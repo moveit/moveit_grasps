@@ -4,7 +4,7 @@ gripper:
     end_effector_name: 'gripper'  #ee group name
 
     #actuated joints in end effector
-    joints : ['jaco_joint_finger_1','jaco_joint_finger_2','jaco_joint_finger_3']
+    joints : ['jaco2_joint_finger_1','jaco2_joint_finger_2','jaco2_joint_finger_3']
 
     #open position
     pregrasp_posture : [0.0, 0.0, 0.0]
