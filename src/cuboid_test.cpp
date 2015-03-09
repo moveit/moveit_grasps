@@ -100,6 +100,7 @@ public:
 
       grasps_->generateCuboidGrasps( visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
                                      max_grasp_size_, grasp_data_, possible_grasps_);
+      ROS_INFO_STREAM_NAMED("test", "Generated " << possible_grasps_.size() << " possible grasps around cuboid ");
 
       //visual_tools_->publishAnimatedGrasps(possible_grasps_, ee_jmg_);
       visual_tools_->publishGrasps(possible_grasps_, ee_jmg_);
@@ -107,12 +108,7 @@ public:
       completed_trials++;
       if (completed_trials == number_of_trials)
         break;
-
-      ROS_DEBUG_STREAM_NAMED("test","end loop");
-      if (ros::ok())
-        ROS_DEBUG_STREAM_NAMED("test","ros ok");
     }
-
   }
 
   void animateGripperOpenClose(int number_of_trials) 
