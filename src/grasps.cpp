@@ -325,12 +325,13 @@ geometry_msgs::PoseStamped Grasps::getPreGraspPose(const moveit_msgs::Grasp &gra
 void Grasps::publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp_data,
                                const rviz_visual_tools::colors &color, double approach_length)
 {
-  Eigen::Affine3d eigen_grasp_pose;
+  //Eigen::Affine3d eigen_grasp_pose;
   // Convert each grasp back to forward-facing error (undo end effector custom rotation)
-  tf::poseMsgToEigen(grasp, eigen_grasp_pose);
-  eigen_grasp_pose = eigen_grasp_pose * grasp_data.grasp_pose_to_eef_pose_.inverse();
+  //tf::poseMsgToEigen(grasp, eigen_grasp_pose);
+  //eigen_grasp_pose = eigen_grasp_pose * grasp_data.grasp_pose_to_eef_pose_.inverse();
 
-  visual_tools_->publishArrow(eigen_grasp_pose, color, rviz_visual_tools::REGULAR);
+  //visual_tools_->publishArrow(eigen_grasp_pose, color, rviz_visual_tools::REGULAR);
+  visual_tools_->publishArrow(grasp, color, rviz_visual_tools::REGULAR);
 }
 
 Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, double radius)
@@ -401,6 +402,7 @@ Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, d
     points.block(offset, 0, offset, 3) = bottom.block(1, 0, offset, 3);
   }
 
+  offset *= 2;
   if (left_right_array_size != 0) 
   {
     ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points", "generating left/right points");    
@@ -409,7 +411,6 @@ Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, d
       left.row(i)    <<  length / 2 + radius, -width / 2 + i * left_right_delta, 0;
       right.row(i) << -length / 2 - radius, -width / 2 + i * left_right_delta, 0;
     }
-    offset *= 2;
     ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points", "offset = " << offset);
     left_right_offset = left_right_array_size - 2;
     ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points", "left_right_offset = " << left_right_offset);
@@ -470,7 +471,7 @@ Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, d
   ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points","right \n = " << right);
   ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points","points \n = " << points);
 
-  ROS_INFO_STREAM_NAMED("cuboid_grasp_points", "Generated " << points.size() / 3 << " possible grasp points");
+  ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points", "Generated " << points.size() / 3 << " possible grasp points");
 
   return points;
 } 
@@ -500,8 +501,10 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
   grasp_pose_msg.header.frame_id = grasp_data.base_link_;
 
   // grasp generator loop
-  //TODO: get correct data from grasp_data
-  double radius = 0.24; //grasp_data.grasp_depth_; 
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","offsetting grasp points by gripper finger length, " << grasp_data.finger_to_palm_depth_);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","Translate gripper by " << grasp_data.grasp_pose_to_eef_pose_.translation() );
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","Rotate gripper by " << grasp_data.grasp_pose_to_eef_pose_.rotation() );
+  double radius = grasp_data.finger_to_palm_depth_; 
 
   moveit_msgs::Grasp new_grasp;
   static int grasp_id = 0;
@@ -599,13 +602,23 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
 
     grasp_pose = grasp_pose * Eigen::AngleAxisd(rotation_angle, Eigen::Vector3d::UnitY());
 
+    //publishGraspArrow(new_grasp.grasp_pose.pose, grasp_data, rviz_visual_tools::YELLOW);
+
+    visual_tools_->publishZArrow(grasp_pose);
+
+    // translate and rotate gripper to match standard orientation
+    // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
+    // Transform the grasp pose
+    grasp_pose = grasp_pose * grasp_data.grasp_pose_to_eef_pose_;
+
     tf::poseEigenToMsg(grasp_pose, grasp_pose_msg.pose);
     new_grasp.grasp_pose = grasp_pose_msg;
     possible_grasps.push_back(new_grasp);
 
     if (verbose_)
-    {
-      // TEMP publishGraspArrow(new_grasp.grasp_pose.pose, grasp_data, rviz_visual_tools::YELLOW );
+    {  
+      visual_tools_->publishXArrow(new_grasp.grasp_pose.pose);
+      visual_tools_->publishYArrow(new_grasp.grasp_pose.pose);
       visual_tools_->publishSphere(poseCenter, rviz_visual_tools::PINK, 0.01);
     }
 

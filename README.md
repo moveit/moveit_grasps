@@ -71,7 +71,7 @@ Within that file you can specify the following (example taken from jaco):
     grasp_time_from_start : 4.0
 
     # desired pose from end effector to grasp - [x,y,z]
-    grasp_pose_to_eef :  [-0.05, 0, 0]
+    grasp_pose_to_eef_translation :  [-0.05, 0, 0]
 
     # desired pose from end effector to grasp - [roll, pitch, yall], in standard 3,2,1 notation
     grasp_pose_to_eef_rotation : [1.5707, 0, 0]

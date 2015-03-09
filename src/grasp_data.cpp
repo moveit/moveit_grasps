@@ -62,7 +62,7 @@ bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string&
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture; // todo: remove all underscore post-fixes
   std::vector<double> grasp_posture;
-  std::vector<double> grasp_pose_to_eef;
+  std::vector<double> grasp_pose_to_eef_translation;
   std::vector<double> grasp_pose_to_eef_rotation;
   double pregrasp_time_from_start;
   double grasp_time_from_start;
@@ -151,9 +151,9 @@ bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string&
     grasp_posture.push_back(static_cast<double>(grasp_posture_list[i]));
   }
 
-  ROS_ASSERT(child_nh.hasParam("grasp_pose_to_eef"));
+  ROS_ASSERT(child_nh.hasParam("grasp_pose_to_eef_translation"));
   XmlRpc::XmlRpcValue g_to_eef_list;
-  child_nh.getParam("grasp_pose_to_eef", g_to_eef_list);
+  child_nh.getParam("grasp_pose_to_eef_translation", g_to_eef_list);
   ROS_ASSERT(g_to_eef_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
   for (int32_t i = 0; i < g_to_eef_list.size(); ++i)
   {
@@ -162,14 +162,14 @@ bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string&
     {
       if (g_to_eef_list[i].getType() != XmlRpc::XmlRpcValue::TypeInt )
       {
-        ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_pose_to_eef` wrong data type - int or double required.");
+        ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_pose_to_eef_translation` wrong data type - int or double required.");
         return false;
       }
       else
-        grasp_pose_to_eef.push_back(static_cast<int>(g_to_eef_list[i]));
+        grasp_pose_to_eef_translation.push_back(static_cast<int>(g_to_eef_list[i]));
     }
     else
-      grasp_pose_to_eef.push_back(static_cast<double>(g_to_eef_list[i]));
+      grasp_pose_to_eef_translation.push_back(static_cast<double>(g_to_eef_list[i]));
   }
 
   ROS_ASSERT(child_nh.hasParam("grasp_pose_to_eef_rotation"));
@@ -198,16 +198,16 @@ bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string&
 
   // Orientation
   ROS_ASSERT(grasp_pose_to_eef_rotation.size() == 3);
-  ROS_ASSERT(grasp_pose_to_eef.size() == 3);
+  ROS_ASSERT(grasp_pose_to_eef_translation.size() == 3);
 
   Eigen::AngleAxisd rollAngle (grasp_pose_to_eef_rotation[0], Eigen::Vector3d::UnitZ());
   Eigen::AngleAxisd pitchAngle(grasp_pose_to_eef_rotation[1], Eigen::Vector3d::UnitX());
   Eigen::AngleAxisd yawAngle  (grasp_pose_to_eef_rotation[2], Eigen::Vector3d::UnitY());
   Eigen::Quaternion<double> quat = rollAngle * yawAngle * pitchAngle;
 
-  grasp_pose_to_eef_pose_ = Eigen::Translation3d(grasp_pose_to_eef[0],
-                                                 grasp_pose_to_eef[1],
-                                                 grasp_pose_to_eef[2]) * quat;
+  grasp_pose_to_eef_pose_ = Eigen::Translation3d(grasp_pose_to_eef_translation[0],
+                                                 grasp_pose_to_eef_translation[1],
+                                                 grasp_pose_to_eef_translation[2]) * quat;
 
   // -------------------------------
   // Create pre-grasp posture if specified

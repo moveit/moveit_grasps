@@ -16,11 +16,13 @@ gripper:
 
     #desired pose from end effector to grasp - [x,y,z]
     #grasp_pose_to_eef :  [-0.1, 0, 0] # NOTE: use when tip of arm is left_gripper. HACK
-    grasp_pose_to_eef :  [0.02, 0, 0.15] # NOTE: use when tip of arm is left_gripper. HACK
+    #grasp_pose_to_eef_translation :  [0.02, 0, 0.15] # NOTE: use when tip of arm is left_gripper. HACK
+    grasp_pose_to_eef_translation :  [0, 0, -0.1] # NOTE: use when tip of arm is left_gripper. HACK
 
     #desired pose from end effector to grasp - [r, p, y]
     #grasp_pose_to_eef_rotation : [1.5707, -1.5707, -1.5707] # 1.5707 = PI/2
-    grasp_pose_to_eef_rotation : [-1.8, 0, 0] # 1.5707 = PI/2
+    #grasp_pose_to_eef_rotation : [-1.8, 0, 0] # 1.5707 = PI/2
+    grasp_pose_to_eef_rotation : [1.5708, 3.14159, 0] # 1.5707 = PI/2
 
     # max depth of fingers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.11
