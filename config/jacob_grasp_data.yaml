@@ -7,7 +7,8 @@ gripper:
     joints : ['jaco2_joint_finger_1','jaco2_joint_finger_2','jaco2_joint_finger_3']
 
     #open position
-    pregrasp_posture : [0.0, 0.0, 0.0]
+    pregrasp_posture : [0.4, 0.4, 0.4]
+    #xopregrasp_posture : [0.0, 0.0, 0.0]
     pregrasp_time_from_start : 4.0
 
     #close position
