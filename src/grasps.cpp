@@ -336,7 +336,7 @@ void Grasps::publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp
 
 Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, double radius)
 {
-  ROS_DEBUG_STREAM_NAMED("cuboid_test","generating possible grasp points around cuboid");
+  ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points","generating possible grasp points around cuboid");
 
   /*
    * Create equally spaced points around cuboid
@@ -620,9 +620,8 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
       visual_tools_->publishXArrow(new_grasp.grasp_pose.pose);
       visual_tools_->publishYArrow(new_grasp.grasp_pose.pose);
       visual_tools_->publishSphere(poseCenter, rviz_visual_tools::PINK, 0.01);
+      ros::Duration(0.05).sleep();
     }
-
-    ros::Duration(0.05).sleep();
   }
 }
 
