@@ -15,15 +15,14 @@ gripper:
     grasp_posture : [0.697, 0.697, 0.697]
     grasp_time_from_start : 4.0
 
-    #desired pose from end effector to grasp - [x,y,z]
-    #grasp_pose_to_eef :  [-0.1, 0, 0] # NOTE: use when tip of arm is left_gripper. HACK
-    #grasp_pose_to_eef_translation :  [0.02, 0, 0.15] # NOTE: use when tip of arm is left_gripper. HACK
-    grasp_pose_to_eef_translation :  [0, 0, -0.1] # NOTE: use when tip of arm is left_gripper. HACK
+    #distance from wrist joint to palm of end effector
+    grasp_pose_to_eef_translation :  [0, 0, 0.1]
 
-    #desired pose from end effector to grasp - [r, p, y]
-    #grasp_pose_to_eef_rotation : [1.5707, -1.5707, -1.5707] # 1.5707 = PI/2
-    #grasp_pose_to_eef_rotation : [-1.8, 0, 0] # 1.5707 = PI/2
-    grasp_pose_to_eef_rotation : [1.5708, 3.14159, 0] # 1.5707 = PI/2
+    #Rotation from wrist joint to std end effector orientation
+    #z-axis pointing toward object to grasp
+    #x-axis perp. to movement of grippers
+    #y-axis parallel to movement of grippers
+    grasp_pose_to_eef_rotation : [0, 0, 0]
 
-    # max depth of fingers (distance from finger tip to inner palm)
+    # length of grippers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.11
