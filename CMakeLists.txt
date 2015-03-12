@@ -96,6 +96,12 @@ target_link_libraries(cuboid_grasp_test
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
+# Test mesh bounding box
+add_executable(bounding_box_test src/mesh_bounding_box_test.cpp)
+target_link_libraries(bounding_box_test
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
 ## Install ---------------------------------------------------------------
 
 # Install libraries

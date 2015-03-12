@@ -195,6 +195,12 @@ public:
   void publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp_data, const rviz_visual_tools::colors &color, double approach_length = 0.1);
 
   /**
+   * \brief get the bounding box for a mesh
+   *
+   */
+  //bool getBoundingBoxOfMesh(std::string mesh_file, shapes::Shape &mesh, bodies::BoundingBox &box);
+
+  /**
    * \brief Getter for Verbose
    */ 
   bool getVerbose()
