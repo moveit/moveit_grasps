@@ -139,21 +139,14 @@ public:
     l = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
     w = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
     h = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
-    ROS_DEBUG_STREAM_NAMED("random_cuboid","Size = " << l << ", "<< w << ", " << h);
+    ROS_INFO_STREAM_NAMED("random_cuboid","Size = " << l << ", "<< w << ", " << h);
 
     // Position
     // Values chosen to be within shelf boundary for Amazon pick & place challenge
     // TODO: get right values
-    rviz_visual_tools::RandomPoseBounds pose_bounds;
-    pose_bounds.x_min_ = CUBOID_WORKSPACE_MIN_X; 
-    pose_bounds.x_max_ =  CUBOID_WORKSPACE_MAX_X;
-
-    pose_bounds.y_min_ = CUBOID_WORKSPACE_MIN_Y; 
-    pose_bounds.y_max_ =  CUBOID_WORKSPACE_MAX_Y;
-
-    pose_bounds.z_min_ = CUBOID_WORKSPACE_MIN_Z; 
-    pose_bounds.z_max_ =  CUBOID_WORKSPACE_MAX_Z;
-
+    rviz_visual_tools::RandomPoseBounds pose_bounds(CUBOID_WORKSPACE_MIN_X, CUBOID_WORKSPACE_MAX_X, 
+                                                    CUBOID_WORKSPACE_MIN_Y, CUBOID_WORKSPACE_MAX_Y, 
+                                                    CUBOID_WORKSPACE_MIN_Z, CUBOID_WORKSPACE_MAX_Z);
     // Orientation 
     visual_tools_->generateRandomPose(cuboid_pose, pose_bounds);
 
