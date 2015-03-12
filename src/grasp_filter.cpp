@@ -99,8 +99,6 @@ bool GraspFilter::filterGrasps(const std::vector<moveit_msgs::Grasp>& possible_g
   // -----------------------------------------------------------------------------------------------
   // Get the solver timeout from kinematics.yaml
   solver_timeout_ = arm_jmg->getDefaultIKTimeout();
-  ROS_WARN_STREAM_NAMED("temp","solver timeout is overwritten!");
-  solver_timeout_ = 0.1; //0.05;
   ROS_DEBUG_STREAM_NAMED("grasp_filter","Grasp filter IK timeout " << solver_timeout_);
 
   // -----------------------------------------------------------------------------------------------
