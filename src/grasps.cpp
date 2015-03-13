@@ -601,7 +601,6 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
       rotation_angle *= -1;
 
     grasp_pose = grasp_pose * Eigen::AngleAxisd(rotation_angle, Eigen::Vector3d::UnitY());
-    grasp_pose = grasp_pose * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY());
 
     if (verbose_)
     {

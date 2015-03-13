@@ -232,3 +232,34 @@ Features we'd like to see added to this project:
 
  - Dave Coleman, CU Boulder @davetcoleman
  - Bence Magyar, PAL Robotics @bmagyar
+
+#PCL Junk
+
+install pcl from source:
+```
+git clone git@github.com:PointCloudLibrary/pcl.git
+cd pcl
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make
+sudo make install
+```
+Read the output and see where it gets installed. Mine was `/usr/local/include/pcl-1.8`
+
+check if you have local include in 'LD_LIBRARY_PATH'
+```
+echo $LD_LIBRARY_PATH
+```
+
+if not, add to your `.bashrc`
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include
+```
+
+for files that need it:
+```
+#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>
+```
+
+Edit `CMakeLists` per [this ROS Answer](#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>)
