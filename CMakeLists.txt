@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   moveit_msgs
   cmake_modules
+  pcl_ros
 )
 
 find_package(Eigen REQUIRED)
