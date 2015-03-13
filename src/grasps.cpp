@@ -601,10 +601,16 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
       rotation_angle *= -1;
 
     grasp_pose = grasp_pose * Eigen::AngleAxisd(rotation_angle, Eigen::Vector3d::UnitY());
+    grasp_pose = grasp_pose * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY());
 
-    //publishGraspArrow(new_grasp.grasp_pose.pose, grasp_data, rviz_visual_tools::YELLOW);
-
-    visual_tools_->publishZArrow(grasp_pose);
+    if (verbose_)
+    {
+      // show generated grasp pose
+      visual_tools_->publishXArrow(grasp_pose, rviz_visual_tools::MAGENTA, rviz_visual_tools::SMALL, 0.05);    
+      visual_tools_->publishYArrow(grasp_pose, rviz_visual_tools::YELLOW, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::CYAN, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01);
+    }
 
     // translate and rotate gripper to match standard orientation
     // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
@@ -616,10 +622,12 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
     possible_grasps.push_back(new_grasp);
 
     if (verbose_)
-    {  
-      visual_tools_->publishXArrow(new_grasp.grasp_pose.pose);
-      visual_tools_->publishYArrow(new_grasp.grasp_pose.pose);
-      visual_tools_->publishSphere(poseCenter, rviz_visual_tools::PINK, 0.01);
+    {
+      // show gripper center and grasp direction
+      //visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
+      //visual_tools_->publishYArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
       ros::Duration(0.05).sleep();
     }
   }

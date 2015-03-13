@@ -187,12 +187,12 @@ bool GraspFilter::filterGraspsHelper(const std::vector<moveit_msgs::Grasp>& poss
   if (!moveit::core::Transforms::sameFrame(ik_frame, robot_state_->getRobotModel()->getModelFrame()))
   {
     const robot_model::LinkModel *lm = robot_state_->getLinkModel((!ik_frame.empty() && ik_frame[0] == '/') ? ik_frame.substr(1) : ik_frame);
-    std::cout << "link model is  "<< lm->getName() << std::endl;
+
     if (!lm)
       return false;
     //pose = getGlobalLinkTransform(lm).inverse() * pose;
-    ROS_WARN_STREAM_NAMED("temp","remove this update call");
-    robot_state_->update();// TODO remove?
+    //ROS_WARN_STREAM_NAMED("temp","remove this update call");
+    //robot_state_->update();// TODO remove?
     link_transform = robot_state_->getGlobalLinkTransform(lm).inverse();
   }
 
