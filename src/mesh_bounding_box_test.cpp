@@ -10,6 +10,9 @@
 #include <moveit_grasps/grasps.h>
 
 #include <geometric_shapes/shape_operations.h>
+#include <geometric_shapes/bodies.h>
+
+//#include <pcl17/features/moment_of_inertia_estimation.h>
 
 #include <boost/filesystem.hpp>
 
@@ -60,7 +63,16 @@ public:
       visual_tools_->publishMesh(mesh_pose_,mesh_path.string());
 
       // GET BOUNDING BOX FUNCTION
+<<<<<<< Updated upstream
       shapes::Shape *mesh = shapes::createMeshFromResource(mesh_path.string());
+=======
+      shapes::Shape* mesh = shapes::createMeshFromResource(mesh_path.string());
+
+      const bodies::Body* body = new bodies::ConvexMesh(mesh);
+
+      double depth, width, height;
+      computeBoundingBox(body, depth, width, height);
+>>>>>>> Stashed changes
        
       // END BOUNDING BOX FUNCTION
 
@@ -71,6 +83,25 @@ public:
 
   }
 
+<<<<<<< Updated upstream
+=======
+  void computeBoundingBox(const bodies::Body* body, double& depth, double& width, double& height)
+  {
+    const bodies::ConvexMesh* conv = dynamic_cast<const bodies::ConvexMesh*>(body);
+
+    size_t number_of_vertices = conv->getScaledVertices().size();
+    ROS_DEBUG_STREAM_NAMED("bounding_box","Number of vertices = " << number_of_vertices);
+
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+
+    for (int i = 0; i < number_of_vertices; i++)
+    {
+
+    }
+
+  }
+
+>>>>>>> Stashed changes
   double fRand(double fMin, double fMax) 
   {
     return fMin + ( (double)rand() / RAND_MAX ) * (fMax - fMin);
