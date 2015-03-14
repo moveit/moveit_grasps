@@ -128,7 +128,8 @@ public:
     Eigen::Vector3f position (position_OBB.x, position_OBB.y, position_OBB.z);
     Eigen::Quaternionf quat (rotational_matrix_OBB);
 
-    publishWireframeCuboid(position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
+    publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
+			   position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
 
     // Axis oriented bounding box
     //pcl::PointXYZ min_point_AABB;
@@ -139,7 +140,8 @@ public:
 
   }
 
-  void publishWireframeCuboid(const Eigen::Vector3f &position,
+  void publishWireframeCuboid(const Eigen::Affine3d &pose,
+			      const Eigen::Vector3f &position,
 			      const  Eigen::Matrix3f &rotation_matrix,
 			      const pcl::PointXYZ &min_point,
 			      const pcl::PointXYZ &max_point) {
@@ -169,6 +171,16 @@ public:
     Eigen::Vector3d pt6 = p6.cast <double> ();
     Eigen::Vector3d pt7 = p7.cast <double> ();
     Eigen::Vector3d pt8 = p8.cast <double> ();
+
+    pt1 = pose * pt1;
+    pt2 = pose * pt2;
+    pt3 = pose * pt3;
+    pt4 = pose * pt4;
+    pt5 = pose * pt5;
+    pt6 = pose * pt6;
+    pt7 = pose * pt7;
+    pt8 = pose * pt8;
+
 
     visual_tools_->publishLine(pt1, pt2);
     visual_tools_->publishLine(pt1, pt4);
