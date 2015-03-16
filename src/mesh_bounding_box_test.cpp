@@ -5,7 +5,6 @@
 
 #include <ros/ros.h>
 
-
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit_grasps/grasps.h>
 
@@ -103,9 +102,6 @@ public:
       point.x = mesh_msg.vertices[i].x;
       point.z = mesh_msg.vertices[i].y;
       point.y = mesh_msg.vertices[i].z;
-      // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].x);
-      // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].y);
-      // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].z);
       cloud->points.push_back(point);
     }
 
@@ -132,19 +128,19 @@ public:
      publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
      			   position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
 
-     // Eigen::Vector3f min_sphere (min_point_OBB.x, min_point_OBB.y, min_point_OBB.z);
-    //  Eigen::Vector3f max_sphere (max_point_OBB.x, max_point_OBB.y, max_point_OBB.z);
+     Eigen::Vector3f min_sphere (min_point_OBB.x, min_point_OBB.y, min_point_OBB.z);
+     Eigen::Vector3f max_sphere (max_point_OBB.x, max_point_OBB.y, max_point_OBB.z);
 
-    // visual_tools_->publishSphere(min_sphere.cast <double> (), rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
-    // visual_tools_->publishSphere(max_sphere.cast <double> (), rviz_visual_tools::RED, rviz_visual_tools::LARGE);
+    visual_tools_->publishSphere(min_sphere.cast <double> (), rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
+    visual_tools_->publishSphere(max_sphere.cast <double> (), rviz_visual_tools::RED, rviz_visual_tools::LARGE);
 
     // Axis oriented bounding box
-    // pcl::PointXYZ min_point_AABB;
-    // pcl::PointXYZ max_point_AABB;
-    // feature_extractor.getAABB(min_point_AABB, max_point_AABB);
+     pcl::PointXYZ min_point_AABB;
+     pcl::PointXYZ max_point_AABB;
+     feature_extractor.getAABB(min_point_AABB, max_point_AABB);
 
-    // Eigen::Vector3f AABB_position = Eigen::Vector3f::Zero(3);
-    // Eigen::Matrix3f rotation_matrix = Eigen::Matrix3f::Identity(3,3);
+    Eigen::Vector3f AABB_position = Eigen::Vector3f::Zero(3);
+    Eigen::Matrix3f rotation_matrix = Eigen::Matrix3f::Identity(3,3);
 
     // ROS_INFO_STREAM(mesh_pose_);
     // ROS_INFO_STREAM(AABB_position);
@@ -152,8 +148,8 @@ public:
     // ROS_INFO_STREAM(min_point_AABB);
     // ROS_INFO_STREAM(max_point_AABB);
 
-    // publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
-    // 			   AABB_position, rotation_matrix, min_point_AABB, max_point_AABB);
+    publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
+    			   AABB_position, rotation_matrix, min_point_AABB, max_point_AABB, rviz_visual_tools::RED);
 
 
     ROS_DEBUG_STREAM_NAMED("bbox","done extracting features");
@@ -164,7 +160,8 @@ public:
 			      const Eigen::Vector3f &position,
 			      const Eigen::Matrix3f &rotation_matrix,
 			      const pcl::PointXYZ &min_point,
-			      const pcl::PointXYZ &max_point) {
+			      const pcl::PointXYZ &max_point,
+			      const rviz_visual_tools::colors &color=rviz_visual_tools::BLUE) {
     Eigen::Vector3f p1 (min_point.x, min_point.y, min_point.z);
     Eigen::Vector3f p2 (min_point.x, min_point.y, max_point.z);
     Eigen::Vector3f p3 (max_point.x, min_point.y, max_point.z);
@@ -192,20 +189,27 @@ public:
     Eigen::Vector3d pt7 = p7.cast <double> ();
     Eigen::Vector3d pt8 = p8.cast <double> ();
 
+    pt1 = pose * pt1;
+    pt2 = pose * pt2;
+    pt3 = pose * pt3;
+    pt4 = pose * pt4;
+    pt5 = pose * pt5;
+    pt6 = pose * pt6;
+    pt7 = pose * pt7;
+    pt8 = pose * pt8;
 
-
-    visual_tools_->publishLine(pt1, pt2);
-    visual_tools_->publishLine(pt1, pt4);
-    visual_tools_->publishLine(pt1, pt5);
-    visual_tools_->publishLine(pt5, pt6);
-    visual_tools_->publishLine(pt5, pt8);
-    visual_tools_->publishLine(pt2, pt6);
-    visual_tools_->publishLine(pt6, pt7);
-    visual_tools_->publishLine(pt7, pt8);
-    visual_tools_->publishLine(pt2, pt3);
-    visual_tools_->publishLine(pt4, pt8);
-    visual_tools_->publishLine(pt3, pt4);
-    visual_tools_->publishLine(pt3, pt7);
+    visual_tools_->publishLine(pt1, pt2, color);
+    visual_tools_->publishLine(pt1, pt4, color);
+    visual_tools_->publishLine(pt1, pt5, color);
+    visual_tools_->publishLine(pt5, pt6, color);
+    visual_tools_->publishLine(pt5, pt8, color);
+    visual_tools_->publishLine(pt2, pt6, color);
+    visual_tools_->publishLine(pt6, pt7, color);
+    visual_tools_->publishLine(pt7, pt8, color);
+    visual_tools_->publishLine(pt2, pt3, color);
+    visual_tools_->publishLine(pt4, pt8, color);
+    visual_tools_->publishLine(pt3, pt4, color);
+    visual_tools_->publishLine(pt3, pt7, color);
   }
 
   double fRand(double fMin, double fMax)
