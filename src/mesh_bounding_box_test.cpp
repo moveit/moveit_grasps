@@ -19,8 +19,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include <limits>
-
 namespace fs = boost::filesystem;
 
 namespace moveit_grasps
@@ -99,9 +97,6 @@ public:
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointXYZ point;
 
-    double minx = std::numeric_limits<double>::max(), miny = std::numeric_limits<double>::max(), minz = std::numeric_limits<double>::max();
-    double maxx = std::numeric_limits<double>::min(), maxy = std::numeric_limits<double>::min(), maxz = std::numeric_limits<double>::min();
-
     // get vertices into point cloud for pcl magic
     for (int i = 0; i < num_vertices; i++)
     {
@@ -112,29 +107,7 @@ public:
       // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].y);
       // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].z);
       cloud->points.push_back(point);
-      if (point.x < minx) minx = point.x;
-      if (point.x > maxx) maxx = point.x;
-
-      if (point.y < miny) miny = point.y;
-      if (point.y > maxy) maxy = point.y;
-
-      if (point.z < minz) minz = point.z;
-      if (point.z > maxz) maxz = point.z;
-
     }
-    ROS_INFO_STREAM(minx);
-    ROS_INFO_STREAM(miny);
-    ROS_INFO_STREAM(minz);
-
-    Eigen::Vector3d min_sphere (minx, miny, minz);
-    Eigen::Vector3d max_sphere (maxx, maxy, maxz);
-
-    visual_tools_->publishSphere(min_sphere, rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
-    visual_tools_->publishSphere(max_sphere, rviz_visual_tools::RED, rviz_visual_tools::LARGE);
-
-    ROS_INFO_STREAM(maxx);
-    ROS_INFO_STREAM(maxy);
-    ROS_INFO_STREAM(maxz);
 
     ROS_DEBUG_STREAM_NAMED("bbox","num points in cloud = " << cloud->points.size());
 
@@ -158,6 +131,12 @@ public:
 
      publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
      			   position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
+
+     // Eigen::Vector3f min_sphere (min_point_OBB.x, min_point_OBB.y, min_point_OBB.z);
+    //  Eigen::Vector3f max_sphere (max_point_OBB.x, max_point_OBB.y, max_point_OBB.z);
+
+    // visual_tools_->publishSphere(min_sphere.cast <double> (), rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
+    // visual_tools_->publishSphere(max_sphere.cast <double> (), rviz_visual_tools::RED, rviz_visual_tools::LARGE);
 
     // Axis oriented bounding box
     // pcl::PointXYZ min_point_AABB;
