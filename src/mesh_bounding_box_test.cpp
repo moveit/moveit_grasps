@@ -19,13 +19,12 @@
 
 #include <boost/filesystem.hpp>
 
+#include <limits>
+
 namespace fs = boost::filesystem;
 
 namespace moveit_grasps
 {
-
-
-
 
 class MeshBoundingBoxTest
 {
@@ -56,7 +55,7 @@ public:
 
       // get mesh file to publish
       // TODO: grab a random mesh from the meshes directory
-      fs::path mesh_path = "file:/home/andy/ros/ws_picknik/src/picknik/picknik_main/meshes/products/kong_air_dog_squeakair_tennis_ball/recommended.dae";
+      fs::path mesh_path = "file:/home/jorge/ws_picknik/src/picknik/picknik_main/meshes/products/kong_air_dog_squeakair_tennis_ball/recommended.dae";
 
       // get random pose for mesh
       rviz_visual_tools::RandomPoseBounds bounds(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
@@ -68,6 +67,7 @@ public:
 
       visual_tools_->publishMesh(mesh_pose_,mesh_path.string());
 
+      visual_tools_->publishAxis(mesh_pose_);
       // GET BOUNDING BOX FUNCTION
       shapes::Shape* mesh= shapes::createMeshFromResource(mesh_path.string());
       shapes::ShapeMsg shape_msg;
@@ -99,14 +99,42 @@ public:
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointXYZ point;
 
+    double minx = std::numeric_limits<double>::max(), miny = std::numeric_limits<double>::max(), minz = std::numeric_limits<double>::max();
+    double maxx = std::numeric_limits<double>::min(), maxy = std::numeric_limits<double>::min(), maxz = std::numeric_limits<double>::min();
+
     // get vertices into point cloud for pcl magic
     for (int i = 0; i < num_vertices; i++)
     {
       point.x = mesh_msg.vertices[i].x;
-      point.y = mesh_msg.vertices[i].y;
-      point.z = mesh_msg.vertices[i].z;
+      point.z = mesh_msg.vertices[i].y;
+      point.y = mesh_msg.vertices[i].z;
+      // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].x);
+      // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].y);
+      // ROS_INFO_STREAM_NAMED("vertices", mesh_msg.vertices[i].z);
       cloud->points.push_back(point);
+      if (point.x < minx) minx = point.x;
+      if (point.x > maxx) maxx = point.x;
+
+      if (point.y < miny) miny = point.y;
+      if (point.y > maxy) maxy = point.y;
+
+      if (point.z < minz) minz = point.z;
+      if (point.z > maxz) maxz = point.z;
+
     }
+    ROS_INFO_STREAM(minx);
+    ROS_INFO_STREAM(miny);
+    ROS_INFO_STREAM(minz);
+
+    Eigen::Vector3d min_sphere (minx, miny, minz);
+    Eigen::Vector3d max_sphere (maxx, maxy, maxz);
+
+    visual_tools_->publishSphere(min_sphere, rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
+    visual_tools_->publishSphere(max_sphere, rviz_visual_tools::RED, rviz_visual_tools::LARGE);
+
+    ROS_INFO_STREAM(maxx);
+    ROS_INFO_STREAM(maxy);
+    ROS_INFO_STREAM(maxz);
 
     ROS_DEBUG_STREAM_NAMED("bbox","num points in cloud = " << cloud->points.size());
 
@@ -128,13 +156,26 @@ public:
     Eigen::Vector3f position (position_OBB.x, position_OBB.y, position_OBB.z);
     Eigen::Quaternionf quat (rotational_matrix_OBB);
 
-    publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
-			   position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
+     publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
+     			   position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
 
     // Axis oriented bounding box
-    //pcl::PointXYZ min_point_AABB;
-    //pcl::PointXYZ max_point_AABB;
-    //feature_extractor.getAABB(min_point_AABB, max_point_AABB);
+    // pcl::PointXYZ min_point_AABB;
+    // pcl::PointXYZ max_point_AABB;
+    // feature_extractor.getAABB(min_point_AABB, max_point_AABB);
+
+    // Eigen::Vector3f AABB_position = Eigen::Vector3f::Zero(3);
+    // Eigen::Matrix3f rotation_matrix = Eigen::Matrix3f::Identity(3,3);
+
+    // ROS_INFO_STREAM(mesh_pose_);
+    // ROS_INFO_STREAM(AABB_position);
+    // ROS_INFO_STREAM(rotation_matrix);
+    // ROS_INFO_STREAM(min_point_AABB);
+    // ROS_INFO_STREAM(max_point_AABB);
+
+    // publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
+    // 			   AABB_position, rotation_matrix, min_point_AABB, max_point_AABB);
+
 
     ROS_DEBUG_STREAM_NAMED("bbox","done extracting features");
 
@@ -142,7 +183,7 @@ public:
 
   void publishWireframeCuboid(const Eigen::Affine3d &pose,
 			      const Eigen::Vector3f &position,
-			      const  Eigen::Matrix3f &rotation_matrix,
+			      const Eigen::Matrix3f &rotation_matrix,
 			      const pcl::PointXYZ &min_point,
 			      const pcl::PointXYZ &max_point) {
     Eigen::Vector3f p1 (min_point.x, min_point.y, min_point.z);
@@ -172,14 +213,6 @@ public:
     Eigen::Vector3d pt7 = p7.cast <double> ();
     Eigen::Vector3d pt8 = p8.cast <double> ();
 
-    pt1 = pose * pt1;
-    pt2 = pose * pt2;
-    pt3 = pose * pt3;
-    pt4 = pose * pt4;
-    pt5 = pose * pt5;
-    pt6 = pose * pt6;
-    pt7 = pose * pt7;
-    pt8 = pose * pt8;
 
 
     visual_tools_->publishLine(pt1, pt2);
