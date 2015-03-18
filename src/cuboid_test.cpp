@@ -91,7 +91,7 @@ public:
       ROS_INFO_STREAM_NAMED("test", "generating random cuboid");
       generateRandomCuboid(cuboid_pose_,depth_,width_,height_);
 
-      visual_tools_->publishRectangle(cuboid_pose_,depth_,width_,height_);
+      visual_tools_->publishCuboid(cuboid_pose_,depth_,width_,height_);
       visual_tools_->publishAxis(cuboid_pose_);
 
       ROS_INFO_STREAM_NAMED("test","generating grasps for cuboid");
