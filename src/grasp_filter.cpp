@@ -71,11 +71,30 @@ bool GraspFilter::chooseBestGrasp( std::vector<GraspSolution>& filtered_grasps,
   double max_quality = -1;
   for (std::size_t i = 0; i < filtered_grasps.size(); ++i)
   {
-    if (filtered_grasps[i].grasp_.grasp_quality > max_quality)
+    // METHOD 1 - use score
+    if (false)
     {
-      max_quality = filtered_grasps[i].grasp_.grasp_quality;
-      chosen = filtered_grasps[i];
+      if (filtered_grasps[i].grasp_.grasp_quality > max_quality)
+      {
+        max_quality = filtered_grasps[i].grasp_.grasp_quality;
+        chosen = filtered_grasps[i];
+      }
     }
+    else // METHOD 2 - use yall angle
+    {
+      const geometry_msgs::Pose& pose = filtered_grasps[i].grasp_.grasp_pose.pose;
+      //double roll = atan2(2*(pose.orientation.x*pose.orientation.y + pose.orientation.w*pose.orientation.z), pose.orientation.w*pose.orientation.w + pose.orientation.x*pose.orientation.x - pose.orientation.y*pose.orientation.y - pose.orientation.z*pose.orientation.z);
+      double yall = asin(-2*(pose.orientation.x*pose.orientation.z - pose.orientation.w*pose.orientation.y));
+      //double pitch = atan2(2*(pose.orientation.y*pose.orientation.z + pose.orientation.w*pose.orientation.x), pose.orientation.w*pose.orientation.w - pose.orientation.x*pose.orientation.x - pose.orientation.y*pose.orientation.y + pose.orientation.z*pose.orientation.z);
+      //std::cout << "ROLL: " << roll << " YALL: " << yall << " PITCH: " << pitch << std::endl;
+      std::cout << "YALL: " << yall << std::endl;
+      if (yall > max_quality)
+      {
+        max_quality = yall;
+        chosen = filtered_grasps[i];
+      }
+    }
+
   }
 
   ROS_INFO_STREAM_NAMED("grasp_filter","Chose grasp with quality " << max_quality);

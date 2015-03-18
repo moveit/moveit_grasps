@@ -635,6 +635,8 @@ bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, float dept
                                   float max_grasp_size, const moveit_grasps::GraspData& grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
   // generate grasps over axes that aren't too wide to grip with Open Hand
+  
+  // Most default type of grasp is X axis
   if (depth <= max_grasp_size ) // depth = size along x-axis
   {
     ROS_INFO_STREAM_NAMED("cuboid_grasps","generating grasps around x-axis of cuboid");
