@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED thread system)
-find_package(PCL 1.8 REQUIRED)
+#find_package(PCL 1.8 REQUIRED)
 
 add_message_files(DIRECTORY msg FILES
   GraspGeneratorOptions.msg
@@ -60,11 +60,11 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
+#  ${PCL_INCLUDE_DIRS}
 )
 
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
 
 # Grasp Generator Library
 add_library(${PROJECT_NAME}
@@ -102,9 +102,14 @@ target_link_libraries(cuboid_grasp_test
 )
 
 # Test mesh bounding box
-add_executable(bounding_box_test src/mesh_bounding_box_test.cpp)
-target_link_libraries(bounding_box_test
-  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${PCL_LIBRARIES}
+#add_executable(bounding_box_test src/mesh_bounding_box_test.cpp)
+#target_link_libraries(bounding_box_test
+#  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${PCL_LIBRARIES}
+#)
+
+add_executable(grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
+target_link_libraries(grasp_poses_visualizer
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 ## Install ---------------------------------------------------------------
