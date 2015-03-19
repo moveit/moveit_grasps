@@ -81,7 +81,7 @@ public:
 
     visual_tools_->deleteAllMarkers();
 
-    ROS_INFO_STREAM_NAMED("viz_test","************* \nStarting Vizualization" << "\n*************");
+    ROS_INFO_STREAM_NAMED("viz_test","\n************* \nStarting Vizualization" << "\n*************");
 
     ROS_INFO_STREAM_NAMED("viz_test", "generating random cuboid");
     generateRandomCuboid(cuboid_pose_,depth_,width_,height_);
@@ -92,61 +92,87 @@ public:
     // SHOW OBJECT POSE
     visual_tools_->publishRectangle(cuboid_pose_,depth_,width_,height_);
     visual_tools_->publishAxis(cuboid_pose_, 0.05, 0.005);
-    visual_tools_->publishText(cuboid_pose_,"Object Pose", rviz_visual_tools::WHITE, rviz_visual_tools::SMALL, text);
+    visual_tools_->publishText(cuboid_pose_,"Object Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
     possible_grasps_.clear();
-    grasps_->generateCuboidGrasps( visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
+    grasps_->generateCuboidGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
                                      max_grasp_size_, grasp_data_, possible_grasps_);    
 
-    // SHOW EE GRASP POSE (grasp_pose * grasp_data.grasp_pose_to_eef_pose_)
-    display_pose = visual_tools_->convertPose(possible_grasps_[50].grasp_pose.pose);
-    visual_tools_->publishAxis(display_pose, 0.05, 0.005);
-    visual_tools_->publishSphere(display_pose.translation(), rviz_visual_tools::GREEN, 0.02);
-    visual_tools_->publishText(display_pose, "EE Pose", rviz_visual_tools::WHITE, rviz_visual_tools::SMALL, text);
+    // SHOW EE GRASP POSE
+    Eigen::Affine3d ee_pose = visual_tools_->convertPose(possible_grasps_[50].grasp_pose.pose);
+    visual_tools_->publishAxis(ee_pose, 0.05, 0.005);
+    visual_tools_->publishSphere(ee_pose.translation(), rviz_visual_tools::GREEN, 0.02);
+    visual_tools_->publishText(ee_pose, "EE Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
+
+    // SHOW GRASP POSE 
+    Eigen::Affine3d grasp_pose;
+    grasp_pose = ee_pose * grasp_data_.grasp_pose_to_eef_pose_.inverse();
+    visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
+    visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.02);
+    visual_tools_->publishText(grasp_pose, "Grasp Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
+
+    // SHOW finger_to_palm_depth
+    Eigen::Vector3d grasp_point = grasp_pose.translation();
+    Eigen::Vector3d obj_point = visual_tools_->convertPose(cuboid_pose_).translation();
+    Eigen::Vector3d palm_vector = obj_point - grasp_point;
+    palm_vector.normalize();
+
+    Eigen::Vector3d palm_point = grasp_point + palm_vector * grasp_data_.finger_to_palm_depth_;
+    visual_tools_->publishLine(grasp_point, palm_point, rviz_visual_tools::GREY);
+
+    Eigen::Affine3d text_pose;
+    Eigen::Vector3d text_point = grasp_point + palm_vector * grasp_data_.finger_to_palm_depth_ * 0.5;
+    text_pose = grasp_pose;
+    text_pose.translation() += text_point - grasp_pose.translation();
+    visual_tools_->publishText(text_pose, "finger_to_palm_depth", rviz_visual_tools::GREY, rviz_visual_tools::XSMALL, text);    
 
     // SHOW PRE_GRASP_APPROACH
     Eigen::Vector3d pregrasp_vector = Eigen::Vector3d(possible_grasps_[50].pre_grasp_approach.direction.vector.x,
                                                       possible_grasps_[50].pre_grasp_approach.direction.vector.y,
                                                       possible_grasps_[50].pre_grasp_approach.direction.vector.z);
-    ROS_DEBUG_STREAM_NAMED("viz_test","pregrasp_vector\n" << pregrasp_vector);
-    double pregrasp_distance = possible_grasps_[50].pre_grasp_approach.desired_distance;
-    double pregrasp_distance_min = possible_grasps_[50].pre_grasp_approach.min_distance;
-    Eigen::Vector3d pregrasp_point = display_pose.translation() - pregrasp_vector * pregrasp_distance;
-    Eigen::Vector3d pregrasp_min_point = display_pose.translation() - pregrasp_vector * pregrasp_distance_min;
-    visual_tools_->publishLine(pregrasp_point,pregrasp_min_point);
-    visual_tools_->publishSphere(pregrasp_point, rviz_visual_tools::PURPLE, 0.02);
-    visual_tools_->publishSphere(pregrasp_min_point, rviz_visual_tools::PINK,0.02);
+    pregrasp_vector.normalize();
+    Eigen::Vector3d approach_point = ee_pose.translation() + ee_pose.rotation() * pregrasp_vector * 
+      possible_grasps_[50].pre_grasp_approach.desired_distance;
+    display_pose = ee_pose;
+    display_pose.translation() += approach_point - ee_pose.translation();
+    visual_tools_->publishSphere(approach_point,rviz_visual_tools::PURPLE, 0.02);
+    visual_tools_->publishText(display_pose, "Pre-grasp desired", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
+
+    Eigen::Vector3d approach_point_min = ee_pose.translation() + ee_pose.rotation() * pregrasp_vector * 
+      possible_grasps_[50].pre_grasp_approach.min_distance;
+    display_pose = ee_pose;
+    display_pose.translation() += approach_point_min - ee_pose.translation();    
+    visual_tools_->publishSphere(approach_point_min,rviz_visual_tools::PINK, 0.02);
+    visual_tools_->publishText(display_pose, "Pre-grasp min", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
+
+
+    visual_tools_->publishLine(approach_point, approach_point_min, rviz_visual_tools::GREY);
     
     // SHOW POST_GRASP_RETREAT
     Eigen::Vector3d postgrasp_vector = Eigen::Vector3d(possible_grasps_[50].post_grasp_retreat.direction.vector.x,
                                                        possible_grasps_[50].post_grasp_retreat.direction.vector.y,
                                                        possible_grasps_[50].post_grasp_retreat.direction.vector.z);
-    ROS_DEBUG_STREAM_NAMED("viz_test","postgrasp_vector\n" << postgrasp_vector);
-    double postgrasp_distance = possible_grasps_[50].post_grasp_retreat.desired_distance;
-    double postgrasp_distance_min = possible_grasps_[50].post_grasp_retreat.min_distance;
-    Eigen::Vector3d postgrasp_point = display_pose.translation() + postgrasp_vector * postgrasp_distance;
-    Eigen::Vector3d postgrasp_min_point = display_pose.translation() + postgrasp_vector * postgrasp_distance_min;
-    visual_tools_->publishLine(postgrasp_point,postgrasp_min_point);
-    visual_tools_->publishSphere(postgrasp_point, rviz_visual_tools::ORANGE, 0.02);
-    visual_tools_->publishSphere(postgrasp_min_point, rviz_visual_tools::YELLOW,0.02);
-    
-    // SHOW GRASP POSE (result from generate grasp functions)
-    display_pose = display_pose * grasp_data_.grasp_pose_to_eef_pose_.inverse();
-    visual_tools_->publishAxis(display_pose, 0.05, 0.005);
-    visual_tools_->publishSphere(display_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.02);
-    visual_tools_->publishText(display_pose, "Grasp Pose", rviz_visual_tools::WHITE, rviz_visual_tools::SMALL, text);
+    postgrasp_vector.normalize();
+    Eigen::Vector3d retreat_point = ee_pose.translation() - ee_pose.rotation() * postgrasp_vector * 
+      possible_grasps_[50].post_grasp_retreat.desired_distance;
+    Eigen::Affine3d block_pose;
+    block_pose = ee_pose;
+    block_pose.translation() += retreat_point - ee_pose.translation();
+    visual_tools_->publishBlock(block_pose,rviz_visual_tools::ORANGE, 0.015);
+    visual_tools_->publishText(block_pose, "Post-grasp desired", rviz_visual_tools::DARK_GREY, rviz_visual_tools::XSMALL, text);
 
-    // SHOW finger_to_palm_depth
-    Eigen::Vector3d grasp_point = display_pose.translation();
-    Eigen::Vector3d obj_point = visual_tools_->convertPose(cuboid_pose_).translation();
-    Eigen::Vector3d palm_vector = obj_point - grasp_point;
-    palm_vector.normalize();
-    Eigen::Vector3d palm_point = grasp_point + palm_vector * grasp_data_.finger_to_palm_depth_;
-    visual_tools_->publishLine(grasp_point, palm_point, rviz_visual_tools::GREY);
+    Eigen::Vector3d retreat_point_min = ee_pose.translation() - ee_pose.rotation() * postgrasp_vector * 
+      possible_grasps_[50].post_grasp_retreat.min_distance;
+    block_pose = ee_pose;
+    block_pose.translation() += retreat_point_min - ee_pose.translation();
+    visual_tools_->publishBlock(block_pose,rviz_visual_tools::YELLOW, 0.015);
+    visual_tools_->publishText(block_pose, "Post-grasp min", rviz_visual_tools::DARK_GREY, rviz_visual_tools::XSMALL, text);
 
-    Eigen::Vector3d text_translation = display_pose * palm_vector * (0.5 * grasp_data_.finger_to_palm_depth_);
-    display_pose.translation() += text_translation;
-    visual_tools_->publishText(display_pose, "finger_to_palm_depth", rviz_visual_tools::WHITE, rviz_visual_tools::SMALL, text);    
-    
+    visual_tools_->publishLine(retreat_point, retreat_point_min, rviz_visual_tools::DARK_GREY);
+
+    // SHOW ROBOT GRIPPER
+    std::vector<moveit_msgs::Grasp> visualized_grasp;
+    visualized_grasp.push_back(possible_grasps_[50]);
+    visual_tools_->publishGrasps(visualized_grasp, ee_jmg_);
   }
 
   void generateRandomCuboid(geometry_msgs::Pose& cuboid_pose, double& l, double& w, double& h)
