@@ -81,7 +81,7 @@ Within that file you can specify the following (example taken from jaco):
 
 These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
 The result should look like the following:
-![Grasp Poses Visualization](/resources/moveit_grasps_poses.jpeg)
+![Grasp Poses Visualization](https://bytebucket.org/cuamazonchallenge/moveit_grasps/raw/6a0397bce5a309428e0fa25366e0d58015c93433/resources/moveit_grasps_poses.jpeg?token=ca124fc4d9cd8f2678a7392b3a568f7883f8ee3b)
 
 Poses Visualized: Object, Grasp, EE
 Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
