@@ -79,6 +79,13 @@ Within that file you can specify the following (example taken from jaco):
     # max depth of fingers - distance from finger tip to inner palm
     finger_to_palm_depth : 0.11
 
+These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
+The result should look like the following:
+![Grasp Poses Visualization](/resources/moveit_grasps_poses.jpeg)
+
+Poses Visualized: Object, Grasp, EE
+Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
+
 ## Code Usage
 
 Note: You might find the moveit_blocks.h example, discussed at the bottom of this page, most helpful.
@@ -213,27 +220,6 @@ To also test the IK grasp filtering:
 roslaunch moveit_grasps grasp_filter_test.launch
 ```
 
-## TODO
-
-Features we'd like to see added to this project:
-
- - Ability to reason about any shape, not just centroid of a bounding box
-   - Input arbitrary meshes
-   - Auto create a bounding box around that mesh
- - Better reasoning about support surfaces (table)
- - Integrate collision checking to verify feasibility of grasp
- - Support non-parallel gripper end effectors
- - Make grasp quality metric better informed
- - Make this project easier to setup for new robots
-   - Integrate into Setup Assistant GUI
- - Improve pick and place pipline header file
-
-## Contributors
-
- - Dave Coleman, CU Boulder @davetcoleman
- - Andy McEvoy, CU Boulder @mcevoyandy
- - Bence Magyar, PAL Robotics @bmagyar
-
 #PCL Junk
 
 install pcl from source:
@@ -264,3 +250,24 @@ for files that need it:
 ```
 
 Edit `CMakeLists` per [this ROS Answer](http://answers.ros.org/question/81306/catkin-cant-find-pclconfigcmake/)
+
+## TODO
+
+Features we'd like to see added to this project:
+
+ - Ability to reason about any shape, not just centroid of a bounding box
+   - Input arbitrary meshes
+   - Auto create a bounding box around that mesh
+ - Better reasoning about support surfaces (table)
+ - Integrate collision checking to verify feasibility of grasp
+ - Support non-parallel gripper end effectors
+ - Make grasp quality metric better informed
+ - Make this project easier to setup for new robots
+   - Integrate into Setup Assistant GUI
+ - Improve pick and place pipline header file
+
+## Contributors
+
+ - Dave Coleman, CU Boulder @davetcoleman
+ - Andy McEvoy, CU Boulder @mcevoyandy
+ - Bence Magyar, PAL Robotics @bmagyar
