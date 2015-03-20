@@ -24,5 +24,6 @@ gripper:
     #y-axis parallel to movement of grippers
     grasp_pose_to_eef_rotation : [-1.5708, 3.14159, 0]
 
+
     # length of grippers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.11

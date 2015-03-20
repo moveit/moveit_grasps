@@ -18,7 +18,7 @@ static const double CUBOID_WORKSPACE_MIN_Z = 0.0;
 static const double CUBOID_WORKSPACE_MAX_Z = 1.0;
 
 // TODO: verify max object size Open Hand can grasp
-static const double MODEL_T_MAX_GRASP_SIZE = 0.10;
+static const double MAX_GRASP_SIZE = 0.10;
 
 class GraspPosesVisualizer
 {
@@ -36,7 +36,6 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   std::vector<moveit_msgs::Grasp> possible_grasps_;
   moveit_grasps::GraspData grasp_data_;
-  const moveit::core::JointModelGroup* ee_jmg_;
 
   // TODO: read in from param
 
@@ -66,7 +65,6 @@ public:
     	ROS_ERROR_STREAM_NAMED("init", "Failed to load grasp data");
     	ros::shutdown();
       }
-    ee_jmg_ = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
     // load grasp generator
     grasps_.reset( new moveit_grasps::Grasps(visual_tools_, verbose) );
@@ -75,7 +73,7 @@ public:
     depth_ = CUBOID_MIN_SIZE;
     width_ = CUBOID_MIN_SIZE;
     height_ = CUBOID_MIN_SIZE;
-    max_grasp_size_ = MODEL_T_MAX_GRASP_SIZE;
+    max_grasp_size_ = MAX_GRASP_SIZE;
     // Seed random
     srand(ros::Time::now().toSec());
 
@@ -172,7 +170,7 @@ public:
     // SHOW ROBOT GRIPPER
     std::vector<moveit_msgs::Grasp> visualized_grasp;
     visualized_grasp.push_back(possible_grasps_[50]);
-    visual_tools_->publishGrasps(visualized_grasp, ee_jmg_);
+    visual_tools_->publishGrasps(visualized_grasp, grasp_data_->ee_jmg_);
   }
 
   void generateRandomCuboid(geometry_msgs::Pose& cuboid_pose, double& l, double& w, double& h)

@@ -231,6 +231,7 @@ Features we'd like to see added to this project:
 ## Contributors
 
  - Dave Coleman, CU Boulder @davetcoleman
+ - Andy McEvoy, CU Boulder @mcevoyandy
  - Bence Magyar, PAL Robotics @bmagyar
 
 #PCL Junk
@@ -262,4 +263,4 @@ for files that need it:
 #include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>
 ```
 
-Edit `CMakeLists` per [this ROS Answer](#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>)
+Edit `CMakeLists` per [this ROS Answer](http://answers.ros.org/question/81306/catkin-cant-find-pclconfigcmake/)

@@ -227,6 +227,8 @@ bool Grasps::generateAxisGrasps(
     // -------------------------------------------------------------------------------------------------------
     // -------------------------------------------------------------------------------------------------------
     // Approach and retreat
+    // TODO:: Currently the pre/post approach/retreat are not being used. Either remove or make it robot agnostic.
+    // It currently being loaded with the assumption that z-axis is pointing away from object.
     // -------------------------------------------------------------------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
@@ -530,6 +532,8 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
 
   // Approach and retreat
   // aligned with pose (aligned with grasp pose z-axis
+  // TODO:: Currently the pre/post approach/retreat are not being used. Either remove or make it robot agnostic.
+  // It currently being loaded with the assumption that z-axis is pointing away from object.
   Eigen::Vector3d approach_vector;
   approach_vector = grasp_pose * Eigen::Vector3d::UnitZ();
   approach_vector.normalize();
