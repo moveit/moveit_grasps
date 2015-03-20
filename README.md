@@ -79,6 +79,13 @@ Within that file you can specify the following (example taken from jaco):
     # max depth of fingers - distance from finger tip to inner palm
     finger_to_palm_depth : 0.11
 
+These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
+The result should look like the following:
+![Grasp Poses Visualization](https://bytebucket.org/cuamazonchallenge/moveit_grasps/raw/6a0397bce5a309428e0fa25366e0d58015c93433/resources/moveit_grasps_poses.jpeg?token=ca124fc4d9cd8f2678a7392b3a568f7883f8ee3b)
+
+Poses Visualized: Object, Grasp, EE
+Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
+
 ## Code Usage
 
 Note: You might find the moveit_blocks.h example, discussed at the bottom of this page, most helpful.
@@ -213,6 +220,37 @@ To also test the IK grasp filtering:
 roslaunch moveit_grasps grasp_filter_test.launch
 ```
 
+#PCL Junk
+
+install pcl from source:
+```
+git clone git@github.com:PointCloudLibrary/pcl.git
+cd pcl
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make
+sudo make install
+```
+Read the output and see where it gets installed. Mine was `/usr/local/include/pcl-1.8`
+
+check if you have local include in 'LD_LIBRARY_PATH'
+```
+echo $LD_LIBRARY_PATH
+```
+
+if not, add to your `.bashrc`
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include
+```
+
+for files that need it:
+```
+#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>
+```
+
+Edit `CMakeLists` per [this ROS Answer](http://answers.ros.org/question/81306/catkin-cant-find-pclconfigcmake/)
+
 ## TODO
 
 Features we'd like to see added to this project:
@@ -231,4 +269,5 @@ Features we'd like to see added to this project:
 ## Contributors
 
  - Dave Coleman, CU Boulder @davetcoleman
+ - Andy McEvoy, CU Boulder @mcevoyandy
  - Bence Magyar, PAL Robotics @bmagyar

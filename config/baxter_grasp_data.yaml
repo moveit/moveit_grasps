@@ -17,13 +17,13 @@ left_hand:
     #desired pose from end effector to grasp - [x,y,z]
     #grasp_pose_to_eef : [-0.14, 0, 0] # NOTE: use when tip of arm is NOT left_gripper
     #grasp_pose_to_eef :  [-0.095, 0, 0] # NOTE: use when tip of arm is left_gripper. CALCULATED
-    grasp_pose_to_eef_translation :  [-0.05, 0, 0] # NOTE: use when tip of arm is left_gripper. HACK
+    grasp_pose_to_eef_translation :  [0, 0, 0] # NOTE: use when tip of arm is left_gripper. HACK
 
     #desired pose from end effector to grasp - [r, p, y]
-    grasp_pose_to_eef_rotation : [0, 1.5708, 0] # 1.5707 = PI/2
+    grasp_pose_to_eef_rotation : [0, 0, 0] # 1.5707 = PI/2
 
     # max depth of fingers (distance from finger tip to inner palm)
-    finger_to_palm_depth : 0.11
+    finger_to_palm_depth : 0.1
 
 # =====================================================
 right_hand:
@@ -42,11 +42,11 @@ right_hand:
     grasp_time_from_start : 4.0
 
     #desired pose from end effector to grasp - [x,y,z]
-    grasp_pose_to_eef_translation : [-0.207, 0, 0]
+    grasp_pose_to_eef_translation : [0, 0, -0.06]
 
     #desired pose from end effector to grasp - [r, p, y]
-    grasp_pose_to_eef_rotation : [0, 1.5708, 0] # 1.5707 = PI/2
+    grasp_pose_to_eef_rotation : [0, 0, 0] # 1.5707 = PI/2
 
     # max depth of fingers (distance from finger tip to inner palm)
-    finger_to_palm_depth : 0.11
+    finger_to_palm_depth : 0.1
 

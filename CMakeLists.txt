@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED thread system)
+find_package(PCL 1.8 REQUIRED)
 
 add_message_files(DIRECTORY msg FILES
   GraspGeneratorOptions.msg
@@ -33,9 +34,9 @@ add_action_files(DIRECTORY action FILES
 )
 
 generate_messages(DEPENDENCIES
-  geometry_msgs 
-  actionlib_msgs 
-  std_msgs 
+  geometry_msgs
+  actionlib_msgs
+  std_msgs
   moveit_msgs
 )
 
@@ -55,18 +56,22 @@ catkin_package(
   INCLUDE_DIRS include
 )
 
-## Build 
+## Build
 include_directories(
-  include 
+  include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
+
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 # Grasp Generator Library
 add_library(${PROJECT_NAME}
   src/grasps.cpp
   src/grasp_data.cpp
 )
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
@@ -74,7 +79,7 @@ target_link_libraries(${PROJECT_NAME}
 add_library(${PROJECT_NAME}_filter
   src/grasp_filter.cpp
 )
-target_link_libraries(${PROJECT_NAME}_filter 
+target_link_libraries(${PROJECT_NAME}_filter
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
@@ -86,7 +91,7 @@ target_link_libraries(${PROJECT_NAME}_filter_test
 
 # Test grasp executable
 add_executable(${PROJECT_NAME}_test src/grasps_test.cpp)
-target_link_libraries(${PROJECT_NAME}_test 
+target_link_libraries(${PROJECT_NAME}_test
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
@@ -96,12 +101,23 @@ target_link_libraries(cuboid_grasp_test
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
+# Test mesh bounding box
+add_executable(bounding_box_test src/mesh_bounding_box_test.cpp)
+target_link_libraries(bounding_box_test
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${PCL_LIBRARIES}
+)
+
+add_executable(grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
+target_link_libraries(grasp_poses_visualizer
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
 ## Install ---------------------------------------------------------------
 
 # Install libraries
-install(TARGETS 
-  ${PROJECT_NAME} 
-  ${PROJECT_NAME}_filter 
+install(TARGETS
+  ${PROJECT_NAME}
+  ${PROJECT_NAME}_filter
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
 # Install header files
@@ -112,7 +128,7 @@ install(DIRECTORY launch    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # Install executables
-install(TARGETS 
+install(TARGETS
   ${PROJECT_NAME}_test
   ${PROJECT_NAME}_filter_test
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
