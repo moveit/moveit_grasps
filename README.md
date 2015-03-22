@@ -44,6 +44,37 @@ Indigo:
 rosdep install --from-paths src --ignore-src --rosdistro indigo
 ```
 
+You will need PCL installed from source to use its latest features (untill at least ROS Jade is released):
+```
+git clone git@github.com:PointCloudLibrary/pcl.git
+cd pcl
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make
+sudo make install
+```
+Read the output and see where it gets installed. Mine was `/usr/local/include/pcl-1.8`
+
+Dheck if you have local include in 'LD_LIBRARY_PATH'
+```
+echo $LD_LIBRARY_PATH
+```
+
+if not, add to your `.bashrc`
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include
+```
+
+for files that need it:
+```
+#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>
+```
+
+Edit `CMakeLists` per [this ROS Answer](http://answers.ros.org/question/81306/catkin-cant-find-pclconfigcmake/)
+
+
+
 ## Robot-Agnostic Configuration
 
 You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/config/baxter_grasp_data.yaml). See the comments within that file for explanations. 
@@ -219,37 +250,6 @@ To also test the IK grasp filtering:
 ```
 roslaunch moveit_grasps grasp_filter_test.launch
 ```
-
-#PCL Junk
-
-install pcl from source:
-```
-git clone git@github.com:PointCloudLibrary/pcl.git
-cd pcl
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release .. 
-make
-sudo make install
-```
-Read the output and see where it gets installed. Mine was `/usr/local/include/pcl-1.8`
-
-check if you have local include in 'LD_LIBRARY_PATH'
-```
-echo $LD_LIBRARY_PATH
-```
-
-if not, add to your `.bashrc`
-```
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include
-```
-
-for files that need it:
-```
-#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>
-```
-
-Edit `CMakeLists` per [this ROS Answer](http://answers.ros.org/question/81306/catkin-cant-find-pclconfigcmake/)
 
 ## TODO
 
