@@ -161,13 +161,13 @@ public:
    * \param whether to also check ik feasibility for the pregrasp position
    * \return true on success
    */
-  bool filterGrasps(const std::vector<moveit_msgs::Grasp>& possible_grasps,
+  bool filterGraspsKinematically(const std::vector<moveit_msgs::Grasp>& possible_grasps,
                     std::vector<GraspSolution>& filtered_grasps,
                     bool filter_pregrasp,
                     const robot_model::JointModelGroup* arm_jmg);
 
   /**
-   * \brief Filter using collision checking. Run this after filterGrasps()
+   * \brief Filter using collision checking. Run this after filterGraspsKinematically()
    * \param potential grasps - invalid ones will be removed
    * \param the planning scene containing the objects to collision check with
    * \return true on success
@@ -180,9 +180,9 @@ public:
 private:
 
   /**
-   * \brief Helper for filterGrasps
+   * \brief Helper for filterGraspsKinematically
    */
-  bool filterGraspsHelper(const std::vector<moveit_msgs::Grasp>& possible_grasps,
+  bool filterGraspsKinematicallyHelper(const std::vector<moveit_msgs::Grasp>& possible_grasps,
                           std::vector<GraspSolution>& filtered_grasps,
                           bool filter_pregrasp, 
                           const robot_model::JointModelGroup* ee_jmg,
@@ -191,7 +191,7 @@ private:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  void filterGraspThread(IkThreadStruct ik_thread_struct);
+  void filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct);
 
   /**
    * \brief Helper for filterGraspsInCollision

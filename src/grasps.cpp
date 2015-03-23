@@ -652,19 +652,19 @@ bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, float dept
   // Most default type of grasp is X axis
   if (depth <= max_grasp_size ) // depth = size along x-axis
   {
-    ROS_INFO_STREAM_NAMED("cuboid_grasps","generating grasps around x-axis of cuboid");
+    ROS_INFO_STREAM_NAMED("cuboid_grasps","Generating grasps around x-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, possible_grasps);
   }
 
   if (width <= max_grasp_size ) // width = size along y-axis
   {
-    ROS_INFO_STREAM_NAMED("cuboid_grasps","generating grasps around y-axis of cuboid");
+    ROS_INFO_STREAM_NAMED("cuboid_grasps","Generating grasps around y-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, possible_grasps);
   }
 
   if (height <= max_grasp_size ) // height = size along z-axis
   {
-    ROS_INFO_STREAM_NAMED("cuboid_grasps","generating grasps around z-axis of cuboid");
+    ROS_INFO_STREAM_NAMED("cuboid_grasps","Generating grasps around z-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
   }    
     

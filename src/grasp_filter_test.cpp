@@ -182,7 +182,7 @@ public:
 
       // Filter the grasp for only the ones that are reachable
       bool filter_pregrasps = true;
-      grasp_filter_->filterGrasps(possible_grasps, filtered_grasps, filter_pregrasps, arm_jmg);
+      grasp_filter_->filterGraspsKinematically(possible_grasps, filtered_grasps, filter_pregrasps, arm_jmg);
 
       // Show all generated grasps (non-filtered)
       visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);      
