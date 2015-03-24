@@ -10,11 +10,11 @@ namespace moveit_grasps
 // Size and location for randomly generated cuboids
 static const double CUBOID_MIN_SIZE = 0.02;
 static const double CUBOID_MAX_SIZE = 0.15;
-static const double CUBOID_WORKSPACE_MIN_X = 0.01; 
-static const double CUBOID_WORKSPACE_MAX_X = 0.5;
-static const double CUBOID_WORKSPACE_MIN_Y = -0.5;
-static const double CUBOID_WORKSPACE_MAX_Y = 0.5;
-static const double CUBOID_WORKSPACE_MIN_Z = 0.0;
+static const double CUBOID_WORKSPACE_MIN_X = -1.0; 
+static const double CUBOID_WORKSPACE_MAX_X = 1.0;
+static const double CUBOID_WORKSPACE_MIN_Y = -1.0;
+static const double CUBOID_WORKSPACE_MAX_Y = 1.0;
+static const double CUBOID_WORKSPACE_MIN_Z = -1.0;
 static const double CUBOID_WORKSPACE_MAX_Z = 1.0;
 
 // TODO: verify max object size Open Hand can grasp
@@ -80,13 +80,14 @@ public:
     // Seed random
     srand(ros::Time::now().toSec());
 
-    visual_tools_->deleteAllMarkers();
 
     int completed_trials = 0;
     while(ros::ok())
     {
       ROS_INFO_STREAM_NAMED("test","\n************* \nStarting test " 
                             << completed_trials + 1 << " of " << number_of_trials << "\n*************");
+
+      visual_tools_->deleteAllMarkers();
 
       ROS_INFO_STREAM_NAMED("test", "generating random cuboid");
       generateRandomCuboid(cuboid_pose_,depth_,width_,height_);

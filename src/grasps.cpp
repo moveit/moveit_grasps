@@ -483,7 +483,7 @@ Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, d
 } 
 
 bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float depth, float width, float height, grasp_axis_t axis,
-                              const moveit_grasps::GraspData& grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
+                                      const moveit_grasps::GraspData& grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
   // create transform from object to world frame (/base_link)
   Eigen::Affine3d object_global_transform = cuboid_pose;
@@ -594,7 +594,7 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
     grasp_translation = grasp_pose * Eigen::Vector3d(grasp_points(i,0), 0, grasp_points(i,1)) - 
       Eigen::Vector3d(dx,dy,dz);
     grasp_pose.translation() += grasp_translation;    
-	    
+  
     // Visualize lines for getting gripper rotation angle
     Eigen::Vector3d cuboidCenter = cuboid_pose.translation();
     Eigen::Vector3d poseCenter = grasp_pose.translation();
@@ -603,15 +603,29 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
 
     // now rotate to point toward center of cuboid
     Eigen::Vector3d gripper_z = zAxis - poseCenter;
+    gripper_z.normalized();
     Eigen::Vector3d to_cuboid = cuboidCenter - poseCenter;
+    to_cuboid.normalized();
     Eigen::Vector3d cross_prod = gripper_z.cross(to_cuboid);
 	    
-    double dot = cross_prod.dot(yAxis);
+    for (size_t j = 0; j < 3; j++)
+    {
+      // check for possible negative zero values...
+      if (std::abs(cross_prod[j]) < 0.000001)
+        cross_prod[j] = 0;
+    }
+
+    double dot = cross_prod.dot(yAxis - poseCenter);
     double rotation_angle = acos( gripper_z.normalized().dot(to_cuboid.normalized()));
 
     // check sign of rotation angle
     if (dot < 0) 
       rotation_angle *= -1;
+
+    ROS_DEBUG_STREAM_NAMED("cuboid","");
+    ROS_DEBUG_STREAM_NAMED("cuboid","yAxis      = " << yAxis[0] << " " << yAxis[1] << " " << yAxis[2]);
+    ROS_DEBUG_STREAM_NAMED("cuboid","cross_prod = " << cross_prod[0] << " " << cross_prod[1] << " " << cross_prod[2]);
+    ROS_DEBUG_STREAM_NAMED("cuboid","yAxis . cross_prod = " << dot);
 
     grasp_pose = grasp_pose * Eigen::AngleAxisd(rotation_angle, Eigen::Vector3d::UnitY());
 
