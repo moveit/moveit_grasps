@@ -13,8 +13,8 @@
 #include <geometric_shapes/shape_operations.h>
 #include <geometric_shapes/bodies.h>
 
-#include <pcl/features/moment_of_inertia_estimation.h>
-#include <pcl/common/common_headers.h>
+//#include <pcl/features/moment_of_inertia_estimation.h>
+//#include <pcl/common/common_headers.h>
 
 #include <boost/filesystem.hpp>
 
@@ -52,7 +52,7 @@ public:
 
       // get mesh file to publish
       // TODO: grab a random mesh from the meshes directory
-      fs::path mesh_path = "file:/home/jorge/ws_picknik/src/picknik/picknik_main/meshes/products/kong_air_dog_squeakair_tennis_ball/recommended.dae";
+      fs::path mesh_path = "file:/home/andy/ros/ws_picknik/src/picknik/picknik_main/meshes/products/kong_air_dog_squeakair_tennis_ball/recommended.dae";
 
       // get random pose for mesh
       rviz_visual_tools::RandomPoseBounds bounds(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
@@ -93,123 +93,25 @@ public:
     ROS_DEBUG_STREAM_NAMED("bbox","num triangles = " << mesh_msg.triangles.size());
     ROS_DEBUG_STREAM_NAMED("bbox","num vertices = " << num_vertices);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointXYZ point;
-
-    // get vertices into point cloud for pcl magic
+    // calculate centroid and display
+    Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+    Eigen::Vector3d point = Eigen::Vector3d::Zero();
+    
     for (int i = 0; i < num_vertices; i++)
     {
-      point.x = mesh_msg.vertices[i].x;
-      point.z = mesh_msg.vertices[i].y;
-      point.y = mesh_msg.vertices[i].z;
-      cloud->points.push_back(point);
+      point << mesh_msg.vertices[i].x, mesh_msg.vertices[i].y, mesh_msg.vertices[i].z;
+      point = visual_tools_->convertPose(mesh_pose_) * point;
+      centroid += point;
     }
+    for (int i = 0; i < 3; i++)
+    {
+      centroid[i] /= num_vertices;
+    }
+    ROS_DEBUG_STREAM_NAMED("centroid","centroid = \n" << centroid);
 
-    ROS_DEBUG_STREAM_NAMED("bbox","num points in cloud = " << cloud->points.size());
-
-    // extract bounding box properties
-    ROS_DEBUG_STREAM_NAMED("bbox","starting cloud feature extractor");
-
-    pcl::MomentOfInertiaEstimation <pcl::PointXYZ> feature_extractor;
-    feature_extractor.setInputCloud(cloud);
-    feature_extractor.compute();
-
-    // Oriented BoundingBox
-    pcl::PointXYZ min_point_OBB;
-    pcl::PointXYZ max_point_OBB;
-    pcl::PointXYZ position_OBB;
-    Eigen::Matrix3f rotational_matrix_OBB;
-
-    feature_extractor.getOBB (min_point_OBB, max_point_OBB, position_OBB, rotational_matrix_OBB);
-
-    Eigen::Vector3f position (position_OBB.x, position_OBB.y, position_OBB.z);
-    Eigen::Quaternionf quat (rotational_matrix_OBB);
-
-     publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
-     			   position, rotational_matrix_OBB, min_point_OBB, max_point_OBB);
-
-     Eigen::Vector3f min_sphere (min_point_OBB.x, min_point_OBB.y, min_point_OBB.z);
-     Eigen::Vector3f max_sphere (max_point_OBB.x, max_point_OBB.y, max_point_OBB.z);
-
-    visual_tools_->publishSphere(min_sphere.cast <double> (), rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
-    visual_tools_->publishSphere(max_sphere.cast <double> (), rviz_visual_tools::RED, rviz_visual_tools::LARGE);
-
-    // Axis oriented bounding box
-     pcl::PointXYZ min_point_AABB;
-     pcl::PointXYZ max_point_AABB;
-     feature_extractor.getAABB(min_point_AABB, max_point_AABB);
-
-    Eigen::Vector3f AABB_position = Eigen::Vector3f::Zero(3);
-    Eigen::Matrix3f rotation_matrix = Eigen::Matrix3f::Identity(3,3);
-
-    // ROS_INFO_STREAM(mesh_pose_);
-    // ROS_INFO_STREAM(AABB_position);
-    // ROS_INFO_STREAM(rotation_matrix);
-    // ROS_INFO_STREAM(min_point_AABB);
-    // ROS_INFO_STREAM(max_point_AABB);
-
-    publishWireframeCuboid(visual_tools_->convertPose(mesh_pose_),
-    			   AABB_position, rotation_matrix, min_point_AABB, max_point_AABB, rviz_visual_tools::RED);
-
-
-    ROS_DEBUG_STREAM_NAMED("bbox","done extracting features");
-
-  }
-
-  void publishWireframeCuboid(const Eigen::Affine3d &pose,
-			      const Eigen::Vector3f &position,
-			      const Eigen::Matrix3f &rotation_matrix,
-			      const pcl::PointXYZ &min_point,
-			      const pcl::PointXYZ &max_point,
-			      const rviz_visual_tools::colors &color=rviz_visual_tools::BLUE) {
-    Eigen::Vector3f p1 (min_point.x, min_point.y, min_point.z);
-    Eigen::Vector3f p2 (min_point.x, min_point.y, max_point.z);
-    Eigen::Vector3f p3 (max_point.x, min_point.y, max_point.z);
-    Eigen::Vector3f p4 (max_point.x, min_point.y, min_point.z);
-    Eigen::Vector3f p5 (min_point.x, max_point.y, min_point.z);
-    Eigen::Vector3f p6 (min_point.x, max_point.y, max_point.z);
-    Eigen::Vector3f p7 (max_point.x, max_point.y, max_point.z);
-    Eigen::Vector3f p8 (max_point.x, max_point.y, min_point.z);
-
-    p1 = rotation_matrix * p1 + position;
-    p2 = rotation_matrix * p2 + position;
-    p3 = rotation_matrix * p3 + position;
-    p4 = rotation_matrix * p4 + position;
-    p5 = rotation_matrix * p5 + position;
-    p6 = rotation_matrix * p6 + position;
-    p7 = rotation_matrix * p7 + position;
-    p8 = rotation_matrix * p8 + position;
-
-    Eigen::Vector3d pt1 = p1.cast <double> ();
-    Eigen::Vector3d pt2 = p2.cast <double> ();
-    Eigen::Vector3d pt3 = p3.cast <double> ();
-    Eigen::Vector3d pt4 = p4.cast <double> ();
-    Eigen::Vector3d pt5 = p5.cast <double> ();
-    Eigen::Vector3d pt6 = p6.cast <double> ();
-    Eigen::Vector3d pt7 = p7.cast <double> ();
-    Eigen::Vector3d pt8 = p8.cast <double> ();
-
-    pt1 = pose * pt1;
-    pt2 = pose * pt2;
-    pt3 = pose * pt3;
-    pt4 = pose * pt4;
-    pt5 = pose * pt5;
-    pt6 = pose * pt6;
-    pt7 = pose * pt7;
-    pt8 = pose * pt8;
-
-    visual_tools_->publishLine(pt1, pt2, color);
-    visual_tools_->publishLine(pt1, pt4, color);
-    visual_tools_->publishLine(pt1, pt5, color);
-    visual_tools_->publishLine(pt5, pt6, color);
-    visual_tools_->publishLine(pt5, pt8, color);
-    visual_tools_->publishLine(pt2, pt6, color);
-    visual_tools_->publishLine(pt6, pt7, color);
-    visual_tools_->publishLine(pt7, pt8, color);
-    visual_tools_->publishLine(pt2, pt3, color);
-    visual_tools_->publishLine(pt4, pt8, color);
-    visual_tools_->publishLine(pt3, pt4, color);
-    visual_tools_->publishLine(pt3, pt7, color);
+    visual_tools_->publishSphere(centroid, rviz_visual_tools::PINK, 0.01);
+    
+    
   }
 
   double fRand(double fMin, double fMax)
