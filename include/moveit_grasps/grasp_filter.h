@@ -158,35 +158,43 @@ public:
    * \brief Return grasps that are kinematically feasible
    * \param possible_grasps - all possible grasps that this will test
    * \param filtered_grasps - result - only the grasps that are kinematically feasible
-   * \param whether to also check ik feasibility for the pregrasp position
+   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param arm_jmg - the arm to solve the IK problem on
+   * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
    * \return true on success
    */
   bool filterGraspsKinematically(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                    std::vector<GraspSolution>& filtered_grasps,
-                    bool filter_pregrasp,
-                    const robot_model::JointModelGroup* arm_jmg);
+                                 std::vector<GraspSolution>& filtered_grasps,
+                                 bool filter_pregrasp,
+                                 const robot_model::JointModelGroup* arm_jmg,
+                                 bool verbose_if_failed = true);
 
   /**
    * \brief Filter using collision checking. Run this after filterGraspsKinematically()
    * \param potential grasps - invalid ones will be removed
    * \param the planning scene containing the objects to collision check with
+   * \param arm_jmg - the arm to solve the IK problem on
+   * \param robot_state -
+   * \param verbose - show debug markers and logging when filtering grasps
+   * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
    * \return true on success
    */
   bool filterGraspsInCollision(std::vector<GraspSolution>& possible_grasps,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                const robot_model::JointModelGroup* arm_jmg,
                                robot_state::RobotStatePtr robot_state,
-                               bool verbose = false);
+                               bool verbose = false,
+                               bool verbose_if_failed = true);
 private:
 
   /**
    * \brief Helper for filterGraspsKinematically
    */
   bool filterGraspsKinematicallyHelper(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                          std::vector<GraspSolution>& filtered_grasps,
-                          bool filter_pregrasp, 
-                          const robot_model::JointModelGroup* ee_jmg,
-                          const robot_model::JointModelGroup* arm_jmg, bool verbose);
+                                       std::vector<GraspSolution>& filtered_grasps,
+                                       bool filter_pregrasp,
+                                       const robot_model::JointModelGroup* ee_jmg,
+                                       const robot_model::JointModelGroup* arm_jmg, bool verbose);
 
   /**
    * \brief Thread for checking part of the possible grasps list

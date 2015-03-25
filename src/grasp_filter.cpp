@@ -49,6 +49,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
 {
   // Make a copy of the robot state so that we are sure outside influence does not break our grasp filter
   robot_state_.reset(new moveit::core::RobotState(*robot_state));
+  robot_state_->update(); // make sure transforms are computed
 
   ROS_DEBUG_STREAM_NAMED("filter","Loaded grasp filter");
 }
@@ -103,9 +104,10 @@ bool GraspFilter::chooseBestGrasp( std::vector<GraspSolution>& filtered_grasps,
 }
 
 bool GraspFilter::filterGraspsKinematically(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                               std::vector<GraspSolution>& filtered_grasps,
-                               bool filter_pregrasp,
-                               const robot_model::JointModelGroup* arm_jmg)
+                                            std::vector<GraspSolution>& filtered_grasps,
+                                            bool filter_pregrasp,
+                                            const robot_model::JointModelGroup* arm_jmg,
+                                            bool verbose_if_failed)
 {
   // -----------------------------------------------------------------------------------------------
   // Error check
@@ -136,7 +138,7 @@ bool GraspFilter::filterGraspsKinematically(const std::vector<moveit_msgs::Grasp
   {
     ROS_ERROR_STREAM_NAMED("grasp_filter","More than one end effectors attached to this arm");
     return false;
-  }  
+  }
   const robot_model::JointModelGroup* ee_jmg = arm_jmg->getParentModel().getJointModelGroup(arm_jmg->getAttachedEndEffectorNames()[0]);
 
   // ----------------------------------------------------------------------------------------
@@ -150,18 +152,21 @@ bool GraspFilter::filterGraspsKinematically(const std::vector<moveit_msgs::Grasp
   if (!result || filtered_grasps.size() == 0)
   {
     ROS_ERROR_STREAM_NAMED("filter","IK filter unable to find any valid grasps! Re-running in verbose mode");
-    verbose = true;
-    result = filterGraspsKinematicallyHelper(possible_grasps, filtered_grasps, filter_pregrasp, ee_jmg, arm_jmg, verbose);
+    if (verbose_if_failed)
+    {
+      verbose = true;
+      result = filterGraspsKinematicallyHelper(possible_grasps, filtered_grasps, filter_pregrasp, ee_jmg, arm_jmg, verbose);
+    }
   }
   return result;
 }
 
 
 bool GraspFilter::filterGraspsKinematicallyHelper(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                                     std::vector<GraspSolution>& filtered_grasps,
-                                     bool filter_pregrasp, 
-                                     const robot_model::JointModelGroup* ee_jmg,
-                                     const robot_model::JointModelGroup* arm_jmg, bool verbose)                                     
+                                                  std::vector<GraspSolution>& filtered_grasps,
+                                                  bool filter_pregrasp,
+                                                  const robot_model::JointModelGroup* ee_jmg,
+                                                  const robot_model::JointModelGroup* arm_jmg, bool verbose)
 {
   // -----------------------------------------------------------------------------------------------
   // how many cores does this computer have and how many do we need?
@@ -214,8 +219,8 @@ bool GraspFilter::filterGraspsKinematicallyHelper(const std::vector<moveit_msgs:
     }
 
     //pose = getGlobalLinkTransform(lm).inverse() * pose;
-    ROS_WARN_STREAM_NAMED("temp","remove this update call");
-    robot_state_->update();// TODO remove?
+    //ROS_WARN_STREAM_NAMED("temp","remove this update call");
+    //robot_state_->update();// TODO remove?
     link_transform = robot_state_->getGlobalLinkTransform(lm).inverse();
   }
 
@@ -243,7 +248,7 @@ bool GraspFilter::filterGraspsKinematicallyHelper(const std::vector<moveit_msgs:
 
     IkThreadStruct tc(possible_grasps, filtered_grasps, link_transform, grasps_id_start,
                       grasps_id_end, kin_solvers_[arm_jmg->getName()][i], filter_pregrasp, ee_jmg,
-                      solver_timeout_, 
+                      solver_timeout_,
                       &lock, verbose, i);
     bgroup.create_thread( boost::bind( &GraspFilter::filterGraspKinematicallyThread, this, tc ) );
   }
@@ -295,7 +300,7 @@ void GraspFilter::filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct
     {
       ik_pose.header.frame_id = ik_thread_struct.kin_solver_->getBaseFrame();
       //std::cout << "after link transform \n" << ik_pose << std::endl;
-      visual_tools_->publishArrow(ik_pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR, 0.1);
+      visual_tools_->publishZArrow(ik_pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR, 0.1);
 
       //   std::cout << std::endl;
       //   std::cout << "-------------------------------------------------------" << std::endl;
@@ -309,8 +314,8 @@ void GraspFilter::filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct
     }
 
     // Test it with IK
-    ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_, 
-                                                   grasp_ik_solution, error_code);      
+    ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_,
+                                                   grasp_ik_solution, error_code);
 
     // Results
     if( error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS )
@@ -334,7 +339,7 @@ void GraspFilter::filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct
         tf::poseEigenToMsg(eigen_pose, ik_pose.pose);
 
         // Test it with IK
-        ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_, pregrasp_ik_solution, error_code);          
+        ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_, pregrasp_ik_solution, error_code);
 
         // Results
         if( error_code.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION )
@@ -391,7 +396,7 @@ bool GraspFilter::filterGraspsInCollision(std::vector<GraspSolution>& possible_g
                                           planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                           const robot_model::JointModelGroup* arm_jmg,
                                           robot_state::RobotStatePtr robot_state,
-                                          bool verbose)
+                                          bool verbose, bool verbose_if_failed)
 {
   // Error check
   if (possible_grasps.size() == 0)
@@ -413,7 +418,7 @@ bool GraspFilter::filterGraspsInCollision(std::vector<GraspSolution>& possible_g
   assert(original_possible_grasps.size() == original_size); // make sure the copy worked
 
   // Check if enough passed. If not, go to debug mode if we weren't already in verbose mode
-  if (!possible_grasps.size() && !verbose)
+  if (!possible_grasps.size() && verbose_if_failed)
   {
     std::cout << std::endl;
     std::cout << std::endl;

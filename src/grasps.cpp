@@ -482,7 +482,7 @@ Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, d
   return points;
 } 
 
-bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float depth, float width, float height, grasp_axis_t axis,
+bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, grasp_axis_t axis,
                                       const moveit_grasps::GraspData& grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
   // create transform from object to world frame (/base_link)
@@ -631,10 +631,12 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
 
     if (verbose_)
     {
+      // collect all markers before publishing to rviz
+      visual_tools_->enableBatchPublishing(true);
+
       // show generated grasp pose
       visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
       visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01);
-      ros::Duration(0.05).sleep();
     }
 
     // translate and rotate gripper to match standard orientation
@@ -653,32 +655,36 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float 
       //visual_tools_->publishYArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, 0.05);
       visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
       visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
+
+      // Send markers to Rviz
+      visual_tools_->triggerBatchPublishAndDisable();
       ros::Duration(0.05).sleep();
     }
   }
 }
 
-bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, float depth, float width,float height, 
-                                  float max_grasp_size, const moveit_grasps::GraspData& grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
+bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
+                                  double max_grasp_size, const moveit_grasps::GraspData& grasp_data, 
+                                  std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
   // generate grasps over axes that aren't too wide to grip with Open Hand
   
   // Most default type of grasp is X axis
   if (depth <= max_grasp_size ) // depth = size along x-axis
   {
-    ROS_INFO_STREAM_NAMED("cuboid_grasps","Generating grasps around x-axis of cuboid");
+    ROS_DEBUG_STREAM_NAMED("cuboid_grasps","Generating grasps around x-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, possible_grasps);
   }
 
   if (width <= max_grasp_size ) // width = size along y-axis
   {
-    ROS_INFO_STREAM_NAMED("cuboid_grasps","Generating grasps around y-axis of cuboid");
+    ROS_DEBUG_STREAM_NAMED("cuboid_grasps","Generating grasps around y-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, possible_grasps);
   }
 
   if (height <= max_grasp_size ) // height = size along z-axis
   {
-    ROS_INFO_STREAM_NAMED("cuboid_grasps","Generating grasps around z-axis of cuboid");
+    ROS_DEBUG_STREAM_NAMED("cuboid_grasps","Generating grasps around z-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
   }    
     

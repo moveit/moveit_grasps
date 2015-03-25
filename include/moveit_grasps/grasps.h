@@ -150,8 +150,8 @@ public:
    * \param possible_grasps possible grasps generated
    * \return true if successful
    */
-  bool generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, float depth, float width,float height, 
-                            float max_grasp_size, const moveit_grasps::GraspData& grasp_data, 
+  bool generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
+                            double max_grasp_size, const moveit_grasps::GraspData& grasp_data, 
                             std::vector<moveit_msgs::Grasp>& possible_grasps);
   
   /**
@@ -165,7 +165,7 @@ public:
    * \param possible_grasps possible grasps generated
    * \return true if successful
    */
-  bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, float depth, float width, float height, 
+  bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
                                 grasp_axis_t axis, const moveit_grasps::GraspData& grasp_data, 
                                 std::vector<moveit_msgs::Grasp>& possible_grasps);
 
