@@ -17,6 +17,7 @@
 //#include <pcl/common/common_headers.h>
 
 #include <boost/filesystem.hpp>
+#include <Eigen/Eigenvalues>
 
 namespace fs = boost::filesystem;
 
@@ -93,24 +94,52 @@ public:
     ROS_DEBUG_STREAM_NAMED("bbox","num triangles = " << mesh_msg.triangles.size());
     ROS_DEBUG_STREAM_NAMED("bbox","num vertices = " << num_vertices);
 
-    // calculate centroid and display
+    // calculate centroid and moments of inertia
     Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
     Eigen::Vector3d point = Eigen::Vector3d::Zero();
-    
+    double Ixx, Iyy, Izz, Ixy, Ixz, Iyz;
+    Ixx = 0; Iyy = 0; Izz = 0; Ixy = 0; Ixz = 0; Iyz = 0;
+
     for (int i = 0; i < num_vertices; i++)
     {
+      // centroid sum
       point << mesh_msg.vertices[i].x, mesh_msg.vertices[i].y, mesh_msg.vertices[i].z;
       point = visual_tools_->convertPose(mesh_pose_) * point;
       centroid += point;
+
+      // moments of inertia sum
+      Ixx += point[1] * point[1] + point[2] * point[2];
+      Iyy += point[0] * point[0] + point[2] * point[2];
+      Izz += point[0] * point[0] + point[1] * point[1];
+      Ixy += point[0] * point[1];
+      Ixz += point[0] * point[2];
+      Iyz += point[1] * point[2];
+
     }
+    
+    // final centroid calculation
     for (int i = 0; i < 3; i++)
     {
       centroid[i] /= num_vertices;
     }
     ROS_DEBUG_STREAM_NAMED("centroid","centroid = \n" << centroid);
-
     visual_tools_->publishSphere(centroid, rviz_visual_tools::PINK, 0.01);
+
+    // Solve for principle axes of inertia
+    Eigen::Matrix3d inertia_axis_aligned;
+
+    inertia_axis_aligned.row(0) <<  Ixx, -Ixy, -Ixz;
+    inertia_axis_aligned.row(1) << -Ixy,  Iyy, -Iyz;
+    inertia_axis_aligned.row(2) << -Ixz, -Iyz,  Izz;    
+
+    ROS_DEBUG_STREAM_NAMED("inertia","inertia_axis_aligned = \n" << inertia_axis_aligned);
+
+    Eigen::EigenSolver<Eigen::MatrixXd> es(inertia_axis_aligned);
     
+    ROS_DEBUG_STREAM_NAMED("inertia","eigenvalues = \n" << es.eigenvalues());
+    ROS_DEBUG_STREAM_NAMED("inertia","eigenvectors = \n" << es.eigenvectors());
+
+
     
   }
 
