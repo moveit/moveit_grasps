@@ -57,7 +57,7 @@ private:
   ros::NodeHandle nh_;
 
   // Grasp generator
-  moveit_grasps::GraspsPtr grasps_;
+  moveit_grasps::GraspsPtr grasp_generator_;
 
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
@@ -94,7 +94,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasps_.reset( new moveit_grasps::Grasps(visual_tools_, true) );
+    grasp_generator_.reset( new moveit_grasps::Grasps(visual_tools_, true) );
 
     geometry_msgs::Pose pose;
     visual_tools_->generateEmptyPose(pose);
@@ -140,10 +140,12 @@ public:
       possible_grasps.clear();
 
       // Generate set of grasps for one object
-      //grasps_->generateBlockGrasps( visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
-      grasps_->generateAxisGrasps( visual_tools_->convertPose(object_pose), moveit_grasps::Y_AXIS, moveit_grasps::DOWN, 
-                                   moveit_grasps::HALF, 0, grasp_data_, possible_grasps);
-                                   
+      double depth = 0.05;
+      double width = 0.05;
+      double height = 0.05;
+      double max_grasp_size = 0.10; // TODO: verify max object size Open Hand can grasp
+      grasp_generator_->generateCuboidGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
+                                              grasp_data_, possible_grasps);
 
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);

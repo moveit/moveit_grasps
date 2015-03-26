@@ -458,6 +458,9 @@ bool GraspFilter::filterGraspsInCollisionHelper(std::vector<GraspSolution>& poss
   for (std::vector<GraspSolution>::iterator grasp_it = possible_grasps.begin();
        grasp_it != possible_grasps.end(); /*it++*/)
   {
+    if (!ros::ok())
+      return false;
+
     // -----------------------------------------------------------------------------------
     // Check grasp ik solution
     robot_state_->setJointGroupPositions(arm_jmg, grasp_it->grasp_ik_solution_);

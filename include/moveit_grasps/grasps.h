@@ -103,44 +103,6 @@ public:
   Grasps(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
   /**
-   * \brief Destructor
-   */
-  ~Grasps();
-
-  /**
-   * \brief Create all possible grasp positions for a block
-   * \param pose of block, where vector arrow is parallel to table plane
-   * \param data describing end effector
-   * \param resulting generated possible grasps
-   * \return true if successful
-   */ 
-  bool generateBlockGrasps(const Eigen::Affine3d& object_pose, const GraspData& grasp_data,
-    std::vector<moveit_msgs::Grasp>& possible_grasps);
-
-  /**
-   * \brief Create grasp positions in one axis around a single pose
-   *        Note: to visualize these grasps use moveit_visual_tools.publishAnimatedGrasps() function or
-   *        moveit_visual_tools.publishIKSolutions() with the resulting data
-   * \param pose - center point of object to be grasped
-   * \param axis - axis relative to object pose to rotate generated grasps around
-   * \param direction - a parallel gripper is typically symetric such that it can perform the same grasp 
-   *                    180 degree around. this option allows to generate a flipped grasp pose
-   * \param rotation - amount to rotate around the object - 180 or 360 degrees
-   * \param hand_roll - amount in radians to roll wrist with respect to center point of object during grasp. use 0 by default
-   * \param grasp_data - parameters specific to the robot geometry
-   * \param possible_grasps - the output solution vector of possible grasps to attempt. ok if pre-populated
-   * \return true if successful
-   */
-  bool generateAxisGrasps(
-    const Eigen::Affine3d& object_pose,
-    grasp_axis_t axis,
-    grasp_direction_t direction,
-    grasp_rotation_t rotation,
-    double hand_roll,
-    const GraspData& grasp_data,
-    std::vector<moveit_msgs::Grasp>& possible_grasps);
-
-  /**
    * \brief Create possible grasp positions around a cuboid 
    * \param cuboid_pose pose of cuboid 
    * \param depth length of cuboid along local x-axis

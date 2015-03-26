@@ -1,4 +1,4 @@
-base_link: 'base'
+base_link: 'world'
 # =====================================================
 left_hand:
     end_effector_name: 'left_hand'  #ee group name
