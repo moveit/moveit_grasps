@@ -129,7 +129,6 @@ public:
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/end_effector_marker", 
                                                                    planning_scene_monitor_));
     visual_tools_->setFloorToBaseHeight(-0.9);
-    visual_tools_->deleteAllMarkers();
     visual_tools_->loadTrajectoryPub();
     visual_tools_->loadRobotStatePub();
     visual_tools_->loadSharedRobotState();
@@ -158,7 +157,6 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
-    geometry_msgs::Pose object_pose;
     std::vector<GraspCandidatePtr> candidate_grasps;
 
     const moveit::core::JointModelGroup* ee_jmg = robot_state->getRobotModel()->getJointModelGroup(grasp_data_.ee_group_name_);
@@ -169,24 +167,24 @@ public:
       if(!ros::ok())
         break;
 
+      // Clear markers
+      visual_tools_->deleteAllMarkers();
+
       ROS_INFO_STREAM_NAMED("test","Adding random object " << i+1 << " of " << num_tests);
 
-      // Remove randomness when we are only running one test
-      if (num_tests == 1)
-        generateTestObject(object_pose);
-      else
-        generateRandomObject(object_pose);
-
-      // Show the block
-      visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
+      // Generate random cuboid
+      geometry_msgs::Pose object_pose;
+      double depth;
+      double width;
+      double height;
+      rviz_visual_tools::RandomPoseBounds pose_bounds(0.2, 0.5, 0, 0.5, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
+      visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
+      visual_tools_->publishCuboid(object_pose, depth, width, height);
 
       // Generate set of grasps for one object
       ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
       std::vector<moveit_msgs::Grasp> possible_grasps;
-      double depth = 0.05;
-      double width = 0.05;
-      double height = 0.05;
-      double max_grasp_size = 0.10; // TODO: verify max object size Open Hand can grasp
+      double max_grasp_size = 0.10; // TODO: verify max object size that can be grasped
       grasp_generator_->generateCuboidGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
                                               grasp_data_, possible_grasps);
 
@@ -218,8 +216,9 @@ public:
         new_point.positions = candidate_grasps[i]->grasp_ik_solution_;
         ik_solutions.push_back(new_point);
       }
-      visual_tools_->publishIKSolutions(ik_solutions, planning_group_name_, 0.25);
-    }
+      double animation_speed = 0.1;
+      visual_tools_->publishIKSolutions(ik_solutions, planning_group_name_, animation_speed);
+    } // for each trial
 
 
   }
@@ -263,7 +262,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-  int num_tests = 1;
+  int num_tests = 10;
 
   ros::init(argc, argv, "grasp_generator_test");
 

@@ -7,16 +7,6 @@
 namespace moveit_grasps
 {
 
-// Size and location for randomly generated cuboids
-static const double CUBOID_MIN_SIZE = 0.02;
-static const double CUBOID_MAX_SIZE = 0.15;
-static const double CUBOID_WORKSPACE_MIN_X = -1.0; 
-static const double CUBOID_WORKSPACE_MAX_X = 1.0;
-static const double CUBOID_WORKSPACE_MIN_Y = -1.0;
-static const double CUBOID_WORKSPACE_MAX_Y = 1.0;
-static const double CUBOID_WORKSPACE_MIN_Z = -1.0;
-static const double CUBOID_WORKSPACE_MAX_Z = 1.0;
-
 // TODO: verify max object size Open Hand can grasp
 static const double MODEL_T_MAX_GRASP_SIZE = 0.10;
 
@@ -58,7 +48,6 @@ public:
 
     // set up rviz
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base","/rviz_visual_tools"));
-    visual_tools_->setMuted(false);
     visual_tools_->loadMarkerPub();
 
     // load grasp data 
@@ -73,9 +62,6 @@ public:
     grasps_.reset( new moveit_grasps::Grasps(visual_tools_, verbose) );
 
     // initialize cuboid size
-    depth_ = CUBOID_MIN_SIZE;
-    width_ = CUBOID_MIN_SIZE;
-    height_ = CUBOID_MIN_SIZE;
     max_grasp_size_ = MODEL_T_MAX_GRASP_SIZE;
     // Seed random
     srand(ros::Time::now().toSec());
@@ -90,7 +76,7 @@ public:
       visual_tools_->deleteAllMarkers();
 
       ROS_INFO_STREAM_NAMED("test", "generating random cuboid");
-      generateRandomCuboid(cuboid_pose_,depth_,width_,height_);
+      visual_tools_->generateRandomCuboid(cuboid_pose_,depth_,width_,height_);
 
       visual_tools_->publishCuboid(cuboid_pose_,depth_,width_,height_);
       visual_tools_->publishAxis(cuboid_pose_);
@@ -132,29 +118,6 @@ public:
 	visual_tools_->publishEEMarkers(pose, ee_jmg_, rviz_visual_tools::GREEN, "test_eef");
 	ros::Duration(1.0).sleep();
       }
-  }
-
-  void generateRandomCuboid(geometry_msgs::Pose& cuboid_pose, double& l, double& w, double& h)
-  {
-    // Size
-    l = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
-    w = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
-    h = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
-    ROS_INFO_STREAM_NAMED("random_cuboid","Size = " << l << ", "<< w << ", " << h);
-
-    // Position
-    // Values chosen to be within shelf boundary for Amazon pick & place challenge
-    // TODO: get right values
-    rviz_visual_tools::RandomPoseBounds pose_bounds(CUBOID_WORKSPACE_MIN_X, CUBOID_WORKSPACE_MAX_X, 
-                                                    CUBOID_WORKSPACE_MIN_Y, CUBOID_WORKSPACE_MAX_Y, 
-                                                    CUBOID_WORKSPACE_MIN_Z, CUBOID_WORKSPACE_MAX_Z);
-    // Orientation 
-    visual_tools_->generateRandomPose(cuboid_pose, pose_bounds);
-
-    ROS_INFO_STREAM_NAMED("random_cuboid","Position = " << cuboid_pose.position.x << ", " << 
-    			   cuboid_pose.position.y << ", " << cuboid_pose.position.z);
-    ROS_INFO_STREAM_NAMED("random_cuboid","Quaternion = " << cuboid_pose.orientation.x << ", " <<
-			   cuboid_pose.orientation.y << ", " << cuboid_pose.orientation.z);
   }
 
   double fRand(double fMin, double fMax) 

@@ -461,6 +461,8 @@ bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double dep
     ROS_DEBUG_STREAM_NAMED("cuboid_grasps","Generating grasps around z-axis of cuboid");
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
   }    
+
+  ROS_INFO_STREAM_NAMED("grasp_generator","Generated " << possible_grasps.size() << " grasps");
     
   // Visualize animated grasps that have been generated
   double animation_speed = 0.0025;
