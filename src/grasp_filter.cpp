@@ -43,6 +43,9 @@
 // Conversions
 #include <eigen_conversions/eigen_msg.h>
 
+// Parameter loading
+#include <rviz_visual_tools/ros_param_utilities.h>
+
 namespace moveit_grasps
 {
 
@@ -50,10 +53,18 @@ namespace moveit_grasps
 GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
                           moveit_visual_tools::MoveItVisualToolsPtr& visual_tools )
   : visual_tools_(visual_tools)
+  , nh_("~/filter")
 {
   // Make a copy of the robot state so that we are sure outside influence does not break our grasp filter
   robot_state_.reset(new moveit::core::RobotState(*robot_state));
   robot_state_->update(); // make sure transforms are computed
+
+  // Load visulization settings
+  const std::string parent_name = "filter"; // for namespacing logging messages
+  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
+  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
+  rviz_visual_tools::getBoolParameter(parent_name, nh_, "collision_verbose", collision_verbose_);
+
 
   ROS_DEBUG_STREAM_NAMED("filter","Loaded grasp filter");
 }
@@ -69,18 +80,25 @@ std::vector<GraspCandidatePtr> GraspFilter::convertToGraspCandidatePtrs(const st
   return candidates;
 }
 
-std::size_t GraspFilter::filterGraspsKinematically(std::vector<GraspCandidatePtr>& candidate_grasps,
-                                                   const robot_model::JointModelGroup* arm_jmg,
-                                                   bool filter_pregrasp,
-                                                   bool verbose, bool verbose_if_failed)
+std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                      const robot_model::JointModelGroup* arm_jmg,
+                                      bool filter_pregrasp,
+                                      bool verbose, bool verbose_if_failed, bool collision_verbose)
 {
   // -----------------------------------------------------------------------------------------------
   // Error check
-  if( candidate_grasps.empty() )
+  if( grasp_candidates.empty() )
   {
     ROS_ERROR_NAMED("filter","Unable to filter grasps because vector is empty");
     return false;
   }
+  if (!filter_pregrasp)
+    ROS_WARN_STREAM_NAMED("filter","Not filtering pre-grasp - GraspCandidate may have bad data");
+
+  // Override verbose settings with yaml settings if necessary
+  if (collision_verbose_)
+    collision_verbose = collision_verbose_;
 
   // -----------------------------------------------------------------------------------------------
   // Get the solver timeout from kinematics.yaml
@@ -107,38 +125,59 @@ std::size_t GraspFilter::filterGraspsKinematically(std::vector<GraspCandidatePtr
   const robot_model::JointModelGroup* ee_jmg = arm_jmg->getParentModel().getJointModelGroup(arm_jmg->getAttachedEndEffectorNames()[0]);
 
   // Try to filter grasps not in verbose mode
-  std::size_t remaining_grasps = filterGraspsKinematicallyHelper(candidate_grasps, ee_jmg, arm_jmg, filter_pregrasp, verbose);
+  std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, ee_jmg, arm_jmg, filter_pregrasp, verbose, collision_verbose);
   if (remaining_grasps == 0)
   {
     ROS_ERROR_STREAM_NAMED("filter","IK filter unable to find any valid grasps! Re-running in verbose mode");
     if (verbose_if_failed)
     {
       verbose = true;
-      remaining_grasps = filterGraspsKinematicallyHelper(candidate_grasps, ee_jmg, arm_jmg, filter_pregrasp, verbose);
+      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, ee_jmg, arm_jmg, filter_pregrasp, verbose, collision_verbose);
     }
   }
 
   // Visualize valid grasps as arrows with cartesian path as well
-  bool show_cartesian_path = false;
-  ROS_DEBUG_STREAM_NAMED("filter.show_ik_filtered_grasps", "Showing ik filtered grasps");
-  ROS_DEBUG_STREAM_NAMED("filter.show_ik_filtered_grasps",
-                         (visualizeGrasps(candidate_grasps, arm_jmg, show_cartesian_path) ? "Done" : "Failed"));
+  if (show_filtered_grasps_)
+  {
+    ROS_INFO_STREAM_NAMED("filter", "Showing filtered grasps");
+    visualizeGrasps(grasp_candidates, arm_jmg);
+  }
+
+  // Visualize valid grasp as arm positions
+  if (show_filtered_arm_solutions_)
+  {
+    double animation_speed = 0.25;
+    ROS_INFO_STREAM_NAMED("filter", "Showing filtered arm solutions");
+    visualizeIKSolutions(grasp_candidates, arm_jmg, animation_speed);
+  }
 
   return remaining_grasps;
 }
 
 
-std::size_t GraspFilter::filterGraspsKinematicallyHelper(std::vector<GraspCandidatePtr>& candidate_grasps,
-                                                         const robot_model::JointModelGroup* ee_jmg,
-                                                         const robot_model::JointModelGroup* arm_jmg,
-                                                         bool filter_pregrasp,
-                                                         bool verbose)
+std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                            planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                            const robot_model::JointModelGroup* ee_jmg,
+                                            const robot_model::JointModelGroup* arm_jmg,
+                                            bool filter_pregrasp,
+                                            bool verbose, bool collision_verbose)
 {
   // -----------------------------------------------------------------------------------------------
-  // how many cores does this computer have and how many do we need?
+  // Setup collision checking
+
+  // Copy planning scene that is locked
+  planning_scene::PlanningScenePtr cloned_scene;
+  {
+    planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
+    cloned_scene = planning_scene::PlanningScene::clone(scene);
+  }
+  *robot_state_ = cloned_scene->getCurrentState();
+
+  // -----------------------------------------------------------------------------------------------
+  // Choose Number of cores
   std::size_t num_threads = boost::thread::hardware_concurrency();
-  if( num_threads > candidate_grasps.size() )
-    num_threads = candidate_grasps.size();
+  if( num_threads > grasp_candidates.size() )
+    num_threads = grasp_candidates.size();
 
   // Debug
   if(verbose)
@@ -199,7 +238,7 @@ std::size_t GraspFilter::filterGraspsKinematicallyHelper(std::vector<GraspCandid
   boost::thread_group bgroup; // create a group of threads
 
   // split up the work between threads
-  double num_grasps_per_thread = double(candidate_grasps.size()) / num_threads;
+  double num_grasps_per_thread = double(grasp_candidates.size()) / num_threads;
   int grasps_id_start;
   int grasps_id_end = 0;
 
@@ -207,19 +246,25 @@ std::size_t GraspFilter::filterGraspsKinematicallyHelper(std::vector<GraspCandid
   {
     grasps_id_start = grasps_id_end;
     grasps_id_end = ceil(num_grasps_per_thread*(thread_id+1));
-    if( grasps_id_end >= candidate_grasps.size() )
-      grasps_id_end = candidate_grasps.size();
+    if( grasps_id_end >= grasp_candidates.size() )
+      grasps_id_end = grasp_candidates.size();
     //ROS_INFO_STREAM_NAMED("filter","low " << grasps_id_start << " high " << grasps_id_end);
 
-    IkThreadStruct tc(candidate_grasps, link_transform, grasps_id_start,
-                      grasps_id_end,
-                      kin_solvers_[arm_jmg->getName()][thread_id],
-                      ee_jmg,
-                      solver_timeout_,
-                      filter_pregrasp,
-                      verbose,
-                      thread_id);
-    bgroup.create_thread( boost::bind( &GraspFilter::filterGraspKinematicallyThread, this, tc ) );
+    // Create the data to send to each thread
+    IkThreadStruct thread_struct(grasp_candidates,
+                                 cloned_scene,
+                                 link_transform,
+                                 grasps_id_start,
+                                 grasps_id_end,
+                                 kin_solvers_[arm_jmg->getName()][thread_id],
+                                 ee_jmg,
+                                 arm_jmg,
+                                 solver_timeout_,
+                                 filter_pregrasp,
+                                 verbose,
+                                 collision_verbose,
+                                 thread_id);
+    bgroup.create_thread( boost::bind( &GraspFilter::filterGraspsThread, this, thread_struct ) );
   }
 
   ROS_DEBUG_STREAM_NAMED("filter","Waiting to join " << num_threads << " ik threads...");
@@ -227,32 +272,58 @@ std::size_t GraspFilter::filterGraspsKinematicallyHelper(std::vector<GraspCandid
 
   // Count number of grasps remaining
   std::size_t remaining_grasps = 0;
-  for (std::size_t i = 0; i < candidate_grasps.size(); ++i)
+  std::size_t grasp_filtered_by_ik = 0;
+  std::size_t grasp_filtered_by_collision = 0;
+  std::size_t pregrasp_filtered_by_ik = 0;
+  std::size_t pregrasp_filtered_by_collision = 0;
+
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    if (candidate_grasps[i]->validated_by_ik_)
+    if (grasp_candidates[i]->grasp_filtered_by_ik_)
+      grasp_filtered_by_ik++;
+    if (grasp_candidates[i]->grasp_filtered_by_collision_)
+      grasp_filtered_by_collision++;
+    if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
+      pregrasp_filtered_by_ik++;
+    if (grasp_candidates[i]->pregrasp_filtered_by_collision_)
+      pregrasp_filtered_by_collision++;
+    if (grasp_candidates[i]->valid_)
       remaining_grasps++;
   }
 
-  ROS_INFO_STREAM_NAMED("filter", "Grasp filter complete, found " << remaining_grasps << " IK solutions out of " <<
-                        candidate_grasps.size() );
+  if (remaining_grasps +
+      grasp_filtered_by_ik +
+      grasp_filtered_by_collision +
+      pregrasp_filtered_by_ik +
+      pregrasp_filtered_by_collision != grasp_candidates.size())
+    ROS_ERROR_STREAM_NAMED("filter","Logged filter reasons do not add up to total number of grasps. Internal error.");
+
+
+  std::cout << "-------------------------------------------------------" << std::endl;
+  std::cout << "GRASPING RESULTS " << std::endl;
+  std::cout << "total candidate grasps         " << grasp_candidates.size() << std::endl;
+  std::cout << "grasp_filtered_by_ik           " << grasp_filtered_by_ik << std::endl;
+  std::cout << "grasp_filtered_by_collision    " << grasp_filtered_by_collision << std::endl;
+  std::cout << "pregrasp_filtered_by_ik        " << pregrasp_filtered_by_ik << std::endl;
+  std::cout << "pregrasp_filtered_by_collision " << pregrasp_filtered_by_collision << std::endl;
+  std::cout << "remaining grasps               " << remaining_grasps << std::endl;
+  std::cout << "-------------------------------------------------------" << std::endl;
 
   if (false)
   {
     // End Benchmark time
     double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
     ROS_INFO_STREAM_NAMED("filter","Grasp generator IK grasp filtering benchmark time:");
-    std::cout << duration << "\t" << candidate_grasps.size() << "\n";
+    std::cout << duration << "\t" << grasp_candidates.size() << "\n";
   }
 
   return remaining_grasps;
 }
 
-void GraspFilter::filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct)
+void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
 {
   // Seed state - start at zero
   std::vector<double> ik_seed_state(num_variables_); // fill with zeros
-  std::vector<double> grasp_ik_solution;
-  std::vector<double> pregrasp_ik_solution;
   moveit_msgs::MoveItErrorCodes error_code;
   geometry_msgs::PoseStamped ik_pose;
   Eigen::Affine3d eigen_pose;
@@ -260,236 +331,149 @@ void GraspFilter::filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct
   // Process the assigned grasps
   for( int i = ik_thread_struct.grasps_id_start_; i < ik_thread_struct.grasps_id_end_; ++i )
   {
-    //ROS_DEBUG_STREAM_NAMED("filter", "Checking grasp #" << i);
+    if (!ros::ok())
+      break;
 
-    // Clear out previous solution just in case - not sure if this is needed
-    grasp_ik_solution.clear(); // TODO remove
-    pregrasp_ik_solution.clear(); // TODO remove
+    ROS_DEBUG_STREAM_NAMED("filter.superdebug", "Checking grasp #" << i);
 
-    // Transform current pose to frame of planning group
-    ik_pose = ik_thread_struct.candidate_grasps_[i]->grasp_.grasp_pose;
+    // Helper pointer
+    GraspCandidatePtr& grasp_candidate = ik_thread_struct.grasp_candidates_[i];
 
-    tf::poseMsgToEigen(ik_pose.pose, eigen_pose);
-    eigen_pose = ik_thread_struct.link_transform_ * eigen_pose;
-    tf::poseEigenToMsg(eigen_pose, ik_pose.pose);
+    // Get pose
+    ik_pose = grasp_candidate->grasp_.grasp_pose;
 
+    // Debug
     if (ik_thread_struct.verbose_ && false)
     {
       ik_pose.header.frame_id = ik_thread_struct.kin_solver_->getBaseFrame();
       visual_tools_->publishZArrow(ik_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR, 0.1);
-
-      // Debug: display grasp position
-      //visual_tools_->publishEEMarkers(ik_pose.pose, ik_thread_struct.ee_jmg_, rviz_visual_tools::RED);
-      //ros::Duration(0.1).sleep();
     }
 
-    // Test it with IK
-    ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_,
-                                                   grasp_ik_solution, error_code);
-
-    // Results
-    if( error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS )
+    // Solve IK Problem
+    if (!findIKSolution(ik_pose, grasp_candidate->grasp_ik_solution_, ik_seed_state, error_code, ik_thread_struct))
     {
-      //ROS_INFO_STREAM_NAMED("filter","Found IK Solution");
+      ROS_DEBUG_STREAM_NAMED("filter.superdebug","the-grasp: unable to find IK solution");
+      grasp_candidate->grasp_filtered_by_ik_ = true;
+      continue;
+    }
 
-      // Copy solution to seed state so that next solution is faster
-      ik_seed_state = grasp_ik_solution;
+    // Copy solution to seed state so that next solution is faster
+    ik_seed_state = grasp_candidate->grasp_ik_solution_;
 
-      // Start pre-grasp section ----------------------------------------------------------
-      if (ik_thread_struct.filter_pregrasp_)       // optionally check the pregrasp
+    // Check for collision
+    if (checkInCollision(grasp_candidate->grasp_ik_solution_, ik_thread_struct, ik_thread_struct.collision_verbose_))
+    {
+      ROS_DEBUG_STREAM_NAMED("filter.superdebug","the-grasp: arm position is in collision");
+      grasp_candidate->grasp_filtered_by_collision_ = true;
+      continue;
+    }
+
+    // Start pre-grasp section ----------------------------------------------------------
+    if (ik_thread_struct.filter_pregrasp_)       // optionally check the pregrasp
+    {
+      // Convert to a pre-grasp
+      const std::string &ee_parent_link_name = ik_thread_struct.ee_jmg_->getEndEffectorParentGroup().second;
+      ik_pose = Grasps::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
+
+      // Solve IK Problem
+      if (!findIKSolution(ik_pose, grasp_candidate->pregrasp_ik_solution_, ik_seed_state, error_code, ik_thread_struct))
       {
-        // Convert to a pre-grasp
-        const std::string &ee_parent_link_name = ik_thread_struct.ee_jmg_->getEndEffectorParentGroup().second;
-        ik_pose = Grasps::getPreGraspPose(ik_thread_struct.candidate_grasps_[i]->grasp_, ee_parent_link_name);
-
-        // Transform current pose to frame of planning group
-        Eigen::Affine3d eigen_pose;
-        tf::poseMsgToEigen(ik_pose.pose, eigen_pose);
-        eigen_pose = ik_thread_struct.link_transform_ * eigen_pose;
-        tf::poseEigenToMsg(eigen_pose, ik_pose.pose);
-
-        // Test it with IK
-        ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_, pregrasp_ik_solution, error_code);
-
-        // Results
-        if( error_code.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION )
-        {
-          // The grasp was valid but the pre-grasp was not
-          ROS_DEBUG_STREAM_NAMED("filter.superdebug","Unable to find IK solution for pre-grasp pose.");
-          continue;
-        }
-        else if( error_code.val == moveit_msgs::MoveItErrorCodes::TIMED_OUT )
-        {
-          ROS_DEBUG_STREAM_NAMED("filter.superdebug","Unable to find IK solution for pre-grasp pose: Timed Out.");
-          continue;
-        }
-        else if( error_code.val != moveit_msgs::MoveItErrorCodes::SUCCESS )
-        {
-          ROS_INFO_STREAM_NAMED("filter.superdebug","IK solution error for pre-grasp: MoveItErrorCodes.msg = " << error_code);
-          continue;
-        }
+        ROS_DEBUG_STREAM_NAMED("filter.superdebug","pre-grasp: unable to find IK solution");
+        grasp_candidate->pregrasp_filtered_by_ik_ = true;
+        continue;
       }
-      else
+
+      // Check for collision
+      if (checkInCollision(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, ik_thread_struct.collision_verbose_))
       {
-        ROS_WARN_STREAM_NAMED("filter","Not filtering pre-grasp - GraspCandidate may have bad data");
+        ROS_DEBUG_STREAM_NAMED("filter.superdebug","pre-grasp: arm position is in collision");
+        grasp_candidate->pregrasp_filtered_by_collision_ = true;
+        continue;
       }
-      // Both grasp and pre-grasp have passed, create the solution
-      ik_thread_struct.candidate_grasps_[i]->validated_by_ik_ = true;
-      ik_thread_struct.candidate_grasps_[i]->grasp_ik_solution_ = grasp_ik_solution;
-      ik_thread_struct.candidate_grasps_[i]->pregrasp_ik_solution_ = pregrasp_ik_solution;
+    }
 
-      // End pre-grasp section -------------------------------------------------------
-    }
-    else if( error_code.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION )
-    {
-      ROS_DEBUG_STREAM_NAMED("filter.superdebug","Unable to find IK solution for pose: No Solution");
-    }
-    else if( error_code.val == moveit_msgs::MoveItErrorCodes::TIMED_OUT )
-    {
-      ROS_DEBUG_STREAM_NAMED("filter.superdebug","Unable to find IK solution for pose: Timed Out.");
-    }
-    else
-      ROS_ERROR_STREAM_NAMED("filter.superdebug","IK solution error: MoveItErrorCodes.msg = " << error_code);
-  }
+    // Grasp is valid
+    grasp_candidate->valid_ = true;
 
-  //ROS_DEBUG_STREAM_NAMED("filter","Thread " << ik_thread_struct.thread_id_ << " finished");
+  } // for each grasp
+
+  ROS_WARN_STREAM_NAMED("filter","Thread " << ik_thread_struct.thread_id_ << " finished");
 }
 
-bool GraspFilter::filterGraspsInCollision(std::vector<GraspCandidatePtr>& candidate_grasps,
-                                          planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                          const robot_model::JointModelGroup* arm_jmg,
-                                          robot_state::RobotStatePtr robot_state,
-                                          bool verbose, bool verbose_if_failed)
+bool GraspFilter::findIKSolution(geometry_msgs::PoseStamped& ik_pose, std::vector<double>& ik_solution,
+                                 std::vector<double>& ik_seed_state, moveit_msgs::MoveItErrorCodes& error_code,
+                                 IkThreadStruct& ik_thread_struct)
 {
-  // Error check
-  if (candidate_grasps.size() == 0)
+  // Transform current pose to frame of planning group
+  Eigen::Affine3d eigen_pose;
+  tf::poseMsgToEigen(ik_pose.pose, eigen_pose);
+  eigen_pose = ik_thread_struct.link_transform_ * eigen_pose;
+  tf::poseEigenToMsg(eigen_pose, ik_pose.pose);
+
+  // Clear out previous solution just in case - not sure if this is needed
+  ik_solution.clear(); // TODO remove
+
+  // Test it with IK
+  ik_thread_struct.kin_solver_->searchPositionIK(ik_pose.pose, ik_seed_state, ik_thread_struct.timeout_, ik_solution, error_code);
+
+  // Results
+  if( error_code.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION )
   {
-    ROS_ERROR_STREAM_NAMED("filter","Unable to filter grasps for collision because none were passed in");
+    // The grasp was valid but the pre-grasp was not
+    ROS_DEBUG_STREAM_NAMED("filter.superdebug","No IK solution");
     return false;
   }
-
-  std::vector<GraspCandidatePtr> original_candidate_grasps = candidate_grasps;
-  const std::size_t original_size = candidate_grasps.size();
-
-  // Initial run
-  if (!filterGraspsInCollisionHelper(candidate_grasps, planning_scene_monitor, arm_jmg, robot_state, verbose))
+  else if( error_code.val == moveit_msgs::MoveItErrorCodes::TIMED_OUT )
   {
-    ROS_ERROR_STREAM_NAMED("filter","Grasp filter failed");
+    ROS_DEBUG_STREAM_NAMED("filter.superdebug","Timed Out.");
     return false;
   }
-
-  assert(original_candidate_grasps.size() == original_size); // make sure the copy worked
-
-  // Check if enough passed. If not, go to debug mode if we weren't already in verbose mode
-  if (!candidate_grasps.size() && verbose_if_failed)
+  else if( error_code.val != moveit_msgs::MoveItErrorCodes::SUCCESS )
   {
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    ROS_WARN_STREAM_NAMED("filter","All grasps were filtered due to collision, possible error");
-    ROS_WARN_STREAM_NAMED("filter","Re-running again in debug mode");
-
-    if (!filterGraspsInCollisionHelper(original_candidate_grasps, planning_scene_monitor, arm_jmg, robot_state, true))
-    {
-      ROS_ERROR_STREAM_NAMED("filter","Grasp filter failed");
-      return false;
-    }
+    ROS_ERROR_STREAM_NAMED("filter","Unknown MoveItErrorCode from IK solver: " << error_code.val);    
+    return false;
   }
 
   return true;
 }
 
-bool GraspFilter::filterGraspsInCollisionHelper(std::vector<GraspCandidatePtr>& candidate_grasps,
-                                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                                const robot_model::JointModelGroup* arm_jmg,
-                                                robot_state::RobotStatePtr robot_state,
-                                                bool verbose)
+bool GraspFilter::checkInCollision(std::vector<double>& ik_solution,
+                                   IkThreadStruct& ik_thread_struct,
+                                   bool verbose)
 {
-  // Copy the current state positions
-  *robot_state_ = *robot_state;
+  // Apply joint values to robot state
+  robot_state_->setJointGroupPositions(ik_thread_struct.arm_jmg_, ik_solution);
 
-  // Copy planning scene that is locked
-  planning_scene::PlanningScenePtr cloned_scene;
+  if (ik_thread_struct.planning_scene_->isStateColliding(*robot_state_, ik_thread_struct.arm_jmg_->getName(), verbose))
   {
-    planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
-    cloned_scene = planning_scene::PlanningScene::clone(scene);
-  }
-
-  ROS_DEBUG_STREAM_NAMED("filter","Filtering " << candidate_grasps.size() << " possible grasps");
-
-  // Start checking all grasps
-  for (std::vector<GraspCandidatePtr>::iterator grasp_it = candidate_grasps.begin();
-       grasp_it != candidate_grasps.end(); /*it++*/)
-  {
-    if (!ros::ok())
-      return false;
-
-    GraspCandidatePtr& grasp_candidate = *grasp_it;
-
-    // -----------------------------------------------------------------------------------
-    // Check grasp ik solution
-    robot_state_->setJointGroupPositions(arm_jmg, grasp_candidate->grasp_ik_solution_);
-
-    if (cloned_scene->isStateColliding(*robot_state_, arm_jmg->getName(), verbose))
+    if (verbose)
     {
-      // Remove this grasp
-      if (verbose)
-      {
-        std::cout << std::endl;
-        ROS_INFO_STREAM_NAMED("filter","Grasp solution colliding");
-        visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::RED);
-        visual_tools_->publishContactPoints(*robot_state_, cloned_scene.get());
-
-        ros::Duration(4.0).sleep();
-      }
-      continue; // next grasp
-    }
-
-    // -----------------------------------------------------------------------------------
-    // Check PRE-grasp ik solution
-    /*
-      robot_state_->setJointGroupPositions(arm_jmg, grasp_it->pregrasp_ik_solution_);
-
-      if (cloned_scene->isStateColliding(*robot_state_, arm_jmg->getName(), verbose))
-      {
-      // Remove this grasp
-      if (verbose)
-      {
-      ROS_INFO_STREAM_NAMED("filter","Pre-grasp solution colliding");
+      ROS_INFO_STREAM_NAMED("filter.superdebug","Grasp solution colliding");
       visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::RED);
-      ros::Duration(1.0).sleep();
-      }
+      visual_tools_->publishContactPoints(*robot_state_, ik_thread_struct.planning_scene_.get());
 
-      continue; // next grasp
-      }
-    */
+      ros::Duration(2.0).sleep();
+    }
 
-    grasp_candidate->validated_by_collision_ = true;
-
-    // Else
-    grasp_it++; // move to next grasp
+    return false;
   }
 
-  ROS_INFO_STREAM_NAMED("filter","After collision checking " << candidate_grasps.size() << " grasps were found valid");
-
-  if (verbose)
-  {
-    visual_tools_->hideRobot();
-  }
+  //  if (ik_thread_struct.planning_scene_->checkSelfCollision()
+  //isStateColliding(*robot_state_, ik_thread_struct.arm_jmg_->getName(), verbose))
 
   return true;
 }
 
-bool GraspFilter::chooseBestGrasp( std::vector<GraspCandidatePtr>& candidate_grasps,
+bool GraspFilter::chooseBestGrasp( std::vector<GraspCandidatePtr>& grasp_candidates,
                                    GraspCandidatePtr& chosen )
 {
   // Find max grasp quality
   double max_quality = -1;
   bool found_valid_grasp = false;
-  for (std::size_t i = 0; i < candidate_grasps.size(); ++i)
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
     // Check if valid grasp
-    if (!candidate_grasps[i]->validated_by_ik_ || !candidate_grasps[i]->validated_by_collision_)
+    if (!grasp_candidates[i]->valid_)
     {
       continue; // not valid
     }
@@ -497,15 +481,15 @@ bool GraspFilter::chooseBestGrasp( std::vector<GraspCandidatePtr>& candidate_gra
     // METHOD 1 - use score
     if (true)
     {
-      if (candidate_grasps[i]->grasp_.grasp_quality > max_quality)
+      if (grasp_candidates[i]->grasp_.grasp_quality > max_quality)
       {
-        max_quality = candidate_grasps[i]->grasp_.grasp_quality;
-        chosen = candidate_grasps[i];
+        max_quality = grasp_candidates[i]->grasp_.grasp_quality;
+        chosen = grasp_candidates[i];
       }
     }
     else // METHOD 2 - use yall angle
     {
-      const geometry_msgs::Pose& pose = candidate_grasps[i]->grasp_.grasp_pose.pose;
+      const geometry_msgs::Pose& pose = grasp_candidates[i]->grasp_.grasp_pose.pose;
       //double roll = atan2(2*(pose.orientation.x*pose.orientation.y + pose.orientation.w*pose.orientation.z), pose.orientation.w*pose.orientation.w + pose.orientation.x*pose.orientation.x - pose.orientation.y*pose.orientation.y - pose.orientation.z*pose.orientation.z);
       double yall = asin(-2*(pose.orientation.x*pose.orientation.z - pose.orientation.w*pose.orientation.y));
       //double pitch = atan2(2*(pose.orientation.y*pose.orientation.z + pose.orientation.w*pose.orientation.x), pose.orientation.w*pose.orientation.w - pose.orientation.x*pose.orientation.x - pose.orientation.y*pose.orientation.y + pose.orientation.z*pose.orientation.z);
@@ -514,7 +498,7 @@ bool GraspFilter::chooseBestGrasp( std::vector<GraspCandidatePtr>& candidate_gra
       if (yall > max_quality)
       {
         max_quality = yall;
-        chosen = candidate_grasps[i];
+        chosen = grasp_candidates[i];
       }
     }
 
@@ -525,20 +509,40 @@ bool GraspFilter::chooseBestGrasp( std::vector<GraspCandidatePtr>& candidate_gra
   return true;
 }
 
-bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& candidate_grasps,
-                                  const moveit::core::JointModelGroup *arm_jmg, bool show_cartesian_path)
+bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
+                                  const moveit::core::JointModelGroup *arm_jmg)
 {
   // Publish in batch
   visual_tools_->enableBatchPublishing(true);
 
-  for (std::size_t i = 0; i < candidate_grasps.size(); ++i)
+  /*
+    RED - grasp filtered by ik
+    PINK - grasp filtered by collision
+    BLUE - pregrasp filtered by ik
+    CYAN - pregrasp filtered by collision
+    GREEN - valid
+  */
+
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    if (!candidate_grasps[i]->validated_by_ik_) // || !candidate_grasps[i]->validated_by_collision_)
+    if (grasp_candidates[i]->grasp_filtered_by_ik_)
     {
-      visual_tools_->publishZArrow(candidate_grasps[i]->grasp_.grasp_pose.pose, rviz_visual_tools::RED);
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::RED);
+    }
+    else if (grasp_candidates[i]->grasp_filtered_by_collision_)
+    {
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::PINK);
+    }
+    else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
+    {
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::BLUE);
+    }
+    else if (grasp_candidates[i]->pregrasp_filtered_by_collision_)
+    {
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::CYAN);
     }
     else
-      visual_tools_->publishZArrow(candidate_grasps[i]->grasp_.grasp_pose.pose, rviz_visual_tools::GREEN);
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::GREEN);
   }
 
   // Publish in batch
@@ -546,5 +550,56 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& candidat
 
   return true;
 }
+
+bool GraspFilter::visualizeIKSolutionsOLD(const std::vector<GraspCandidatePtr>& grasp_candidates,
+                                       const moveit::core::JointModelGroup* arm_jmg, double animation_speed)
+{
+  // Convert the grasp_candidates into a format moveit_visual_tools can use
+  std::vector<trajectory_msgs::JointTrajectoryPoint> ik_solutions;
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
+  {
+    // Check if valid grasp
+    if (!grasp_candidates[i]->valid_)
+      continue;
+
+    trajectory_msgs::JointTrajectoryPoint new_point;
+    new_point.positions = grasp_candidates[i]->grasp_ik_solution_;
+    ik_solutions.push_back(new_point);
+  }
+
+  if (ik_solutions.empty())
+  {
+    ROS_ERROR_STREAM_NAMED("filter","Unable to visualize IK solutions because there are no valid ones");
+    return false;
+  }
+  
+  return visual_tools_->publishIKSolutions(ik_solutions, arm_jmg, animation_speed);
+}
+
+bool GraspFilter::visualizeIKSolutions(const std::vector<GraspCandidatePtr>& grasp_candidates,
+                                       const moveit::core::JointModelGroup* arm_jmg, double animation_speed)
+{
+  // Convert the grasp_candidates into a format moveit_visual_tools can use
+  std::vector<trajectory_msgs::JointTrajectoryPoint> ik_solutions;
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
+  {
+    // Check if valid grasp
+    if (!grasp_candidates[i]->valid_)
+      continue;
+
+    trajectory_msgs::JointTrajectoryPoint new_point;
+    new_point.positions = grasp_candidates[i]->grasp_ik_solution_;
+    ik_solutions.push_back(new_point);
+  }
+
+  if (ik_solutions.empty())
+  {
+    ROS_ERROR_STREAM_NAMED("filter","Unable to visualize IK solutions because there are no valid ones");
+    return false;
+  }
+  
+  return visual_tools_->publishIKSolutions(ik_solutions, arm_jmg, animation_speed);
+}
+
 
 } // namespace

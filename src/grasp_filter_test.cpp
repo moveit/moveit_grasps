@@ -121,6 +121,18 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load planning scene to share
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));    
+    if (planning_scene_monitor_->getPlanningScene())
+    {
+      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+                                                            "grasping_planning_scene");
+      planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
+    }
+    else
+    {
+      ROS_ERROR_STREAM_NAMED("test","Planning scene not configured");
+      return;
+    }
+
     const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor_->getRobotModel();
     const robot_model::JointModelGroup* arm_jmg = robot_model->getJointModelGroup(planning_group_name_);
 
@@ -133,6 +145,7 @@ public:
     visual_tools_->loadRobotStatePub();
     visual_tools_->loadSharedRobotState();
     visual_tools_->getSharedRobotState()->setToDefaultValues();
+    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState());
     robot_state::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
     // ---------------------------------------------------------------------------------------------
@@ -145,7 +158,7 @@ public:
     visual_tools_->removeAllCollisionObjects();
 
     // Create a collision table for fun
-    visual_tools_->publishCollisionTable(TABLE_X, TABLE_Y, 0, TABLE_WIDTH, TABLE_HEIGHT, TABLE_DEPTH, "table");
+    //visual_tools_->publishCollisionTable(TABLE_X, TABLE_Y, 0, TABLE_WIDTH, TABLE_HEIGHT, TABLE_DEPTH, "table");
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
@@ -157,7 +170,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
-    std::vector<GraspCandidatePtr> candidate_grasps;
+    std::vector<GraspCandidatePtr> grasp_candidates;
 
     const moveit::core::JointModelGroup* ee_jmg = robot_state->getRobotModel()->getJointModelGroup(grasp_data_.ee_group_name_);
   
@@ -177,7 +190,7 @@ public:
       double depth;
       double width;
       double height;
-      rviz_visual_tools::RandomPoseBounds pose_bounds(0.2, 0.5, 0, 0.5, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
+      rviz_visual_tools::RandomPoseBounds pose_bounds(0.6, 1.0, 0, 0.5, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
       visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
       visual_tools_->publishCuboid(object_pose, depth, width, height);
 
@@ -189,14 +202,16 @@ public:
                                               grasp_data_, possible_grasps);
 
       // Convert to the correct type for filtering
-      candidate_grasps = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps);
+      grasp_candidates = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps);
 
       // Filter the grasp for only the ones that are reachable
       ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
       bool filter_pregrasps = true;
       bool verbose = true;
       bool verbose_if_failed = true;
-      std::size_t valid_grasps = grasp_filter_->filterGraspsKinematically(candidate_grasps, arm_jmg, filter_pregrasps, verbose, verbose_if_failed);
+      std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
+                                                             arm_jmg, filter_pregrasps, 
+                                                             verbose, verbose_if_failed);
 
       if (valid_grasps == 0)
       {
@@ -204,20 +219,7 @@ public:
         continue;
       }
 
-      // Convert the candidate_grasps into a format moveit_visual_tools can use
-      std::vector<trajectory_msgs::JointTrajectoryPoint> ik_solutions;
-      for (std::size_t i = 0; i < candidate_grasps.size(); ++i)
-      {
-        // Check if valid grasp
-        if (!candidate_grasps[i]->validated_by_ik_) // || !candidate_grasps[i]->validated_by_collision_)
-          continue; // not valid
-
-        trajectory_msgs::JointTrajectoryPoint new_point;
-        new_point.positions = candidate_grasps[i]->grasp_ik_solution_;
-        ik_solutions.push_back(new_point);
-      }
-      double animation_speed = 0.1;
-      visual_tools_->publishIKSolutions(ik_solutions, planning_group_name_, animation_speed);
+      // Note: to visualize enable DEBUG level in the ros console
     } // for each trial
 
 
@@ -262,7 +264,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-  int num_tests = 10;
+  int num_tests = 1;
 
   ros::init(argc, argv, "grasp_generator_test");
 

@@ -1,0 +1,18 @@
+generator:
+  # Show the arrows
+  verbose: false
+  # Show hand of generated grasps
+  show_prefiltered_grasps: false
+filter:
+  # Collision in verbose
+  collision_verbose: false
+  # Show post-filter arrows
+  show_filtered_grasps: true
+  # Show pose-filter arm ik solutions
+  show_filtered_arm_solutions: true
+
+
+
+
+
+  

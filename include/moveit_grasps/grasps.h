@@ -80,19 +80,6 @@ enum grasp_rotation_t {FULL, HALF};
 // Class
 class Grasps
 {
-private:
-
-  // class for publishing stuff to rviz
-  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-
-  // Transform from frame of box to global frame
-  Eigen::Affine3d object_global_transform_;
-
-  // Display more output both in console and in Rviz (with arrows and markers)
-  bool verbose_;
-
-  // Number of grasp points to generate around 
-  int number_grasp_points_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles). With GCC, this is done with a attribute ((aligned(16))).
@@ -178,7 +165,25 @@ public:
     verbose_ = verbose;
   }
   
+private:
 
+  // class for publishing stuff to rviz
+  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+
+  // Transform from frame of box to global frame
+  Eigen::Affine3d object_global_transform_;
+
+  // Display more output both in console and in Rviz (with arrows and markers)
+  bool verbose_;
+
+  // Number of grasp points to generate around 
+  int number_grasp_points_;
+
+  // Visualization levels
+  bool show_prefiltered_grasps_;
+
+  // Shared node handle
+  ros::NodeHandle nh_;
 
 }; // end of class
 
