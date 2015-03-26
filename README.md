@@ -44,37 +44,6 @@ Indigo:
 rosdep install --from-paths src --ignore-src --rosdistro indigo
 ```
 
-You will need PCL installed from source to use its latest features (untill at least ROS Jade is released):
-```
-git clone git@github.com:PointCloudLibrary/pcl.git
-cd pcl
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release .. 
-make
-sudo make install
-```
-Read the output and see where it gets installed. Mine was `/usr/local/include/pcl-1.8`
-
-Dheck if you have local include in 'LD_LIBRARY_PATH'
-```
-echo $LD_LIBRARY_PATH
-```
-
-if not, add to your `.bashrc`
-```
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include
-```
-
-for files that need it:
-```
-#include <pcl-1.8/pcl/features/moment_of_inertia_estimation.h>
-```
-
-Edit `CMakeLists` per [this ROS Answer](http://answers.ros.org/question/81306/catkin-cant-find-pclconfigcmake/)
-
-
-
 ## Robot-Agnostic Configuration
 
 You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/config/baxter_grasp_data.yaml). See the comments within that file for explanations. 
@@ -231,7 +200,6 @@ There are currently example implementations:
 
  - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/indigo-devel/baxter_pick_place)
  - [reem_tabletop_grasping](https://github.com/pal-robotics/reem_tabletop_grasping)
- - [clam_pick_place](https://github.com/davetcoleman/clam/tree/master/clam_pick_place)
 
 ## Testing
 
@@ -255,16 +223,11 @@ roslaunch moveit_grasps grasp_filter_test.launch
 
 Features we'd like to see added to this project:
 
- - Ability to reason about any shape, not just centroid of a bounding box
-   - Input arbitrary meshes
-   - Auto create a bounding box around that mesh
  - Better reasoning about support surfaces (table)
  - Integrate collision checking to verify feasibility of grasp
- - Support non-parallel gripper end effectors
  - Make grasp quality metric better informed
  - Make this project easier to setup for new robots
    - Integrate into Setup Assistant GUI
- - Improve pick and place pipline header file
 
 ## Contributors
 

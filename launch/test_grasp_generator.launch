@@ -17,8 +17,8 @@
   <arg name="baxter" default="false" />
   <arg name="hand" default="false" />
   <group ns="moveit_grasps_test">
-    <include file="$(find moveit_grasps)/launch/robots/load_jacob.launch" if="$(arg jacob)"/>
-    <include file="$(find moveit_grasps)/launch/robots/load_baxter.launch" if="$(arg baxter)"/>
+    <include file="$(find moveit_grasps)/launch/robots/load_jacob.launch.xml" if="$(arg jacob)"/>
+    <include file="$(find moveit_grasps)/launch/robots/load_baxter.launch.xml" if="$(arg baxter)"/>
   </group>
 
   <!-- Start the test -->

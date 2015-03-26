@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2013, University of Colorado, Boulder
+ *  Copyright (c) 2015, University of Colorado, Boulder
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-// Author: Dave Coleman
-// Desc:   Filters grasps based on kinematic feasibility
+/* Author: Dave Coleman <dave@dav.ee>
+   Desc:   Filters grasps based on kinematic feasibility and collision
+*/
 
 #ifndef MOVEIT_GRASPS__GRASP_FILTER_
 #define MOVEIT_GRASPS__GRASP_FILTER_
@@ -67,12 +68,21 @@ namespace moveit_grasps
 /**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
  */
-struct GraspSolution
+struct GraspCandidate
 {
+  GraspCandidate(moveit_msgs::Grasp grasp)
+    : grasp_(grasp)
+    , validated_by_ik_(false)
+    , validated_by_collision_(false)
+  {}
+
   moveit_msgs::Grasp grasp_;
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
+  bool validated_by_ik_;
+  bool validated_by_collision_;
 };
+typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
 /**
  * \brief Struct for passing parameters to threads, for cleaner code
@@ -80,42 +90,36 @@ struct GraspSolution
 struct IkThreadStruct
 {
   IkThreadStruct(
-                 const std::vector<moveit_msgs::Grasp> &possible_grasps, // the input
-                 std::vector<GraspSolution> &filtered_grasps, // the result
+                 std::vector<GraspCandidatePtr> &candidate_grasps, // the input
                  Eigen::Affine3d &link_transform,
                  int grasps_id_start,
                  int grasps_id_end,
                  kinematics::KinematicsBaseConstPtr kin_solver,
-                 bool filter_pregrasp,
                  const robot_model::JointModelGroup* ee_jmg,
                  double timeout,
-                 boost::mutex *lock,
+                 bool filter_pregrasp,
                  bool verbose,
                  int thread_id)
-  : possible_grasps_(possible_grasps),
-    filtered_grasps_(filtered_grasps),
+  : candidate_grasps_(candidate_grasps),
     link_transform_(link_transform),
     grasps_id_start_(grasps_id_start),
     grasps_id_end_(grasps_id_end),
     kin_solver_(kin_solver),
-    filter_pregrasp_(filter_pregrasp),
     ee_jmg_(ee_jmg),
     timeout_(timeout),
-    lock_(lock),
+    filter_pregrasp_(filter_pregrasp),
     verbose_(verbose),
     thread_id_(thread_id)
   {
   }
-  const std::vector<moveit_msgs::Grasp> &possible_grasps_;
-  std::vector<GraspSolution> &filtered_grasps_;
+  std::vector<GraspCandidatePtr> &candidate_grasps_;
   Eigen::Affine3d link_transform_;
   int grasps_id_start_;
   int grasps_id_end_;
   kinematics::KinematicsBaseConstPtr kin_solver_;
-  bool filter_pregrasp_;
   const robot_model::JointModelGroup* ee_jmg_;
   double timeout_;
-  boost::mutex *lock_;
+  bool filter_pregrasp_;
   bool verbose_;
   int thread_id_;
 };
@@ -144,30 +148,36 @@ public:
   GraspFilter( robot_state::RobotStatePtr robot_state,
                moveit_visual_tools::MoveItVisualToolsPtr& visual_tools );
 
-  // Destructor
-  ~GraspFilter();
-
   /**
-   * \brief Of an array of grasps, choose just one for use
-   * \return true on success
+   * \brief Convert the ROS message vector into our custom struct for candidate grasps
+   * \param vector of grasps generated from a grasp generator
+   * \return vector of grasps in this package's proper format
    */
-  bool chooseBestGrasp( std::vector<GraspSolution>& filtered_grasps,
-                        GraspSolution& chosen );
+  std::vector<GraspCandidatePtr> convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& candidate_grasps);
 
   /**
    * \brief Return grasps that are kinematically feasible
-   * \param possible_grasps - all possible grasps that this will test
-   * \param filtered_grasps - result - only the grasps that are kinematically feasible
-   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param candidate_grasps - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
+   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
    * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
-   * \return true on success
+   * \return number of grasps remaining
    */
-  bool filterGraspsKinematically(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                                 std::vector<GraspSolution>& filtered_grasps,
-                                 bool filter_pregrasp,
-                                 const robot_model::JointModelGroup* arm_jmg,
-                                 bool verbose_if_failed = true);
+  std::size_t filterGraspsKinematically(std::vector<GraspCandidatePtr>& candidate_grasps,
+                                        const robot_model::JointModelGroup* arm_jmg,
+                                        bool filter_pregrasp = false,
+                                        bool verbose = false,
+                                        bool verbose_if_failed = true);
+
+  /**
+   * \brief Helper for filterGraspsKinematically
+   * \return number of grasps remaining
+   */
+  std::size_t filterGraspsKinematicallyHelper(std::vector<GraspCandidatePtr>& candidate_grasps,                                              
+                                              const robot_model::JointModelGroup* ee_jmg,
+                                              const robot_model::JointModelGroup* arm_jmg, 
+                                              bool filter_pregrasp,
+                                              bool verbose);
 
   /**
    * \brief Filter using collision checking. Run this after filterGraspsKinematically()
@@ -179,23 +189,28 @@ public:
    * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
    * \return true on success
    */
-  bool filterGraspsInCollision(std::vector<GraspSolution>& possible_grasps,
+  bool filterGraspsInCollision(std::vector<GraspCandidatePtr>& candidate_grasps,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                const robot_model::JointModelGroup* arm_jmg,
                                robot_state::RobotStatePtr robot_state,
                                bool verbose = false,
                                bool verbose_if_failed = true);
-private:
 
   /**
-   * \brief Helper for filterGraspsKinematically
+   * \brief Of an array of grasps, choose just one for use
+   * \return true on success
    */
-  bool filterGraspsKinematicallyHelper(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                                       std::vector<GraspSolution>& filtered_grasps,
-                                       bool filter_pregrasp,
-                                       const robot_model::JointModelGroup* ee_jmg,
-                                       const robot_model::JointModelGroup* arm_jmg, bool verbose);
+  bool chooseBestGrasp( std::vector<GraspCandidatePtr>& candidate_grasps,
+                        GraspCandidatePtr& chosen );
 
+  /**
+   * \brief Show grasps after being filtered
+   * \return true on success
+   */
+  bool visualizeGrasps(const std::vector<GraspCandidatePtr>& candidate_grasps,
+                       const moveit::core::JointModelGroup *arm_jmg, bool show_cartesian_path);
+
+private:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
@@ -204,7 +219,7 @@ private:
   /**
    * \brief Helper for filterGraspsInCollision
    */
-  bool filterGraspsInCollisionHelper(std::vector<GraspSolution>& possible_grasps,
+  bool filterGraspsInCollisionHelper(std::vector<GraspCandidatePtr>& candidate_grasps,
                                      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                      const robot_model::JointModelGroup* arm_jmg,
                                      robot_state::RobotStatePtr robot_state,

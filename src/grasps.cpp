@@ -434,7 +434,14 @@ bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double dep
                                   double max_grasp_size, const moveit_grasps::GraspData& grasp_data, 
                                   std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
-  // generate grasps over axes that aren't too wide to grip with Open Hand
+  // TODO: change all "cuboid_grasps" to "grasp_generator"
+
+  // Use ROS logger to turn verbose mode on/off
+  bool grasp_generator_verbose = false;
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.debug_arrows","Verbose is enabled: " << (grasp_generator_verbose = true));
+  verbose_ = grasp_generator_verbose;
+
+  // Generate grasps over axes that aren't too wide to grip
   
   // Most default type of grasp is X axis
   if (depth <= max_grasp_size ) // depth = size along x-axis
@@ -455,6 +462,14 @@ bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double dep
     generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
   }    
     
+  // Visualize animated grasps that have been generated
+  double animation_speed = 0.0025;
+  const moveit::core::JointModelGroup* ee_jmg = grasp_data.ee_jmg_;
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.prefiltered_grasps","Animating all generated (candidate) grasps before filtering (disable this log level to disable visualization)");
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.prefiltered_grasps",
+                         (visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg, animation_speed) ? "Done" : "Failed"));
+
+  return true;
 }
 
 } // namespace
