@@ -1,0 +1,16 @@
+<launch>
+
+  <!-- Debug -->  
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Load Rviz -->
+  <node name="$(anon rviz)" pkg="rviz" type="rviz" respawn="false"
+	args="-d $(find moveit_grasps)/launch/rviz/grasps.rviz" output="screen">
+  </node>
+
+  <!-- Publish world frame -->
+  <node pkg="tf" type="static_transform_publisher" name="tf_publisher_world" args="0 0 0 0 0 0 /world /base 25" />
+
+</launch>

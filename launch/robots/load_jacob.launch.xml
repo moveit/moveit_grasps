@@ -1,0 +1,10 @@
+<launch>
+  <include file="$(find jacob_moveit_config)/launch/planning_context.launch.xml">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+
+  <!-- Which arm to use -->
+  <param name="ee_group_name" value="gripper"/>
+
+  <rosparam command="load" file="$(find moveit_grasps)/config/jacob_grasp_data.yaml"/>
+</launch>

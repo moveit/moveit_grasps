@@ -1,0 +1,17 @@
+<launch>
+
+  <!-- Debug -->  
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Command line arguments -->
+  <arg name="verbose" default="false" />
+  <arg name="trials" default="1" />
+
+  <!-- Start the test -->
+  <node name="bounding_box_test" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps" 
+	type="bounding_box_test" output="screen" args="--verbose $(arg verbose) --trials $(arg trials)">
+  </node>
+
+</launch>

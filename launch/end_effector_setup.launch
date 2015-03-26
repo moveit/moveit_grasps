@@ -1,0 +1,23 @@
+<launch>
+  <!-- Launch grap_test_rviz.launch to visualize this test -->
+
+  <!-- Debug -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Choose robot and arm -->
+  <arg name="jacob" default="false" />
+  <arg name="baxter" default="false" />
+  <arg name="hand" default="false" />
+  <group ns="grasp_poses_visualizer">
+    <include file="$(find moveit_grasps)/launch/robots/load_jacob.launch" if="$(arg jacob)"/>
+    <include file="$(find moveit_grasps)/launch/robots/load_baxter.launch" if="$(arg baxter)"/>
+  </group>
+
+  <!-- Start the test -->
+  <node name="grasp_poses_visualizer" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+	type="grasp_poses_visualizer" output="screen" args="">
+  </node>
+
+</launch>
