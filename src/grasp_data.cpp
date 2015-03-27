@@ -50,14 +50,22 @@
 
 namespace moveit_grasps
 {
-GraspData::GraspData()
+
+GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                     moveit::core::RobotModelConstPtr robot_model)
   : base_link_("/base_link")
   , grasp_depth_(0.12)
   , angle_resolution_(16)
-{}
+{
+  if (!loadGraspData(nh, end_effector, robot_model))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data","Error loading grasp data, shutting down");
+    exit(-1);
+  }
+}
 
-bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                                   moveit::core::RobotModelConstPtr robot_model)
+bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                              moveit::core::RobotModelConstPtr robot_model)
 {
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture; // todo: remove all underscore post-fixes
@@ -234,10 +242,6 @@ bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string&
   grasp_posture_.points[0].time_from_start = ros::Duration(grasp_time_from_start);
 
   // -------------------------------
-  // SRDF Info
-  ee_group_name_ = end_effector_name;
-
-  // -------------------------------
   // Geometry data
   finger_to_palm_depth_ = finger_to_palm_depth;
 
@@ -250,7 +254,9 @@ bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string&
   angle_resolution_ = 32; //TODO parametrize this, or move to action interface
 
   // Copy values from RobotModel
-  ee_jmg_ = robot_model->getJointModelGroup(ee_group_name_);
+  ee_jmg_ = robot_model->getJointModelGroup(end_effector_name);
+  arm_jmg_ = robot_model->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
+
   parent_link_name_ = ee_jmg_->getEndEffectorParentGroup().second;
   parent_link_ = robot_model->getLinkModel(parent_link_name_);
 
@@ -295,7 +301,7 @@ void GraspData::print()
   std::cout << "pre_grasp_posture_: \n" << pre_grasp_posture_ << std::endl;
   std::cout << "grasp_posture_: \n" << grasp_posture_ << std::endl;
   std::cout << "base_link_: " << base_link_ << std::endl;
-  std::cout << "ee_group_: " << ee_group_name_  <<  std::endl;
+  std::cout << "ee_group_: " << ee_jmg_->getName()  <<  std::endl;
   std::cout << "grasp_depth_: " << grasp_depth_ << std::endl;
   std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
   std::cout << "finger_to_palm_depth_: " << finger_to_palm_depth_ << std::endl;

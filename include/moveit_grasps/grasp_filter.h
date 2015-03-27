@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2013, University of Colorado, Boulder
+ *  Copyright (c) 2015, University of Colorado, Boulder
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-// Author: Dave Coleman
-// Desc:   Filters grasps based on kinematic feasibility
+/* Author: Dave Coleman <dave@dav.ee>
+   Desc:   Filters grasps based on kinematic feasibility and collision
+*/
 
 #ifndef MOVEIT_GRASPS__GRASP_FILTER_
 #define MOVEIT_GRASPS__GRASP_FILTER_
@@ -46,7 +47,7 @@
 #include <moveit_msgs/Grasp.h>
 
 // Grasping
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 // Rviz
 #include <moveit_visual_tools/moveit_visual_tools.h>
@@ -66,13 +67,54 @@ namespace moveit_grasps
 
 /**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
+ *        This includes the pregrasp and grasp IK solution
  */
-struct GraspSolution
+struct GraspCandidate
 {
+  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data)
+    : grasp_(grasp)
+    , grasp_data_(grasp_data)
+    , valid_(false)
+    , grasp_filtered_by_ik_(false)
+    , grasp_filtered_by_collision_(false)
+    , pregrasp_filtered_by_ik_(false)
+    , pregrasp_filtered_by_collision_(false)
+  {}
+
+  bool getPreGraspState(moveit::core::RobotStatePtr &robot_state)
+  {
+    // Apply IK solved arm joints to state
+    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
+
+    // Set end effector to correct configuration
+    grasp_data_->setRobotStatePreGrasp(robot_state);
+
+    return true;
+  }
+
+  bool getGraspState(moveit::core::RobotStatePtr robot_state)
+  {
+    // Apply IK solved arm joints to state
+    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
+
+    // Set end effector to correct configuration
+    grasp_data_->setRobotStateGrasp(robot_state);
+    
+    return true;
+  }
+
   moveit_msgs::Grasp grasp_;
+  const GraspDataPtr grasp_data_;
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
+
+  bool valid_;
+  bool grasp_filtered_by_ik_;
+  bool grasp_filtered_by_collision_;
+  bool pregrasp_filtered_by_ik_;
+  bool pregrasp_filtered_by_collision_;
 };
+typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
 /**
  * \brief Struct for passing parameters to threads, for cleaner code
@@ -80,135 +122,174 @@ struct GraspSolution
 struct IkThreadStruct
 {
   IkThreadStruct(
-                 const std::vector<moveit_msgs::Grasp> &possible_grasps, // the input
-                 std::vector<GraspSolution> &filtered_grasps, // the result
+                 std::vector<GraspCandidatePtr> &grasp_candidates, // the input
+                 planning_scene::PlanningScenePtr planning_scene,
                  Eigen::Affine3d &link_transform,
                  int grasps_id_start,
                  int grasps_id_end,
                  kinematics::KinematicsBaseConstPtr kin_solver,
-                 bool filter_pregrasp,
+                 robot_state::RobotStatePtr robot_state,
                  const robot_model::JointModelGroup* ee_jmg,
+                 const robot_model::JointModelGroup* arm_jmg,
                  double timeout,
-                 boost::mutex *lock,
+                 bool filter_pregrasp,
                  bool verbose,
+                 bool collision_verbose,
                  int thread_id)
-  : possible_grasps_(possible_grasps),
-    filtered_grasps_(filtered_grasps),
+  : grasp_candidates_(grasp_candidates),
+    planning_scene_(planning_scene),
     link_transform_(link_transform),
     grasps_id_start_(grasps_id_start),
     grasps_id_end_(grasps_id_end),
     kin_solver_(kin_solver),
-    filter_pregrasp_(filter_pregrasp),
+    robot_state_(robot_state),
     ee_jmg_(ee_jmg),
+    arm_jmg_(arm_jmg),
     timeout_(timeout),
-    lock_(lock),
+    filter_pregrasp_(filter_pregrasp),
     verbose_(verbose),
+    collision_verbose_(collision_verbose),
     thread_id_(thread_id)
   {
   }
-  const std::vector<moveit_msgs::Grasp> &possible_grasps_;
-  std::vector<GraspSolution> &filtered_grasps_;
+  std::vector<GraspCandidatePtr> &grasp_candidates_;
+  planning_scene::PlanningScenePtr planning_scene_;
   Eigen::Affine3d link_transform_;
   int grasps_id_start_;
   int grasps_id_end_;
   kinematics::KinematicsBaseConstPtr kin_solver_;
-  bool filter_pregrasp_;
+  robot_state::RobotStatePtr robot_state_;
   const robot_model::JointModelGroup* ee_jmg_;
+  const robot_model::JointModelGroup* arm_jmg_;
   double timeout_;
-  boost::mutex *lock_;
+  bool filter_pregrasp_;
   bool verbose_;
+  bool collision_verbose_;
   int thread_id_;
 };
 
 // Class
 class GraspFilter
 {
-private:
-  // State of robot
-  robot_state::RobotStatePtr robot_state_;
-
-  // threaded kinematic solvers
-  std::map<std::string, std::vector<kinematics::KinematicsBaseConstPtr> > kin_solvers_;
-
-  // class for publishing stuff to rviz
-  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-
-  // Number of degrees of freedom for the IK solver to find
-  std::size_t num_variables_;
-
-  double solver_timeout_;
-
 public:
 
   // Constructor
   GraspFilter( robot_state::RobotStatePtr robot_state,
                moveit_visual_tools::MoveItVisualToolsPtr& visual_tools );
 
-  // Destructor
-  ~GraspFilter();
+  /**
+   * \brief Convert the ROS message vector into our custom struct for candidate grasps
+   * \param vector of grasps generated from a grasp generator
+   * \return vector of grasps in this package's proper format
+   */
+  std::vector<GraspCandidatePtr> convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& grasp_candidates,
+                                                             const GraspDataPtr grasp_data);
+
+  /**
+   * \brief Return grasps that are kinematically feasible
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param arm_jmg - the arm to solve the IK problem on
+   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
+   * \return number of grasps remaining
+   */
+  std::size_t filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                           planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                           const robot_model::JointModelGroup* arm_jmg,
+                           bool filter_pregrasp = false,
+                           bool verbose = false,
+                           bool verbose_if_failed = true,
+                           bool collision_verbose = false);
+
+  /**
+   * \brief Helper for filterGrasps
+   * \return number of grasps remaining
+   */
+  std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                 planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                 const robot_model::JointModelGroup* ee_jmg,
+                                 const robot_model::JointModelGroup* arm_jmg,
+                                 bool filter_pregrasp,
+                                 bool verbose, bool collision_verbose);
+
+  /**
+   * \brief Thread for checking part of the possible grasps list
+   */
+  void filterGraspsThread(IkThreadStruct ik_thread_struct);
+
+  /**
+   * \brief Helper for the thread function to find IK solutions
+   * \return true on success
+   */
+  bool findIKSolution(geometry_msgs::PoseStamped& ik_pose, std::vector<double>& ik_solution,
+                      std::vector<double>& ik_seed_state, moveit_msgs::MoveItErrorCodes& error_code,
+                      IkThreadStruct& ik_thread_struct, const moveit::core::GroupStateValidityCallbackFn &constraint);
+
+  /**
+   * \brief Helper for the thread function to check the arm for collision with the planning scene
+   * \return true on success
+   */
+  bool checkInCollision(std::vector<double>& ik_solution,
+                        IkThreadStruct& ik_thread_struct,
+                        bool verbose);
 
   /**
    * \brief Of an array of grasps, choose just one for use
    * \return true on success
    */
-  bool chooseBestGrasp( std::vector<GraspSolution>& filtered_grasps,
-                        GraspSolution& chosen );
+  bool chooseBestGrasp( std::vector<GraspCandidatePtr>& grasp_candidates,
+                        GraspCandidatePtr& chosen );
 
   /**
-   * \brief Return grasps that are kinematically feasible
-   * \param possible_grasps - all possible grasps that this will test
-   * \param filtered_grasps - result - only the grasps that are kinematically feasible
-   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \param arm_jmg - the arm to solve the IK problem on
-   * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
+   * \brief Show grasps after being filtered
    * \return true on success
    */
-  bool filterGraspsKinematically(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                                 std::vector<GraspSolution>& filtered_grasps,
-                                 bool filter_pregrasp,
-                                 const robot_model::JointModelGroup* arm_jmg,
-                                 bool verbose_if_failed = true);
+  bool visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
+                       const moveit::core::JointModelGroup *arm_jmg);
 
   /**
-   * \brief Filter using collision checking. Run this after filterGraspsKinematically()
-   * \param potential grasps - invalid ones will be removed
-   * \param the planning scene containing the objects to collision check with
-   * \param arm_jmg - the arm to solve the IK problem on
-   * \param robot_state -
-   * \param verbose - show debug markers and logging when filtering grasps
-   * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
+   * \brief Show IK solutions of entire arm
    * \return true on success
    */
-  bool filterGraspsInCollision(std::vector<GraspSolution>& possible_grasps,
-                               planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const robot_model::JointModelGroup* arm_jmg,
-                               robot_state::RobotStatePtr robot_state,
-                               bool verbose = false,
-                               bool verbose_if_failed = true);
+  bool visualizeIKSolutions(const std::vector<GraspCandidatePtr>& grasp_candidates,
+                            const moveit::core::JointModelGroup* arm_jmg, double animation_speed);
+
+  /**
+   * \brief Show solutions of entire arm
+   * \return true on success
+   */
+  bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
+
 private:
 
-  /**
-   * \brief Helper for filterGraspsKinematically
-   */
-  bool filterGraspsKinematicallyHelper(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                                       std::vector<GraspSolution>& filtered_grasps,
-                                       bool filter_pregrasp,
-                                       const robot_model::JointModelGroup* ee_jmg,
-                                       const robot_model::JointModelGroup* arm_jmg, bool verbose);
+  // Allow a writeable robot state
+  robot_state::RobotStatePtr robot_state_;
 
-  /**
-   * \brief Thread for checking part of the possible grasps list
-   */
-  void filterGraspKinematicallyThread(IkThreadStruct ik_thread_struct);
+  // Keep a robot state for every thread
+  std::vector<robot_state::RobotStatePtr> robot_states_;
 
-  /**
-   * \brief Helper for filterGraspsInCollision
-   */
-  bool filterGraspsInCollisionHelper(std::vector<GraspSolution>& possible_grasps,
-                                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                     const robot_model::JointModelGroup* arm_jmg,
-                                     robot_state::RobotStatePtr robot_state,
-                                     bool verbose);
+  // Threaded kinematic solvers
+  std::map<std::string, std::vector<kinematics::KinematicsBaseConstPtr> > kin_solvers_;
+
+  // Class for publishing stuff to rviz
+  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+
+  // Number of degrees of freedom for the IK solver to find
+  std::size_t num_variables_;
+
+  // Time to allow IK solver to run
+  double solver_timeout_;
+
+  // Visualization levels
+  bool collision_verbose_;
+  double collision_verbose_speed_;
+  bool show_filtered_grasps_;
+  bool show_filtered_arm_solutions_;
+  double show_filtered_arm_solutions_speed_;
+  double show_filtered_arm_solutions_pregrasp_speed_;
+
+  // Shared node handle
+  ros::NodeHandle nh_;
 
 }; // end of class
 
@@ -216,5 +297,12 @@ typedef boost::shared_ptr<GraspFilter> GraspFilterPtr;
 typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
 } // namespace
+
+namespace
+{
+bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
+                  moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *state,
+                  const robot_state::JointModelGroup *group, const double *ik_solution);
+}
 
 #endif

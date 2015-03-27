@@ -57,18 +57,18 @@ class GraspData
 public:
 
   /**
-   * \brief Constructor
-   */
-  GraspData();
-
-  /**
    * \brief Loads grasp data from a yaml file (load from roslaunch)
    * \param node handle - allows for namespacing
    * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
+   */
+  GraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
+
+  /**
+   * \brief Helper function for constructor
    * \return true on success
    */
-  bool loadRobotGraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
-
+  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                     moveit::core::RobotModelConstPtr robot_model);
   /**
    * \brief Alter a robot state so that the end effector corresponding to this grasp data is in pre-grasp state (OPEN)
    * \param joint state of robot
@@ -103,8 +103,9 @@ public:
   trajectory_msgs::JointTrajectory grasp_posture_; // when the end effector is in "close" position
   std::string base_link_; // name of global frame with z pointing up
 
-  std::string ee_group_name_; // the end effector name
+  //std::string ee_group_name_; // the end effector name
   const robot_model::JointModelGroup* ee_jmg_; // this end effector
+  const robot_model::JointModelGroup* arm_jmg_; // the arm that attaches to this end effector
 
   double grasp_depth_; // distance from center point of object to end effector
   int angle_resolution_; // generate grasps at PI/angle_resolution increments
@@ -115,7 +116,10 @@ public:
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"
   std::string parent_link_name_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"
 
-};
+}; // class
+
+typedef boost::shared_ptr<GraspData> GraspDataPtr;
+typedef boost::shared_ptr<const GraspData> GraspDataConstPtr;
 
 } // namespace
 

@@ -43,9 +43,9 @@
 #include <Eigen/Geometry>
 
 // Grasp generation
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
-namespace baxter_pick_place
+namespace moveit_grasps
 {
 
 static const double BLOCK_SIZE = 0.04;
@@ -57,13 +57,13 @@ private:
   ros::NodeHandle nh_;
 
   // Grasp generator
-  moveit_grasps::GraspsPtr grasp_generator_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // robot-specific data for generating grasps
-  moveit_grasps::GraspData grasp_data_;
+  moveit_grasps::GraspDataPtr grasp_data_;
 
   // which baxter arm are we using
   std::string ee_group_name_;
@@ -87,14 +87,13 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    if (!grasp_data_.loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
-      ros::shutdown();
+    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset( new moveit_grasps::Grasps(visual_tools_, true) );
+    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, true) );
 
     geometry_msgs::Pose pose;
     visual_tools_->generateEmptyPose(pose);
@@ -106,12 +105,12 @@ public:
       for (std::size_t i = 0; i < 4; ++i)
       {
         // Test visualization of end effector in OPEN position
-        grasp_data_.setRobotStatePreGrasp( visual_tools_->getSharedRobotState() );
+        grasp_data_->setRobotStatePreGrasp( visual_tools_->getSharedRobotState() );
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::ORANGE, "test_eef");
         ros::Duration(1.0).sleep();
 
         // Test visualization of end effector in CLOSED position
-        grasp_data_.setRobotStateGrasp( visual_tools_->getSharedRobotState() );
+        grasp_data_->setRobotStateGrasp( visual_tools_->getSharedRobotState() );
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::GREEN, "test_eef");
         ros::Duration(1.0).sleep();      
       }
@@ -214,7 +213,7 @@ int main(int argc, char *argv[])
   int num_tests = 1;
   ros::init(argc, argv, "grasp_generator_test");
 
-  ROS_INFO_STREAM_NAMED("main","Grasps Test");
+  ROS_INFO_STREAM_NAMED("main","GraspGenerator Test");
 
   ros::AsyncSpinner spinner(2);
   spinner.start();
@@ -227,7 +226,7 @@ int main(int argc, char *argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  baxter_pick_place::GraspGeneratorTest tester(num_tests);
+  moveit_grasps::GraspGeneratorTest tester(num_tests);
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;

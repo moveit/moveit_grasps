@@ -1,7 +1,7 @@
 <launch>
   <arg name="hand" default="false" />
 
-  <include file="$(find baxter_moveit_config)/launch/planning_context.launch.xml">
+  <include file="$(find baxter_moveit_config)/launch/planning_context.launch">
     <arg name="load_robot_description" value="true"/>
   </include>
 

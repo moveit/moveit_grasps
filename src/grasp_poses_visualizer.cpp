@@ -36,7 +36,7 @@
    Desc:   creates a vizualization of all the poses used in the graping pipeline
 */
 
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 namespace moveit_grasps
 {
@@ -66,10 +66,10 @@ private:
   double height_;
   double max_grasp_size_;
   geometry_msgs::Pose cuboid_pose_;
-  moveit_grasps::GraspsPtr grasps_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   std::vector<moveit_msgs::Grasp> possible_grasps_;
-  moveit_grasps::GraspData grasp_data_;
+  moveit_grasps::GraspDataPtr grasp_data_;
 
   // TODO: read in from param
 
@@ -80,7 +80,8 @@ private:
 public:
 
   // Constructor
-  GraspPosesVisualizer(bool verbose) : nh_("~")
+  GraspPosesVisualizer(bool verbose) 
+    : nh_("~")
   {
     // get arm parameters
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
@@ -89,19 +90,15 @@ public:
     ROS_INFO_STREAM_NAMED("init", "Planning Group: " << planning_group_name_);
 
     // set up rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base","/rviz_visual_tools"));
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base","/end_effector_marker"));
     visual_tools_->setMuted(false);
     visual_tools_->loadMarkerPub();
 
-    // load grasp data 
-    if (!grasp_data_.loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
-      {
-    	ROS_ERROR_STREAM_NAMED("init", "Failed to load grasp data");
-    	ros::shutdown();
-      }
+    // Load grasp data 
+    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     // load grasp generator
-    grasps_.reset( new moveit_grasps::Grasps(visual_tools_, verbose) );
+    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, verbose) );
 
     // initialize cuboid size
     depth_ = CUBOID_MIN_SIZE;
@@ -126,7 +123,7 @@ public:
     visual_tools_->publishAxis(cuboid_pose_, 0.05, 0.005);
     visual_tools_->publishText(cuboid_pose_,"Object Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
     possible_grasps_.clear();
-    grasps_->generateCuboidGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
+    grasp_generator_->generateCuboidGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
                                      max_grasp_size_, grasp_data_, possible_grasps_);    
 
     // SHOW EE GRASP POSE
@@ -137,7 +134,7 @@ public:
 
     // SHOW GRASP POSE 
     Eigen::Affine3d grasp_pose;
-    grasp_pose = ee_pose * grasp_data_.grasp_pose_to_eef_pose_.inverse();
+    grasp_pose = ee_pose * grasp_data_->grasp_pose_to_eef_pose_.inverse();
     visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.02);
     visual_tools_->publishText(grasp_pose, "Grasp Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
@@ -148,11 +145,11 @@ public:
     Eigen::Vector3d palm_vector = obj_point - grasp_point;
     palm_vector.normalize();
 
-    Eigen::Vector3d palm_point = grasp_point + palm_vector * grasp_data_.finger_to_palm_depth_;
+    Eigen::Vector3d palm_point = grasp_point + palm_vector * grasp_data_->finger_to_palm_depth_;
     visual_tools_->publishLine(grasp_point, palm_point, rviz_visual_tools::GREY);
 
     Eigen::Affine3d text_pose;
-    Eigen::Vector3d text_point = grasp_point + palm_vector * grasp_data_.finger_to_palm_depth_ * 0.5;
+    Eigen::Vector3d text_point = grasp_point + palm_vector * grasp_data_->finger_to_palm_depth_ * 0.5;
     text_pose = grasp_pose;
     text_pose.translation() += text_point - grasp_pose.translation();
     visual_tools_->publishText(text_pose, "finger_to_palm_depth", rviz_visual_tools::GREY, rviz_visual_tools::XSMALL, text);    
@@ -204,7 +201,7 @@ public:
     // SHOW ROBOT GRIPPER
     std::vector<moveit_msgs::Grasp> visualized_grasp;
     visualized_grasp.push_back(possible_grasps_[50]);
-    visual_tools_->publishGrasps(visualized_grasp, grasp_data_.ee_jmg_);
+    visual_tools_->publishGrasps(visualized_grasp, grasp_data_->ee_jmg_);
   }
 
   void generateRandomCuboid(geometry_msgs::Pose& cuboid_pose, double& l, double& w, double& h)
