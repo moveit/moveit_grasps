@@ -104,6 +104,13 @@ To also test the grasp filtering:
 roslaunch moveit_grasps test_filter.launch baxter:=true
 ```
 
+### Bounding Box From Mesh
+```
+roslaunch moveit_grasps rviz.launch
+roslaunch moveit_grasps test_bounding_box.launch
+```
+Each mesh in the products folder will be displayed with the calculated bounding box. Hit `enter` to move to the next mesh.
+
 ## Tested Robots
 
  - [Baxter](https://github.com/davetcoleman/baxter_cpp)
