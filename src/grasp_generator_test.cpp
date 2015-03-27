@@ -43,7 +43,7 @@
 #include <Eigen/Geometry>
 
 // Grasp generation
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 namespace baxter_pick_place
 {
@@ -57,7 +57,7 @@ private:
   ros::NodeHandle nh_;
 
   // Grasp generator
-  moveit_grasps::GraspsPtr grasp_generator_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
@@ -94,7 +94,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset( new moveit_grasps::Grasps(visual_tools_, true) );
+    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, true) );
 
     geometry_msgs::Pose pose;
     visual_tools_->generateEmptyPose(pose);
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
   int num_tests = 1;
   ros::init(argc, argv, "grasp_generator_test");
 
-  ROS_INFO_STREAM_NAMED("main","Grasps Test");
+  ROS_INFO_STREAM_NAMED("main","GraspGenerator Test");
 
   ros::AsyncSpinner spinner(2);
   spinner.start();

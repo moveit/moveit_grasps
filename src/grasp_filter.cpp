@@ -373,7 +373,7 @@ void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
     {
       // Convert to a pre-grasp
       const std::string &ee_parent_link_name = ik_thread_struct.ee_jmg_->getEndEffectorParentGroup().second;
-      ik_pose = Grasps::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
+      ik_pose = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
 
       // Solve IK Problem
       if (!findIKSolution(ik_pose, grasp_candidate->pregrasp_ik_solution_, ik_seed_state, error_code, ik_thread_struct))
@@ -448,9 +448,9 @@ bool GraspFilter::checkInCollision(std::vector<double>& ik_solution,
   {
     if (verbose)
     {
-      ROS_INFO_STREAM_NAMED("filter.superdebug","Grasp solution colliding");
+      ROS_ERROR_STREAM_NAMED("filter","Grasp solution colliding");
       visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::RED);
-      visual_tools_->publishContactPoints(*robot_state_, ik_thread_struct.planning_scene_.get());
+      visual_tools_->publishContactPoints(*robot_state_, ik_thread_struct.planning_scene_.get(), rviz_visual_tools::BLACK);
 
       ros::Duration(2.0).sleep();
     }

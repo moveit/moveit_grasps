@@ -36,7 +36,7 @@
    Desc:   Generates geometric grasps for cuboids and blocks, not using physics or contact wrenches
 */
 
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 // Parameter loading
 #include <rviz_visual_tools/ros_param_utilities.h>
@@ -45,7 +45,7 @@ namespace moveit_grasps
 {
 
 // Constructor
-Grasps::Grasps(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
+GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
   : visual_tools_(visual_tools)
   , nh_("~/generator")
   , verbose_(verbose)
@@ -60,7 +60,7 @@ Grasps::Grasps(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verb
   ROS_DEBUG_STREAM_NAMED("grasps","Loaded grasp generator");
 }
 
-geometry_msgs::PoseStamped Grasps::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
+geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
 {
   // Grasp Pose Variables
   geometry_msgs::PoseStamped grasp_pose = grasp.grasp_pose;
@@ -105,7 +105,7 @@ geometry_msgs::PoseStamped Grasps::getPreGraspPose(const moveit_msgs::Grasp &gra
   return pre_grasp_pose;
 }
 
-void Grasps::publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp_data,
+void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp_data,
                                const rviz_visual_tools::colors &color, double approach_length)
 {
   //Eigen::Affine3d eigen_grasp_pose;
@@ -117,7 +117,7 @@ void Grasps::publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp
   visual_tools_->publishArrow(grasp, color, rviz_visual_tools::REGULAR);
 }
 
-Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, double radius)
+Eigen::ArrayXXf GraspGenerator::generateCuboidGraspPoints(double length, double width, double radius)
 {
   ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points","generating possible grasp points around cuboid");
 
@@ -259,7 +259,7 @@ Eigen::ArrayXXf Grasps::generateCuboidGraspPoints(double length, double width, d
   return points;
 }
 
-bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, grasp_axis_t axis,
+bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, grasp_axis_t axis,
                                       const moveit_grasps::GraspData& grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
   // create transform from object to world frame (/base_link)
@@ -440,7 +440,7 @@ bool Grasps::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double
   }
 }
 
-bool Grasps::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
+bool GraspGenerator::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
                                   double max_grasp_size, const moveit_grasps::GraspData& grasp_data,
                                   std::vector<moveit_msgs::Grasp>& possible_grasps)
 {

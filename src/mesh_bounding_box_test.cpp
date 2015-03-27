@@ -7,7 +7,7 @@
 
 
 #include <moveit_visual_tools/moveit_visual_tools.h>
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 // #include <rviz_visual_tools/rviz_visual_tools.h>
 

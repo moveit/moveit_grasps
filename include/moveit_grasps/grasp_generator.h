@@ -35,8 +35,8 @@
 // Author: Dave Coleman
 // Desc:   Generates grasps for a cube
 
-#ifndef MOVEIT_GRASPS__MOVEIT_GRASPS_H_
-#define MOVEIT_GRASPS__MOVEIT_GRASPS_H_
+#ifndef MOVEIT_GRASPS__GRASP_GENERATOR_H_
+#define MOVEIT_GRASPS__GRASP_GENERATOR_H_
 
 // ROS
 #include <ros/ros.h>
@@ -78,7 +78,7 @@ enum grasp_direction_t {UP, DOWN};
 enum grasp_rotation_t {FULL, HALF};
 
 // Class
-class Grasps
+class GraspGenerator
 {
 
 public:
@@ -87,7 +87,7 @@ public:
   /**
    * \brief Constructor
    */
-  Grasps(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
+  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
   /**
    * \brief Create possible grasp positions around a cuboid 
@@ -187,8 +187,8 @@ private:
 
 }; // end of class
 
-typedef boost::shared_ptr<Grasps> GraspsPtr;
-typedef boost::shared_ptr<const Grasps> GraspsConstPtr;
+typedef boost::shared_ptr<GraspGenerator> GraspGeneratorPtr;
+typedef boost::shared_ptr<const GraspGenerator> GraspGeneratorConstPtr;
 
 } // namespace
 

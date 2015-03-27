@@ -68,7 +68,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 # Grasp Generator Library
 add_library(${PROJECT_NAME}
-  src/grasps.cpp
+  src/grasp_generator.cpp
   src/grasp_data.cpp
 )
 target_link_libraries(${PROJECT_NAME}
@@ -90,7 +90,7 @@ target_link_libraries(${PROJECT_NAME}_filter_test
 )
 
 # Test grasp executable
-add_executable(${PROJECT_NAME}_test src/grasps_test.cpp)
+add_executable(${PROJECT_NAME}_test src/grasp_generator_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )

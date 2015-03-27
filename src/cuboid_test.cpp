@@ -2,7 +2,7 @@
    Desc:   Tests the cuboid grasp generator
 */
 
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 namespace moveit_grasps
 {
@@ -22,7 +22,7 @@ private:
   double height_;
   double max_grasp_size_;
   geometry_msgs::Pose cuboid_pose_;
-  moveit_grasps::GraspsPtr grasps_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   std::vector<moveit_msgs::Grasp> possible_grasps_;
   moveit_grasps::GraspData grasp_data_;
@@ -59,7 +59,7 @@ public:
     ee_jmg_ = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
     // load grasp generator
-    grasps_.reset( new moveit_grasps::Grasps(visual_tools_, verbose) );
+    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, verbose) );
 
     // initialize cuboid size
     max_grasp_size_ = MODEL_T_MAX_GRASP_SIZE;
@@ -85,7 +85,7 @@ public:
     
       possible_grasps_.clear();
 
-      grasps_->generateCuboidGrasps( visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
+      grasp_generator_->generateCuboidGrasps( visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
                                      max_grasp_size_, grasp_data_, possible_grasps_);
       ROS_INFO_STREAM_NAMED("test", "Generated " << possible_grasps_.size() << " possible grasps around cuboid ");
 

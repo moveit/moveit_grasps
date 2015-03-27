@@ -57,7 +57,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Grasp 
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
@@ -84,7 +84,7 @@ private:
   ros::NodeHandle nh_;
 
   // Grasp generator
-  moveit_grasps::GraspsPtr grasp_generator_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
@@ -162,7 +162,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset( new moveit_grasps::Grasps(visual_tools_) );
+    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_) );
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
@@ -170,8 +170,6 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
-    std::vector<GraspCandidatePtr> grasp_candidates;
-
     const moveit::core::JointModelGroup* ee_jmg = robot_state->getRobotModel()->getJointModelGroup(grasp_data_.ee_group_name_);
   
     // Loop
@@ -202,6 +200,7 @@ public:
                                               grasp_data_, possible_grasps);
 
       // Convert to the correct type for filtering
+      std::vector<GraspCandidatePtr> grasp_candidates;
       grasp_candidates = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps);
 
       // Filter the grasp for only the ones that are reachable

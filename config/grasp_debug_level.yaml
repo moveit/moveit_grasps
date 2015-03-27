@@ -5,7 +5,9 @@ generator:
   show_prefiltered_grasps: false
 filter:
   # Collision in verbose
-  collision_verbose: false
+  collision_verbose: true
+  # Show grasps filtered by collision
+  
   # Show post-filter arrows
   show_filtered_grasps: true
   # Show pose-filter arm ik solutions

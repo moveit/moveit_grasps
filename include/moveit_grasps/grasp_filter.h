@@ -47,7 +47,7 @@
 #include <moveit_msgs/Grasp.h>
 
 // Grasping
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 // Rviz
 #include <moveit_visual_tools/moveit_visual_tools.h>

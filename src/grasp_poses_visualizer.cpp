@@ -36,7 +36,7 @@
    Desc:   creates a vizualization of all the poses used in the graping pipeline
 */
 
-#include <moveit_grasps/grasps.h>
+#include <moveit_grasps/grasp_generator.h>
 
 namespace moveit_grasps
 {
@@ -66,7 +66,7 @@ private:
   double height_;
   double max_grasp_size_;
   geometry_msgs::Pose cuboid_pose_;
-  moveit_grasps::GraspsPtr grasps_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   std::vector<moveit_msgs::Grasp> possible_grasps_;
   moveit_grasps::GraspData grasp_data_;
@@ -101,7 +101,7 @@ public:
       }
 
     // load grasp generator
-    grasps_.reset( new moveit_grasps::Grasps(visual_tools_, verbose) );
+    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, verbose) );
 
     // initialize cuboid size
     depth_ = CUBOID_MIN_SIZE;
@@ -126,7 +126,7 @@ public:
     visual_tools_->publishAxis(cuboid_pose_, 0.05, 0.005);
     visual_tools_->publishText(cuboid_pose_,"Object Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
     possible_grasps_.clear();
-    grasps_->generateCuboidGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
+    grasp_generator_->generateCuboidGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
                                      max_grasp_size_, grasp_data_, possible_grasps_);    
 
     // SHOW EE GRASP POSE
