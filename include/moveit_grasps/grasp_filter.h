@@ -67,11 +67,13 @@ namespace moveit_grasps
 
 /**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
+ *        This includes the pregrasp and grasp IK solution
  */
 struct GraspCandidate
 {
-  GraspCandidate(moveit_msgs::Grasp grasp)
+  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data)
     : grasp_(grasp)
+    , grasp_data_(grasp_data)
     , valid_(false)
     , grasp_filtered_by_ik_(false)
     , grasp_filtered_by_collision_(false)
@@ -79,7 +81,30 @@ struct GraspCandidate
     , pregrasp_filtered_by_collision_(false)
   {}
 
+  bool getPreGraspState(moveit::core::RobotStatePtr &robot_state)
+  {
+    // Apply IK solved arm joints to state
+    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
+
+    // Set end effector to correct configuration
+    grasp_data_->setRobotStatePreGrasp(robot_state);
+
+    return true;
+  }
+
+  bool getGraspState(moveit::core::RobotStatePtr robot_state)
+  {
+    // Apply IK solved arm joints to state
+    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
+
+    // Set end effector to correct configuration
+    grasp_data_->setRobotStateGrasp(robot_state);
+    
+    return true;
+  }
+
   moveit_msgs::Grasp grasp_;
+  const GraspDataPtr grasp_data_;
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
 
@@ -103,6 +128,7 @@ struct IkThreadStruct
                  int grasps_id_start,
                  int grasps_id_end,
                  kinematics::KinematicsBaseConstPtr kin_solver,
+                 robot_state::RobotStatePtr robot_state,
                  const robot_model::JointModelGroup* ee_jmg,
                  const robot_model::JointModelGroup* arm_jmg,
                  double timeout,
@@ -116,6 +142,7 @@ struct IkThreadStruct
     grasps_id_start_(grasps_id_start),
     grasps_id_end_(grasps_id_end),
     kin_solver_(kin_solver),
+    robot_state_(robot_state),
     ee_jmg_(ee_jmg),
     arm_jmg_(arm_jmg),
     timeout_(timeout),
@@ -131,6 +158,7 @@ struct IkThreadStruct
   int grasps_id_start_;
   int grasps_id_end_;
   kinematics::KinematicsBaseConstPtr kin_solver_;
+  robot_state::RobotStatePtr robot_state_;
   const robot_model::JointModelGroup* ee_jmg_;
   const robot_model::JointModelGroup* arm_jmg_;
   double timeout_;
@@ -154,7 +182,8 @@ public:
    * \param vector of grasps generated from a grasp generator
    * \return vector of grasps in this package's proper format
    */
-  std::vector<GraspCandidatePtr> convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& grasp_candidates);
+  std::vector<GraspCandidatePtr> convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& grasp_candidates,
+                                                             const GraspDataPtr grasp_data);
 
   /**
    * \brief Return grasps that are kinematically feasible
@@ -194,7 +223,7 @@ public:
    */
   bool findIKSolution(geometry_msgs::PoseStamped& ik_pose, std::vector<double>& ik_solution,
                       std::vector<double>& ik_seed_state, moveit_msgs::MoveItErrorCodes& error_code,
-                      IkThreadStruct& ik_thread_struct);
+                      IkThreadStruct& ik_thread_struct, const moveit::core::GroupStateValidityCallbackFn &constraint);
 
   /**
    * \brief Helper for the thread function to check the arm for collision with the planning scene
@@ -222,20 +251,22 @@ public:
    * \brief Show IK solutions of entire arm
    * \return true on success
    */
-  bool visualizeIKSolutionsOLD(const std::vector<GraspCandidatePtr>& grasp_candidates,
-                               const moveit::core::JointModelGroup* arm_jmg, double animation_speed);
-
-  /**
-   * \brief Show IK solutions of entire arm
-   * \return true on success
-   */
   bool visualizeIKSolutions(const std::vector<GraspCandidatePtr>& grasp_candidates,
                             const moveit::core::JointModelGroup* arm_jmg, double animation_speed);
+
+  /**
+   * \brief Show solutions of entire arm
+   * \return true on success
+   */
+  bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
 
 private:
 
   // Allow a writeable robot state
   robot_state::RobotStatePtr robot_state_;
+
+  // Keep a robot state for every thread
+  std::vector<robot_state::RobotStatePtr> robot_states_;
 
   // Threaded kinematic solvers
   std::map<std::string, std::vector<kinematics::KinematicsBaseConstPtr> > kin_solvers_;
@@ -250,9 +281,12 @@ private:
   double solver_timeout_;
 
   // Visualization levels
+  bool collision_verbose_;
+  double collision_verbose_speed_;
   bool show_filtered_grasps_;
   bool show_filtered_arm_solutions_;
-  bool collision_verbose_;
+  double show_filtered_arm_solutions_speed_;
+  double show_filtered_arm_solutions_pregrasp_speed_;
 
   // Shared node handle
   ros::NodeHandle nh_;
@@ -263,5 +297,12 @@ typedef boost::shared_ptr<GraspFilter> GraspFilterPtr;
 typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
 } // namespace
+
+namespace
+{
+bool isStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
+                  moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *state,
+                  const robot_state::JointModelGroup *group, const double *ik_solution);
+}
 
 #endif

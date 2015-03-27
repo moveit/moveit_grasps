@@ -63,7 +63,7 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // robot-specific data for generating grasps
-  moveit_grasps::GraspData grasp_data_;
+  moveit_grasps::GraspDataPtr grasp_data_;
 
   // which baxter arm are we using
   std::string ee_group_name_;
@@ -74,6 +74,7 @@ public:
   // Constructor
   GraspGeneratorTest(int num_tests)
     : nh_("~")
+    , grasp_data_(new moveit_grasps::GraspData())
   {
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
 
@@ -87,7 +88,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    if (!grasp_data_.loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
+    if (!grasp_data_->loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
       ros::shutdown();
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
@@ -106,12 +107,12 @@ public:
       for (std::size_t i = 0; i < 4; ++i)
       {
         // Test visualization of end effector in OPEN position
-        grasp_data_.setRobotStatePreGrasp( visual_tools_->getSharedRobotState() );
+        grasp_data_->setRobotStatePreGrasp( visual_tools_->getSharedRobotState() );
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::ORANGE, "test_eef");
         ros::Duration(1.0).sleep();
 
         // Test visualization of end effector in CLOSED position
-        grasp_data_.setRobotStateGrasp( visual_tools_->getSharedRobotState() );
+        grasp_data_->setRobotStateGrasp( visual_tools_->getSharedRobotState() );
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::GREEN, "test_eef");
         ros::Duration(1.0).sleep();      
       }

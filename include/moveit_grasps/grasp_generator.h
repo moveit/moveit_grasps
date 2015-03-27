@@ -100,7 +100,7 @@ public:
    * \return true if successful
    */
   bool generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
-                            double max_grasp_size, const moveit_grasps::GraspData& grasp_data, 
+                            double max_grasp_size, const GraspDataPtr grasp_data, 
                             std::vector<moveit_msgs::Grasp>& possible_grasps);
   
   /**
@@ -115,7 +115,7 @@ public:
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
-                                grasp_axis_t axis, const moveit_grasps::GraspData& grasp_data, 
+                                grasp_axis_t axis, const GraspDataPtr grasp_data, 
                                 std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /**
@@ -141,7 +141,7 @@ public:
    * \param arm - the planning group of the arm we want to display
    * \return true on success
    */
-  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspData& grasp_data, const rviz_visual_tools::colors &color, double approach_length = 0.1);
+  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data, const rviz_visual_tools::colors &color, double approach_length = 0.1);
 
   /**
    * \brief get the bounding box for a mesh
@@ -181,6 +181,7 @@ private:
 
   // Visualization levels
   bool show_prefiltered_grasps_;
+  double show_prefiltered_grasps_speed_;
 
   // Shared node handle
   ros::NodeHandle nh_;

@@ -93,7 +93,7 @@ private:
   moveit_grasps::GraspFilterPtr grasp_filter_;
 
   // data for generating grasps
-  moveit_grasps::GraspData grasp_data_;
+  moveit_grasps::GraspDataPtr grasp_data_;
 
   // Shared planning scene (load once for everything)
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
@@ -108,6 +108,7 @@ public:
   // Constructor
   GraspGeneratorTest(int num_tests) 
     : nh_("~")
+    , grasp_data_(new GraspData())
   {
     // Get arm info from param server
     nh_.param("arm", arm_, std::string("left"));
@@ -150,7 +151,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data
-    if (!grasp_data_.loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
+    if (!grasp_data_->loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
       ros::shutdown();
 
     // ---------------------------------------------------------------------------------------------
@@ -170,7 +171,6 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
-    const moveit::core::JointModelGroup* ee_jmg = robot_state->getRobotModel()->getJointModelGroup(grasp_data_.ee_group_name_);
   
     // Loop
     for (int i = 0; i < num_tests; ++i)
@@ -201,12 +201,12 @@ public:
 
       // Convert to the correct type for filtering
       std::vector<GraspCandidatePtr> grasp_candidates;
-      grasp_candidates = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps);
+      grasp_candidates = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps, grasp_data_);
 
       // Filter the grasp for only the ones that are reachable
       ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
       bool filter_pregrasps = true;
-      bool verbose = true;
+      bool verbose = false; // note: setting this to true will disable threading
       bool verbose_if_failed = true;
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                              arm_jmg, filter_pregrasps, 
@@ -263,7 +263,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-  int num_tests = 1;
+  int num_tests = 5;
 
   ros::init(argc, argv, "grasp_generator_test");
 

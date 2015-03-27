@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /MarkerArray1
         - /MarkerArray1/Namespaces1
         - /RobotState1
         - /Trajectory1
@@ -59,6 +60,7 @@ Visualization Manager:
         Arrow: true
         Collision: true
         Cuboid: true
+        end_effector: true
       Queue Size: 100
       Value: true
     - Attached Body Color: 150; 50; 150
@@ -902,22 +904,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.84485
+      Distance: 1.6563
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.464339
-        Y: 0.117501
-        Z: 0.223339
+        X: 0.33384
+        Y: 0.126983
+        Z: 0.227266
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.419798
+      Pitch: 0.504796
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.337219
+      Yaw: 0.625838
     Saved: ~
 Window Geometry:
   Displays:
