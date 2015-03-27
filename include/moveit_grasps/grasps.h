@@ -51,9 +51,14 @@
 #include <moveit_msgs/Grasp.h>
 #include <moveit/macros/deprecation.h>
 
+// geometric_shapes
+#include <geometric_shapes/shape_operations.h>
+#include <geometric_shapes/bodies.h>
+
 // Eigen
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <Eigen/Eigenvalues>
 #include <eigen_conversions/eigen_msg.h>
 
 // Visualization
@@ -63,6 +68,7 @@
 #include <cstdlib>
 #include <string>
 #include <math.h>
+#include <limits>
 #define _USE_MATH_DEFINES
 
 #include <moveit_grasps/grasp_data.h>
@@ -161,6 +167,7 @@ public:
    *
    */
   //bool getBoundingBoxOfMesh(std::string mesh_file, shapes::Shape &mesh, bodies::BoundingBox &box);
+  bool getBoundingBoxFromMesh(shape_msgs::Mesh mesh_msg, Eigen::Affine3d& pose, double& depth, double& width, double& height);
 
   /**
    * \brief Getter for Verbose
