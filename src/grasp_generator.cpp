@@ -61,6 +61,247 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   ROS_DEBUG_STREAM_NAMED("grasps","Loaded grasp generator");
 }
 
+
+bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
+                                    double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
+                                    std::vector<moveit_msgs::Grasp>& possible_grasps)
+{
+  double depth;
+  double width;
+  double height;
+  Eigen::Affine3d mesh_pose;
+  if (!getBoundingBoxFromMesh(mesh_msg, mesh_pose, depth, width, height))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to get bounding box from mesh");
+    return false;
+  }
+
+  // TODO - reconcile the new mesh_pose with the input cuboid_pose
+
+  return generateGrasps(cuboid_pose, depth, width, height, max_grasp_size, grasp_data, possible_grasps);
+}
+
+bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
+                                    double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
+                                    std::vector<moveit_msgs::Grasp>& possible_grasps)
+{
+  // Generate grasps over axes that aren't too wide to grip
+
+  // Most default type of grasp is X axis
+  if (depth <= max_grasp_size ) // depth = size along x-axis
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around x-axis of cuboid");
+    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, possible_grasps);
+  }
+
+  if (width <= max_grasp_size ) // width = size along y-axis
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around y-axis of cuboid");
+    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, possible_grasps);
+  }
+
+  if (height <= max_grasp_size ) // height = size along z-axis
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around z-axis of cuboid");
+    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
+  }
+
+  if (!possible_grasps.size())
+    ROS_WARN_STREAM_NAMED("grasp_generator","Generated 0 grasps");
+  else
+    ROS_INFO_STREAM_NAMED("grasp_generator","Generated " << possible_grasps.size() << " grasps");
+
+  // Visualize animated grasps that have been generated
+  if (show_prefiltered_grasps_)
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_generator","Animating all generated (candidate) grasps before filtering");
+    visual_tools_->publishAnimatedGrasps(possible_grasps, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+  }
+
+  return true;
+}
+
+bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, grasp_axis_t axis,
+                                              const moveit_grasps::GraspDataPtr grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
+{
+  // create transform from object to world frame (/base_link)
+  Eigen::Affine3d object_global_transform = cuboid_pose;
+
+  // grasp parameters
+
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","generating reusable motions and msgs");
+
+  moveit_msgs::GripperTranslation pre_grasp_approach;
+  pre_grasp_approach.direction.header.stamp = ros::Time::now();
+  pre_grasp_approach.desired_distance = grasp_data->finger_to_palm_depth_;
+  pre_grasp_approach.min_distance = grasp_data->finger_to_palm_depth_;
+
+  moveit_msgs::GripperTranslation post_grasp_retreat;
+  post_grasp_retreat.direction.header.stamp = ros::Time::now();
+  post_grasp_retreat.desired_distance = grasp_data->finger_to_palm_depth_;
+  post_grasp_retreat.min_distance = grasp_data->finger_to_palm_depth_;
+
+  geometry_msgs::PoseStamped grasp_pose_msg;
+  grasp_pose_msg.header.stamp = ros::Time::now();
+  grasp_pose_msg.header.frame_id = grasp_data->base_link_;
+
+  // grasp generator loop
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","offsetting grasp points by gripper finger length, " << grasp_data->finger_to_palm_depth_);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","Translate gripper by " << grasp_data->grasp_pose_to_eef_pose_.translation() );
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","Rotate gripper by " << grasp_data->grasp_pose_to_eef_pose_.rotation() );
+  double radius = grasp_data->finger_to_palm_depth_;
+
+  moveit_msgs::Grasp new_grasp;
+  static int grasp_id = 0;
+  double grasp_score;
+
+  Eigen::Affine3d grasp_pose;
+  Eigen::Affine3d base_grasp_pose;
+
+  double dx = cuboid_pose.translation()[0];
+  double dy = cuboid_pose.translation()[1];
+  double dz = cuboid_pose.translation()[2];
+
+  Eigen::Vector3d grasp_translation;
+  Eigen::ArrayXXf grasp_points;
+
+  new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
+  grasp_id++;
+
+  // pre-grasp and grasp postures
+  new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
+  new_grasp.grasp_posture = grasp_data->grasp_posture_;
+
+
+  // Approach and retreat
+  // aligned with pose (aligned with grasp pose z-axis
+  // TODO:: Currently the pre/post approach/retreat are not being used. Either remove or make it robot agnostic.
+  // It currently being loaded with the assumption that z-axis is pointing away from object.
+  Eigen::Vector3d approach_vector;
+  approach_vector = grasp_pose * Eigen::Vector3d::UnitZ();
+  approach_vector.normalize();
+
+  pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_name_;
+  pre_grasp_approach.direction.vector.x = 0;
+  pre_grasp_approach.direction.vector.y = 0;
+  pre_grasp_approach.direction.vector.z = 1;
+  new_grasp.pre_grasp_approach = pre_grasp_approach;
+
+  post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_name_;
+  post_grasp_retreat.direction.vector.x = 0;
+  post_grasp_retreat.direction.vector.y = 0;
+  post_grasp_retreat.direction.vector.z = -1;
+  new_grasp.post_grasp_retreat = post_grasp_retreat;
+
+  switch(axis)
+  {
+    case X_AXIS:
+      // will rotate around x-axis testing grasps
+      grasp_points = generateCuboidGraspPoints(height, width, radius);
+
+      base_grasp_pose = cuboid_pose
+        * Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitX())
+        * Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitZ());
+      break;
+
+    case Y_AXIS:
+      // will rotate around y-axis testing grasps
+      grasp_points = generateCuboidGraspPoints(height, depth, radius);
+
+      base_grasp_pose = cuboid_pose *
+        Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitY());
+      break;
+
+    case Z_AXIS:
+      // will rotate around z-axis testing grasps
+      grasp_points = generateCuboidGraspPoints(depth, width, radius);
+
+      base_grasp_pose = cuboid_pose *
+        Eigen::AngleAxisd(-M_PI / 2, Eigen::Vector3d::UnitX());
+      break;
+
+    default:
+      ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","grasp axis may not be defined properly");
+      break;
+  }
+
+  for (size_t i = 0; i < grasp_points.size() / 3; i++ )
+  {
+    grasp_pose = base_grasp_pose;
+
+    // move to grasp position
+    grasp_translation = grasp_pose * Eigen::Vector3d(grasp_points(i,0), 0, grasp_points(i,1)) -
+      Eigen::Vector3d(dx,dy,dz);
+    grasp_pose.translation() += grasp_translation;
+
+    // Visualize lines for getting gripper rotation angle
+    Eigen::Vector3d cuboidCenter = cuboid_pose.translation();
+    Eigen::Vector3d poseCenter = grasp_pose.translation();
+    Eigen::Vector3d zAxis = grasp_pose * Eigen::Vector3d::UnitZ();
+    Eigen::Vector3d yAxis = grasp_pose * Eigen::Vector3d::UnitY();
+
+    // now rotate to point toward center of cuboid
+    Eigen::Vector3d gripper_z = zAxis - poseCenter;
+    gripper_z.normalized();
+    Eigen::Vector3d to_cuboid = cuboidCenter - poseCenter;
+    to_cuboid.normalized();
+    Eigen::Vector3d cross_prod = gripper_z.cross(to_cuboid);
+
+    for (size_t j = 0; j < 3; j++)
+    {
+      // check for possible negative zero values...
+      if (std::abs(cross_prod[j]) < 0.000001)
+        cross_prod[j] = 0;
+    }
+
+    double dot = cross_prod.dot(yAxis - poseCenter);
+    double rotation_angle = acos( gripper_z.normalized().dot(to_cuboid.normalized()));
+
+    // check sign of rotation angle
+    if (dot < 0)
+      rotation_angle *= -1;
+
+    ROS_DEBUG_STREAM_NAMED("cuboid","");
+    ROS_DEBUG_STREAM_NAMED("cuboid","yAxis      = " << yAxis[0] << " " << yAxis[1] << " " << yAxis[2]);
+    ROS_DEBUG_STREAM_NAMED("cuboid","cross_prod = " << cross_prod[0] << " " << cross_prod[1] << " " << cross_prod[2]);
+    ROS_DEBUG_STREAM_NAMED("cuboid","yAxis . cross_prod = " << dot);
+
+    grasp_pose = grasp_pose * Eigen::AngleAxisd(rotation_angle, Eigen::Vector3d::UnitY());
+
+    if (verbose_)
+    {
+      // collect all markers before publishing to rviz
+      visual_tools_->enableBatchPublishing(true);
+
+      // show generated grasp pose
+      visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
+      visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01);
+    }
+
+    // translate and rotate gripper to match standard orientation
+    // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
+    // Transform the grasp pose
+    grasp_pose = grasp_pose * grasp_data->grasp_pose_to_eef_pose_;
+
+    tf::poseEigenToMsg(grasp_pose, grasp_pose_msg.pose);
+    new_grasp.grasp_pose = grasp_pose_msg;
+    possible_grasps.push_back(new_grasp);
+
+    if (verbose_)
+    {
+      // show gripper center and grasp direction
+      visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
+      //visual_tools_->publishYArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
+
+      // Send markers to Rviz
+      visual_tools_->triggerBatchPublishAndDisable();
+      ros::Duration(0.05).sleep();
+    }
+  }
+}
+
 geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
 {
   // Grasp Pose Variables
@@ -260,362 +501,139 @@ Eigen::ArrayXXf GraspGenerator::generateCuboidGraspPoints(double length, double 
   return points;
 }
 
-bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, grasp_axis_t axis,
-                                              const moveit_grasps::GraspDataPtr grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps)
+bool GraspGenerator::getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Eigen::Affine3d& cuboid_pose,
+                                            double& depth, double& width, double& height)
 {
-  // create transform from object to world frame (/base_link)
-  Eigen::Affine3d object_global_transform = cuboid_pose;
+  int num_vertices = mesh_msg.vertices.size();
+  ROS_DEBUG_STREAM_NAMED("bbox","num triangles = " << mesh_msg.triangles.size());
+  ROS_DEBUG_STREAM_NAMED("bbox","num vertices = " << num_vertices);
 
-  // grasp parameters
+  // calculate centroid and moments of inertia
+  Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+  Eigen::Vector3d point = Eigen::Vector3d::Zero();
+  double Ixx, Iyy, Izz, Ixy, Ixz, Iyz;
+  Ixx = 0; Iyy = 0; Izz = 0; Ixy = 0; Ixz = 0; Iyz = 0;
 
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","generating reusable motions and msgs");
-
-  moveit_msgs::GripperTranslation pre_grasp_approach;
-  pre_grasp_approach.direction.header.stamp = ros::Time::now();
-  pre_grasp_approach.desired_distance = grasp_data->finger_to_palm_depth_;
-  pre_grasp_approach.min_distance = grasp_data->finger_to_palm_depth_;
-
-  moveit_msgs::GripperTranslation post_grasp_retreat;
-  post_grasp_retreat.direction.header.stamp = ros::Time::now();
-  post_grasp_retreat.desired_distance = grasp_data->finger_to_palm_depth_;
-  post_grasp_retreat.min_distance = grasp_data->finger_to_palm_depth_;
-
-  geometry_msgs::PoseStamped grasp_pose_msg;
-  grasp_pose_msg.header.stamp = ros::Time::now();
-  grasp_pose_msg.header.frame_id = grasp_data->base_link_;
-
-  // grasp generator loop
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","offsetting grasp points by gripper finger length, " << grasp_data->finger_to_palm_depth_);
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","Translate gripper by " << grasp_data->grasp_pose_to_eef_pose_.translation() );
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","Rotate gripper by " << grasp_data->grasp_pose_to_eef_pose_.rotation() );
-  double radius = grasp_data->finger_to_palm_depth_;
-
-  moveit_msgs::Grasp new_grasp;
-  static int grasp_id = 0;
-  double grasp_score;
-
-  Eigen::Affine3d grasp_pose;
-  Eigen::Affine3d base_grasp_pose;
-
-  double dx = cuboid_pose.translation()[0];
-  double dy = cuboid_pose.translation()[1];
-  double dz = cuboid_pose.translation()[2];
-
-  Eigen::Vector3d grasp_translation;
-  Eigen::ArrayXXf grasp_points;
-
-  new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
-  grasp_id++;
-
-  // pre-grasp and grasp postures
-  new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
-  new_grasp.grasp_posture = grasp_data->grasp_posture_;
-
-
-  // Approach and retreat
-  // aligned with pose (aligned with grasp pose z-axis
-  // TODO:: Currently the pre/post approach/retreat are not being used. Either remove or make it robot agnostic.
-  // It currently being loaded with the assumption that z-axis is pointing away from object.
-  Eigen::Vector3d approach_vector;
-  approach_vector = grasp_pose * Eigen::Vector3d::UnitZ();
-  approach_vector.normalize();
-
-  pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_name_;
-  pre_grasp_approach.direction.vector.x = 0;
-  pre_grasp_approach.direction.vector.y = 0;
-  pre_grasp_approach.direction.vector.z = 1;
-  new_grasp.pre_grasp_approach = pre_grasp_approach;
-
-  post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_name_;
-  post_grasp_retreat.direction.vector.x = 0;
-  post_grasp_retreat.direction.vector.y = 0;
-  post_grasp_retreat.direction.vector.z = -1;
-  new_grasp.post_grasp_retreat = post_grasp_retreat;
-
-  switch(axis)
+  for (int i = 0; i < num_vertices; i++)
   {
-    case X_AXIS:
-      // will rotate around x-axis testing grasps
-      grasp_points = generateCuboidGraspPoints(height, width, radius);
+    // centroid sum
+    point << mesh_msg.vertices[i].x, mesh_msg.vertices[i].y, mesh_msg.vertices[i].z;
+    centroid += point;
 
-      base_grasp_pose = cuboid_pose
-        * Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitX())
-        * Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitZ());
-      break;
+    // moments of inertia sum
+    Ixx += point[1] * point[1] + point[2] * point[2];
+    Iyy += point[0] * point[0] + point[2] * point[2];
+    Izz += point[0] * point[0] + point[1] * point[1];
+    Ixy += point[0] * point[1];
+    Ixz += point[0] * point[2];
+    Iyz += point[1] * point[2];
 
-    case Y_AXIS:
-      // will rotate around y-axis testing grasps
-      grasp_points = generateCuboidGraspPoints(height, depth, radius);
-
-      base_grasp_pose = cuboid_pose *
-        Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitY());
-      break;
-
-    case Z_AXIS:
-      // will rotate around z-axis testing grasps
-      grasp_points = generateCuboidGraspPoints(depth, width, radius);
-
-      base_grasp_pose = cuboid_pose *
-        Eigen::AngleAxisd(-M_PI / 2, Eigen::Vector3d::UnitX());
-      break;
-
-    default:
-      ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","grasp axis may not be defined properly");
-      break;
   }
 
-  for (size_t i = 0; i < grasp_points.size() / 3; i++ )
+  // final centroid calculation
+  for (int i = 0; i < 3; i++)
   {
-    grasp_pose = base_grasp_pose;
+    centroid[i] /= num_vertices;
+  }
+  ROS_DEBUG_STREAM_NAMED("bbox","centroid = \n" << centroid);
 
-    // move to grasp position
-    grasp_translation = grasp_pose * Eigen::Vector3d(grasp_points(i,0), 0, grasp_points(i,1)) -
-      Eigen::Vector3d(dx,dy,dz);
-    grasp_pose.translation() += grasp_translation;
+  if (verbose_)
+    visual_tools_->publishSphere(centroid, rviz_visual_tools::PINK, 0.01);
 
-    // Visualize lines for getting gripper rotation angle
-    Eigen::Vector3d cuboidCenter = cuboid_pose.translation();
-    Eigen::Vector3d poseCenter = grasp_pose.translation();
-    Eigen::Vector3d zAxis = grasp_pose * Eigen::Vector3d::UnitZ();
-    Eigen::Vector3d yAxis = grasp_pose * Eigen::Vector3d::UnitY();
+  // Solve for principle axes of inertia
+  Eigen::Matrix3d inertia_axis_aligned;
+  inertia_axis_aligned.row(0) <<  Ixx, -Ixy, -Ixz;
+  inertia_axis_aligned.row(1) << -Ixy,  Iyy, -Iyz;
+  inertia_axis_aligned.row(2) << -Ixz, -Iyz,  Izz;
 
-    // now rotate to point toward center of cuboid
-    Eigen::Vector3d gripper_z = zAxis - poseCenter;
-    gripper_z.normalized();
-    Eigen::Vector3d to_cuboid = cuboidCenter - poseCenter;
-    to_cuboid.normalized();
-    Eigen::Vector3d cross_prod = gripper_z.cross(to_cuboid);
+  ROS_DEBUG_STREAM_NAMED("bbox","inertia_axis_aligned = \n" << inertia_axis_aligned);
 
-    for (size_t j = 0; j < 3; j++)
+  Eigen::EigenSolver<Eigen::MatrixXd> es(inertia_axis_aligned);
+
+  ROS_DEBUG_STREAM_NAMED("bbox","eigenvalues = \n" << es.eigenvalues());
+  ROS_DEBUG_STREAM_NAMED("bbox","eigenvectors = \n" << es.eigenvectors());
+
+  Eigen::Vector3d axis_1 = es.eigenvectors().col(0).real();
+  Eigen::Vector3d axis_2 = es.eigenvectors().col(1).real();
+  Eigen::Vector3d axis_3 = es.eigenvectors().col(2).real();
+
+  // Test if eigenvectors are right-handed
+  Eigen::Vector3d w = axis_1.cross(axis_2) - axis_3;
+  double epsilon = 0.000001;
+  if ( !(std::abs(w(0)) < epsilon && std::abs(w(1)) < epsilon && std::abs(w(2)) < epsilon) )
+  {
+    axis_3 *= -1;
+    ROS_DEBUG_STREAM_NAMED("bbox","eigenvectors are left-handed, multiplying v3 by -1");
+  }
+
+  // assumes msg was given wrt world... probably needs better name
+  Eigen::Affine3d world_to_mesh_transform = Eigen::Affine3d::Identity();
+  world_to_mesh_transform.linear() << axis_1, axis_2, axis_3;
+  world_to_mesh_transform.translation() = centroid;
+
+  // Transform and get bounds
+  Eigen::Vector3d min;
+  Eigen::Vector3d max;
+  for (int i = 0; i < 3; i++)
+  {
+    min(i)=std::numeric_limits<double>::max();
+    max(i)=std::numeric_limits<double>::min();
+  }
+
+  for (int i = 0; i < num_vertices; i++)
+  {
+    point << mesh_msg.vertices[i].x, mesh_msg.vertices[i].y, mesh_msg.vertices[i].z;
+    point = world_to_mesh_transform.inverse() * point;
+    for (int j = 0; j < 3; j++)
     {
-      // check for possible negative zero values...
-      if (std::abs(cross_prod[j]) < 0.000001)
-        cross_prod[j] = 0;
-    }
+      if (point(j) < min(j))
+        min(j) = point(j);
 
-    double dot = cross_prod.dot(yAxis - poseCenter);
-    double rotation_angle = acos( gripper_z.normalized().dot(to_cuboid.normalized()));
-
-    // check sign of rotation angle
-    if (dot < 0)
-      rotation_angle *= -1;
-
-    ROS_DEBUG_STREAM_NAMED("cuboid","");
-    ROS_DEBUG_STREAM_NAMED("cuboid","yAxis      = " << yAxis[0] << " " << yAxis[1] << " " << yAxis[2]);
-    ROS_DEBUG_STREAM_NAMED("cuboid","cross_prod = " << cross_prod[0] << " " << cross_prod[1] << " " << cross_prod[2]);
-    ROS_DEBUG_STREAM_NAMED("cuboid","yAxis . cross_prod = " << dot);
-
-    grasp_pose = grasp_pose * Eigen::AngleAxisd(rotation_angle, Eigen::Vector3d::UnitY());
-
-    if (verbose_)
-    {
-      // collect all markers before publishing to rviz
-      visual_tools_->enableBatchPublishing(true);
-
-      // show generated grasp pose
-      visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
-      visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01);
-    }
-
-    // translate and rotate gripper to match standard orientation
-    // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
-    // Transform the grasp pose
-    grasp_pose = grasp_pose * grasp_data->grasp_pose_to_eef_pose_;
-
-    tf::poseEigenToMsg(grasp_pose, grasp_pose_msg.pose);
-    new_grasp.grasp_pose = grasp_pose_msg;
-    possible_grasps.push_back(new_grasp);
-
-    if (verbose_)
-    {
-      // show gripper center and grasp direction
-      visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
-      //visual_tools_->publishYArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, 0.05);
-      visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
-      visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
-
-      // Send markers to Rviz
-      visual_tools_->triggerBatchPublishAndDisable();
-      ros::Duration(0.05).sleep();
+      if (point(j) > max(j))
+        max(j) = point(j);
     }
   }
-}
+  ROS_DEBUG_STREAM_NAMED("bbox","min = \n" << min);
+  ROS_DEBUG_STREAM_NAMED("bbox","max = \n" << max);
 
-bool GraspGenerator::generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
-                                          double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
-                                          std::vector<moveit_msgs::Grasp>& possible_grasps)
-{
-  // Generate grasps over axes that aren't too wide to grip
+  // points
+  Eigen::Vector3d p[8];
 
-  // Most default type of grasp is X axis
-  if (depth <= max_grasp_size ) // depth = size along x-axis
+  p[0] << min(0), min(1), min(2);
+  p[1] << max(0), min(1), min(2);
+  p[2] << min(0), max(1), min(2);
+  p[3] << max(0), max(1), min(2);
+
+  p[4] << min(0), min(1), max(2);
+  p[5] << max(0), min(1), max(2);
+  p[6] << min(0), max(1), max(2);
+  p[7] << max(0), max(1), max(2);
+
+  if (verbose_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around x-axis of cuboid");
-    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, possible_grasps);
+    for (int i = 0; i < 8; i++)
+      visual_tools_->publishSphere(world_to_mesh_transform * p[i],rviz_visual_tools::YELLOW,0.01);
   }
 
-  if (width <= max_grasp_size ) // width = size along y-axis
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around y-axis of cuboid");
-    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, possible_grasps);
-  }
+  depth = max(0) - min(0);
+  width = max(1) - min(1);
+  height = max(2) - min(2);
+  ROS_DEBUG_STREAM_NAMED("bbox","bbox size = " << depth << ", " << width << ", " << height);
 
-  if (height <= max_grasp_size ) // height = size along z-axis
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around z-axis of cuboid");
-    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
-  }
+  Eigen::Vector3d translation;
+  translation << (min(0) + max(0)) / 2.0, (min(1) + max(1)) / 2.0, (min(2) + max(2)) / 2.0;
+  ROS_DEBUG_STREAM_NAMED("bbox","bbox origin = \n" << translation);
+  cuboid_pose = world_to_mesh_transform;
+  cuboid_pose.translation() = world_to_mesh_transform * translation;
 
-  if (!possible_grasps.size())
-    ROS_WARN_STREAM_NAMED("grasp_generator","Generated 0 grasps");
-  else
-    ROS_INFO_STREAM_NAMED("grasp_generator","Generated " << possible_grasps.size() << " grasps");
-
-  // Visualize animated grasps that have been generated
-  if (show_prefiltered_grasps_)
+  if (verbose_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator","Animating all generated (candidate) grasps before filtering");
-    visual_tools_->publishAnimatedGrasps(possible_grasps, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+    visual_tools_->publishCuboid(visual_tools_->convertPose(cuboid_pose),
+                                 depth,width,height,rviz_visual_tools::TRANSLUCENT);
+    visual_tools_->publishAxis(world_to_mesh_transform);
   }
 
   return true;
-}
-
-bool Grasps::getBoundingBoxFromMesh(shape_msgs::Mesh mesh_msg, Eigen::Affine3d& pose, double& depth, double& width, double& height)
-{
-    int num_vertices = mesh_msg.vertices.size();
-    ROS_DEBUG_STREAM_NAMED("bbox","num triangles = " << mesh_msg.triangles.size());
-    ROS_DEBUG_STREAM_NAMED("bbox","num vertices = " << num_vertices);
-
-    // calculate centroid and moments of inertia
-    Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
-    Eigen::Vector3d point = Eigen::Vector3d::Zero();
-    double Ixx, Iyy, Izz, Ixy, Ixz, Iyz;
-    Ixx = 0; Iyy = 0; Izz = 0; Ixy = 0; Ixz = 0; Iyz = 0;
-
-    for (int i = 0; i < num_vertices; i++)
-    {
-      // centroid sum
-      point << mesh_msg.vertices[i].x, mesh_msg.vertices[i].y, mesh_msg.vertices[i].z;
-      //point = visual_tools_->convertPose(mesh_pose_) * point;
-      centroid += point;
-
-      // moments of inertia sum
-      Ixx += point[1] * point[1] + point[2] * point[2];
-      Iyy += point[0] * point[0] + point[2] * point[2];
-      Izz += point[0] * point[0] + point[1] * point[1];
-      Ixy += point[0] * point[1];
-      Ixz += point[0] * point[2];
-      Iyz += point[1] * point[2];
-
-    }
-    
-    // final centroid calculation
-    for (int i = 0; i < 3; i++)
-    {
-      centroid[i] /= num_vertices;
-    }
-    ROS_DEBUG_STREAM_NAMED("bbox","centroid = \n" << centroid);
-
-    if (verbose_)
-      visual_tools_->publishSphere(centroid, rviz_visual_tools::PINK, 0.01);
-
-    // Solve for principle axes of inertia
-    Eigen::Matrix3d inertia_axis_aligned;
-    inertia_axis_aligned.row(0) <<  Ixx, -Ixy, -Ixz;
-    inertia_axis_aligned.row(1) << -Ixy,  Iyy, -Iyz;
-    inertia_axis_aligned.row(2) << -Ixz, -Iyz,  Izz;    
-
-    ROS_DEBUG_STREAM_NAMED("bbox","inertia_axis_aligned = \n" << inertia_axis_aligned);
-
-    Eigen::EigenSolver<Eigen::MatrixXd> es(inertia_axis_aligned);
-    
-    ROS_DEBUG_STREAM_NAMED("bbox","eigenvalues = \n" << es.eigenvalues());
-    ROS_DEBUG_STREAM_NAMED("bbox","eigenvectors = \n" << es.eigenvectors());
-    
-    Eigen::Vector3d axis_1 = es.eigenvectors().col(0).real();
-    Eigen::Vector3d axis_2 = es.eigenvectors().col(1).real();
-    Eigen::Vector3d axis_3 = es.eigenvectors().col(2).real();
-
-    // Test if eigenvectors are right-handed
-    Eigen::Vector3d w = axis_1.cross(axis_2) - axis_3;
-    double epsilon = 0.000001;
-    if ( !(std::abs(w(0)) < epsilon && std::abs(w(1)) < epsilon && std::abs(w(2)) < epsilon) )
-    {
-      axis_3 *= -1;
-      ROS_DEBUG_STREAM_NAMED("bbox","eigenvectors are left-handed, multiplying v3 by -1");
-    }
-
-    // assumes msg was given wrt world... probably needs better name
-    Eigen::Affine3d world_to_mesh_transform = Eigen::Affine3d::Identity();
-    world_to_mesh_transform.linear() << axis_1, axis_2, axis_3;
-    world_to_mesh_transform.translation() = centroid;
-    
-    // Transform and get bounds
-    Eigen::Vector3d min;
-    Eigen::Vector3d max;
-    for (int i = 0; i < 3; i++)
-    {
-      min(i)=std::numeric_limits<double>::max();
-      max(i)=std::numeric_limits<double>::min();
-    }
-
-    for (int i = 0; i < num_vertices; i++)
-    {
-      point << mesh_msg.vertices[i].x, mesh_msg.vertices[i].y, mesh_msg.vertices[i].z;
-      point = world_to_mesh_transform.inverse() * point;
-      for (int j = 0; j < 3; j++)
-      {
-        if (point(j) < min(j))
-          min(j) = point(j);
-
-        if (point(j) > max(j))
-          max(j) = point(j);
-      }
-    }
-    ROS_DEBUG_STREAM_NAMED("bbox","min = \n" << min);
-    ROS_DEBUG_STREAM_NAMED("bbox","max = \n" << max);
-
-    // points
-    Eigen::Vector3d p[8];
-    
-    p[0] << min(0), min(1), min(2);
-    p[1] << max(0), min(1), min(2);
-    p[2] << min(0), max(1), min(2); 
-    p[3] << max(0), max(1), min(2);
-
-    p[4] << min(0), min(1), max(2);
-    p[5] << max(0), min(1), max(2);
-    p[6] << min(0), max(1), max(2); 
-    p[7] << max(0), max(1), max(2);   
-
-    if (verbose_)
-    {
-      for (int i = 0; i < 8; i++)
-        visual_tools_->publishSphere(world_to_mesh_transform * p[i],rviz_visual_tools::YELLOW,0.01);
-    }
-
-    depth = max(0) - min(0);
-    width = max(1) - min(1);
-    height = max(2) - min(2);
-    ROS_DEBUG_STREAM_NAMED("bbox","bbox size = " << depth << ", " << width << ", " << height);
-    
-    Eigen::Affine3d cuboid_pose;
-    Eigen::Vector3d translation;
-    translation << (min(0) + max(0)) / 2.0, (min(1) + max(1)) / 2.0, (min(2) + max(2)) / 2.0;
-    ROS_DEBUG_STREAM_NAMED("bbox","bbox origin = \n" << translation);
-    cuboid_pose = world_to_mesh_transform;
-    cuboid_pose.translation() = world_to_mesh_transform * translation;
-    pose = cuboid_pose;
-
-    if (verbose_)
-    {
-      visual_tools_->publishCuboid(visual_tools_->convertPose(cuboid_pose),
-                                   depth,width,height,rviz_visual_tools::TRANSLUCENT);
-      visual_tools_->publishAxis(world_to_mesh_transform);
-    }
-
-    return true;
 }
 
 

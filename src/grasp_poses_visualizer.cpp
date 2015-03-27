@@ -123,7 +123,7 @@ public:
     visual_tools_->publishAxis(cuboid_pose_, 0.05, 0.005);
     visual_tools_->publishText(cuboid_pose_,"Object Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
     possible_grasps_.clear();
-    grasp_generator_->generateCuboidGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
                                      max_grasp_size_, grasp_data_, possible_grasps_);    
 
     // SHOW EE GRASP POSE

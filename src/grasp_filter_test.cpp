@@ -194,7 +194,7 @@ public:
       ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
       std::vector<moveit_msgs::Grasp> possible_grasps;
       double max_grasp_size = 0.10; // TODO: verify max object size that can be grasped
-      grasp_generator_->generateCuboidGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
+      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
                                               grasp_data_, possible_grasps);
 
       // Convert to the correct type for filtering

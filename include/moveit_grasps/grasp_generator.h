@@ -97,6 +97,18 @@ public:
 
   /**
    * \brief Create possible grasp positions around a cuboid 
+   * \param mesh_msg - model of object to grasp from perception
+   * \param cuboid_pose pose of cuboid 
+   * \param grasp_data data describing end effector
+   * \param possible_grasps possible grasps generated
+   * \return true if successful
+   */
+  bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
+                            double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
+                            std::vector<moveit_msgs::Grasp>& possible_grasps);
+
+  /**
+   * \brief Create possible grasp positions around a cuboid 
    * \param cuboid_pose pose of cuboid 
    * \param depth length of cuboid along local x-axis
    * \param width length of cuboid along local y-axis
@@ -105,7 +117,7 @@ public:
    * \param possible_grasps possible grasps generated
    * \return true if successful
    */
-  bool generateCuboidGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
+  bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
                             double max_grasp_size, const GraspDataPtr grasp_data, 
                             std::vector<moveit_msgs::Grasp>& possible_grasps);
   
@@ -153,9 +165,9 @@ public:
    * \brief get the bounding box for a mesh
    *
    */
-  //bool getBoundingBoxOfMesh(std::string mesh_file, shapes::Shape &mesh, bodies::BoundingBox &box);
-  bool getBoundingBoxFromMesh(shape_msgs::Mesh mesh_msg, Eigen::Affine3d& pose, double& depth, double& width, double& height);
-
+  bool getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Eigen::Affine3d& cuboid_pose, 
+                              double& depth, double& width, double& height);
+                                            
   /**
    * \brief Getter for Verbose
    */ 

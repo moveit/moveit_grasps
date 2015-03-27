@@ -143,7 +143,7 @@ public:
       double width = 0.05;
       double height = 0.05;
       double max_grasp_size = 0.10; // TODO: verify max object size Open Hand can grasp
-      grasp_generator_->generateCuboidGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
+      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
                                               grasp_data_, possible_grasps);
 
       // Visualize them
