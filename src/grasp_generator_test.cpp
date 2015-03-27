@@ -45,7 +45,7 @@
 // Grasp generation
 #include <moveit_grasps/grasp_generator.h>
 
-namespace baxter_pick_place
+namespace moveit_grasps
 {
 
 static const double BLOCK_SIZE = 0.04;
@@ -74,7 +74,6 @@ public:
   // Constructor
   GraspGeneratorTest(int num_tests)
     : nh_("~")
-    , grasp_data_(new moveit_grasps::GraspData())
   {
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
 
@@ -88,8 +87,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    if (!grasp_data_->loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
-      ros::shutdown();
+    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
@@ -228,7 +226,7 @@ int main(int argc, char *argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  baxter_pick_place::GraspGeneratorTest tester(num_tests);
+  moveit_grasps::GraspGeneratorTest tester(num_tests);
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;

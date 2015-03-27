@@ -50,14 +50,22 @@
 
 namespace moveit_grasps
 {
-GraspData::GraspData()
+
+GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                     moveit::core::RobotModelConstPtr robot_model)
   : base_link_("/base_link")
   , grasp_depth_(0.12)
   , angle_resolution_(16)
-{}
+{
+  if (!loadGraspData(nh, end_effector, robot_model))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data","Error loading grasp data, shutting down");
+    exit(-1);
+  }
+}
 
-bool GraspData::loadRobotGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                                   moveit::core::RobotModelConstPtr robot_model)
+bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                              moveit::core::RobotModelConstPtr robot_model)
 {
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture; // todo: remove all underscore post-fixes

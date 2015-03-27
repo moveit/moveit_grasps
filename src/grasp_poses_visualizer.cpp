@@ -82,7 +82,6 @@ public:
   // Constructor
   GraspPosesVisualizer(bool verbose) 
     : nh_("~")
-    , grasp_data_(new GraspData())
   {
     // get arm parameters
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
@@ -95,12 +94,8 @@ public:
     visual_tools_->setMuted(false);
     visual_tools_->loadMarkerPub();
 
-    // load grasp data 
-    if (!grasp_data_->loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
-      {
-    	ROS_ERROR_STREAM_NAMED("init", "Failed to load grasp data");
-    	ros::shutdown();
-      }
+    // Load grasp data 
+    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     // load grasp generator
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, verbose) );

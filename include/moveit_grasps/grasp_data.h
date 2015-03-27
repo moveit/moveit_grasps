@@ -57,18 +57,18 @@ class GraspData
 public:
 
   /**
-   * \brief Constructor
-   */
-  GraspData();
-
-  /**
    * \brief Loads grasp data from a yaml file (load from roslaunch)
    * \param node handle - allows for namespacing
    * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
+   */
+  GraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
+
+  /**
+   * \brief Helper function for constructor
    * \return true on success
    */
-  bool loadRobotGraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
-
+  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                     moveit::core::RobotModelConstPtr robot_model);
   /**
    * \brief Alter a robot state so that the end effector corresponding to this grasp data is in pre-grasp state (OPEN)
    * \param joint state of robot

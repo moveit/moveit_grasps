@@ -394,7 +394,7 @@ void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
 
     bool collision_checking_verbose = false;
     moveit::core::GroupStateValidityCallbackFn constraint_fn
-      = boost::bind(&isStateValid, ik_thread_struct.planning_scene_.get(),
+      = boost::bind(&isGraspStateValid, ik_thread_struct.planning_scene_.get(),
                     collision_checking_verbose, visual_tools_, _1, _2, _3);
 
     // Solve IK Problem
@@ -663,7 +663,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
 
 namespace
 {
-bool isStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
+bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
                   moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *robot_state,
                   const robot_state::JointModelGroup *group, const double *ik_solution)
 {

@@ -300,7 +300,7 @@ typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
 namespace
 {
-bool isStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
+bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
                   moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *state,
                   const robot_state::JointModelGroup *group, const double *ik_solution);
 }

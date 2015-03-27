@@ -108,7 +108,6 @@ public:
   // Constructor
   GraspGeneratorTest(int num_tests) 
     : nh_("~")
-    , grasp_data_(new GraspData())
   {
     // Get arm info from param server
     nh_.param("arm", arm_, std::string("left"));
@@ -150,9 +149,8 @@ public:
     robot_state::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
     // ---------------------------------------------------------------------------------------------
-    // Load grasp data
-    if (!grasp_data_->loadRobotGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
-      ros::shutdown();
+    // Load grasp data specific to our robot
+    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
