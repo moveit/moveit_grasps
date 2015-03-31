@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED thread system)
+find_package(OpenMP)
 
 add_message_files(DIRECTORY msg FILES
   GraspGeneratorOptions.msg
@@ -80,6 +81,8 @@ add_library(${PROJECT_NAME}_filter
 target_link_libraries(${PROJECT_NAME}_filter
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
+set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
 # Test filter executable
 add_executable(${PROJECT_NAME}_filter_test src/grasp_filter_test.cpp)
