@@ -66,7 +66,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
 {
   if (possible_grasps.size() == 0 )
   {
-    ROS_WARN_STREAM_NAMED("depth grasps", "possible_grasps is empty. Call generateGrasps() first");
+    ROS_WARN_STREAM_NAMED("depth_grasps", "possible_grasps is empty. Call generateGrasps() first");
     return false;
   }
 
@@ -85,7 +85,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
   for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
   {
     // Just divide the finger length by 5 for now...
-    base_pose = visual_tools_->convertPose(it.grasp_pose);
+    base_pose = visual_tools_->convertPose(it->grasp_pose.pose);
     to_cuboid = cuboid_pose.translation() - base_pose.translation();
     to_cuboid.normalized();
     to_cuboid *= grasp_data->finger_to_palm_depth_ / 5.0;
@@ -97,23 +97,35 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
 
       new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
       grasp_id++;
-      new_grasp.pre_grasp_posture = it.pre_grasp_posture;
-      new_grasp.grasp_posture = it.grasp_posture;
+      new_grasp.pre_grasp_posture = it->pre_grasp_posture;
+      new_grasp.grasp_posture = it->grasp_posture;
 
       tf::poseEigenToMsg(depth_pose, depth_pose_msg.pose);
-      new_grasp.depth_pose = depth_pose_msg;
+      new_grasp.grasp_pose = depth_pose_msg;
       depth_grasps.push_back(new_grasp);
 
+      if (verbose_)
+      {
+        // show gripper center and grasp direction
+        //visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
+        //visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
+        visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
+
+        // Send markers to Rviz
+        visual_tools_->triggerBatchPublishAndDisable();
+        ros::Duration(0.05).sleep();
+    }
     }
   }
-  
+  ROS_INFO_STREAM_NAMED("depth_grasps","added " << depth_grasps.size() << " variable depth grasps");
+ 
   // depth_grasps is almost always larger, should change this so smaller is being inserted.
   possible_grasps.insert(possible_grasps.end(), depth_grasps.begin(), depth_grasps.end());
   return true;
 }
 
 bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
-                                       moveit_grasps::grasp_parrell_plane plane, Eigen::Vector3d grasp_axis,
+                                       moveit_grasps::grasp_parallel_plane plane, Eigen::Vector3d grasp_axis,
                                        const moveit_grasps::GraspDataPtr grasp_data,
                                        std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
@@ -135,12 +147,12 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
 
   for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
   {
-    Eigen::Vector3d grasp_pose = visual_tools_->convertPose(it.grasp_pose);
+    Eigen::Affine3d parallel_pose = visual_tools_->convertPose(it->grasp_pose.pose);
     Eigen::Vector3d rotation_axis;
 
     // get angle between grasp
     Eigen::Vector3d parallel_vector;
-    parallel_vector = grasp_pose * grasp_axis;
+    parallel_vector = parallel_pose * grasp_axis;
 
     switch(plane)
     {
@@ -161,7 +173,7 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
         break;
     }
     
-    Eigen::Vector3d to_cuboid = cuboid_pose.translation() - grasp_pose.translation(); 
+    Eigen::Vector3d to_cuboid = cuboid_pose.translation() - parallel_pose.translation(); 
     Eigen::Vector3d cross_prod = parallel_vector.normalized().cross(to_cuboid.normalized());
     double rotation_angle = acos( to_cuboid.normalized().dot( parallel_vector.normalized() ) );
 
@@ -177,13 +189,12 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
 
     new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
     grasp_id++;
-    new_grasp.pre_grasp_posture = it.pre_grasp_posture;
-    new_grasp.grasp_posture = it.grasp_posture;
+    new_grasp.pre_grasp_posture = it->pre_grasp_posture;
+    new_grasp.grasp_posture = it->grasp_posture;
     
     tf::poseEigenToMsg(parallel_pose, parallel_pose_msg.pose);
-    new_grasp.depth_pose = parallel_pose_msg;
+    new_grasp.grasp_pose = parallel_pose_msg;
     parallel_grasps.push_back(new_grasp);
-
   }
   
   // should change this so smaller is being inserted.
