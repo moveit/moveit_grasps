@@ -82,6 +82,7 @@ static const double RAD2DEG = 57.2957795;
 enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
 enum grasp_direction_t {UP, DOWN};
 enum grasp_rotation_t {FULL, HALF};
+enum grasp_parallel_plane{XY, XZ, YZ};
 
 // Class
 class GraspGenerator
@@ -94,6 +95,20 @@ public:
    * \brief Constructor
    */
   GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
+
+  /*
+   *
+   */
+  bool addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, const moveit_grasps::GraspDataPtr grasp_data,
+                              std::vector<moveit_msgs::Grasp>& possible_grasps);
+
+  /* 
+   *
+   */
+  bool addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
+                         moveit_grasps::grasp_parrell_plane plane, Eigen::Vector3d grasp_axis,
+                         const moveit_grasps::GraspDataPtr grasp_data,
+                         std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /**
    * \brief Create possible grasp positions around a cuboid 
