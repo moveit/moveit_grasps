@@ -372,6 +372,8 @@ void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
   geometry_msgs::PoseStamped ik_pose;
   Eigen::Affine3d eigen_pose;
 
+  bool secondary_collision_checking = false;
+
   // Process the assigned grasps
   for( int i = ik_thread_struct.grasps_id_start_; i < ik_thread_struct.grasps_id_end_; ++i )
   {
@@ -414,12 +416,13 @@ void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
     ik_seed_state = grasp_candidate->grasp_ik_solution_;
 
     // Check for collision
-    if (checkInCollision(grasp_candidate->grasp_ik_solution_, ik_thread_struct, ik_thread_struct.collision_verbose_))
-    {
-      ROS_DEBUG_STREAM_NAMED("filter.superdebug","the-grasp: arm position is in collision");
-      grasp_candidate->grasp_filtered_by_collision_ = true;
-      continue;
-    }
+    if (secondary_collision_checking)
+      if (checkInCollision(grasp_candidate->grasp_ik_solution_, ik_thread_struct, ik_thread_struct.collision_verbose_))
+      {
+        ROS_DEBUG_STREAM_NAMED("filter.superdebug","the-grasp: arm position is in collision");
+        grasp_candidate->grasp_filtered_by_collision_ = true;
+        continue;
+      }
 
     // Start pre-grasp section ----------------------------------------------------------
     if (ik_thread_struct.filter_pregrasp_)       // optionally check the pregrasp
@@ -440,12 +443,13 @@ void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
       }
 
       // Check for collision
-      if (checkInCollision(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, ik_thread_struct.collision_verbose_))
-      {
-        ROS_DEBUG_STREAM_NAMED("filter.superdebug","pre-grasp: arm position is in collision");
-        grasp_candidate->pregrasp_filtered_by_collision_ = true;
-        continue;
-      }
+      if (secondary_collision_checking)
+        if (checkInCollision(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, ik_thread_struct.collision_verbose_))
+        {
+          ROS_DEBUG_STREAM_NAMED("filter.superdebug","pre-grasp: arm position is in collision");
+          grasp_candidate->pregrasp_filtered_by_collision_ = true;
+          continue;
+        }
     }
 
     // Grasp is valid
