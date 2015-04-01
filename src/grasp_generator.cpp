@@ -50,7 +50,8 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   , nh_("~/generator")
   , verbose_(verbose)
 {
-  number_grasp_points_ = 50;
+  
+  mm_between_grasps_ = 0;
 
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
@@ -81,14 +82,19 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
   depth_pose_msg.header.stamp = ros::Time::now();
   depth_pose_msg.header.frame_id = grasp_data->base_link_;
 
+  int number_depth_grasps = grasp_data->finger_to_palm_depth_ / mm_between_grasps_;
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","number_depth_grasps = " << number_depth_grasps);
+  if (number_depth_grasps < 1)
+    number_depth_grasps = 1;
+  
+  double delta = grasp_data->finger_to_palm_depth_ / number_depth_grasps;
 
   for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
   {
-    // Just divide the finger length by 5 for now...
     base_pose = visual_tools_->convertPose(it->grasp_pose.pose);
     to_cuboid = cuboid_pose.translation() - base_pose.translation();
     to_cuboid.normalized();
-    to_cuboid *= grasp_data->finger_to_palm_depth_ / 5.0;
+    to_cuboid *= delta;
 
     depth_pose = base_pose;
     for (int i = 0; i < 5; i++)
@@ -508,7 +514,13 @@ Eigen::ArrayXXf GraspGenerator::generateCuboidGraspPoints(double length, double 
    */
 
   // choose the larger of the two and make angular increments about equal
-  double delta = (2 * length + 2 * width + 2 * M_PI * radius) / number_grasp_points_;
+  //double delta = (2 * length + 2 * width + 2 * M_PI * radius) / number_grasp_points_;
+  if (mm_between_grasps_ < MIN_GRASP_DISTANCE)
+  {
+    mm_between_grasps_ = MIN_GRASP_DISTANCE;
+    ROS_WARN_STREAM_NAMED("cuboid_grasp_points","mm_between_grasps_ < MIN_GRASP_DISTANCE ( " << MIN_GRASP_DISTANCE << ")");
+  }
+  double delta = mm_between_grasps_ / 1000; // mm to m
 
   size_t top_bottom_array_size = length / delta + 1;
   if (top_bottom_array_size <= 2)

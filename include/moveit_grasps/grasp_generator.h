@@ -77,6 +77,7 @@ namespace moveit_grasps
 {
 
 static const double RAD2DEG = 57.2957795;
+static const double MIN_GRASP_DISTANCE = 5; // mm between grasps
 
 // Grasp axis orientation
 enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
@@ -190,6 +191,14 @@ public:
   {
     return verbose_;
   }
+
+  /**
+   * \brief Setter for delta between grasps
+   */
+  void setGraspDelta(int mm_between_grasps)
+  {
+   mm_between_grasps_ = mm_between_grasps;
+  }
   
   /**
    * \brief Setter for Verbose
@@ -211,7 +220,7 @@ private:
   bool verbose_;
 
   // Number of grasp points to generate around 
-  int number_grasp_points_;
+  double mm_between_grasps_;
 
   // Visualization levels
   bool show_prefiltered_grasps_;

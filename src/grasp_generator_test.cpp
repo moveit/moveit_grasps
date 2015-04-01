@@ -121,6 +121,8 @@ public:
     geometry_msgs::Pose object_pose;
     std::vector<moveit_msgs::Grasp> possible_grasps;
     grasp_generator_->setVerbose(true);
+    grasp_generator_->setGraspDelta(10);
+
     // Loop
     int i = 0;
     while(ros::ok())
