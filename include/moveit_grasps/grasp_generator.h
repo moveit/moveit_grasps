@@ -77,13 +77,11 @@ namespace moveit_grasps
 {
 
 static const double RAD2DEG = 57.2957795;
-static const double MIN_GRASP_DISTANCE = 5; // mm between grasps
 
 // Grasp axis orientation
 enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
 enum grasp_direction_t {UP, DOWN};
 enum grasp_rotation_t {FULL, HALF};
-enum grasp_parallel_plane{XY, XZ, YZ};
 
 // Class
 class GraspGenerator
@@ -96,20 +94,6 @@ public:
    * \brief Constructor
    */
   GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
-
-  /*
-   *
-   */
-  bool addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, const moveit_grasps::GraspDataPtr grasp_data,
-                              std::vector<moveit_msgs::Grasp>& possible_grasps);
-
-  /* 
-   *
-   */
-  bool addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
-                         moveit_grasps::grasp_parallel_plane plane, Eigen::Vector3d grasp_axis,
-                         const moveit_grasps::GraspDataPtr grasp_data,
-                         std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /**
    * \brief Create possible grasp positions around a cuboid 
@@ -191,14 +175,6 @@ public:
   {
     return verbose_;
   }
-
-  /**
-   * \brief Setter for delta between grasps
-   */
-  void setGraspDelta(int mm_between_grasps)
-  {
-   mm_between_grasps_ = mm_between_grasps;
-  }
   
   /**
    * \brief Setter for Verbose
@@ -220,7 +196,7 @@ private:
   bool verbose_;
 
   // Number of grasp points to generate around 
-  double mm_between_grasps_;
+  int number_grasp_points_;
 
   // Visualization levels
   bool show_prefiltered_grasps_;
