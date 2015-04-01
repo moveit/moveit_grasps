@@ -101,7 +101,7 @@ struct GraspCandidate
 
     // Set end effector to correct configuration
     grasp_data_->setRobotStateGrasp(robot_state);
-    
+
     return true;
   }
 
@@ -129,26 +129,20 @@ struct IkThreadStruct
                  std::vector<GraspCandidatePtr> &grasp_candidates, // the input
                  planning_scene::PlanningScenePtr planning_scene,
                  Eigen::Affine3d &link_transform,
-                 int grasps_id_start,
-                 int grasps_id_end,
+                 std::size_t grasp_id,
                  kinematics::KinematicsBaseConstPtr kin_solver,
                  robot_state::RobotStatePtr robot_state,
-                 const robot_model::JointModelGroup* ee_jmg,
-                 const robot_model::JointModelGroup* arm_jmg,
                  double timeout,
                  bool filter_pregrasp,
                  bool verbose,
                  bool collision_verbose,
-                 int thread_id)
+                 std::size_t thread_id)
   : grasp_candidates_(grasp_candidates),
     planning_scene_(planning_scene),
     link_transform_(link_transform),
-    grasps_id_start_(grasps_id_start),
-    grasps_id_end_(grasps_id_end),
+    grasp_id(grasp_id),
     kin_solver_(kin_solver),
     robot_state_(robot_state),
-    ee_jmg_(ee_jmg),
-    arm_jmg_(arm_jmg),
     timeout_(timeout),
     filter_pregrasp_(filter_pregrasp),
     verbose_(verbose),
@@ -159,18 +153,22 @@ struct IkThreadStruct
   std::vector<GraspCandidatePtr> &grasp_candidates_;
   planning_scene::PlanningScenePtr planning_scene_;
   Eigen::Affine3d link_transform_;
-  int grasps_id_start_;
-  int grasps_id_end_;
+  std::size_t grasp_id;
   kinematics::KinematicsBaseConstPtr kin_solver_;
   robot_state::RobotStatePtr robot_state_;
-  const robot_model::JointModelGroup* ee_jmg_;
   const robot_model::JointModelGroup* arm_jmg_;
   double timeout_;
   bool filter_pregrasp_;
   bool verbose_;
   bool collision_verbose_;
-  int thread_id_;
+  std::size_t thread_id_;
+
+  // Used within processing function
+  geometry_msgs::PoseStamped ik_pose_;
+  moveit_msgs::MoveItErrorCodes error_code_;
+  std::vector<double> ik_seed_state_;
 };
+typedef boost::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 
 // Class
 class GraspFilter
@@ -223,7 +221,6 @@ public:
    */
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                 const robot_model::JointModelGroup* ee_jmg,
                                  const robot_model::JointModelGroup* arm_jmg,
                                  bool filter_pregrasp,
                                  bool verbose, bool collision_verbose);
@@ -231,22 +228,21 @@ public:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  void filterGraspsThread(IkThreadStruct ik_thread_struct);
+  bool processCandidateGrasp(IkThreadStructPtr& ik_thread_struct);
 
   /**
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
-  bool findIKSolution(geometry_msgs::PoseStamped& ik_pose, std::vector<double>& ik_solution,
-                      std::vector<double>& ik_seed_state, moveit_msgs::MoveItErrorCodes& error_code,
-                      IkThreadStruct& ik_thread_struct, const moveit::core::GroupStateValidityCallbackFn &constraint);
+  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, GraspCandidatePtr& grasp_candidate,
+                      const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
 
   /**
    * \brief Helper for the thread function to check the arm for collision with the planning scene
    * \return true on success
    */
   bool checkInCollision(std::vector<double>& ik_solution,
-                        IkThreadStruct& ik_thread_struct,
+                        IkThreadStructPtr& ik_thread_struct,
                         bool verbose);
 
   /**
@@ -293,6 +289,9 @@ private:
   // Number of degrees of freedom for the IK solver to find
   std::size_t num_variables_;
 
+  // Modes
+  bool secondary_collision_checking_;
+
   // Time to allow IK solver to run
   double solver_timeout_;
 
@@ -316,9 +315,9 @@ typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
 namespace
 {
-bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose,
-                  moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *state,
-                  const robot_state::JointModelGroup *group, const double *ik_solution);
+bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose, double verbose_speed,
+                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *state,
+                       const robot_state::JointModelGroup *group, const double *ik_solution);
 }
 
 #endif

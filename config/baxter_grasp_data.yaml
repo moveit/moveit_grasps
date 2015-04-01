@@ -33,7 +33,8 @@ right_hand:
     joints : ['right_gripper_l_finger_joint']
 
     #open position
-    pregrasp_posture : [0.49]
+    #pregrasp_posture : [0.49]  # THIS IS MAX OPEN
+    pregrasp_posture : [0.8]
     pregrasp_time_from_start : 4.0
 
     #close position

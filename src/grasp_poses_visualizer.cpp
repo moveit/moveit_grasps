@@ -91,7 +91,6 @@ public:
 
     // set up rviz
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base","/end_effector_marker"));
-    visual_tools_->setMuted(false);
     visual_tools_->loadMarkerPub();
 
     // Load grasp data 

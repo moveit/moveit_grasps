@@ -25,7 +25,6 @@ public:
 
     // setup rviz
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base","/rviz_visual_tools"));
-    visual_tools_->setMuted(false);
     visual_tools_->loadMarkerPub();
     visual_tools_->deleteAllMarkers();
 
