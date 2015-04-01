@@ -175,6 +175,56 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
   return remaining_grasps;
 }
 
+std::size_t GraspFilter::filterGraspsByPlane(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                             Eigen::Affine3d filter_pose,
+                                             grasp_parallel_plane plane, int direction)
+{
+  ROS_DEBUG_STREAM_NAMED("filter_by_plane","Starting with " << grasp_candidates.size() << " grasps");
+
+  std::size_t num_grasps_filtered = 0;
+
+  Eigen::Affine3d grasp_pose;
+  Eigen::Vector3d grasp_position;
+
+  for (std::size_t i = 0; i < grasp_candidates.size(); i++)
+  {
+    // get grasp translation in filter pose CS
+    grasp_pose = visual_tools_->convertPose(grasp_candidates[i]->grasp_.grasp_pose.pose);
+    grasp_position = filter_pose.inverse() * grasp_pose.translation();
+    
+    // filter grasps by cutting plane
+    switch(plane)
+    {
+      case XY:
+        if (direction == -1 && grasp_position(2) < 0)
+          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
+        else if (direction == 1 && grasp_position(2) > 0)
+          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
+        break;
+      case XZ:
+        if (direction == -1 && grasp_position(1) < 0)
+          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
+        else if (direction == 1 && grasp_position(1) > 0)
+          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
+        break;
+      case YZ:
+        if (direction == -1 && grasp_position(0) < 0)
+          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
+        else if (direction == 1 && grasp_position(0) > 0)
+          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
+        break;
+      default:
+        ROS_WARN_STREAM_NAMED("filter_by_plane","plane not specified correctly");
+        break;
+    }
+    
+    if (grasp_candidates[i]->grasp_filtered_by_obstruction_ == true)
+      num_grasps_filtered++;
+
+  }
+  ROS_DEBUG_STREAM_NAMED("filter_by_plane","Number of grasps filtered by cutting plane = " << num_grasps_filtered);
+}
+
 
 std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                             planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
@@ -316,6 +366,8 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   std::size_t remaining_grasps = 0;
   std::size_t grasp_filtered_by_ik = 0;
   std::size_t grasp_filtered_by_collision = 0;
+  std::size_t grasp_filtered_by_obstruction = 0;
+  std::size_t grasp_filtered_by_orientation = 0;
   std::size_t pregrasp_filtered_by_ik = 0;
   std::size_t pregrasp_filtered_by_collision = 0;
 
@@ -325,6 +377,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
       grasp_filtered_by_ik++;
     if (grasp_candidates[i]->grasp_filtered_by_collision_)
       grasp_filtered_by_collision++;
+    if (grasp_candidates[i]->grasp_filtered_by_obstruction_)
+      grasp_filtered_by_obstruction++;
+    if (grasp_candidates[i]->grasp_filtered_by_orientation_)
+      grasp_filtered_by_orientation++;
     if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
       pregrasp_filtered_by_ik++;
     if (grasp_candidates[i]->pregrasp_filtered_by_collision_)
@@ -336,6 +392,8 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   if (remaining_grasps +
       grasp_filtered_by_ik +
       grasp_filtered_by_collision +
+      grasp_filtered_by_obstruction + 
+      grasp_filtered_by_orientation +
       pregrasp_filtered_by_ik +
       pregrasp_filtered_by_collision != grasp_candidates.size())
     ROS_ERROR_STREAM_NAMED("filter","Logged filter reasons do not add up to total number of grasps. Internal error.");
@@ -346,6 +404,8 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   std::cout << "total candidate grasps         " << grasp_candidates.size() << std::endl;
   std::cout << "grasp_filtered_by_ik           " << grasp_filtered_by_ik << std::endl;
   std::cout << "grasp_filtered_by_collision    " << grasp_filtered_by_collision << std::endl;
+  std::cout << "grasp_filtered_by_obstruction  " << grasp_filtered_by_obstruction << std::endl;
+  std::cout << "grasp_filtered_by_orientation  " << grasp_filtered_by_orientation << std::endl;
   std::cout << "pregrasp_filtered_by_ik        " << pregrasp_filtered_by_ik << std::endl;
   std::cout << "pregrasp_filtered_by_collision " << pregrasp_filtered_by_collision << std::endl;
   std::cout << "remaining grasps               " << remaining_grasps << std::endl;
@@ -391,6 +451,10 @@ void GraspFilter::filterGraspsThread(IkThreadStruct ik_thread_struct)
       ik_pose.header.frame_id = ik_thread_struct.kin_solver_->getBaseFrame();
       visual_tools_->publishZArrow(ik_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR, 0.1);
     }
+
+    // skip grasps that have already been rejected by obstructions and orientation filters
+    if (grasp_candidate->grasp_filtered_by_obstruction_ || grasp_candidate->grasp_filtered_by_orientation_)
+      continue;
 
     bool collision_checking_verbose = false;
     moveit::core::GroupStateValidityCallbackFn constraint_fn
@@ -575,6 +639,8 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
   /*
     RED - grasp filtered by ik
     PINK - grasp filtered by collision
+    MAGENTA - grasp filtered by obstruction
+    YELLOW - grasp filtered by orientation
     BLUE - pregrasp filtered by ik
     CYAN - pregrasp filtered by collision
     GREEN - valid
@@ -593,6 +659,14 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::BLUE);
+    }
+    else if (grasp_candidates[i]->grasp_filtered_by_obstruction_)
+    {
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::MAGENTA);
+    }
+    else if (grasp_candidates[i]->grasp_filtered_by_orientation_)
+    {
+      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::YELLOW);
     }
     else if (grasp_candidates[i]->pregrasp_filtered_by_collision_)
     {

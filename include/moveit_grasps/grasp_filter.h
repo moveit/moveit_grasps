@@ -77,6 +77,8 @@ struct GraspCandidate
     , valid_(false)
     , grasp_filtered_by_ik_(false)
     , grasp_filtered_by_collision_(false)
+    , grasp_filtered_by_obstruction_(false)
+    , grasp_filtered_by_orientation_(false)
     , pregrasp_filtered_by_ik_(false)
     , pregrasp_filtered_by_collision_(false)
   {}
@@ -111,6 +113,8 @@ struct GraspCandidate
   bool valid_;
   bool grasp_filtered_by_ik_;
   bool grasp_filtered_by_collision_;
+  bool grasp_filtered_by_obstruction_;
+  bool grasp_filtered_by_orientation_;
   bool pregrasp_filtered_by_ik_;
   bool pregrasp_filtered_by_collision_;
 };
@@ -200,6 +204,18 @@ public:
                            bool verbose = false,
                            bool verbose_if_failed = true,
                            bool collision_verbose = false);
+
+  /**
+   * \brief Filter grasps by cutting plane
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param filter_pose - pose of filter that will define cutting plane
+   * \param plane - the cutting plane (XY, XZ, or YZ)
+   * \param direction - which side of this plane to cut (+/- 1)
+   * \return number of grasps remaining
+   */
+  std::size_t filterGraspsByPlane(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                  Eigen::Affine3d filter_pose,
+                                  grasp_parallel_plane plane, int direction);
 
   /**
    * \brief Helper for filterGrasps

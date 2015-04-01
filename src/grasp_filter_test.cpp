@@ -162,7 +162,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_) );
-
+    grasp_generator_->setGraspDelta(0.010);
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
     grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_) );
@@ -206,6 +206,10 @@ public:
       bool filter_pregrasps = true;
       bool verbose = false; // note: setting this to true will disable threading
       bool verbose_if_failed = true;
+      int direction = 1;
+      std::size_t unobstructed_grasps = grasp_filter_->filterGraspsByPlane(grasp_candidates, 
+                                                                           visual_tools_->convertPose(object_pose),
+                                                                           moveit_grasps::XY, direction);
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                              arm_jmg, filter_pregrasps, 
                                                              verbose, verbose_if_failed);
