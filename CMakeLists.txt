@@ -62,9 +62,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-
 # Grasp Generator Library
 add_library(${PROJECT_NAME}
   src/grasp_generator.cpp
