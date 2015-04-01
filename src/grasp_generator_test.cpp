@@ -120,8 +120,6 @@ public:
     // Generate grasps for a bunch of random objects
     geometry_msgs::Pose object_pose;
     std::vector<moveit_msgs::Grasp> possible_grasps;
-    grasp_generator_->setVerbose(true);
-    grasp_generator_->setGraspDelta(10);
 
     // Loop
     int i = 0;
@@ -148,12 +146,9 @@ public:
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
                                               grasp_data_, possible_grasps);
 
-      // add grasps at variable depth
-      grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
-
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
-      double animate_speed = 0.1;
+      double animate_speed = 1;
       visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
 
       // Test if done
