@@ -198,21 +198,18 @@ std::size_t GraspFilter::filterGraspsByPlane(std::vector<GraspCandidatePtr>& gra
     switch(plane)
     {
       case XY:
-        if (direction == -1 && grasp_position(2) < 0)
-          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
-        else if (direction == 1 && grasp_position(2) > 0)
+        if ( (direction == -1 && grasp_position(2) < 0) ||
+             (direction ==  1 && grasp_position(2) > 0) )
           grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
         break;
       case XZ:
-        if (direction == -1 && grasp_position(1) < 0)
-          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
-        else if (direction == 1 && grasp_position(1) > 0)
+        if ( (direction == -1 && grasp_position(1) < 0) ||
+             (direction ==  1 && grasp_position(1) > 0) )
           grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
         break;
       case YZ:
-        if (direction == -1 && grasp_position(0) < 0)
-          grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
-        else if (direction == 1 && grasp_position(0) > 0)
+        if ( (direction == -1 && grasp_position(0) < 0) ||
+             (direction == 1 && grasp_position(0) > 0) )
           grasp_candidates[i]->grasp_filtered_by_obstruction_ = true;
         break;
       default:

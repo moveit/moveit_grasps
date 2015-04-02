@@ -112,9 +112,9 @@ struct GraspCandidate
 
   bool valid_;
   bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_collision_;
-  bool grasp_filtered_by_obstruction_;
-  bool grasp_filtered_by_orientation_;
+  bool grasp_filtered_by_collision_; // arm is in collision with the environment
+  bool grasp_filtered_by_obstruction_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
+  bool grasp_filtered_by_orientation_; // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
   bool pregrasp_filtered_by_collision_;
 };
