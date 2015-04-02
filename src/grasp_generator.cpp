@@ -49,9 +49,8 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   : visual_tools_(visual_tools)
   , nh_("~/generator")
   , verbose_(verbose)
+  , m_between_grasps_(MIN_GRASP_DISTANCE)
 {
-  number_grasp_points_ = 50;
-
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "verbose", verbose_);
@@ -61,6 +60,153 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   ROS_DEBUG_STREAM_NAMED("grasps","Loaded grasp generator");
 }
 
+bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, const moveit_grasps::GraspDataPtr grasp_data,
+                              std::vector<moveit_msgs::Grasp>& possible_grasps)
+{
+  if (possible_grasps.size() == 0 )
+  {
+    ROS_WARN_STREAM_NAMED("depth_grasps", "possible_grasps is empty. Call generateGrasps() first");
+    return false;
+  }
+
+  std::vector<moveit_msgs::Grasp> depth_grasps;
+  std::vector<moveit_msgs::Grasp>::iterator it;
+  Eigen::Affine3d base_pose, depth_pose;
+  Eigen::Vector3d to_cuboid;
+
+  static int grasp_id = 0;
+  moveit_msgs::Grasp new_grasp;
+  geometry_msgs::PoseStamped depth_pose_msg;
+  depth_pose_msg.header.stamp = ros::Time::now();
+  depth_pose_msg.header.frame_id = grasp_data->base_link_;
+
+  int number_depth_grasps = grasp_data->finger_to_palm_depth_ / m_between_grasps_;
+
+  if (number_depth_grasps < 1)
+    number_depth_grasps = 1;
+  
+  double delta = grasp_data->finger_to_palm_depth_ / number_depth_grasps;
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","finger_to_palm_depth_ = " << grasp_data->finger_to_palm_depth_);
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","delta                 = " << delta);
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","number_depth_grasps   = " << number_depth_grasps);
+
+  for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
+  {
+    base_pose = visual_tools_->convertPose(it->grasp_pose.pose);
+    to_cuboid = cuboid_pose.translation() - base_pose.translation();
+    to_cuboid.normalized();
+    to_cuboid *= delta;
+
+    depth_pose = base_pose;
+    for (std::size_t i = 0; i < number_depth_grasps; i++)
+    {
+      depth_pose.translation() += to_cuboid;
+
+      new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
+      grasp_id++;
+      new_grasp.pre_grasp_posture = it->pre_grasp_posture;
+      new_grasp.grasp_posture = it->grasp_posture;
+
+      tf::poseEigenToMsg(depth_pose, depth_pose_msg.pose);
+      new_grasp.grasp_pose = depth_pose_msg;
+      depth_grasps.push_back(new_grasp);
+
+      if (verbose_)
+      {
+        // show gripper center and grasp direction
+        //visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
+        //visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
+        visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
+
+        // Send markers to Rviz 
+        ros::Duration(0.05).sleep();
+    }
+    }
+  }
+  ROS_INFO_STREAM_NAMED("depth_grasps","added " << depth_grasps.size() << " variable depth grasps");
+ 
+  // depth_grasps is almost always larger, should change this so smaller is being inserted.
+  possible_grasps.insert(possible_grasps.end(), depth_grasps.begin(), depth_grasps.end());
+  return true;
+}
+
+bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
+                                       moveit_grasps::grasp_parallel_plane plane, Eigen::Vector3d grasp_axis,
+                                       const moveit_grasps::GraspDataPtr grasp_data,
+                                       std::vector<moveit_msgs::Grasp>& possible_grasps)
+{
+  if (possible_grasps.size() == 0 )
+  {
+    ROS_WARN_STREAM_NAMED("parallel grasps", "possible_grasps is empty. Call generateGrasps() first");
+    return false;
+  }
+
+  std::vector<moveit_msgs::Grasp> parallel_grasps;
+  std::vector<moveit_msgs::Grasp>::iterator it;
+  
+  static int grasp_id = 0;
+  moveit_msgs::Grasp new_grasp;
+  geometry_msgs::PoseStamped parallel_pose_msg;
+  parallel_pose_msg.header.stamp = ros::Time::now();
+  parallel_pose_msg.header.frame_id = grasp_data->base_link_;
+
+
+  for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
+  {
+    Eigen::Affine3d parallel_pose = visual_tools_->convertPose(it->grasp_pose.pose);
+    Eigen::Vector3d rotation_axis;
+
+    // get angle between grasp
+    Eigen::Vector3d parallel_vector;
+    parallel_vector = parallel_pose * grasp_axis;
+
+    switch(plane)
+    {
+      case XY:
+        parallel_vector(2) = 0;
+        rotation_axis = Eigen::Vector3d::UnitZ();
+        break;
+      case XZ:
+        parallel_vector(1) = 0;
+        rotation_axis = Eigen::Vector3d::UnitY();
+        break;
+      case YZ:
+        parallel_vector(0) = 0;
+        rotation_axis = Eigen::Vector3d::UnitX();
+        break;
+      default:
+        ROS_WARN_STREAM_NAMED("parallel grasps", "parallel plane not set correctly");
+        break;
+    }
+    
+    Eigen::Vector3d to_cuboid = cuboid_pose.translation() - parallel_pose.translation(); 
+    Eigen::Vector3d cross_prod = parallel_vector.normalized().cross(to_cuboid.normalized());
+    double rotation_angle = acos( to_cuboid.normalized().dot( parallel_vector.normalized() ) );
+
+    // get direction to rotate
+    double dot = cross_prod.dot(rotation_axis);
+    if (dot < 0)
+      rotation_angle *= -1;
+
+    ROS_DEBUG_STREAM_NAMED("parallel grasps", "cross_prod = \n" << cross_prod);
+    
+    // add new pose
+    parallel_pose *= Eigen::AngleAxisd(rotation_angle, rotation_axis);
+
+    new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
+    grasp_id++;
+    new_grasp.pre_grasp_posture = it->pre_grasp_posture;
+    new_grasp.grasp_posture = it->grasp_posture;
+    
+    tf::poseEigenToMsg(parallel_pose, parallel_pose_msg.pose);
+    new_grasp.grasp_pose = parallel_pose_msg;
+    parallel_grasps.push_back(new_grasp);
+  }
+  
+  // should change this so smaller is being inserted.
+  possible_grasps.insert(possible_grasps.end(), parallel_grasps.begin(), parallel_grasps.end());
+  return true; 
+}
 
 bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
                                     double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
@@ -368,7 +514,13 @@ Eigen::ArrayXXf GraspGenerator::generateCuboidGraspPoints(double length, double 
    */
 
   // choose the larger of the two and make angular increments about equal
-  double delta = (2 * length + 2 * width + 2 * M_PI * radius) / number_grasp_points_;
+  //double delta = (2 * length + 2 * width + 2 * M_PI * radius) / number_grasp_points_;
+  if (m_between_grasps_ < MIN_GRASP_DISTANCE)
+  {
+    m_between_grasps_ = MIN_GRASP_DISTANCE;
+    ROS_WARN_STREAM_NAMED("cuboid_grasp_points","m_between_grasps_ < MIN_GRASP_DISTANCE ( " << MIN_GRASP_DISTANCE << ")");
+  }
+  double delta = m_between_grasps_;
 
   size_t top_bottom_array_size = length / delta + 1;
   if (top_bottom_array_size <= 2)
@@ -509,6 +661,7 @@ bool GraspGenerator::getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Ei
   ROS_DEBUG_STREAM_NAMED("bbox","num vertices = " << num_vertices);
 
   // calculate centroid and moments of inertia
+  // NOTE: Assimp adds verticies to imported meshes, which is not accounted for in the MOI and CG calculations
   Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
   Eigen::Vector3d point = Eigen::Vector3d::Zero();
   double Ixx, Iyy, Izz, Ixy, Ixz, Iyz;
