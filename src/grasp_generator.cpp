@@ -49,6 +49,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   : visual_tools_(visual_tools)
   , nh_("~/generator")
   , verbose_(verbose)
+  , m_between_grasps_(MIN_GRASP_DISTANCE)
 {
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
@@ -80,11 +81,14 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
   depth_pose_msg.header.frame_id = grasp_data->base_link_;
 
   int number_depth_grasps = grasp_data->finger_to_palm_depth_ / m_between_grasps_;
-  ROS_DEBUG_STREAM_NAMED("depth_grasps","number_depth_grasps = " << number_depth_grasps);
+
   if (number_depth_grasps < 1)
     number_depth_grasps = 1;
   
   double delta = grasp_data->finger_to_palm_depth_ / number_depth_grasps;
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","finger_to_palm_depth_ = " << grasp_data->finger_to_palm_depth_);
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","delta                 = " << delta);
+  ROS_DEBUG_STREAM_NAMED("depth_grasps","number_depth_grasps   = " << number_depth_grasps);
 
   for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
   {
@@ -94,7 +98,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
     to_cuboid *= delta;
 
     depth_pose = base_pose;
-    for (int i = 0; i < 5; i++)
+    for (std::size_t i = 0; i < number_depth_grasps; i++)
     {
       depth_pose.translation() += to_cuboid;
 
@@ -114,8 +118,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
         //visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
         visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
 
-        // Send markers to Rviz
-        visual_tools_->triggerBatchPublishAndDisable();
+        // Send markers to Rviz 
         ros::Duration(0.05).sleep();
     }
     }
