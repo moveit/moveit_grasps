@@ -155,7 +155,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
     visual_tools_->removeAllCollisionObjects();
-
+    
     // Create a collision table for fun
     //visual_tools_->publishCollisionTable(TABLE_X, TABLE_Y, 0, TABLE_WIDTH, TABLE_HEIGHT, TABLE_DEPTH, "table");
 
@@ -163,13 +163,15 @@ public:
     // Load grasp generator
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_) );
     grasp_generator_->setGraspDelta(0.010);
+    grasp_generator_->setVerbose(false);
+    
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
     grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_) );
 
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
-  
+
     // Loop
     for (int i = 0; i < num_tests; ++i)
     {
@@ -178,8 +180,9 @@ public:
 
       // Clear markers
       visual_tools_->deleteAllMarkers();
-
       ROS_INFO_STREAM_NAMED("test","Adding random object " << i+1 << " of " << num_tests);
+      Eigen::Affine3d world_cs = Eigen::Affine3d::Identity();
+      visual_tools_->publishAxis(world_cs);
 
       // Generate random cuboid
       geometry_msgs::Pose object_pose;
@@ -188,7 +191,8 @@ public:
       double height;
       rviz_visual_tools::RandomPoseBounds pose_bounds(0.6, 1.0, 0, 0.5, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
       visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
-      visual_tools_->publishCuboid(object_pose, depth, width, height);
+      visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
+      visual_tools_->publishAxis(object_pose);
 
       // Generate set of grasps for one object
       ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
@@ -207,9 +211,23 @@ public:
       bool verbose = false; // note: setting this to true will disable threading
       bool verbose_if_failed = true;
       int direction = 1;
+
+      // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
+      Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
+      filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
+      //visual_tools_->publishAxis(filter_pose);
       std::size_t unobstructed_grasps = grasp_filter_->filterGraspsByPlane(grasp_candidates, 
-                                                                           visual_tools_->convertPose(object_pose),
-                                                                           moveit_grasps::XY, direction);
+                                                                           filter_pose,
+                                                                           moveit_grasps::YZ, direction);
+      // can only reach the object from the front
+      filter_pose = Eigen::Affine3d::Identity();
+      filter_pose = filter_pose * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY());
+      filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
+      visual_tools_->publishAxis(filter_pose);
+      std::size_t oriented_grasps = grasp_filter_->filterGraspsByOrientation(grasp_candidates,
+                                                                             filter_pose,
+                                                                             0.524, grasp_data_);
+
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                              arm_jmg, filter_pregrasps, 
                                                              verbose, verbose_if_failed);
@@ -221,6 +239,9 @@ public:
       }
 
       // Note: to visualize enable DEBUG level in the ros console
+
+      ROS_INFO_STREAM_NAMED("test","finished trial, wating 5s to start next trial");
+      ros::Duration(5.0).sleep(); // give some time to look at results of each trial
     } // for each trial
 
 
@@ -265,7 +286,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-  int num_tests = 5;
+  int num_tests = 1;
 
   ros::init(argc, argv, "grasp_generator_test");
 

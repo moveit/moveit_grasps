@@ -216,6 +216,17 @@ public:
                                   grasp_parallel_plane plane, int direction);
 
   /**
+   * \brief Filter grasps by desired orientation
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param desired_pose - the desired grasp pose ( using standard grasping orientation )
+   * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
+   * \return number of grasps remaining
+   */
+  std::size_t filterGraspsByOrientation(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                        Eigen::Affine3d desired_pose, double max_angular_offset,
+                                        GraspDataPtr grasp_data);
+
+  /**
    * \brief Helper for filterGrasps
    * \return number of grasps remaining
    */
