@@ -225,6 +225,7 @@ public:
       filter_pose = filter_pose * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY());
       filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
       //visual_tools_->publishAxis(filter_pose);
+      grasp_filter_->clearDesiredGraspOrientations();
       grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
 
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,

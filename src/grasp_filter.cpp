@@ -212,12 +212,8 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate,
       break;
   }
 
-  if (grasp_candidate->grasp_filtered_by_cutting_plane_ == true)
-    return true;
-  else
-    return false;
+  return grasp_candidate->grasp_filtered_by_cutting_plane_;
 }
-
 
 bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate,
                                            Eigen::Affine3d desired_pose, double max_angular_offset)
@@ -444,9 +440,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   // Helper pointer
   GraspCandidatePtr& grasp_candidate = ik_thread_struct->grasp_candidates_[ik_thread_struct->grasp_id];
 
-  // skip grasps that have already been rejected by obstructions and orientation filters
-  if (isGraspValid(grasp_candidate) == false)
-    return false;
 
   // Get pose
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
@@ -457,10 +450,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     ik_thread_struct->ik_pose_.header.frame_id = ik_thread_struct->kin_solver_->getBaseFrame();
     visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR, 0.1);
   }
-
-  moveit::core::GroupStateValidityCallbackFn constraint_fn
-    = boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
-                  ik_thread_struct->collision_verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Filter by cutting planes
   for (std::size_t i = 0; i < cutting_planes_.size(); i++)
@@ -483,6 +472,10 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
       return false;
     } 
   }
+
+  moveit::core::GroupStateValidityCallbackFn constraint_fn
+    = boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
+                  ik_thread_struct->collision_verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Set gripper position (how open the fingers are) to OPEN
   grasp_candidate->grasp_data_->setRobotStatePreGrasp(ik_thread_struct->robot_state_);
@@ -784,6 +777,11 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
 void GraspFilter::clearCuttingPlanes()
 {
   cutting_planes_.clear();
+}
+
+void GraspFilter::clearDesiredGraspOrientations()
+{
+  desired_grasp_orientations_.clear();
 }
 
 } // namespace

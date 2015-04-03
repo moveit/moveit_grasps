@@ -75,11 +75,10 @@ struct CuttingPlane
   int direction_;
 
   CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
-  {
-    pose_ = pose;
-    plane_ = plane;
-    direction_ = direction;
-  }
+    : pose_(pose)
+    , plane_(plane)
+    , direction_(direction)
+  {}
 };
 typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
 
@@ -92,10 +91,9 @@ struct DesiredGraspOrientation
   double max_angle_offset_;
   
   DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
-  {
-    pose_ = pose;
-    max_angle_offset_ = max_angle_offset;
-  }
+    : pose_(pose)
+    , max_angle_offset_(max_angle_offset)
+  {}
 };
 typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
 
@@ -299,6 +297,11 @@ public:
    * \param max_angle_offset - maximum amount a generated grasp can deviate from the desired pose
    */
   void addDesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset);
+
+  /**
+   * \brief clear all desired orientations
+   */
+  void clearDesiredGraspOrientations();
 
   /**
    * \brief Helper for the thread function to check the arm for collision with the planning scene
