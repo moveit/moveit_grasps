@@ -66,6 +66,38 @@ namespace moveit_grasps
 {
 
 /**
+ * \brief Contains information to filter grasps by a cutting plane
+ */
+struct CuttingPlane
+{
+  Eigen::Affine3d pose_;
+  grasp_parallel_plane plane_; 
+  int direction_;
+
+  CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
+    : pose_(pose)
+    , plane_(plane)
+    , direction_(direction)
+  {}
+};
+typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
+
+/** 
+ * \brief Contains information to filter grasps by orientation
+ */
+struct DesiredGraspOrientation
+{
+  Eigen::Affine3d pose_;
+  double max_angle_offset_;
+  
+  DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
+    : pose_(pose)
+    , max_angle_offset_(max_angle_offset)
+  {}
+};
+typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
+
+/**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
  *        This includes the pregrasp and grasp IK solution
  */
@@ -77,6 +109,8 @@ struct GraspCandidate
     , valid_(false)
     , grasp_filtered_by_ik_(false)
     , grasp_filtered_by_collision_(false)
+    , grasp_filtered_by_cutting_plane_(false)
+    , grasp_filtered_by_orientation_(false)
     , pregrasp_filtered_by_ik_(false)
     , pregrasp_filtered_by_collision_(false)
   {}
@@ -110,7 +144,9 @@ struct GraspCandidate
 
   bool valid_;
   bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_collision_;
+  bool grasp_filtered_by_collision_; // arm is in collision with the environment
+  bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
+  bool grasp_filtered_by_orientation_; // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
   bool pregrasp_filtered_by_collision_;
 };
@@ -200,6 +236,27 @@ public:
                            bool collision_verbose = false);
 
   /**
+   * \brief Filter grasps by cutting plane
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param filter_pose - pose of filter that will define cutting plane
+   * \param plane - the cutting plane (XY, XZ, or YZ)
+   * \param direction - which side of this plane to cut (+/- 1)
+   * \return true if grasp is filtered by operation
+   */
+  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose, 
+                                 grasp_parallel_plane plane, int direction);
+
+  /**
+   * \brief Filter grasps by desired orientation
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param desired_pose - the desired grasp pose ( using standard grasping orientation )
+   * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
+   * \return true if grasp is filtered by operation
+   */
+  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Affine3d desired_pose, 
+                                       double max_angular_offset);
+
+  /**
    * \brief Helper for filterGrasps
    * \return number of grasps remaining
    */
@@ -222,6 +279,31 @@ public:
                       const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
 
   /**
+   * \brief add a cutting plane 
+   * \param pose - pose describing the cutting plane
+   * \param plane - which plane to use as the cutting plane
+   * \param direction - on which side of the plane the grasps will be removed
+   */
+  void addCuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction);
+
+  /**
+   * \brief clear all cutting planes
+   */
+  void clearCuttingPlanes();
+
+  /**
+   * \brief add a desired grasp orientation
+   * \param pose - the desired grasping pose
+   * \param max_angle_offset - maximum amount a generated grasp can deviate from the desired pose
+   */
+  void addDesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset);
+
+  /**
+   * \brief clear all desired orientations
+   */
+  void clearDesiredGraspOrientations();
+
+  /**
    * \brief Helper for the thread function to check the arm for collision with the planning scene
    * \return true on success
    */
@@ -235,6 +317,12 @@ public:
    */
   bool chooseBestGrasp( std::vector<GraspCandidatePtr>& grasp_candidates,
                         GraspCandidatePtr& chosen );
+
+  /**
+   * \brief Check if a grasp candidate is valid
+   *
+   */
+  bool isGraspValid(GraspCandidatePtr grasp);
 
   /**
    * \brief Show grasps after being filtered
@@ -289,6 +377,10 @@ private:
 
   // Shared node handle
   ros::NodeHandle nh_;
+
+  // Cutting planes and orientation filter
+  std::vector<CuttingPlanePtr> cutting_planes_;
+  std::vector<DesiredGraspOrientationPtr> desired_grasp_orientations_;
 
 }; // end of class
 

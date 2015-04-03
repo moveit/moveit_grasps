@@ -155,29 +155,33 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
     visual_tools_->removeAllCollisionObjects();
-
+    
     // Create a collision table for fun
     //visual_tools_->publishCollisionTable(TABLE_X, TABLE_Y, 0, TABLE_WIDTH, TABLE_HEIGHT, TABLE_DEPTH, "table");
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_) );
-
+    grasp_generator_->setGraspDelta(0.010);
+    grasp_generator_->setVerbose(false);
+    
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
     grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_) );
 
     // ---------------------------------------------------------------------------------------------
+    // Clear Markers
+    visual_tools_->deleteAllMarkers();
+    Eigen::Affine3d world_cs = Eigen::Affine3d::Identity();
+    visual_tools_->publishAxis(world_cs);
+
     // Generate grasps for a bunch of random objects
-  
+
     // Loop
     for (int i = 0; i < num_tests; ++i)
     {
       if(!ros::ok())
         break;
-
-      // Clear markers
-      visual_tools_->deleteAllMarkers();
 
       ROS_INFO_STREAM_NAMED("test","Adding random object " << i+1 << " of " << num_tests);
 
@@ -186,9 +190,10 @@ public:
       double depth;
       double width;
       double height;
-      rviz_visual_tools::RandomPoseBounds pose_bounds(0.6, 1.0, 0, 0.5, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
+      rviz_visual_tools::RandomPoseBounds pose_bounds(0.6, 1.0, -0.25, 0.25, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
       visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
-      visual_tools_->publishCuboid(object_pose, depth, width, height);
+      visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
+      visual_tools_->publishAxis(object_pose);
 
       // Generate set of grasps for one object
       ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
@@ -206,6 +211,23 @@ public:
       bool filter_pregrasps = true;
       bool verbose = false; // note: setting this to true will disable threading
       bool verbose_if_failed = true;
+      int direction = 1;
+
+      // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
+      Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
+      filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
+      //visual_tools_->publishAxis(filter_pose);
+      grasp_filter_->clearCuttingPlanes();
+      grasp_filter_->addCuttingPlane(filter_pose, moveit_grasps::YZ, direction);
+
+      // can only reach the object from the front
+      filter_pose = Eigen::Affine3d::Identity();
+      filter_pose = filter_pose * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY());
+      filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
+      //visual_tools_->publishAxis(filter_pose);
+      grasp_filter_->clearDesiredGraspOrientations();
+      grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
+
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                              arm_jmg, filter_pregrasps, 
                                                              verbose, verbose_if_failed);
@@ -217,6 +239,9 @@ public:
       }
 
       // Note: to visualize enable DEBUG level in the ros console
+
+      ROS_INFO_STREAM_NAMED("test","finished trial, wating 5s to start next trial");
+      ros::Duration(5.0).sleep(); // give some time to look at results of each trial
     } // for each trial
 
 
