@@ -71,7 +71,7 @@ namespace moveit_grasps
 struct CuttingPlane
 {
   Eigen::Affine3d pose_;
-  grasp_parallel_plane plane_; 
+  grasp_parallel_plane plane_;
   int direction_;
 
   CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
@@ -82,14 +82,14 @@ struct CuttingPlane
 };
 typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
 
-/** 
+/**
  * \brief Contains information to filter grasps by orientation
  */
 struct DesiredGraspOrientation
 {
   Eigen::Affine3d pose_;
   double max_angle_offset_;
-  
+
   DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
     : pose_(pose)
     , max_angle_offset_(max_angle_offset)
@@ -106,7 +106,6 @@ struct GraspCandidate
   GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data)
     : grasp_(grasp)
     , grasp_data_(grasp_data)
-    , valid_(false)
     , grasp_filtered_by_ik_(false)
     , grasp_filtered_by_collision_(false)
     , grasp_filtered_by_cutting_plane_(false)
@@ -137,12 +136,23 @@ struct GraspCandidate
     return true;
   }
 
+  bool isValid()
+  {
+    if (grasp_filtered_by_ik_ || 
+        grasp_filtered_by_collision_ ||
+        grasp_filtered_by_cutting_plane_ || 
+        grasp_filtered_by_orientation_ ||
+        pregrasp_filtered_by_ik_ || 
+        pregrasp_filtered_by_collision_)
+      return false;
+    else
+      return true;
+  }
+
   moveit_msgs::Grasp grasp_;
   const GraspDataPtr grasp_data_;
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
-
-  bool valid_;
   bool grasp_filtered_by_ik_;
   bool grasp_filtered_by_collision_; // arm is in collision with the environment
   bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
@@ -243,18 +253,21 @@ public:
    * \param direction - which side of this plane to cut (+/- 1)
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose, 
-                                 grasp_parallel_plane plane, int direction);
+  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose,
+                          grasp_parallel_plane plane, int direction);
 
   /**
-   * \brief Filter grasps by desired orientation
+   * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand a tiny
+   *        amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't removed
+   *        by the cutting plane operations. We know we'll never get to them because they deviate too much from the desired
+   *        grasping pose... straight in.
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param desired_pose - the desired grasp pose ( using standard grasping orientation )
    * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Affine3d desired_pose, 
-                                       double max_angular_offset);
+  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Affine3d desired_pose,
+                                double max_angular_offset);
 
   /**
    * \brief Helper for filterGrasps
@@ -279,7 +292,7 @@ public:
                       const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
 
   /**
-   * \brief add a cutting plane 
+   * \brief add a cutting plane
    * \param pose - pose describing the cutting plane
    * \param plane - which plane to use as the cutting plane
    * \param direction - on which side of the plane the grasps will be removed
@@ -317,12 +330,6 @@ public:
    */
   bool chooseBestGrasp( std::vector<GraspCandidatePtr>& grasp_candidates,
                         GraspCandidatePtr& chosen );
-
-  /**
-   * \brief Check if a grasp candidate is valid
-   *
-   */
-  bool isGraspValid(GraspCandidatePtr grasp);
 
   /**
    * \brief Show grasps after being filtered
