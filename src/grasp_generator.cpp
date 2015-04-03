@@ -50,6 +50,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   , nh_("~/generator")
   , verbose_(verbose)
   , m_between_grasps_(MIN_GRASP_DISTANCE)
+  , m_between_depth_grasps_(MIN_GRASP_DISTANCE)
 {
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
@@ -80,7 +81,13 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
   depth_pose_msg.header.stamp = ros::Time::now();
   depth_pose_msg.header.frame_id = grasp_data->base_link_;
 
-  int number_depth_grasps = grasp_data->finger_to_palm_depth_ / m_between_grasps_;
+  if (m_between_depth_grasps_ < MIN_GRASP_DISTANCE)
+  {
+    m_between_depth_grasps_ = MIN_GRASP_DISTANCE;
+    ROS_WARN_STREAM_NAMED("depth_grasps","m_between_depth_grasps_ < MIN_GRASP_DISTANCE ( " << MIN_GRASP_DISTANCE << ")");
+  }
+
+  int number_depth_grasps = grasp_data->finger_to_palm_depth_ / m_between_depth_grasps_;
 
   if (number_depth_grasps < 1)
     number_depth_grasps = 1;
@@ -94,14 +101,18 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
   {
     base_pose = visual_tools_->convertPose(it->grasp_pose.pose);
     to_cuboid = cuboid_pose.translation() - base_pose.translation();
-    to_cuboid.normalized();
+    to_cuboid = to_cuboid.normalized();
     to_cuboid *= delta;
 
     depth_pose = base_pose;
+
     for (std::size_t i = 0; i < number_depth_grasps; i++)
     {
+
       depth_pose.translation() += to_cuboid;
 
+      // TODO: debug message with distance to cuboid
+      
       new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
       grasp_id++;
       new_grasp.pre_grasp_posture = it->pre_grasp_posture;
@@ -116,7 +127,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
         // show gripper center and grasp direction
         //visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
         //visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
-        visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
+        visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.0025);
 
         // Send markers to Rviz 
         ros::Duration(0.05).sleep();
@@ -402,6 +413,8 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
 
     double dot = cross_prod.dot(yAxis - poseCenter);
     double rotation_angle = acos( gripper_z.normalized().dot(to_cuboid.normalized()));
+    if (!std::isfinite(rotation_angle))
+      rotation_angle = 0;
 
     // check sign of rotation angle
     if (dot < 0)
@@ -420,8 +433,8 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
       visual_tools_->enableBatchPublishing(true);
 
       // show generated grasp pose
-      visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
-      visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01);
+      visual_tools_->publishAxis(grasp_pose, 0.025, 0.0025);
+      visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.004);
     }
 
     // translate and rotate gripper to match standard orientation
@@ -436,10 +449,10 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     if (verbose_)
     {
       // show gripper center and grasp direction
-      visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
+      //visual_tools_->publishXArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL, 0.05);
       //visual_tools_->publishYArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, 0.05);
-      visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
-      visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.01);
+      //visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
+      visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.0025);
 
       // Send markers to Rviz
       visual_tools_->triggerBatchPublishAndDisable();
@@ -507,14 +520,10 @@ void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDat
 
 Eigen::ArrayXXf GraspGenerator::generateCuboidGraspPoints(double length, double width, double radius)
 {
-  ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points","generating possible grasp points around cuboid");
+  ROS_DEBUG_STREAM_NAMED("cuboid_grasp_points","generating possible grasp points around cuboid: " <<
+                         m_between_grasps_ << " delta");
 
-  /*
-   * Create equally spaced points around cuboid
-   */
-
-  // choose the larger of the two and make angular increments about equal
-  //double delta = (2 * length + 2 * width + 2 * M_PI * radius) / number_grasp_points_;
+  // Create equally spaced points around cuboid
   if (m_between_grasps_ < MIN_GRASP_DISTANCE)
   {
     m_between_grasps_ = MIN_GRASP_DISTANCE;
