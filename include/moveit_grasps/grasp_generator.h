@@ -77,7 +77,7 @@ namespace moveit_grasps
 {
 
 static const double RAD2DEG = 57.2957795;
-static const double MIN_GRASP_DISTANCE = 0.01; //m between grasps
+static const double MIN_GRASP_DISTANCE = 0.001; //m between grasps
 
 // Grasp axis orientation
 enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
@@ -193,9 +193,14 @@ public:
   /**
    * \brief Setter for delta between grasps
    */
-  void setGraspDelta(int m_between_grasps)
+  void setGraspDelta(double m_between_grasps)
   {
    m_between_grasps_ = m_between_grasps;
+  }
+
+  void setGraspDepthDelta(double m_between_depth_grasps)
+  {
+    m_between_depth_grasps_ = m_between_depth_grasps;
   }
   
   /**
@@ -217,8 +222,9 @@ private:
   // Display more output both in console and in Rviz (with arrows and markers)
   bool verbose_;
 
-  // Number of grasp points to generate around 
+  // Discretization of grasps
   double m_between_grasps_;
+  double m_between_depth_grasps_;
 
   // Visualization levels
   bool show_prefiltered_grasps_;
