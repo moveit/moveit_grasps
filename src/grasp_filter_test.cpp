@@ -170,6 +170,11 @@ public:
     grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_) );
 
     // ---------------------------------------------------------------------------------------------
+    // Clear Markers
+    visual_tools_->deleteAllMarkers();
+    Eigen::Affine3d world_cs = Eigen::Affine3d::Identity();
+    visual_tools_->publishAxis(world_cs);
+
     // Generate grasps for a bunch of random objects
 
     // Loop
@@ -178,18 +183,14 @@ public:
       if(!ros::ok())
         break;
 
-      // Clear markers
-      visual_tools_->deleteAllMarkers();
       ROS_INFO_STREAM_NAMED("test","Adding random object " << i+1 << " of " << num_tests);
-      Eigen::Affine3d world_cs = Eigen::Affine3d::Identity();
-      visual_tools_->publishAxis(world_cs);
 
       // Generate random cuboid
       geometry_msgs::Pose object_pose;
       double depth;
       double width;
       double height;
-      rviz_visual_tools::RandomPoseBounds pose_bounds(0.6, 1.0, 0, 0.5, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
+      rviz_visual_tools::RandomPoseBounds pose_bounds(0.6, 1.0, -0.25, 0.25, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
       visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
       visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       visual_tools_->publishAxis(object_pose);
@@ -216,17 +217,15 @@ public:
       Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
       filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
       //visual_tools_->publishAxis(filter_pose);
-      std::size_t unobstructed_grasps = grasp_filter_->filterGraspsByPlane(grasp_candidates, 
-                                                                           filter_pose,
-                                                                           moveit_grasps::YZ, direction);
+      grasp_filter_->clearCuttingPlanes();
+      grasp_filter_->addCuttingPlane(filter_pose, moveit_grasps::YZ, direction);
+
       // can only reach the object from the front
       filter_pose = Eigen::Affine3d::Identity();
       filter_pose = filter_pose * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY());
       filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
-      visual_tools_->publishAxis(filter_pose);
-      std::size_t oriented_grasps = grasp_filter_->filterGraspsByOrientation(grasp_candidates,
-                                                                             filter_pose,
-                                                                             0.524, grasp_data_);
+      //visual_tools_->publishAxis(filter_pose);
+      grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
 
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                              arm_jmg, filter_pregrasps, 
@@ -286,7 +285,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-  int num_tests = 1;
+  int num_tests = 5;
 
   ros::init(argc, argv, "grasp_generator_test");
 
