@@ -16,16 +16,6 @@ Developed by [Dave Coleman](http://dav.ee) at the Correll Robotics Lab, Universi
 
 <img align="right" src="https://raw.github.com/davetcoleman/moveit_grasps/hydro-devel/resources/demo.png" /> 
 
-## Video Demo
-
-A demo with Baxter:
-
-[![Baxter Grasp Test](http://img.youtube.com/vi/WEDITCR2qH4/0.jpg)](https://www.youtube.com/watch?v=WEDITCR2qH4)  
-
-## Build Status
-
-[![Build Status](https://travis-ci.org/davetcoleman/moveit_grasps.png?branch=hydro-devel)](https://travis-ci.org/davetcoleman/moveit_grasps)
-
 ## Install
 
 ### Ubuntu Debian
@@ -46,9 +36,9 @@ rosdep install --from-paths src --ignore-src --rosdistro indigo
 
 ## Robot-Agnostic Configuration
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/config/baxter_grasp_data.yaml). See the comments within that file for explanations. 
+You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations. 
 
-To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/launch/grasp_test.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config/baxter_grasp_data.yaml"/>``.
+To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/launch/grasp_test.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>``.
 
 Within that file you can specify the following (example taken from jaco):
 
@@ -90,25 +80,33 @@ Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_mi
 
 There are two tests scripts in this package. To view the tests, first start Rviz with:
 
-```
-roslaunch moveit_grasps rviz.launch
-```
+    roslaunch moveit_grasps rviz.launch
 
 To test just grasp generation for randomly placed blocks:
-```
-roslaunch moveit_grasps test_grasp_generator.launch 
-```
+
+    roslaunch moveit_grasps test_grasp_generator.launch 
 
 To also test the grasp filtering:
-```
-roslaunch moveit_grasps test_filter.launch baxter:=true
-```
+
+    roslaunch moveit_grasps test_filter.launch baxter:=true
+
+### Grasp Filter
+
+When filtered, the colors represent the following:
+
+    RED - grasp filtered by ik
+    PINK - grasp filtered by collision
+    MAGENTA - grasp filtered by cutting plane
+    YELLOW - grasp filtered by orientation
+    BLUE - pregrasp filtered by ik
+    CYAN - pregrasp filtered by collision
+    GREEN - valid
 
 ### Bounding Box From Mesh
-```
-roslaunch moveit_grasps rviz.launch
-roslaunch moveit_grasps test_bounding_box.launch
-```
+
+    roslaunch moveit_grasps rviz.launch
+    roslaunch moveit_grasps test_bounding_box.launch
+
 Each mesh in the products folder will be displayed with the calculated bounding box. Hit `enter` to move to the next mesh.
 
 ## Tested Robots
@@ -129,11 +127,8 @@ There are currently example implementations:
 
 Features we'd like to see added to this project:
 
- - Better reasoning about support surfaces (table)
- - Integrate collision checking to verify feasibility of grasp
  - Make grasp quality metric better informed
- - Make this project easier to setup for new robots
-   - Integrate into Setup Assistant GUI
+ - Integrate into Setup Assistant GUI
 
 ## Contributors
 

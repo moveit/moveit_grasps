@@ -26,7 +26,7 @@
   <node name="cuboid_grasp_test" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps" 
 	type="cuboid_grasp_test" output="screen" args="--verbose $(arg verbose) --trials $(arg trials)">
     <param name="ee_group_name" value="$(arg ee_group_name)"/>
-    <rosparam command="load" file="$(find moveit_grasps)/config/baxter_grasp_data.yaml"/>
+    <rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>
   </node>
 
 </launch>

@@ -9,5 +9,5 @@
   <param unless="$(arg hand)" name="ee_group_name" value="left_hand" />
   <param     if="$(arg hand)" name="ee_group_name" value="right_hand" />
 
-  <rosparam command="load" file="$(find moveit_grasps)/config/baxter_grasp_data.yaml"/>
+  <rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>
 </launch>

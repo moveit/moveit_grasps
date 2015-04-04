@@ -227,6 +227,9 @@ private:
   double m_between_depth_grasps_;
 
   // Visualization levels
+  bool show_grasp_arrows_;
+  double show_grasp_arrows_speed_;
+
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
 

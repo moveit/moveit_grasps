@@ -78,23 +78,23 @@ add_library(${PROJECT_NAME}_filter
 target_link_libraries(${PROJECT_NAME}_filter
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
-set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}") # for threading
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
 # Test filter executable
-add_executable(${PROJECT_NAME}_filter_test src/grasp_filter_test.cpp)
+add_executable(${PROJECT_NAME}_filter_test src/test/grasp_filter_test.cpp)
 target_link_libraries(${PROJECT_NAME}_filter_test
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 # Test grasp executable
-add_executable(${PROJECT_NAME}_test src/grasp_generator_test.cpp)
+add_executable(${PROJECT_NAME}_test src/test/grasp_generator_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 # Test mesh bounding box
-add_executable(bounding_box_test src/mesh_bounding_box_test.cpp)
+add_executable(bounding_box_test src/test/mesh_bounding_box_test.cpp)
 target_link_libraries(bounding_box_test
   ${PROJECT_NAME} 
   ${catkin_LIBRARIES} 

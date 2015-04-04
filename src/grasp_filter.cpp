@@ -72,7 +72,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
                           moveit_visual_tools::MoveItVisualToolsPtr& visual_tools )
   : visual_tools_(visual_tools)
   , nh_("~/filter")
-  , secondary_collision_checking_(false) // TODO remove this featuer
+  , secondary_collision_checking_(false) // TODO remove this feature
 {
   // Make a copy of the robot state so that we are sure outside influence does not break our grasp filter
   robot_state_.reset(new moveit::core::RobotState(*robot_state));
@@ -265,10 +265,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     num_threads = grasp_candidates.size();
 
   // Debug
-  if(verbose)
+  if(verbose || collision_verbose)
   {
     num_threads = 1;
-    ROS_WARN_STREAM_NAMED("grasp_filter","Using only " << num_threads << " threads");
+    ROS_WARN_STREAM_NAMED("grasp_filter","Using only " << num_threads << " threads because verbose or collision_verbose are true");
   }
   ROS_INFO_STREAM_NAMED("filter", "Filtering possible grasps with " << num_threads << " threads");
 
@@ -365,6 +365,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     std::size_t thread_id = omp_get_thread_num();
     ROS_DEBUG_STREAM_NAMED("filter.superdebug","Thread " << thread_id << " processing grasp " << grasp_id);
 
+    // If in verbose mode allow for quick exit
+    if (ik_thread_structs[thread_id]->verbose_ && !ros::ok())
+      continue; // breaking a for loop is not allows with OpenMP
+
     // Assign grasp to process
     ik_thread_structs[thread_id]->grasp_id = grasp_id;
 
@@ -411,10 +415,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   std::cout << "-------------------------------------------------------" << std::endl;
   std::cout << "GRASPING RESULTS " << std::endl;
   std::cout << "total candidate grasps          " << grasp_candidates.size() << std::endl;
-  std::cout << "grasp_filtered_by_ik            " << grasp_filtered_by_ik << std::endl;
-  std::cout << "grasp_filtered_by_collision     " << grasp_filtered_by_collision << std::endl;
   std::cout << "grasp_filtered_by_cutting_plane " << grasp_filtered_by_cutting_plane << std::endl;
   std::cout << "grasp_filtered_by_orientation   " << grasp_filtered_by_orientation << std::endl;
+  std::cout << "grasp_filtered_by_ik            " << grasp_filtered_by_ik << std::endl;
+  std::cout << "grasp_filtered_by_collision     " << grasp_filtered_by_collision << std::endl;
   std::cout << "pregrasp_filtered_by_ik         " << pregrasp_filtered_by_ik << std::endl;
   std::cout << "pregrasp_filtered_by_collision  " << pregrasp_filtered_by_collision << std::endl;
   std::cout << "remaining grasps                " << remaining_grasps << std::endl;
@@ -663,6 +667,7 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
   visual_tools_->enableBatchPublishing(true);
 
   /*
+    NOTE: duplicated in README.md
     RED - grasp filtered by ik
     PINK - grasp filtered by collision
     MAGENTA - grasp filtered by cutting plane
