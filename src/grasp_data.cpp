@@ -256,9 +256,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // Copy values from RobotModel
   ee_jmg_ = robot_model->getJointModelGroup(end_effector_name);
   arm_jmg_ = robot_model->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
-
-  parent_link_name_ = ee_jmg_->getEndEffectorParentGroup().second;
-  parent_link_ = robot_model->getLinkModel(parent_link_name_);
+  parent_link_ = robot_model->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
 
   // Debug
   //moveit_grasps::Grasps::printObjectGraspData(grasp_data);

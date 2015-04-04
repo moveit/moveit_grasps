@@ -114,8 +114,6 @@ public:
 
   // Duplicate end effector data copied from RobotModel
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"
-  std::string parent_link_name_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"
-
 }; // class
 
 typedef boost::shared_ptr<GraspData> GraspDataPtr;

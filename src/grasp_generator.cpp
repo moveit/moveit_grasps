@@ -70,7 +70,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 }
 
 bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, const moveit_grasps::GraspDataPtr grasp_data,
-                              std::vector<moveit_msgs::Grasp>& possible_grasps)
+                                            std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
   if (possible_grasps.size() == 0 )
   {
@@ -99,7 +99,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
 
   if (number_depth_grasps < 1)
     number_depth_grasps = 1;
-  
+
   double delta = grasp_data->finger_to_palm_depth_ / number_depth_grasps;
   ROS_DEBUG_STREAM_NAMED("depth_grasps","finger_to_palm_depth_ = " << grasp_data->finger_to_palm_depth_);
   ROS_DEBUG_STREAM_NAMED("depth_grasps","delta                 = " << delta);
@@ -120,7 +120,7 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
       depth_pose.translation() += to_cuboid;
 
       // TODO: debug message with distance to cuboid
-      
+
       new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
       grasp_id++;
       new_grasp.pre_grasp_posture = it->pre_grasp_posture;
@@ -137,19 +137,19 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
         //visual_tools_->publishZArrow(new_grasp.grasp_pose.pose, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, 0.05);
         visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.0025);
 
-        // Send markers to Rviz 
+        // Send markers to Rviz
         ros::Duration(show_grasp_arrows_speed_).sleep();
-    }
+      }
     }
   }
   ROS_INFO_STREAM_NAMED("depth_grasps","added " << depth_grasps.size() << " variable depth grasps");
- 
+
   // depth_grasps is almost always larger, should change this so smaller is being inserted.
   possible_grasps.insert(possible_grasps.end(), depth_grasps.begin(), depth_grasps.end());
   return true;
 }
 
-bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
+bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
                                        moveit_grasps::grasp_parallel_plane plane, Eigen::Vector3d grasp_axis,
                                        const moveit_grasps::GraspDataPtr grasp_data,
                                        std::vector<moveit_msgs::Grasp>& possible_grasps)
@@ -162,7 +162,7 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
 
   std::vector<moveit_msgs::Grasp> parallel_grasps;
   std::vector<moveit_msgs::Grasp>::iterator it;
-  
+
   static int grasp_id = 0;
   moveit_msgs::Grasp new_grasp;
   geometry_msgs::PoseStamped parallel_pose_msg;
@@ -197,8 +197,8 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
         ROS_WARN_STREAM_NAMED("parallel grasps", "parallel plane not set correctly");
         break;
     }
-    
-    Eigen::Vector3d to_cuboid = cuboid_pose.translation() - parallel_pose.translation(); 
+
+    Eigen::Vector3d to_cuboid = cuboid_pose.translation() - parallel_pose.translation();
     Eigen::Vector3d cross_prod = parallel_vector.normalized().cross(to_cuboid.normalized());
     double rotation_angle = acos( to_cuboid.normalized().dot( parallel_vector.normalized() ) );
 
@@ -208,7 +208,7 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
       rotation_angle *= -1;
 
     ROS_DEBUG_STREAM_NAMED("parallel grasps", "cross_prod = \n" << cross_prod);
-    
+
     // add new pose
     parallel_pose *= Eigen::AngleAxisd(rotation_angle, rotation_axis);
 
@@ -216,15 +216,15 @@ bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose,
     grasp_id++;
     new_grasp.pre_grasp_posture = it->pre_grasp_posture;
     new_grasp.grasp_posture = it->grasp_posture;
-    
+
     tf::poseEigenToMsg(parallel_pose, parallel_pose_msg.pose);
     new_grasp.grasp_pose = parallel_pose_msg;
     parallel_grasps.push_back(new_grasp);
   }
-  
+
   // should change this so smaller is being inserted.
   possible_grasps.insert(possible_grasps.end(), parallel_grasps.begin(), parallel_grasps.end());
-  return true; 
+  return true;
 }
 
 bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
@@ -346,13 +346,13 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   approach_vector = grasp_pose * Eigen::Vector3d::UnitZ();
   approach_vector.normalize();
 
-  pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_name_;
+  pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
   pre_grasp_approach.direction.vector.x = 0;
   pre_grasp_approach.direction.vector.y = 0;
   pre_grasp_approach.direction.vector.z = 1;
   new_grasp.pre_grasp_approach = pre_grasp_approach;
 
-  post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_name_;
+  post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
   post_grasp_retreat.direction.vector.x = 0;
   post_grasp_retreat.direction.vector.y = 0;
   post_grasp_retreat.direction.vector.z = -1;
@@ -469,31 +469,25 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   }
 }
 
-geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
+Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
 {
   // Grasp Pose Variables
-  geometry_msgs::PoseStamped grasp_pose = grasp.grasp_pose;
   Eigen::Affine3d grasp_pose_eigen;
-  tf::poseMsgToEigen(grasp_pose.pose, grasp_pose_eigen);
+  tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
 
-  // Get pre-grasp pose first
-  geometry_msgs::PoseStamped pre_grasp_pose;
-  Eigen::Affine3d pre_grasp_pose_eigen = grasp_pose_eigen; // Copy original grasp pose to pre-grasp pose
-
-  // Approach direction variables
+  // Approach direction
   Eigen::Vector3d pre_grasp_approach_direction_local;
 
   // The direction of the pre-grasp
-  // Calculate the current animation position based on the percent
-  Eigen::Vector3d pre_grasp_approach_direction = Eigen::Vector3d(
-                                                                 -1 * grasp.pre_grasp_approach.direction.vector.x * grasp.pre_grasp_approach.desired_distance,
-                                                                 -1 * grasp.pre_grasp_approach.direction.vector.y * grasp.pre_grasp_approach.desired_distance,
-                                                                 -1 * grasp.pre_grasp_approach.direction.vector.z * grasp.pre_grasp_approach.desired_distance
-                                                                 );
+  Eigen::Vector3d pre_grasp_approach_direction =
+    Eigen::Vector3d(-1 * grasp.pre_grasp_approach.direction.vector.x * grasp.pre_grasp_approach.desired_distance,
+                    -1 * grasp.pre_grasp_approach.direction.vector.y * grasp.pre_grasp_approach.desired_distance,
+                    -1 * grasp.pre_grasp_approach.direction.vector.z * grasp.pre_grasp_approach.desired_distance);
 
   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
   if( grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link )
   {
+    //ROS_WARN_STREAM_NAMED("grasp_generator","Pre grasp approach direction frame_id is " << ee_parent_link);
     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
     pre_grasp_approach_direction_local = grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
   }
@@ -501,6 +495,22 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
   {
     pre_grasp_approach_direction_local = pre_grasp_approach_direction; //grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
   }
+  
+  return pre_grasp_approach_direction_local;
+}
+
+geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
+{
+  // Grasp Pose Variables
+  Eigen::Affine3d grasp_pose_eigen;
+  tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
+
+  // Get pre-grasp pose first
+  geometry_msgs::PoseStamped pre_grasp_pose;
+  Eigen::Affine3d pre_grasp_pose_eigen = grasp_pose_eigen; // Copy original grasp pose to pre-grasp pose
+
+  // Approach direction
+  Eigen::Vector3d pre_grasp_approach_direction_local = getPreGraspDirection(grasp, ee_parent_link);
 
   // Update the grasp matrix usign the new locally-framed approach_direction
   pre_grasp_pose_eigen.translation() += pre_grasp_approach_direction_local;
@@ -509,7 +519,7 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
   tf::poseEigenToMsg(pre_grasp_pose_eigen, pre_grasp_pose.pose);
 
   // Copy original header to new grasp
-  pre_grasp_pose.header = grasp_pose.header;
+  pre_grasp_pose.header = grasp.grasp_pose.header;
 
   return pre_grasp_pose;
 }

@@ -160,8 +160,16 @@ public:
   Eigen::ArrayXXf generateCuboidGraspPoints(double length, double width, double radius);
 
   /**
+   * \brief Get the grasp direction vector relative to the world frame
+   * \param grasp 
+   * \param name of parent link
+   * \return the approach direction
+   */
+  static Eigen::Vector3d getPreGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+
+  /**
    * \brief Using an input grasp description, get the pregrasp pose
-   * \param grasp description
+   * \param grasp 
    * \param name of parent link
    * \return pregrasp pose
    */
