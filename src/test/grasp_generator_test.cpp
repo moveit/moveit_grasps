@@ -151,8 +151,13 @@ public:
 
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
-      double animate_speed = 0.1;
-      visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
+      //double animate_speed = 0.1;
+      //visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
+
+      // Add parallel grasps
+      visual_tools_->publishAxis(object_pose);
+      grasp_generator_->addParallelGrasps(visual_tools_->convertPose(object_pose), depth, width, height, X_AXIS,
+                                          grasp_data_, possible_grasps);
 
       // Test if done
       ++i;

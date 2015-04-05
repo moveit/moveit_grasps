@@ -104,9 +104,8 @@ public:
   /* 
    *
    */
-  bool addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
-                         moveit_grasps::grasp_parallel_plane plane, Eigen::Vector3d grasp_axis,
-                         const moveit_grasps::GraspDataPtr grasp_data,
+  bool addParallelGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
+                         grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
                          std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /**

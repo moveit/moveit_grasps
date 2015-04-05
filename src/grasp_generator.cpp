@@ -138,7 +138,8 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
         visual_tools_->publishBlock(new_grasp.grasp_pose.pose, rviz_visual_tools::PINK, 0.0025);
 
         // Send markers to Rviz 
-        ros::Duration(show_grasp_arrows_speed_).sleep();
+        //ros::Duration(show_grasp_arrows_speed_).sleep();
+        ros::Duration(0.05).sleep();
     }
     }
   }
@@ -149,82 +150,95 @@ bool GraspGenerator::addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, 
   return true;
 }
 
-bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose, 
-                                       moveit_grasps::grasp_parallel_plane plane, Eigen::Vector3d grasp_axis,
-                                       const moveit_grasps::GraspDataPtr grasp_data,
-                                       std::vector<moveit_msgs::Grasp>& possible_grasps)
+bool GraspGenerator::addParallelGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
+                         grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
+                         std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
-  if (possible_grasps.size() == 0 )
+  ROS_DEBUG_STREAM_NAMED("parallel_grasps","Adding parallel grasps around cuboid axis");
+
+  double finger_depth = grasp_data->finger_to_palm_depth_;
+  double length_side_a;
+  double length_side_b;
+
+  Eigen::Affine3d base_pose = cuboid_pose;
+  Eigen::Vector3d a_dir;
+  Eigen::Vector3d b_dir; 
+
+  switch(axis)
   {
-    ROS_WARN_STREAM_NAMED("parallel grasps", "possible_grasps is empty. Call generateGrasps() first");
-    return false;
+    case X_AXIS:
+      length_side_a = width;
+      length_side_b = height;
+      a_dir = base_pose.rotation() * Eigen::Vector3d::UnitY();
+      b_dir = base_pose.rotation() * Eigen::Vector3d::UnitZ();
+      break;
+    case Y_AXIS:
+      length_side_a = depth;
+      length_side_b = height;      
+      a_dir = base_pose.rotation() * Eigen::Vector3d::UnitX();
+      b_dir = base_pose.rotation() * Eigen::Vector3d::UnitZ();
+      break;
+    case Z_AXIS:
+      length_side_a = depth;
+      length_side_b = width;
+      a_dir = base_pose.rotation() * Eigen::Vector3d::UnitX();
+      b_dir = base_pose.rotation() * Eigen::Vector3d::UnitY();
+      break;
+    default:
+      ROS_WARN_STREAM_NAMED("parallel_grasps","axis not defined properly");
+      break;
   }
 
-  std::vector<moveit_msgs::Grasp> parallel_grasps;
-  std::vector<moveit_msgs::Grasp>::iterator it;
-  
-  static int grasp_id = 0;
-  moveit_msgs::Grasp new_grasp;
-  geometry_msgs::PoseStamped parallel_pose_msg;
-  parallel_pose_msg.header.stamp = ros::Time::now();
-  parallel_pose_msg.header.frame_id = grasp_data->base_link_;
+  a_dir = a_dir.normalized();
+  b_dir = b_dir.normalized();
 
+  //
+  base_pose = cuboid_pose;
+  base_pose.translation() -= (0.5 * length_side_a * a_dir + finger_depth * a_dir);
+  base_pose.translation() -= 0.5 * length_side_b * b_dir;
+  visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::BLUE, 0.01);
 
-  for (it = possible_grasps.begin(); it != possible_grasps.end(); ++it)
+  for (int i = 0; i < 10; i++)
   {
-    Eigen::Affine3d parallel_pose = visual_tools_->convertPose(it->grasp_pose.pose);
-    Eigen::Vector3d rotation_axis;
-
-    // get angle between grasp
-    Eigen::Vector3d parallel_vector;
-    parallel_vector = parallel_pose * grasp_axis;
-
-    switch(plane)
-    {
-      case XY:
-        parallel_vector(2) = 0;
-        rotation_axis = Eigen::Vector3d::UnitZ();
-        break;
-      case XZ:
-        parallel_vector(1) = 0;
-        rotation_axis = Eigen::Vector3d::UnitY();
-        break;
-      case YZ:
-        parallel_vector(0) = 0;
-        rotation_axis = Eigen::Vector3d::UnitX();
-        break;
-      default:
-        ROS_WARN_STREAM_NAMED("parallel grasps", "parallel plane not set correctly");
-        break;
-    }
-    
-    Eigen::Vector3d to_cuboid = cuboid_pose.translation() - parallel_pose.translation(); 
-    Eigen::Vector3d cross_prod = parallel_vector.normalized().cross(to_cuboid.normalized());
-    double rotation_angle = acos( to_cuboid.normalized().dot( parallel_vector.normalized() ) );
-
-    // get direction to rotate
-    double dot = cross_prod.dot(rotation_axis);
-    if (dot < 0)
-      rotation_angle *= -1;
-
-    ROS_DEBUG_STREAM_NAMED("parallel grasps", "cross_prod = \n" << cross_prod);
-    
-    // add new pose
-    parallel_pose *= Eigen::AngleAxisd(rotation_angle, rotation_axis);
-
-    new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
-    grasp_id++;
-    new_grasp.pre_grasp_posture = it->pre_grasp_posture;
-    new_grasp.grasp_posture = it->grasp_posture;
-    
-    tf::poseEigenToMsg(parallel_pose, parallel_pose_msg.pose);
-    new_grasp.grasp_pose = parallel_pose_msg;
-    parallel_grasps.push_back(new_grasp);
+    base_pose.translation() += 0.1 * length_side_b * b_dir;
+    visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::BLUE, 0.01);
   }
-  
-  // should change this so smaller is being inserted.
-  possible_grasps.insert(possible_grasps.end(), parallel_grasps.begin(), parallel_grasps.end());
-  return true; 
+
+  //
+  base_pose = cuboid_pose;
+  base_pose.translation() += 0.5 * length_side_a * a_dir + finger_depth * a_dir;
+  base_pose.translation() += 0.5 * length_side_b * b_dir;
+  visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::CYAN, 0.01);
+
+  for (int i = 0; i < 10; i++)
+  {
+    base_pose.translation() -= 0.1 * length_side_b * b_dir;
+    visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::CYAN, 0.01);
+  }
+
+  // 
+  base_pose = cuboid_pose;
+  base_pose.translation() -= 0.5 * length_side_a * a_dir;
+  base_pose.translation() -= (0.5 * length_side_b * b_dir + finger_depth * b_dir);
+  visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::RED, 0.01);
+
+  for (int i = 0; i < 10; i++)
+  {
+    base_pose.translation() += 0.1 * length_side_a * a_dir;
+    visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::RED, 0.01);
+  }
+
+  // 
+  base_pose = cuboid_pose;
+  base_pose.translation() += 0.5 * length_side_a * a_dir;
+  base_pose.translation() += 0.5 * length_side_b * b_dir + finger_depth * b_dir;
+  visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::MAGENTA, 0.01);
+
+  for (int i = 0; i < 10; i++)
+  {
+    base_pose.translation() -= 0.1 * length_side_a * a_dir;
+    visual_tools_->publishSphere(base_pose.translation(), rviz_visual_tools::MAGENTA, 0.01);
+  }
 }
 
 bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
