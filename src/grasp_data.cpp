@@ -75,6 +75,11 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   double pregrasp_time_from_start;
   double grasp_time_from_start;
   double finger_to_palm_depth;
+  double angle_resolution;
+  double grasp_resolution;
+  double grasp_depth_resolution;
+  double grasp_min_depth;
+  double gripper_width;
   std::string end_effector_name;
 
   // Load a param
@@ -111,8 +116,48 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
     return false;
   }
   child_nh.getParam("finger_to_palm_depth", finger_to_palm_depth);
+  
+  // Load a param
+  if (!child_nh.hasParam("gripper_width"))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `gripper_width` missing from rosparam server. Did you load your end effector's configuration yaml file?");
+    return false;
+  }
+  child_nh.getParam("gripper_width", gripper_width);
+
+  // Load a param 
+  if (!child_nh.hasParam("grasp_resolution"))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_resolution` missing from rosparam server. Did you load your end effector's configuration yaml file?");
+    return false;
+  }
+  child_nh.getParam("grasp_resolution", grasp_resolution);
+
+  // Load a param 
+  if (!child_nh.hasParam("grasp_min_depth"))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_min_depth` missing from rosparam server. Did you load your end effector's configuration yaml file?");
+    return false;
+  }
+  child_nh.getParam("grasp_min_depth", grasp_min_depth);
+
+  // Load a param 
+  if (!child_nh.hasParam("grasp_depth_resolution"))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_depth_resolution` missing from rosparam server. Did you load your end effector's configuration yaml file?");
+    return false;
+  }
+  child_nh.getParam("grasp_depth_resolution", grasp_depth_resolution);
 
   // Load a param
+  if (!child_nh.hasParam("angle_resolution"))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `angle_resolution` missing from rosparam server. Did you load your end effector's configuration yaml file?");
+    return false;
+  }
+  child_nh.getParam("angle_resolution", angle_resolution);
+
+// Load a param
   if (!child_nh.hasParam("end_effector_name"))
   {
     ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `end_effector_name` missing from rosparam server. Did you load your end effector's configuration yaml file?");
@@ -244,6 +289,11 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // -------------------------------
   // Geometry data
   finger_to_palm_depth_ = finger_to_palm_depth;
+  gripper_width_ = gripper_width;
+  grasp_resolution_ = grasp_resolution;
+  grasp_depth_resolution_ = grasp_depth_resolution;
+  grasp_min_depth_ = grasp_min_depth;
+  angle_resolution_ = angle_resolution;
 
   // -------------------------------
   // Nums
@@ -251,14 +301,12 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_depth_ = 0.06;// in negative or 0 this makes the grasps on the other side of the object! (like from below)
 
   // generate grasps at PI/angle_resolution increments
-  angle_resolution_ = 32; //TODO parametrize this, or move to action interface
+  //angle_resolution_ = 32; //TODO parametrize this, or move to action interface
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model->getJointModelGroup(end_effector_name);
   arm_jmg_ = robot_model->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
-
-  parent_link_name_ = ee_jmg_->getEndEffectorParentGroup().second;
-  parent_link_ = robot_model->getLinkModel(parent_link_name_);
+  parent_link_ = robot_model->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
 
   // Debug
   //moveit_grasps::Grasps::printObjectGraspData(grasp_data);

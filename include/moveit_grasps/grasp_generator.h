@@ -98,15 +98,15 @@ public:
   /*
    *
    */
-  bool addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, const moveit_grasps::GraspDataPtr grasp_data,
-                              std::vector<moveit_msgs::Grasp>& possible_grasps);
+  // bool addVariableDepthGrasps(const Eigen::Affine3d& cuboid_pose, const moveit_grasps::GraspDataPtr grasp_data,
+  //                             std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /* 
    *
    */
-  bool addParallelGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
-                         grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
-                         std::vector<moveit_msgs::Grasp>& possible_grasps);
+  // bool addParallelGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
+  //                        grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
+  //                        std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /**
    * \brief Create possible grasp positions around a cuboid 
@@ -149,6 +149,23 @@ public:
                                 grasp_axis_t axis, const GraspDataPtr grasp_data, 
                                 std::vector<moveit_msgs::Grasp>& possible_grasps);
 
+  std::size_t addCornerGraspsHelper(Eigen::Affine3d pose,
+                                    double rotation_angles[3],
+                                    Eigen::Vector3d translation,
+                                    double corner_rotation,
+                                    int num_radial_grasps, 
+                                    std::vector<Eigen::Affine3d>& grasp_poses);
+
+  std::size_t addFaceGraspsHelper(Eigen::Affine3d pose,
+                                  double rotation_angles[3],
+                                  Eigen::Vector3d translation,
+                                  Eigen::Vector3d delta,
+                                  double alignment_rotation,
+                                  int num_grasps,
+                                  std::vector<Eigen::Affine3d>& grasp_poses);
+
+  void addGrasp(const Eigen::Affine3d& pose, std::vector<moveit_msgs::Grasp>& possible_grasps);
+
   /**
    * \brief Generate grasp points around the perimeter of the cuboid
    * \param depth length of cuboid along local x-axis
@@ -156,11 +173,19 @@ public:
    * \param height length of cuboid along local z-axis
    * \return a list of points around the cuboid
    */
-  Eigen::ArrayXXf generateCuboidGraspPoints(double length, double width, double radius);
+  // Eigen::ArrayXXf generateCuboidGraspPoints(double length, double width, double radius);
+
+  /**
+   * \brief Get the grasp direction vector relative to the world frame
+   * \param grasp 
+   * \param name of parent link
+   * \return the approach direction
+   */
+  static Eigen::Vector3d getPreGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
    * \brief Using an input grasp description, get the pregrasp pose
-   * \param grasp description
+   * \param grasp 
    * \param name of parent link
    * \return pregrasp pose
    */
