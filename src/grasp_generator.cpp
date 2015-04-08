@@ -83,10 +83,6 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
 
   Eigen::Affine3d grasp_pose = cuboid_pose;
   Eigen::Vector3d a_dir, b_dir; 
-  Eigen::Vector3d x_rot_axis, y_rot_axis, z_rot_axis;
-  x_rot_axis = Eigen::Vector3d::UnitX();
-  y_rot_axis = Eigen::Vector3d::UnitY();
-  z_rot_axis = Eigen::Vector3d::UnitZ();
 
   switch(axis)
   {
@@ -155,7 +151,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   translation = corner_translation_a - corner_translation_b;
   g = addCornerGraspsHelper(cuboid_pose, rotation_angles, translation, M_PI / 2.0, num_radial_grasps, grasp_poses);
 
-  // Create grasps along faces of cuboid, grasps are axis aligned
+  /***** Create grasps along faces of cuboid, grasps are axis aligned *****/
 
   // get exact deltas for sides from desired delta
   int num_grasps_along_a = floor( (length_along_a - grasp_data->gripper_width_) / grasp_data->grasp_resolution_ ) + 1;
@@ -213,7 +209,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   delta = delta_a * a_dir;
   g = addFaceGraspsHelper(cuboid_pose, rotation_angles, b_translation, delta, rotation, num_grasps_along_b, grasp_poses);  
 
-  // add grasps at variable depths
+  /***** Add grasps at variable depths *****/
   int num_depth_grasps = ceil( finger_depth / grasp_data->grasp_depth_resolution_ );
   if (num_depth_grasps <= 0)
     num_depth_grasps = 1;
@@ -236,10 +232,34 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     }
   }
 
-  // add grasps at variable angles 
+  /***** add grasps at variable angles *****/
+  int i = 0;
+  Eigen::Affine3d base_pose;
+  num_grasps = grasp_poses.size();
+  //for (std::size_t i = 0; i < num_grasps; i++)
+  //{
+  base_pose = grasp_poses[i];
+
+  grasp_pose = base_pose * Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());
+  while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose) )
+  {
+    grasp_poses.push_back(grasp_pose);
+    rviz_visual_tools_->publishAxis(grasp_poses, 0.025, 0.0025);
+    grasp_pose *= Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());    
+  }
+
+  grasp_pose = base_pose * Eigen::AngleAxisd(-angle_res, Eigen::Vector3d::UnitY());  
+  while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose) )
+  {
+    grasp_poses.push_back(grasp_pose);
+    rviz_visual_tools_->publishAxis(grasp_poses, 0.025, 0.0025);
+    grasp_pose *= Eigen::AngleAxisd(-angle_res, Eigen::Vector3d::UnitY());    
+  }
 
 
-  // add grasps in both directions
+  //}
+
+  /***** add grasps in both directions *****/
   num_grasps = grasp_poses.size();
   for (std::size_t i = 0; i < num_grasps; i++)
   {
@@ -248,7 +268,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     grasp_poses.push_back(grasp_pose);
   }
 
-  // add all poses as possible grasps
+  /***** add all poses as possible grasps *****/
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
   {
     addGrasp(grasp_poses[i], possible_grasps);
@@ -309,9 +329,66 @@ std::size_t GraspGenerator::addCornerGraspsHelper(Eigen::Affine3d pose, double r
   }
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper","num_grasps_added : grasp_poses.size() = " 
                          << num_grasps_added << " : " << grasp_poses.size());
-
 }
 
+bool GraspGenerator::graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double depth, double width, double height,
+                                             Eigen::Affine3d grasp_pose, const GraspDataPtr grasp_data)
+{
+  // get line segment from grasp point to fingertip
+  Eigen::Vector3d point_a = grasp_pose.translation();
+  Eigen::Vector3d point_b = point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->finger_to_palm_depth_;
+
+  // translate points into cuboid coordinate system 
+  point_a = cuboid_pose.inverse() * point_a; // T_cuboid-world * p_world = p_cuboid
+  point_b = cuboid_pose.inverse() * point_b;
+
+  double t, x, y, z;
+  // check if line segment intersects XY faces of cuboid (z = +/- height/2)
+  t = ( height / 2.0 - point_a[2] ) / ( point_b[2] - point_a[2] ); // parameterization of line segment in 3d
+  if ( intersectionHelper(t, point_a[0], point_a[1], point_b[0], point_b[1], depth, width) )
+    return true;
+
+  t = ( -height / 2.0 - point_a[2] ) / ( point_b[2] - point_a[2] );
+  if ( intersectionHelper(t, point_a[0], point_a[1], point_b[0], point_b[1], depth, width) )
+    return true;
+
+  // check if line segment intersects XZ faces of cuboid (y = +/- width/2)
+  t = ( width / 2.0 - point_a[1] ) / ( point_b[1] - point_a[1] ); 
+  if ( intersectionHelper(t, point_a[0], point_a[2], point_b[0], point_b[2], depth, height) )
+    return true;
+
+  t = ( -width / 2.0 - point_a[1] ) / ( point_b[1] - point_a[1] );
+  if ( intersectionHelper(t, point_a[0], point_a[2], point_b[0], point_b[2], depth, height) )
+    return true;
+
+  // check if line segment intersects YZ faces of cuboid (x = +/- depth/2)
+  t = ( depth / 2.0 - point_a[0] ) / ( point_b[0] - point_a[0] ); 
+  if ( intersectionHelper(t, point_a[1], point_a[2], point_b[1], point_b[2], width, height) )
+    return true;
+
+  t = ( -depth / 2.0 - point_a[0] ) / ( point_b[0] - point_a[0] ); 
+  if ( intersectionHelper(t, point_a[1], point_a[2], point_b[1], point_b[2], width, height) )
+    return true;
+
+  // no intersection found
+  return false;
+}
+
+bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b)
+{
+  double u, v;
+  // plane must cross through our line segment
+  if (t >= 0 && t <= 1)
+  {
+    u = u1 + t * (u2 - u1);
+    v = v1 + t * (v2 - v1);
+    
+    if (u >= -a/2 && u <= a/2 && v >= -b/2 && v <= b/2)
+      return true;
+  }
+  else
+    return false;
+}
 
 void GraspGenerator::addGrasp(const Eigen::Affine3d& pose, std::vector<moveit_msgs::Grasp>& possible_grasps)
 {
