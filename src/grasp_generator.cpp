@@ -240,7 +240,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding variable angle grasps...");
   Eigen::Affine3d base_pose;
   num_grasps = grasp_poses.size();
-  for (std::size_t i = num_corner_grasps; i < num_grasps; i++)
+  for (std::size_t i = num_corner_grasps; i < num_grasps; i++) // corner grasps at zero depth don't need variable angles
   {
     base_pose = grasp_poses[i];
 

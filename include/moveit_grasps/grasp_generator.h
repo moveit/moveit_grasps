@@ -136,20 +136,73 @@ public:
                                 grasp_axis_t axis, const GraspDataPtr grasp_data, 
                                 std::vector<moveit_msgs::Grasp>& possible_grasps);
 
+  /**
+   * \brief helper function for adding grasps at corner of cuboid
+   * \param pose - pose of the object to grasp
+   * \param rotation_angles - rotation angles to go from cuboid pose to standard grasping pose
+   * \param translation - translation to go from cuboid centroid to grasping location
+   * \param corner_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
+   * \param num_radial_grasps - the number of grasps to generate around the corner
+   * \param grasp_poses - list of grasp poses generated
+   * \return the number of poses generated 
+   */
   std::size_t addCornerGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                     double corner_rotation, int num_radial_grasps, 
                                     std::vector<Eigen::Affine3d>& grasp_poses);
 
+  /**
+   * \brief helper function for adding grasps along the face of a cuboid
+   * \param pose - pose of the object to grasp
+   * \param rotation_angles - rotation angles to go from cuboid pose to standard grasping pose
+   * \param delta - distance to move away from cuboid at each step
+   * \param translation - translation to go from cuboid centroid to grasping location
+   * \param alignment_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
+   * \param num_grasps - the number of grasps to generate around the corner
+   * \param grasp_poses - list of grasp poses generated
+   * \return the number of poses generated 
+   */
   std::size_t addFaceGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, int num_grasps,
                                   std::vector<Eigen::Affine3d>& grasp_poses);
 
+  /**
+   * \brief helper function for determining if the grasp will intersect the cuboid
+   * \param cuboid_pose - pose of cuboid
+   * \param depth - size of cuboid along x axis
+   * \param width - size of cuboid along y axis
+   * \param height - size of cuboid along z axis
+   * \param grasp_pose - pose of grasp
+   * \param grasp_data - data describing end effector
+   * \return true if the grasp intersects the cuboid
+   */
   bool graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double depth, double width, double height,
                                Eigen::Affine3d grasp_pose, const GraspDataPtr grasp_data);
 
+  /**
+   * \brief helper function to test intersection of a line with a plane
+   * \param t - parametric distance along grasp line
+   * \param u1, v1, u2, v2 - (u,v) coordinates of the line
+   * \param a, b - length and width of the plane area in which to test for intersection
+   * \param u, v - location of intersection
+   * \return true if the line intersects the plane
+   */
   bool intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b, double& u, double& v);
 
+  /**
+   * \brief creates grasp messages from the generated grasp poses
+   * \param pose - the grasp pose
+   * \param grasp_data data describing the end effector
+   * \param possible_grasps - list possible grasps
+   * \return nothing
+   */
   void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps);
+
+  /**
+   * \brief Score the generated grasp poses
+   * \param 
+   * \return
+   */
+  void scoreGrasps();
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
