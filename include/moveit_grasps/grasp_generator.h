@@ -145,11 +145,11 @@ public:
                                   std::vector<Eigen::Affine3d>& grasp_poses);
 
   bool graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double depth, double width, double height,
-                               Eigen::Affine3d grasp_pose);
+                               Eigen::Affine3d grasp_pose, const GraspDataPtr grasp_data);
 
-  bool intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b);
+  bool intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b, double& u, double& v);
 
-  void addGrasp(const Eigen::Affine3d& pose, std::vector<moveit_msgs::Grasp>& possible_grasps);
+  void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame

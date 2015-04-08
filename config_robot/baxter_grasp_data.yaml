@@ -29,8 +29,8 @@ left_hand:
     gripper_width : 0.015
 
     # grasp resolution parameters (angle is in degrees)
-    grasp_resolution : 0.005
-    grasp_depth_resolution : 0.01
+    grasp_resolution : 0.015
+    grasp_depth_resolution : 0.025
     grasp_min_depth : 0.01
     angle_resolution : 10
 
