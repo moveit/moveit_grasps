@@ -180,7 +180,7 @@ public:
                                         grasp_data_, possible_grasps);
 
       // add grasps at variable depth
-      grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
+      //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
 
       // Convert to the correct type for filtering
       std::vector<GraspCandidatePtr> grasp_candidates;
@@ -243,7 +243,7 @@ public:
                                       grasp_data_, possible_grasps);
 
     // add grasps at variable depth
-    grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
+    //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
 
     // Convert to the correct type for filtering
     std::vector<GraspCandidatePtr> grasp_candidates;

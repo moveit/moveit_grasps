@@ -94,6 +94,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, true) );
+    grasp_generator_->setVerbose(true);
 
     geometry_msgs::Pose pose;
     visual_tools_->generateEmptyPose(pose);
@@ -134,7 +135,7 @@ public:
         generateRandomObject(object_pose);
 
       // Show the block
-      visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
+      //visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
 
       possible_grasps.clear();
 
@@ -142,17 +143,26 @@ public:
       double depth = 0.05;
       double width = 0.05;
       double height = 0.05;
-      double max_grasp_size = 0.10; // TODO: verify max object size Open Hand can grasp
+      double max_grasp_size = 0.1; // TODO: verify max object size Open Hand can grasp
+
+      visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT);
+      visual_tools_->publishAxis(object_pose);
+
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
                                               grasp_data_, possible_grasps);
 
       // add grasps at variable depth
-      grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
+      //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
 
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
-      double animate_speed = 0.1;
-      visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
+      //double animate_speed = 0.1;
+      //visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
+
+      // Add parallel grasps
+
+      //grasp_generator_->addParallelGrasps(visual_tools_->convertPose(object_pose), depth, width, height, X_AXIS,
+      //                                    grasp_data_, possible_grasps);
 
       // Test if done
       ++i;

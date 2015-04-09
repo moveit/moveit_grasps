@@ -25,6 +25,15 @@ left_hand:
     # max depth of fingers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.1
 
+    # width of gripper fingers
+    gripper_width : 0.015
+
+    # grasp resolution parameters (angle is in degrees)
+    grasp_resolution : 0.02
+    grasp_depth_resolution : 0.05
+    grasp_min_depth : 0.01
+    angle_resolution : 15
+
 # =====================================================
 right_hand:
     end_effector_name: 'right_hand'  #ee group name
@@ -51,3 +60,11 @@ right_hand:
     # max depth of fingers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.1
 
+    # width of gripper fingers
+    gripper_width : 0.05
+
+    # grasp resolution parameters (angle is in degrees)
+    grasp_resolution : 0.010
+    grasp_depth_resolution : 0.05
+    grasp_min_depth : 0.01
+    angle_resolution : 10
