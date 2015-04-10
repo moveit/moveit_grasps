@@ -160,7 +160,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   int num_grasps_along_a = floor( (length_along_a - grasp_data->gripper_width_) / grasp_data->grasp_resolution_ ) + 1;
   int num_grasps_along_b = floor( (length_along_b - grasp_data->gripper_width_) / grasp_data->grasp_resolution_ ) + 1; 
 
-  // if the gripper is wider than the object we're trying to grasp, try with gripper aligned with top/center/bottom of object
+  // if the gripper fingers are wider than the object we're trying to grasp, try with gripper aligned with top/center/bottom of object
   // note that current implementation limits objects that are the same size as the gripper_width to 1 grasp
   if (num_grasps_along_a <= 0)
   {
@@ -291,7 +291,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   /***** add all poses as possible grasps *****/
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
   {
-    addGrasp(grasp_poses[i], grasp_data, possible_grasps);
+    addGrasp(grasp_poses[i], grasp_data, possible_grasps, cuboid_pose);
   }
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","created " << grasp_poses.size() << " grasp poses");
 }
@@ -478,7 +478,7 @@ bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u
 }
 
 void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
-                              std::vector<moveit_msgs::Grasp>& possible_grasps)
+                              std::vector<moveit_msgs::Grasp>& possible_grasps, const Eigen::Affine3d& object_pose)
 {
   if (verbose_)
   {
@@ -506,6 +506,15 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   static int grasp_id = 0;
   new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
   grasp_id++;
+
+  // compute grasp score
+  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
+
+  if (verbose_)
+  {
+    visual_tools_->publishAxis(ideal_grasp_pose_);
+    visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * new_grasp.grasp_quality);
+  }
 
   // pre-grasp and grasp postures
   new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
@@ -539,6 +548,53 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.grasp_pose = grasp_pose_msg;
   possible_grasps.push_back(new_grasp);
   
+}
+
+double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
+{
+  // set ideal grasp pose (TODO: remove this and set programatically)
+  ideal_grasp_pose_ = Eigen::Affine3d::Identity();
+  ideal_grasp_pose_ *= Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY()) * 
+    Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ());
+  int num_tests = 3;
+
+  double individual_scores[num_tests];
+  double score_weights[num_tests];
+  
+  // initialize score_weights as 1
+  for (std::size_t i = 0; i < num_tests; i++)
+    score_weights[i] = 1;
+  
+  // how close is z-axis of grasp to desired orientation? (0 = 180 degrees of, 100 = 0 degrees off)
+  Eigen::Vector3d axis_grasp = pose.rotation() * Eigen::Vector3d::UnitZ();
+  Eigen::Vector3d axis_desired = ideal_grasp_pose_.rotation() * Eigen::Vector3d::UnitZ();
+  double angle = acos( axis_grasp.dot(axis_desired) );
+  individual_scores[0] = ( M_PI - angle ) / M_PI;
+
+  // is camera pointed up? (angle betweeen y-axes) (0 = 180 degrees of, 100 = 0 degrees off)
+  axis_grasp = pose.rotation() * Eigen::Vector3d::UnitY();
+  axis_desired = ideal_grasp_pose_.rotation() * Eigen::Vector3d::UnitY();
+  angle = acos( axis_grasp.dot(axis_desired) );
+  individual_scores[1] = ( M_PI - angle ) / M_PI;
+
+  // how close is the palm to the object? (0 = at finger length, 100 = in palm)
+  // TODO: not entierly correct since measuring from centroid of object.
+  double finger_length = grasp_data->finger_to_palm_depth_ - grasp_data->grasp_min_depth_;
+  Eigen::Vector3d delta = pose.translation() - object_pose.translation();
+  double distance = delta.norm();
+  if (distance > finger_length)
+    individual_scores[2] = 0;
+  else
+    individual_scores[2] = ( finger_length - distance ) / finger_length;
+  
+  // compute combined score
+  double score_sum = 0;
+  for (std::size_t i = 0; i < num_tests; i++)
+  {
+    score_sum += individual_scores[i] * score_weights[i];
+  }
+  
+  return ( score_sum / (double)num_tests );
 }
 
 bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
