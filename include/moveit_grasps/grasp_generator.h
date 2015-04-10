@@ -193,16 +193,18 @@ public:
    * \param pose - the grasp pose
    * \param grasp_data data describing the end effector
    * \param possible_grasps - list possible grasps
+   * \param object_pose - pose of object to grasp
    * \return nothing
    */
-  void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps);
+  void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<moveit_msgs::Grasp>& possible_grasps,
+                const Eigen::Affine3d& object_pose);
 
   /**
    * \brief Score the generated grasp poses
    * \param 
    * \return
    */
-  void scoreGrasps();
+  double scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
@@ -243,6 +245,22 @@ public:
     return verbose_;
   }
 
+  /** 
+   * \brief Getter for ideal grasp pose 
+   */
+  Eigen::Affine3d getIdealGraspPose()
+  {
+    return ideal_grasp_pose_;
+  }
+
+  /**
+   * \brief Setter for ideal grasp pose for scoring
+   */
+  void setIdealGraspPose(Eigen::Affine3d ideal_pose)
+  {
+    ideal_grasp_pose_ = ideal_pose;
+  }
+
   /**
    * \brief Setter for delta between grasps
    */
@@ -271,6 +289,9 @@ private:
 
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
+
+  // Ideal grasp pose for scoring purposes
+  Eigen::Affine3d ideal_grasp_pose_;
 
   // Display more output both in console and in Rviz (with arrows and markers)
   bool verbose_;

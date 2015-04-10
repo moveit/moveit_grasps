@@ -151,19 +151,12 @@ public:
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
                                               grasp_data_, possible_grasps);
 
-      // add grasps at variable depth
-      //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
-
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
       //double animate_speed = 0.1;
       //visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
 
-      // Add parallel grasps
-
-      //grasp_generator_->addParallelGrasps(visual_tools_->convertPose(object_pose), depth, width, height, X_AXIS,
-      //                                    grasp_data_, possible_grasps);
-
+      
       // Test if done
       ++i;
       if( i >= num_tests )
