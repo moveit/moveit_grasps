@@ -668,10 +668,10 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
 
   /*
     NOTE: duplicated in README.md
-    RED - grasp filtered by ik
-    PINK - grasp filtered by collision
     MAGENTA - grasp filtered by cutting plane
     YELLOW - grasp filtered by orientation
+    RED - grasp filtered by ik
+    PINK - grasp filtered by collision
     BLUE - pregrasp filtered by ik
     CYAN - pregrasp filtered by collision
     GREEN - valid
