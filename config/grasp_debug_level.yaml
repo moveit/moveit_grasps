@@ -2,8 +2,8 @@ generator:
   # Other verbose stuff
   verbose: false
   # Show the generated grasp arrows
-  show_grasp_arrows: false
-  show_grasp_arrows_speed: 0.0001
+  show_grasp_arrows: true
+  show_grasp_arrows_speed: 0.001
   # Show hand of generated grasps
   show_prefiltered_grasps: false
   show_prefiltered_grasps_speed: 0.01
@@ -13,7 +13,7 @@ filter:
   collision_verbose: false
   collision_verbose_speed: 1.0
   # Show post-filter arrows
-  show_filtered_grasps: true
+  show_filtered_grasps: false
   # Show pose-filter arm ik solutions
   show_filtered_arm_solutions: false
   show_filtered_arm_solutions_pregrasp_speed: 0.5

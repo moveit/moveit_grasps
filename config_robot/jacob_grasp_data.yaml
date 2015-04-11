@@ -17,7 +17,7 @@ gripper:
 
     #distance from wrist joint to palm of end effector
 
-    grasp_pose_to_eef_translation :  [0, 0, -0.1]
+    grasp_pose_to_eef_translation :  [0, 0, -0.115]
 
     #Rotation from wrist joint to std end effector orientation
     #z-axis pointing toward object to grasp

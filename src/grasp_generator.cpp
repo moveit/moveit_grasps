@@ -482,7 +482,8 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 {
   if (verbose_)
   {
-    visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.01);
+    visual_tools_->publishAxis(grasp_pose, 0.02, 0.002);
+    //visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.01);
     ros::Duration(0.01).sleep();
   }
 
@@ -531,13 +532,13 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
   pre_grasp_approach.direction.vector.x = 0;
   pre_grasp_approach.direction.vector.y = 0;
-  pre_grasp_approach.direction.vector.z = 1;
+  pre_grasp_approach.direction.vector.z = -1;
   new_grasp.pre_grasp_approach = pre_grasp_approach;
 
   post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
   post_grasp_retreat.direction.vector.x = 0;
   post_grasp_retreat.direction.vector.y = 0;
-  post_grasp_retreat.direction.vector.z = -1;
+  post_grasp_retreat.direction.vector.z = 1;
   new_grasp.post_grasp_retreat = post_grasp_retreat;
 
   // translate and rotate gripper to match standard orientation
