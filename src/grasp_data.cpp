@@ -48,6 +48,9 @@
 #include <math.h>
 #define _USE_MATH_DEFINES
 
+// Parameter loading
+#include <rviz_visual_tools/ros_param_utilities.h>
+
 namespace moveit_grasps
 {
 
@@ -74,177 +77,42 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   std::vector<double> grasp_pose_to_eef_rotation;
   double pregrasp_time_from_start;
   double grasp_time_from_start;
-  double finger_to_palm_depth;
-  double angle_resolution;
-  double grasp_resolution;
-  double grasp_depth_resolution;
-  double grasp_min_depth;
-  double gripper_width;
+  // double finger_to_palm_depth;
+  // double angle_resolution;
+  // double grasp_resolution;
+  // double grasp_depth_resolution;
+  // double grasp_min_depth;
+  // double gripper_width;
   std::string end_effector_name;
 
-  // Load a param
+  // Helper to let user know what is wrong
   if (!nh.hasParam("base_link"))
   {
     ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `base_link` missing from rosparam server. Did you load your end effector's configuration yaml file? Searching in namespace: " << nh.getNamespace());
     return false;
   }
-  nh.getParam("base_link", base_link_);
+
+  // Load all other parameters
+  const std::string parent_name = "grasp_data"; // for namespacing logging messages
+  rviz_visual_tools::getStringParameter(parent_name, nh, "base_link", base_link_);
 
   // Search within the sub-namespace of this end effector name
   ros::NodeHandle child_nh(nh, end_effector);
 
-  // Load a param
-  if (!child_nh.hasParam("pregrasp_time_from_start"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `pregrasp_time_from_start` missing from rosparam server. Did you load your end effector's configuration yaml file? Searching in namespace: " << child_nh.getNamespace());
-    return false;
-  }
-  child_nh.getParam("pregrasp_time_from_start", pregrasp_time_from_start);
-
-  // Load a param
-  if (!child_nh.hasParam("grasp_time_from_start"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_time_from_start` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("grasp_time_from_start", grasp_time_from_start);
-
-  // Load a param
-  if (!child_nh.hasParam("finger_to_palm_depth"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `finger_to_palm_depth` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("finger_to_palm_depth", finger_to_palm_depth);
-  
-  // Load a param
-  if (!child_nh.hasParam("gripper_width"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `gripper_width` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("gripper_width", gripper_width);
-
-  // Load a param 
-  if (!child_nh.hasParam("grasp_resolution"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_resolution` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("grasp_resolution", grasp_resolution);
-
-  // Load a param 
-  if (!child_nh.hasParam("grasp_min_depth"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_min_depth` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("grasp_min_depth", grasp_min_depth);
-
-  // Load a param 
-  if (!child_nh.hasParam("grasp_depth_resolution"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_depth_resolution` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("grasp_depth_resolution", grasp_depth_resolution);
-
-  // Load a param
-  if (!child_nh.hasParam("angle_resolution"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `angle_resolution` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("angle_resolution", angle_resolution);
-
-// Load a param
-  if (!child_nh.hasParam("end_effector_name"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `end_effector_name` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  child_nh.getParam("end_effector_name", end_effector_name);
-
-  // Load a param
-  if (!child_nh.hasParam("joints"))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `joints` missing from rosparam server. Did you load your end effector's configuration yaml file?");
-    return false;
-  }
-  XmlRpc::XmlRpcValue joint_list;
-  child_nh.getParam("joints", joint_list);
-  if (joint_list.getType() == XmlRpc::XmlRpcValue::TypeArray)
-    for (int32_t i = 0; i < joint_list.size(); ++i)
-    {
-      ROS_ASSERT(joint_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
-      joint_names.push_back(static_cast<std::string>(joint_list[i]));
-    }
-  else
-    ROS_ERROR_STREAM_NAMED("temp","joint list type is not type array???");
-
-  if(child_nh.hasParam("pregrasp_posture"))
-  {
-    XmlRpc::XmlRpcValue preg_posture_list;
-    child_nh.getParam("pregrasp_posture", preg_posture_list);
-    ROS_ASSERT(preg_posture_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-    for (int32_t i = 0; i < preg_posture_list.size(); ++i)
-    {
-      ROS_ASSERT(preg_posture_list[i].getType() == XmlRpc::XmlRpcValue::TypeDouble);
-      pre_grasp_posture.push_back(static_cast<double>(preg_posture_list[i]));
-    }
-  }
-
-  ROS_ASSERT(child_nh.hasParam("grasp_posture"));
-  XmlRpc::XmlRpcValue grasp_posture_list;
-  child_nh.getParam("grasp_posture", grasp_posture_list);
-  ROS_ASSERT(grasp_posture_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-  for (int32_t i = 0; i < grasp_posture_list.size(); ++i)
-  {
-    ROS_ASSERT(grasp_posture_list[i].getType() == XmlRpc::XmlRpcValue::TypeDouble);
-    grasp_posture.push_back(static_cast<double>(grasp_posture_list[i]));
-  }
-
-  ROS_ASSERT(child_nh.hasParam("grasp_pose_to_eef_translation"));
-  XmlRpc::XmlRpcValue g_to_eef_list;
-  child_nh.getParam("grasp_pose_to_eef_translation", g_to_eef_list);
-  ROS_ASSERT(g_to_eef_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-  for (int32_t i = 0; i < g_to_eef_list.size(); ++i)
-  {
-    // Cast to double OR int
-    if (g_to_eef_list[i].getType() != XmlRpc::XmlRpcValue::TypeDouble)
-    {
-      if (g_to_eef_list[i].getType() != XmlRpc::XmlRpcValue::TypeInt )
-      {
-        ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_pose_to_eef_translation` wrong data type - int or double required.");
-        return false;
-      }
-      else
-        grasp_pose_to_eef_translation.push_back(static_cast<int>(g_to_eef_list[i]));
-    }
-    else
-      grasp_pose_to_eef_translation.push_back(static_cast<double>(g_to_eef_list[i]));
-  }
-
-  ROS_ASSERT(child_nh.hasParam("grasp_pose_to_eef_rotation"));
-  XmlRpc::XmlRpcValue g_to_eef_rotation_list;
-  child_nh.getParam("grasp_pose_to_eef_rotation", g_to_eef_rotation_list);
-  ROS_ASSERT(g_to_eef_rotation_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-  for (int32_t i = 0; i < g_to_eef_rotation_list.size(); ++i)
-  {
-    // Cast to double OR int
-    if (g_to_eef_rotation_list[i].getType() != XmlRpc::XmlRpcValue::TypeDouble)
-    {
-      if (g_to_eef_rotation_list[i].getType() != XmlRpc::XmlRpcValue::TypeInt )
-      {
-        ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `grasp_pose_to_eef_rotation` wrong data type - int or double required.");
-        return false;
-      }
-      else
-        grasp_pose_to_eef_rotation.push_back(static_cast<int>(g_to_eef_rotation_list[i]));
-    }
-    else
-      grasp_pose_to_eef_rotation.push_back(static_cast<double>(g_to_eef_rotation_list[i]));
-  }
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "finger_to_palm_depth", finger_to_palm_depth_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "gripper_width", gripper_width_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  rviz_visual_tools::getIntParameter(parent_name, child_nh, "angle_resolution", angle_resolution_);
+  rviz_visual_tools::getStringParameter(parent_name, child_nh, "end_effector_name", end_effector_name);
+  rviz_visual_tools::getStringParameters(parent_name, child_nh, "joints", joint_names);
+  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
+  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_posture", grasp_posture);
+  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_translation", grasp_pose_to_eef_translation);
+  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_rotation", grasp_pose_to_eef_rotation);
 
   // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
@@ -285,15 +153,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_posture_.points.resize(1);
   grasp_posture_.points[0].positions = grasp_posture;
   grasp_posture_.points[0].time_from_start = ros::Duration(grasp_time_from_start);
-
-  // -------------------------------
-  // Geometry data
-  finger_to_palm_depth_ = finger_to_palm_depth;
-  gripper_width_ = gripper_width;
-  grasp_resolution_ = grasp_resolution;
-  grasp_depth_resolution_ = grasp_depth_resolution;
-  grasp_min_depth_ = grasp_min_depth;
-  angle_resolution_ = angle_resolution;
 
   // -------------------------------
   // Nums

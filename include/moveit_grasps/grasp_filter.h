@@ -315,14 +315,6 @@ public:
   void clearDesiredGraspOrientations();
 
   /**
-   * \brief Helper for the thread function to check the arm for collision with the planning scene
-   * \return true on success
-   */
-  bool checkInCollision(std::vector<double>& ik_solution,
-                        IkThreadStructPtr& ik_thread_struct,
-                        bool verbose);
-
-  /**
    * \brief Of an array of grasps, choose just one for use
    * \return true on success
    */
@@ -365,9 +357,6 @@ private:
 
   // Number of degrees of freedom for the IK solver to find
   std::size_t num_variables_;
-
-  // Modes
-  bool secondary_collision_checking_;
 
   // Time to allow IK solver to run
   double solver_timeout_;
