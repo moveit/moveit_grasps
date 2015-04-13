@@ -179,7 +179,6 @@ struct IkThreadStruct
                  double timeout,
                  bool filter_pregrasp,
                  bool verbose,
-                 bool collision_verbose,
                  std::size_t thread_id)
   : grasp_candidates_(grasp_candidates),
     planning_scene_(planning_scene),
@@ -190,7 +189,6 @@ struct IkThreadStruct
     timeout_(timeout),
     filter_pregrasp_(filter_pregrasp),
     verbose_(verbose),
-    collision_verbose_(collision_verbose),
     thread_id_(thread_id)
   {
   }
@@ -204,7 +202,6 @@ struct IkThreadStruct
   double timeout_;
   bool filter_pregrasp_;
   bool verbose_;
-  bool collision_verbose_;
   std::size_t thread_id_;
 
   // Used within processing function
@@ -244,8 +241,7 @@ public:
                            const robot_model::JointModelGroup* arm_jmg,
                            bool filter_pregrasp = false,
                            bool verbose = false,
-                           bool verbose_if_failed = true,
-                           bool collision_verbose = false);
+                           bool verbose_if_failed = true);
 
   /**
    * \brief Filter grasps by cutting plane
@@ -279,7 +275,7 @@ public:
                                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
                                  bool filter_pregrasp,
-                                 bool verbose, bool collision_verbose);
+                                 bool verbose);
 
   /**
    * \brief Thread for checking part of the possible grasps list

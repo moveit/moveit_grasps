@@ -107,7 +107,7 @@ std::vector<GraspCandidatePtr> GraspFilter::convertToGraspCandidatePtrs(const st
 std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                       planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                       const robot_model::JointModelGroup* arm_jmg, bool filter_pregrasp,
-                                      bool verbose, bool verbose_if_failed, bool collision_verbose)
+                                      bool verbose, bool verbose_if_failed)
 {
   // -----------------------------------------------------------------------------------------------
   // Error check
@@ -119,9 +119,6 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
   if (!filter_pregrasp)
     ROS_WARN_STREAM_NAMED("filter","Not filtering pre-grasp - GraspCandidate may have bad data");
 
-  // Override verbose settings with yaml settings if necessary
-  if (collision_verbose_)
-    collision_verbose = collision_verbose_;
 
   // -----------------------------------------------------------------------------------------------
   // Visualize the cutting planes if desired
@@ -171,15 +168,14 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
 
   // Try to filter grasps not in verbose mode
   std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, filter_pregrasp,
-                                                    verbose, collision_verbose);
+                                                    verbose);
   if (remaining_grasps == 0)
   {
     ROS_ERROR_STREAM_NAMED("filter","IK filter unable to find any valid grasps! Re-running in verbose mode");
     if (verbose_if_failed)
     {
       verbose = true;
-      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, filter_pregrasp, verbose,
-                                            collision_verbose);
+      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, filter_pregrasp, verbose);
     }
   }
 
@@ -269,7 +265,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
                                             planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                             const robot_model::JointModelGroup* arm_jmg,
                                             bool filter_pregrasp,
-                                            bool verbose, bool collision_verbose)
+                                            bool verbose)
 {
   // -----------------------------------------------------------------------------------------------
   // Setup collision checking
@@ -289,10 +285,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     num_threads = grasp_candidates.size();
 
   // Debug
-  if(verbose || collision_verbose)
+  if(verbose || collision_verbose_)
   {
     num_threads = 1;
-    ROS_WARN_STREAM_NAMED("grasp_filter","Using only " << num_threads << " threads because verbose or collision_verbose are true");
+    ROS_WARN_STREAM_NAMED("grasp_filter","Using only " << num_threads << " threads because verbose is true");
   }
   ROS_INFO_STREAM_NAMED("filter", "Filtering possible grasps with " << num_threads << " threads");
 
@@ -370,7 +366,6 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
                                                                          solver_timeout_,
                                                                          filter_pregrasp,
                                                                          verbose,
-                                                                         collision_verbose,
                                                                          thread_id));
     ik_thread_structs[thread_id]->ik_seed_state_.resize(num_variables_); // fill with zeros TODO- give a seed state!;
   }
@@ -501,7 +496,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn
     = boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
-                  ik_thread_struct->collision_verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
+                  collision_verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Set gripper position (how open the fingers are) to OPEN
   grasp_candidate->grasp_data_->setRobotStatePreGrasp(ik_thread_struct->robot_state_);
@@ -520,7 +515,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 
   // Check for collision
   if (secondary_collision_checking_)
-    if (checkInCollision(grasp_candidate->grasp_ik_solution_, ik_thread_struct, ik_thread_struct->collision_verbose_))
+    if (checkInCollision(grasp_candidate->grasp_ik_solution_, ik_thread_struct, collision_verbose_))
     {
       ROS_DEBUG_STREAM_NAMED("filter.superdebug","the-grasp: arm position is in collision");
       grasp_candidate->grasp_filtered_by_collision_ = true;
@@ -547,7 +542,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 
     // Check for collision
     if (secondary_collision_checking_)
-      if (checkInCollision(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, ik_thread_struct->collision_verbose_))
+      if (checkInCollision(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, collision_verbose_))
       {
         ROS_DEBUG_STREAM_NAMED("filter.superdebug","pre-grasp: arm position is in collision");
         grasp_candidate->pregrasp_filtered_by_collision_ = true;

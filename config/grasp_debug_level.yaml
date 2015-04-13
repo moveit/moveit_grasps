@@ -12,7 +12,7 @@ filter:
   # Visualize the planes used by the filter
   show_cutting_planes: false
   # Collision checking in verbose
-  collision_verbose: false
+  collision_verbose: true
   collision_verbose_speed: 1.0
   # Show post-filter arrows
   show_filtered_grasps: true
