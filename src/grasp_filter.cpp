@@ -84,6 +84,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
+  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed", show_filtered_arm_solutions_pregrasp_speed_);
 
@@ -121,6 +122,29 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
   // Override verbose settings with yaml settings if necessary
   if (collision_verbose_)
     collision_verbose = collision_verbose_;
+
+  // -----------------------------------------------------------------------------------------------
+  // Visualize the cutting planes if desired
+  if (show_cutting_planes_)
+  {
+    for (std::size_t i = 0; i < cutting_planes_.size(); i++)
+    {
+      switch (cutting_planes_[i]->plane_)
+      {
+        case XY:
+          visual_tools_->publishXYPlane(cutting_planes_[i]->pose_);
+          break;
+        case XZ:
+          visual_tools_->publishXZPlane(cutting_planes_[i]->pose_);
+          break;
+        case YZ:
+          visual_tools_->publishYZPlane(cutting_planes_[i]->pose_);
+          break;
+        default:
+          ROS_ERROR_STREAM_NAMED("grasp_filter","Unknown cutting plane type");
+      }
+    }
+  }
 
   // -----------------------------------------------------------------------------------------------
   // Get the solver timeout from kinematics.yaml

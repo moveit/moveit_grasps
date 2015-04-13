@@ -261,16 +261,10 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /end_effector_marker
+      Marker Topic: /rviz_visual_tools
       Name: MarkerArray
       Namespaces:
-        Axis: true
-        Block: true
-        Cuboid: true
-        Line: true
-        Sphere: true
-        Text: true
-        end_effector: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true

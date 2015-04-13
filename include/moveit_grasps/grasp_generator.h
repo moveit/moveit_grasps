@@ -81,7 +81,6 @@ static const double MIN_GRASP_DISTANCE = 0.001; //m between grasps
 
 // Grasp axis orientation
 enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
-enum grasp_parallel_plane{XY, XZ, YZ};
 
 // Class
 class GraspGenerator

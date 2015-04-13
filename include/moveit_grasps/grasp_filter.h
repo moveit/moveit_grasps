@@ -65,6 +65,8 @@
 namespace moveit_grasps
 {
 
+enum grasp_parallel_plane{XY, XZ, YZ};
+
 /**
  * \brief Contains information to filter grasps by a cutting plane
  */
@@ -379,6 +381,7 @@ private:
   double collision_verbose_speed_;
   bool show_filtered_grasps_;
   bool show_filtered_arm_solutions_;
+  bool show_cutting_planes_;
   double show_filtered_arm_solutions_speed_;
   double show_filtered_arm_solutions_pregrasp_speed_;
 
