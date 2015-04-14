@@ -46,11 +46,19 @@
 // Msgs
 #include <geometry_msgs/Pose.h>
 #include <trajectory_msgs/JointTrajectory.h>
+
+// MoveIt
+#include <moveit/macros/class_forward.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/robot_model/link_model.h>
 
 namespace moveit_grasps
 {
+
+MOVEIT_CLASS_FORWARD(GraspData);
+
+// Map various arms to end effector grasp datas
+typedef std::map<const robot_model::JointModelGroup*, moveit_grasps::GraspDataPtr> GraspDatas;
 
 class GraspData
 {
@@ -120,9 +128,6 @@ public:
   // Duplicate end effector data copied from RobotModel
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"
 }; // class
-
-typedef boost::shared_ptr<GraspData> GraspDataPtr;
-typedef boost::shared_ptr<const GraspData> GraspDataConstPtr;
 
 } // namespace
 
