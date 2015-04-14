@@ -127,7 +127,18 @@ struct GraspCandidate
     return true;
   }
 
-  bool getGraspState(moveit::core::RobotStatePtr robot_state)
+  bool getGraspStateOpen(moveit::core::RobotStatePtr robot_state)
+  {
+    // Apply IK solved arm joints to state
+    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
+
+    // Set end effector to correct configuration
+    grasp_data_->setRobotStatePreGrasp(robot_state);
+
+    return true;
+  }
+
+  bool getGraspStateClosed(moveit::core::RobotStatePtr robot_state)
   {
     // Apply IK solved arm joints to state
     robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);

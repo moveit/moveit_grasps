@@ -725,7 +725,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
     ros::Duration(show_filtered_arm_solutions_pregrasp_speed_).sleep();
 
     // Apply the grasp state
-    grasp_candidates[i]->getGraspState(robot_state_);
+    grasp_candidates[i]->getGraspStateClosed(robot_state_);
 
     // Show in Rviz
     visual_tools_->publishRobotState(robot_state_);
