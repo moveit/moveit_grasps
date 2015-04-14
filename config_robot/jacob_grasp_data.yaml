@@ -7,14 +7,15 @@ gripper:
     joints : ['jaco2_joint_finger_1','jaco2_joint_finger_2','jaco2_joint_finger_3','jaco2_joint_finger_1_tip','jaco2_joint_finger_2_tip','jaco2_joint_finger_3_tip']
 
     #open position
-    pregrasp_posture : [0.3, 0.3, 0.3, 0, 0, 0]
+    pregrasp_posture : [0.2, 0.2, 0.2, 0, 0, 0]
     #xopregrasp_posture : [0.0, 0.0, 0.0]
     pregrasp_time_from_start : 4.0
 
     #close position
-    grasp_posture : [0.697, 0.697, 0.697, 0, 0, 0]
-    # fakes as open position
-    #grasp_posture : [0.3, 0.3, 0.3, 0, 0, 0]
+    #grasp_posture : [0.697, 0.697, 0.697, 0, 0, 0]
+    #partially close position
+    grasp_posture : [0.5, 0.5, 0.5, 0, 0, 0]
+
     grasp_time_from_start : 4.0
 
     #distance from wrist joint to palm of end effector
