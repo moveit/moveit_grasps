@@ -66,7 +66,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "m_between_grasps", m_between_grasps_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "m_between_depth_grasps", m_between_depth_grasps_);
 
-  ROS_DEBUG_STREAM_NAMED("grasps","Loaded grasp generator");
+  ROS_INFO_STREAM_NAMED("grasps","GraspGenerator Ready.");
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 

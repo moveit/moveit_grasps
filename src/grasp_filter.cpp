@@ -78,7 +78,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   robot_state_->update(); // make sure transforms are computed
 
   // Load visulization settings
-  const std::string parent_name = "filter"; // for namespacing logging messages
+  const std::string parent_name = "grasp_filter"; // for namespacing logging messages
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "collision_verbose", collision_verbose_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
@@ -88,7 +88,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed", show_filtered_arm_solutions_pregrasp_speed_);
 
 
-  ROS_DEBUG_STREAM_NAMED("filter","Loaded grasp filter");
+  ROS_INFO_STREAM_NAMED("grasp_filter","GraspFilter Ready.");
 }
 
 std::vector<GraspCandidatePtr> GraspFilter::convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& possible_grasps,
@@ -112,11 +112,11 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
   // Error check
   if( grasp_candidates.empty() )
   {
-    ROS_ERROR_NAMED("filter","Unable to filter grasps because vector is empty");
+    ROS_ERROR_NAMED("grasp_filter","Unable to filter grasps because vector is empty");
     return false;
   }
   if (!filter_pregrasp)
-    ROS_WARN_STREAM_NAMED("filter","Not filtering pre-grasp - GraspCandidate may have bad data");
+    ROS_WARN_STREAM_NAMED("grasp_filter","Not filtering pre-grasp - GraspCandidate may have bad data");
 
 
   // -----------------------------------------------------------------------------------------------
@@ -170,7 +170,7 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
                                                     verbose);
   if (remaining_grasps == 0)
   {
-    ROS_ERROR_STREAM_NAMED("filter","IK filter unable to find any valid grasps! Re-running in verbose mode");
+    ROS_ERROR_STREAM_NAMED("grasp_filter","IK filter unable to find any valid grasps! Re-running in verbose mode");
     if (verbose_if_failed)
     {
       verbose = true;
@@ -181,14 +181,14 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
   // Visualize valid grasps as arrows with cartesian path as well
   if (show_filtered_grasps_)
   {
-    ROS_INFO_STREAM_NAMED("filter", "Showing filtered grasps");
+    ROS_INFO_STREAM_NAMED("grasp_filter", "Showing filtered grasps");
     visualizeGrasps(grasp_candidates, arm_jmg);
   }
 
   // Visualize valid grasp as arm positions
   if (show_filtered_arm_solutions_)
   {
-    ROS_INFO_STREAM_NAMED("filter", "Showing filtered arm solutions");
+    ROS_INFO_STREAM_NAMED("grasp_filter", "Showing filtered arm solutions");
     visualizeCandidateGrasps(grasp_candidates);
   }
 
@@ -288,7 +288,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     num_threads = 1;
     ROS_WARN_STREAM_NAMED("grasp_filter","Using only " << num_threads << " threads because verbose is true");
   }
-  ROS_INFO_STREAM_NAMED("filter", "Filtering possible grasps with " << num_threads << " threads");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "Filtering possible grasps with " << num_threads << " threads");
 
   // -----------------------------------------------------------------------------------------------
   // Load kinematic solvers if not already loaded
@@ -299,7 +299,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     // Create an ik solver for every thread
     for (int i = 0; i < num_threads; ++i)
     {
-      //ROS_DEBUG_STREAM_NAMED("filter","Creating ik solver " << i);
+      //ROS_DEBUG_STREAM_NAMED("grasp_filter","Creating ik solver " << i);
       kin_solvers_[arm_jmg->getName()].push_back(arm_jmg->getSolverInstance());
 
       // Test to make sure we have a valid kinematics solver
@@ -427,7 +427,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
       grasp_filtered_by_orientation +
       pregrasp_filtered_by_ik +
       pregrasp_filtered_by_collision != grasp_candidates.size())
-    ROS_ERROR_STREAM_NAMED("filter","Logged filter reasons do not add up to total number of grasps. Internal error.");
+    ROS_ERROR_STREAM_NAMED("grasp_filter","Logged filter reasons do not add up to total number of grasps. Internal error.");
 
   std::cout << "-------------------------------------------------------" << std::endl;
   std::cout << "GRASPING RESULTS " << std::endl;
@@ -445,7 +445,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   {
     // End Benchmark time
     double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
-    ROS_INFO_STREAM_NAMED("filter","Grasp generator IK grasp filtering benchmark time:");
+    ROS_INFO_STREAM_NAMED("grasp_filter","Grasp generator IK grasp filtering benchmark time:");
     std::cout << duration << "\t" << grasp_candidates.size() << "\n";
   }
 
@@ -569,7 +569,7 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   }
   else if( ik_thread_struct->error_code_.val != moveit_msgs::MoveItErrorCodes::SUCCESS )
   {
-    ROS_ERROR_STREAM_NAMED("filter","Unknown MoveItErrorCode from IK solver: " << ik_thread_struct->error_code_.val);
+    ROS_ERROR_STREAM_NAMED("grasp_filter","Unknown MoveItErrorCode from IK solver: " << ik_thread_struct->error_code_.val);
     return false;
   }
 
@@ -702,7 +702,7 @@ bool GraspFilter::visualizeIKSolutions(const std::vector<GraspCandidatePtr>& gra
 
   if (ik_solutions.empty())
   {
-    ROS_ERROR_STREAM_NAMED("filter","Unable to visualize IK solutions because there are no valid ones");
+    ROS_ERROR_STREAM_NAMED("grasp_filter","Unable to visualize IK solutions because there are no valid ones");
     return false;
   }
 
