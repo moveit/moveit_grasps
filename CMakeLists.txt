@@ -57,6 +57,8 @@ catkin_package(
 )
 
 ## Build
+set(ROS_COMPILE_FLAGS "-W -Wall -Wno-unused-parameter -fno-strict-aliasing")
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}

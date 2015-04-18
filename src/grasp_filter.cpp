@@ -103,10 +103,10 @@ std::vector<GraspCandidatePtr> GraspFilter::convertToGraspCandidatePtrs(const st
   return candidates;
 }
 
-std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                      const robot_model::JointModelGroup* arm_jmg, bool filter_pregrasp,
-                                      bool verbose, bool verbose_if_failed)
+bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                               planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                               const robot_model::JointModelGroup* arm_jmg, bool filter_pregrasp,
+                               bool verbose, bool verbose_if_failed)
 {
   // -----------------------------------------------------------------------------------------------
   // Error check
@@ -192,7 +192,7 @@ std::size_t GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
     visualizeCandidateGrasps(grasp_candidates);
   }
 
-  return remaining_grasps;
+  return true;
 }
 
 bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate,
