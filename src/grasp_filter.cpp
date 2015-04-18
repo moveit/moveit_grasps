@@ -263,7 +263,7 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate,
 std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                             planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                             const robot_model::JointModelGroup* arm_jmg,
-                                            bool filter_pregrasp, bool verbose)                                            
+                                            bool filter_pregrasp, bool verbose)
 {
   // -----------------------------------------------------------------------------------------------
   // Setup collision checking
@@ -297,7 +297,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     kin_solvers_[arm_jmg->getName()].clear();
 
     // Create an ik solver for every thread
-    for (int i = 0; i < num_threads; ++i)
+    for (std::size_t i = 0; i < num_threads; ++i)
     {
       //ROS_DEBUG_STREAM_NAMED("grasp_filter","Creating ik solver " << i);
       kin_solvers_[arm_jmg->getName()].push_back(arm_jmg->getSolverInstance());
@@ -316,7 +316,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   if( robot_states_.size() != num_threads )
   {
     robot_states_.clear();
-    for (int i = 0; i < num_threads; ++i)
+    for (std::size_t i = 0; i < num_threads; ++i)
     {
       // Copy the previous robot state
       robot_states_.push_back(moveit::core::RobotStatePtr(new moveit::core::RobotState(*robot_state_)));
@@ -324,7 +324,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   }
   else // update the states
   {
-    for (int i = 0; i < num_threads; ++i)
+    for (std::size_t i = 0; i < num_threads; ++i)
     {
       // Copy the previous robot state
       *(robot_states_[i]) = *robot_state_;
@@ -353,7 +353,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   // Allocate only once to increase performance
   std::vector<IkThreadStructPtr> ik_thread_structs;
   ik_thread_structs.resize(num_threads);
-  for (int thread_id = 0; thread_id < num_threads; ++thread_id)
+  for (std::size_t thread_id = 0; thread_id < num_threads; ++thread_id)
   {
     ik_thread_structs[thread_id].reset(new moveit_grasps::IkThreadStruct(grasp_candidates,
                                                                          cloned_scene,
@@ -516,8 +516,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   {
     // Convert to a pre-grasp
     const std::string &ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
-    ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name, 
-                                                                 grasp_candidate->grasp_.pre_grasp_approach.desired_distance);
+    ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
 
     // Set gripper position (how open the fingers are) to CLOSED
     grasp_candidate->grasp_data_->setRobotStateGrasp(ik_thread_struct->robot_state_);
@@ -531,7 +530,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     }
     else if (grasp_candidate->pregrasp_ik_solution_.empty())
     {
-      ROS_ERROR_STREAM_NAMED("grasp_filter","IK solution found but vector is empty??");      
+      ROS_ERROR_STREAM_NAMED("grasp_filter","IK solution found but vector is empty??");
     }
   }
   else
@@ -626,7 +625,7 @@ bool GraspFilter::chooseBestGrasps( std::vector<GraspCandidatePtr>& grasp_candid
   // Order remaining valid grasps by best score
   std::sort (grasp_candidates.begin(), grasp_candidates.end(), compareGraspScores);
 
-  ROS_INFO_STREAM_NAMED("grasp_filter","Sorted valid grasps, highest quality is " << grasp_candidates.front()->grasp_.grasp_quality 
+  ROS_INFO_STREAM_NAMED("grasp_filter","Sorted valid grasps, highest quality is " << grasp_candidates.front()->grasp_.grasp_quality
                         << " and lowest quality is " << grasp_candidates.back()->grasp_.grasp_quality);
 
   return true;

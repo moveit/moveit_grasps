@@ -153,7 +153,7 @@ public:
     // Generate grasps for a bunch of random objects
 
     // Loop
-    for (int i = 0; i < num_tests; ++i)
+    for (std::size_t i = 0; i < num_tests; ++i)
     {
       if(!ros::ok())
         break;
@@ -189,7 +189,7 @@ public:
       bool filter_pregrasps = true;
       bool verbose = false; // note: setting this to true will disable threading
       bool verbose_if_failed = true;
-      int direction = 1;
+      //int direction = 1;
 
       // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
       // Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
@@ -337,20 +337,6 @@ int main(int argc, char *argv[])
   // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(2);
   spinner.start();
-
-  // Check for verbose flag
-  bool verbose = false;
-  if (argc > 1)
-  {
-    for (std::size_t i = 0; i < argc; ++i)
-    {
-      if (strcmp(argv[i], "--verbose") == 0)
-      {
-        ROS_INFO_STREAM_NAMED("main","Running in VERBOSE mode (much slower)");
-        verbose = true;
-      }
-    }
-  }
 
   // Seed random
   srand(ros::Time::now().toSec());

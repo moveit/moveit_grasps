@@ -56,8 +56,11 @@ catkin_package(
   INCLUDE_DIRS include
 )
 
-## Build
-set(ROS_COMPILE_FLAGS "-W -Wall -Wno-unused-parameter -fno-strict-aliasing")
+###########
+## Build ##
+###########
+
+set(CMAKE_CXX_FLAGS "-W -Wall -Wno-unused-parameter -fno-strict-aliasing")
 
 include_directories(
   include

@@ -118,12 +118,16 @@ public:
   double grasp_depth_; // distance from center point of object to end effector
   int angle_resolution_; // generate grasps at PI/angle_resolution increments
   
-
   double finger_to_palm_depth_;
   double grasp_resolution_;
   double grasp_depth_resolution_; // generate grasps at this depth resolution along finger_to_palm_depth_
   double grasp_min_depth_; // minimum amount fingers must overlap object
   double gripper_width_; // parameter used to ensure generated grasps will overlap object
+
+  // grasp approach and retreat parameters
+  double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
+  double retreat_distance_desired_; // this is in addition to the finger_to_palm_depth
+  double lift_distance_desired_;
 
   // Duplicate end effector data copied from RobotModel
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"

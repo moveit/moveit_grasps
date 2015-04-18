@@ -146,7 +146,7 @@ public:
    * \return the number of poses generated 
    */
   std::size_t addCornerGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
-                                    double corner_rotation, int num_radial_grasps, 
+                                    double corner_rotation, std::size_t num_radial_grasps, 
                                     std::vector<Eigen::Affine3d>& grasp_poses);
 
   /**
@@ -161,7 +161,7 @@ public:
    * \return the number of poses generated 
    */
   std::size_t addFaceGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
-                                  Eigen::Vector3d delta, double alignment_rotation, int num_grasps,
+                                  Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
                                   std::vector<Eigen::Affine3d>& grasp_poses);
 
   /**
@@ -219,8 +219,7 @@ public:
    * \param name of parent link
    * \return pregrasp pose
    */
-  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link, 
-                                                    const double& desired_distance);
+  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
@@ -275,14 +274,17 @@ private:
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
+  // Display more output both in console and in Rviz (with arrows and markers)
+  bool verbose_;
+
+  // Shared node handle
+  ros::NodeHandle nh_;
+
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
 
   // Ideal grasp pose for scoring purposes
   Eigen::Affine3d ideal_grasp_pose_;
-
-  // Display more output both in console and in Rviz (with arrows and markers)
-  bool verbose_;
 
   // Visualization levels
   bool show_grasp_arrows_;
@@ -290,9 +292,6 @@ private:
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
-
-  // Shared node handle
-  ros::NodeHandle nh_;
 
 }; // end of class
 

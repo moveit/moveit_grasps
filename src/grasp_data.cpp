@@ -105,12 +105,16 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
   rviz_visual_tools::getIntParameter(parent_name, child_nh, "angle_resolution", angle_resolution_);
   rviz_visual_tools::getStringParameter(parent_name, child_nh, "end_effector_name", end_effector_name);
   rviz_visual_tools::getStringParameters(parent_name, child_nh, "joints", joint_names);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_posture", grasp_posture);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
+
 
   // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short

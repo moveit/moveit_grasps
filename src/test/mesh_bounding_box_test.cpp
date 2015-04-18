@@ -34,7 +34,7 @@ public:
     // load grasp generator
     grasp_generator_.reset(new GraspGenerator(visual_tools_, verbose) );
 
-    int completed_trials = 0;
+    //int completed_trials = 0;
 
     ROS_INFO_STREAM_NAMED("test","\n*************\nStarting test\n*************");
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 
   if (argc > 1)
   {
-    for (std::size_t i = 0; i < argc; i++)
+    for (std::size_t i = 0; i < std::size_t(argc); i++)
     {
       if (strcmp(argv[i], "--verbose") == 0)
       {
