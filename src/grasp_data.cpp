@@ -73,8 +73,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture; // todo: remove all underscore post-fixes
   std::vector<double> grasp_posture;
-  std::vector<double> grasp_pose_to_eef_translation;
-  std::vector<double> grasp_pose_to_eef_rotation;
+  std::vector<double> grasp_pose_to_eef_transform;
   double pregrasp_time_from_start;
   double grasp_time_from_start;
   // double finger_to_palm_depth;
@@ -111,24 +110,22 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rviz_visual_tools::getStringParameters(parent_name, child_nh, "joints", joint_names);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_posture", grasp_posture);
-  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_translation", grasp_pose_to_eef_translation);
-  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_rotation", grasp_pose_to_eef_rotation);
+  rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
 
   // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
 
   // Orientation
-  ROS_ASSERT(grasp_pose_to_eef_rotation.size() == 3);
-  ROS_ASSERT(grasp_pose_to_eef_translation.size() == 3);
+  ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
 
-  Eigen::AngleAxisd rollAngle (grasp_pose_to_eef_rotation[0], Eigen::Vector3d::UnitZ());
-  Eigen::AngleAxisd pitchAngle(grasp_pose_to_eef_rotation[1], Eigen::Vector3d::UnitX());
-  Eigen::AngleAxisd yawAngle  (grasp_pose_to_eef_rotation[2], Eigen::Vector3d::UnitY());
+  Eigen::AngleAxisd rollAngle (grasp_pose_to_eef_transform[3], Eigen::Vector3d::UnitZ());
+  Eigen::AngleAxisd pitchAngle(grasp_pose_to_eef_transform[4], Eigen::Vector3d::UnitX());
+  Eigen::AngleAxisd yawAngle  (grasp_pose_to_eef_transform[5], Eigen::Vector3d::UnitY());
   Eigen::Quaternion<double> quat = rollAngle * yawAngle * pitchAngle;
 
-  grasp_pose_to_eef_pose_ = Eigen::Translation3d(grasp_pose_to_eef_translation[0],
-                                                 grasp_pose_to_eef_translation[1],
-                                                 grasp_pose_to_eef_translation[2]) * quat;
+  grasp_pose_to_eef_pose_ = Eigen::Translation3d(grasp_pose_to_eef_transform[0],
+                                                 grasp_pose_to_eef_transform[1],
+                                                 grasp_pose_to_eef_transform[2]) * quat;
 
   // -------------------------------
   // Create pre-grasp posture if specified

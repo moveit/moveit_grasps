@@ -219,7 +219,8 @@ public:
    * \param name of parent link
    * \return pregrasp pose
    */
-  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link, 
+                                                    const double& desired_distance);
 
   /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
@@ -227,7 +228,8 @@ public:
    * \param arm - the planning group of the arm we want to display
    * \return true on success
    */
-  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data, const rviz_visual_tools::colors &color, double approach_length = 0.1);
+  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data, const rviz_visual_tools::colors &color, 
+                         double approach_length = 0.1);
 
   /**
    * \brief get the bounding box for a mesh
@@ -261,19 +263,6 @@ public:
   }
 
   /**
-   * \brief Setter for delta between grasps
-   */
-  void setGraspDelta(double m_between_grasps)
-  {
-   m_between_grasps_ = m_between_grasps;
-  }
-
-  void setGraspDepthDelta(double m_between_depth_grasps)
-  {
-    m_between_depth_grasps_ = m_between_depth_grasps;
-  }
-  
-  /**
    * \brief Setter for Verbose
    */
   void setVerbose(bool verbose)
@@ -294,10 +283,6 @@ private:
 
   // Display more output both in console and in Rviz (with arrows and markers)
   bool verbose_;
-
-  // Discretization of grasps
-  double m_between_grasps_;
-  double m_between_depth_grasps_;
 
   // Visualization levels
   bool show_grasp_arrows_;

@@ -44,16 +44,17 @@
 #include <tf_conversions/tf_eigen.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <moveit_msgs/Grasp.h>
 
 // Grasping
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_candidate.h>
 
 // Rviz
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 // MoveIt
 #include <moveit/robot_state/robot_state.h>
+#include <moveit_msgs/Grasp.h>
 #include <moveit/kinematics_plugin_loader/kinematics_plugin_loader.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
@@ -99,81 +100,6 @@ struct DesiredGraspOrientation
 };
 typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
 
-/**
- * \brief Contains collected data for each potential grasp after it has been verified / filtered
- *        This includes the pregrasp and grasp IK solution
- */
-struct GraspCandidate
-{
-  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data)
-    : grasp_(grasp)
-    , grasp_data_(grasp_data)
-    , grasp_filtered_by_ik_(false)
-    , grasp_filtered_by_collision_(false)
-    , grasp_filtered_by_cutting_plane_(false)
-    , grasp_filtered_by_orientation_(false)
-    , pregrasp_filtered_by_ik_(false)
-    , pregrasp_filtered_by_collision_(false)
-  {}
-
-  bool getPreGraspState(moveit::core::RobotStatePtr &robot_state)
-  {
-    // Apply IK solved arm joints to state
-    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
-
-    // Set end effector to correct configuration
-    grasp_data_->setRobotStatePreGrasp(robot_state);
-
-    return true;
-  }
-
-  bool getGraspStateOpen(moveit::core::RobotStatePtr robot_state)
-  {
-    // Apply IK solved arm joints to state
-    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
-
-    // Set end effector to correct configuration
-    grasp_data_->setRobotStatePreGrasp(robot_state);
-
-    return true;
-  }
-
-  bool getGraspStateClosed(moveit::core::RobotStatePtr robot_state)
-  {
-    // Apply IK solved arm joints to state
-    robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
-
-    // Set end effector to correct configuration
-    grasp_data_->setRobotStateGrasp(robot_state);
-
-    return true;
-  }
-
-  bool isValid()
-  {
-    if (grasp_filtered_by_ik_ || 
-        grasp_filtered_by_collision_ ||
-        grasp_filtered_by_cutting_plane_ || 
-        grasp_filtered_by_orientation_ ||
-        pregrasp_filtered_by_ik_ || 
-        pregrasp_filtered_by_collision_)
-      return false;
-    else
-      return true;
-  }
-
-  moveit_msgs::Grasp grasp_;
-  const GraspDataPtr grasp_data_;
-  std::vector<double> grasp_ik_solution_;
-  std::vector<double> pregrasp_ik_solution_;
-  bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_collision_; // arm is in collision with the environment
-  bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
-  bool grasp_filtered_by_orientation_; // grasp pose is not desireable
-  bool pregrasp_filtered_by_ik_;
-  bool pregrasp_filtered_by_collision_;
-};
-typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
 /**
  * \brief Struct for passing parameters to threads, for cleaner code
@@ -326,11 +252,10 @@ public:
   void clearDesiredGraspOrientations();
 
   /**
-   * \brief Of an array of grasps, choose just one for use
-   * \return true on success
+   * \brief Of an array of grasps, sort the valid ones from best score to worse score
+   * \return true on success, false if no grasps remain
    */
-  bool chooseBestGrasp( std::vector<GraspCandidatePtr>& grasp_candidates,
-                        GraspCandidatePtr& chosen );
+  bool chooseBestGrasps( std::vector<GraspCandidatePtr>& grasp_candidates );
 
   /**
    * \brief Show grasps after being filtered

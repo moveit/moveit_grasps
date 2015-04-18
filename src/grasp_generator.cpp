@@ -49,9 +49,6 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   : visual_tools_(visual_tools)
   , nh_("~/generator")
   , verbose_(verbose)
-  , m_between_grasps_(MIN_GRASP_DISTANCE)
-  , m_between_depth_grasps_(MIN_GRASP_DISTANCE)
-
 {
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
@@ -62,9 +59,6 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
-
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "m_between_grasps", m_between_grasps_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "m_between_depth_grasps", m_between_depth_grasps_);
 
   ROS_INFO_STREAM_NAMED("grasps","GraspGenerator Ready.");
 }
@@ -491,13 +485,13 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   moveit_msgs::GripperTranslation pre_grasp_approach;
   pre_grasp_approach.direction.header.stamp = ros::Time::now();
   pre_grasp_approach.desired_distance = grasp_data->finger_to_palm_depth_;
-  pre_grasp_approach.min_distance = grasp_data->finger_to_palm_depth_;
+  pre_grasp_approach.min_distance = 0; // NOT IMPLEMENTED
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
   post_grasp_retreat.direction.header.stamp = ros::Time::now();
   post_grasp_retreat.desired_distance = grasp_data->finger_to_palm_depth_;
-  post_grasp_retreat.min_distance = grasp_data->finger_to_palm_depth_;
+  post_grasp_retreat.min_distance = 0; // NOT IMPLEMENTED
 
   geometry_msgs::PoseStamped grasp_pose_msg;
   grasp_pose_msg.header.stamp = ros::Time::now();
@@ -663,14 +657,13 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp &g
   Eigen::Affine3d grasp_pose_eigen;
   tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
 
+  // The direction of the pre-grasp
+  Eigen::Vector3d pre_grasp_approach_direction = -1 * Eigen::Vector3d(grasp.pre_grasp_approach.direction.vector.x,    
+                                                                      grasp.pre_grasp_approach.direction.vector.y,
+                                                                      grasp.pre_grasp_approach.direction.vector.z);
+
   // Approach direction
   Eigen::Vector3d pre_grasp_approach_direction_local;
-
-  // The direction of the pre-grasp
-  Eigen::Vector3d pre_grasp_approach_direction =
-    Eigen::Vector3d(-1 * grasp.pre_grasp_approach.direction.vector.x * grasp.pre_grasp_approach.desired_distance,
-                    -1 * grasp.pre_grasp_approach.direction.vector.y * grasp.pre_grasp_approach.desired_distance,
-                    -1 * grasp.pre_grasp_approach.direction.vector.z * grasp.pre_grasp_approach.desired_distance);
 
   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
   if( grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link )
@@ -687,7 +680,8 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp &g
   return pre_grasp_approach_direction_local;
 }
 
-geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
+geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link, 
+                                                           const double& desired_distance)
 {
   // Grasp Pose Variables
   Eigen::Affine3d grasp_pose_eigen;
@@ -701,7 +695,7 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
   Eigen::Vector3d pre_grasp_approach_direction_local = getPreGraspDirection(grasp, ee_parent_link);
 
   // Update the grasp matrix usign the new locally-framed approach_direction
-  pre_grasp_pose_eigen.translation() += pre_grasp_approach_direction_local;
+  pre_grasp_pose_eigen.translation() += pre_grasp_approach_direction_local * desired_distance;
 
   // Convert eigen pre-grasp position back to regular message
   tf::poseEigenToMsg(pre_grasp_pose_eigen, pre_grasp_pose.pose);

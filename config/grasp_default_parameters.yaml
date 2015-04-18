@@ -1,5 +1,0 @@
-generator:
-  # meters between grasps
-  m_between_grasps: 0.01
-  # meters between grasps along approach direction 
-  m_between_depth_grasps: 0.03

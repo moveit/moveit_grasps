@@ -380,7 +380,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   for (std::size_t grasp_id = 0; grasp_id < grasp_candidates.size(); ++grasp_id)
   {
     std::size_t thread_id = omp_get_thread_num();
-    ROS_DEBUG_STREAM_NAMED("filter.superdebug","Thread " << thread_id << " processing grasp " << grasp_id);
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Thread " << thread_id << " processing grasp " << grasp_id);
 
     // If in verbose mode allow for quick exit
     if (ik_thread_structs[thread_id]->verbose_ && !ros::ok())
@@ -454,7 +454,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
 
 bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 {
-  ROS_DEBUG_STREAM_NAMED("filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
+  ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
 
   // Helper pointer
   GraspCandidatePtr& grasp_candidate = ik_thread_struct->grasp_candidates_[ik_thread_struct->grasp_id];
@@ -503,7 +503,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_,
                       ik_thread_struct, grasp_candidate, constraint_fn))
   {
-    ROS_DEBUG_STREAM_NAMED("filter.superdebug","the-grasp: unable to find IK solution");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Unable to find the-grasp IK solution");
     grasp_candidate->grasp_filtered_by_ik_ = true;
     return false;
   }
@@ -516,7 +516,8 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   {
     // Convert to a pre-grasp
     const std::string &ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
-    ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
+    ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name, 
+                                                                 grasp_candidate->grasp_.pre_grasp_approach.desired_distance);
 
     // Set gripper position (how open the fingers are) to CLOSED
     grasp_candidate->grasp_data_->setRobotStateGrasp(ik_thread_struct->robot_state_);
@@ -524,10 +525,23 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     // Solve IK Problem
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
     {
-      ROS_DEBUG_STREAM_NAMED("filter.superdebug","pre-grasp: unable to find IK solution");
+      ROS_DEBUG_STREAM_NAMED("grasp_filter","Unable to find PRE-grasp IK solution");
       grasp_candidate->pregrasp_filtered_by_ik_ = true;
       return false;
     }
+    else if (grasp_candidate->pregrasp_ik_solution_.empty())
+    {
+      ROS_ERROR_STREAM_NAMED("grasp_filter","IK solution found but vector is empty??");      
+    }
+  }
+  else
+  {
+    ROS_WARN_STREAM_NAMED("grasp_filter","Not filtering pregrasp!!");
+  }
+
+  if (grasp_candidate->pregrasp_ik_solution_.empty())
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_filter","IK solution found but vector is empty??  v1");
   }
 
   return true;
@@ -541,9 +555,6 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_pose);
   eigen_pose = ik_thread_struct->link_transform_ * eigen_pose;
   tf::poseEigenToMsg(eigen_pose, ik_thread_struct->ik_pose_.pose);
-
-  // Clear out previous solution just in case - not sure if this is needed
-  ik_solution.clear(); // TODO remove
 
   // Set callback function
   kinematics::KinematicsBase::IKCallbackFn ik_callback_fn;
@@ -559,12 +570,12 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   if( ik_thread_struct->error_code_.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION )
   {
     // The grasp was valid but the pre-grasp was not
-    ROS_DEBUG_STREAM_NAMED("filter.superdebug","No IK solution");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","No IK solution");
     return false;
   }
   else if( ik_thread_struct->error_code_.val == moveit_msgs::MoveItErrorCodes::TIMED_OUT )
   {
-    ROS_DEBUG_STREAM_NAMED("filter.superdebug","Timed Out.");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Timed Out.");
     return false;
   }
   else if( ik_thread_struct->error_code_.val != moveit_msgs::MoveItErrorCodes::SUCCESS )
@@ -586,47 +597,37 @@ void GraspFilter::addDesiredGraspOrientation(Eigen::Affine3d pose, double max_an
   desired_grasp_orientations_.push_back(DesiredGraspOrientationPtr(new DesiredGraspOrientation(pose,max_angle_offset)));
 }
 
-bool GraspFilter::chooseBestGrasp( std::vector<GraspCandidatePtr>& grasp_candidates,
-                                   GraspCandidatePtr& chosen )
+bool GraspFilter::chooseBestGrasps( std::vector<GraspCandidatePtr>& grasp_candidates )
 {
-  // Find max grasp quality
-  double max_quality = -1;
-  bool found_valid_grasp = false;
-  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
+  std::size_t original_num_grasps = grasp_candidates.size();
+
+  // Remove all invalid grasps
+  for(std::vector<GraspCandidatePtr>::iterator it = grasp_candidates.begin(); it != grasp_candidates.end(); )
   {
     // Check if valid grasp
-    if (!grasp_candidates[i]->isValid())
+    if (!(*it)->isValid())
     {
-      continue; // not valid
+      it = grasp_candidates.erase(it); // not valid
     }
+    else
+    {
+      ++it; // was valid, keep
+    }
+  }
+  ROS_INFO_STREAM_NAMED("grasp_filter","Removed " << original_num_grasps - grasp_candidates.size() << " invalid grasp candidates");
 
-    // METHOD 1 - use score
-    if (true)
-    {
-      if (grasp_candidates[i]->grasp_.grasp_quality > max_quality)
-      {
-        max_quality = grasp_candidates[i]->grasp_.grasp_quality;
-        chosen = grasp_candidates[i];
-      }
-    }
-    else // METHOD 2 - use yall angle
-    {
-      const geometry_msgs::Pose& pose = grasp_candidates[i]->grasp_.grasp_pose.pose;
-      //double roll = atan2(2*(pose.orientation.x*pose.orientation.y + pose.orientation.w*pose.orientation.z), pose.orientation.w*pose.orientation.w + pose.orientation.x*pose.orientation.x - pose.orientation.y*pose.orientation.y - pose.orientation.z*pose.orientation.z);
-      double yall = asin(-2*(pose.orientation.x*pose.orientation.z - pose.orientation.w*pose.orientation.y));
-      //double pitch = atan2(2*(pose.orientation.y*pose.orientation.z + pose.orientation.w*pose.orientation.x), pose.orientation.w*pose.orientation.w - pose.orientation.x*pose.orientation.x - pose.orientation.y*pose.orientation.y + pose.orientation.z*pose.orientation.z);
-      //std::cout << "ROLL: " << roll << " YALL: " << yall << " PITCH: " << pitch << std::endl;
-      std::cout << "YALL: " << yall << std::endl;
-      if (yall > max_quality)
-      {
-        max_quality = yall;
-        chosen = grasp_candidates[i];
-      }
-    }
-
+  // Error Check
+  if (grasp_candidates.empty())
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_filter","No remaining candidates grasps");
+    return false;
   }
 
-  ROS_INFO_STREAM_NAMED("grasp_filter","Chose grasp with quality " << max_quality);
+  // Order remaining valid grasps by best score
+  std::sort (grasp_candidates.begin(), grasp_candidates.end(), compareGraspScores);
+
+  ROS_INFO_STREAM_NAMED("grasp_filter","Sorted valid grasps, highest quality is " << grasp_candidates.front()->grasp_.grasp_quality 
+                        << " and lowest quality is " << grasp_candidates.back()->grasp_.grasp_quality);
 
   return true;
 }

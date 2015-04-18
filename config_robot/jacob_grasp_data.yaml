@@ -18,16 +18,12 @@ gripper:
 
     grasp_time_from_start : 4.0
 
-    #distance from wrist joint to palm of end effector
-
-    grasp_pose_to_eef_translation :  [0, 0, -0.115]
-
-    #Rotation from wrist joint to std end effector orientation
+    # Distance from wrist joint to palm of end effector [x, y, z, r, p, y]
+    # Rotation from wrist joint to std end effector orientation
     #z-axis pointing toward object to grasp
     #x-axis perp. to movement of grippers
     #y-axis parallel to movement of grippers
-    grasp_pose_to_eef_rotation : [-1.5708, 3.14159, 0]
-
+    grasp_pose_to_eef_transform :  [0, 0, -0.115, -1.5708, 3.14159, 0]
 
     # length of grippers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.085
