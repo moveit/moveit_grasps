@@ -76,6 +76,12 @@ The result should look like the following:
 Poses Visualized: Object, Grasp, EE
 Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
 
+### grasp_pose_to_eef
+
+The ``grasp_pose_to_eef`` translation is to allow different URDF end effectors to all work the same. In MoveIt! the EE always has a parent link, typically the wrist link or palm link. That parent link should have its Z-axis pointing towards the object you want to grasp i.e. where your pointer finger is pointing. This is the convention laid out in "Robotics" by John Craig in 1955. However, a lot of URDFs do not follow this convention, so this transform allows you to fix it.
+
+Additionally, the x-axis should be pointing up along the grasped object, i.e. the circular axis of a (beer) bottle if you were holding it. The y-axis should be point towards one of the fingers.
+
 ## Testing
 
 There are two tests scripts in this package. To view the tests, first start Rviz with:
