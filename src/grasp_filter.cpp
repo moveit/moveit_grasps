@@ -142,7 +142,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                                     verbose);
   if (remaining_grasps == 0)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_filter","IK filter unable to find any valid grasps!");
+    ROS_WARN_STREAM_NAMED("grasp_filter","Grasp filters removed all grasps!");
     if (verbose_if_failed)
     {
       ROS_INFO_STREAM_NAMED("grasp_filter","Re-running in verbose mode");
@@ -150,7 +150,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
       remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
     }
     else
-      ROS_WARN_STREAM_NAMED("grasp_filter","NOT re-running in verbose mode");    
+      ROS_INFO_STREAM_NAMED("grasp_filter","NOT re-running in verbose mode");    
   }
 
   // Visualize valid grasps as arrows with cartesian path as well
