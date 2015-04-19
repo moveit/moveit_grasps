@@ -299,6 +299,7 @@ private:
 
   // Visualization levels
   bool collision_verbose_;
+  bool statistics_verbose_;
   double collision_verbose_speed_;
   bool show_filtered_grasps_;
   bool show_filtered_arm_solutions_;

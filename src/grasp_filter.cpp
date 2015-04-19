@@ -80,6 +80,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   // Load visulization settings
   const std::string parent_name = "grasp_filter"; // for namespacing logging messages
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "collision_verbose", collision_verbose_);
+  rviz_visual_tools::getBoolParameter(parent_name, nh_, "statistics_verbose", statistics_verbose_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
@@ -141,12 +142,15 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                                     verbose);
   if (remaining_grasps == 0)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_filter","IK filter unable to find any valid grasps! Re-running in verbose mode");
+    ROS_ERROR_STREAM_NAMED("grasp_filter","IK filter unable to find any valid grasps!");
     if (verbose_if_failed)
     {
+      ROS_INFO_STREAM_NAMED("grasp_filter","Re-running in verbose mode");
       verbose = true;
       remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
     }
+    else
+      ROS_WARN_STREAM_NAMED("grasp_filter","NOT re-running in verbose mode");    
   }
 
   // Visualize valid grasps as arrows with cartesian path as well
@@ -413,17 +417,20 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   total_filter_calls += 1;
   double average_duration = total_duration / total_filter_calls;
 
-  std::cout << "-------------------------------------------------------" << std::endl;
-  std::cout << "GRASPING RESULTS " << std::endl;
-  std::cout << "total candidate grasps          " << grasp_candidates.size() << std::endl;
-  std::cout << "grasp_filtered_by_cutting_plane " << grasp_filtered_by_cutting_plane << std::endl;
-  std::cout << "grasp_filtered_by_orientation   " << grasp_filtered_by_orientation << std::endl;
-  std::cout << "grasp_filtered_by_ik            " << grasp_filtered_by_ik << std::endl;
-  std::cout << "pregrasp_filtered_by_ik         " << pregrasp_filtered_by_ik << std::endl;
-  std::cout << "remaining grasps                " << remaining_grasps << std::endl;
-  std::cout << "time duration:                  " << duration << std::endl;
-  std::cout << "average time duration:          " << average_duration << std::endl;
-  std::cout << "-------------------------------------------------------" << std::endl;
+  if (statistics_verbose_)
+  {
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "GRASP FILTER RESULTS " << std::endl;
+    std::cout << "total candidate grasps          " << grasp_candidates.size() << std::endl;
+    std::cout << "grasp_filtered_by_cutting_plane " << grasp_filtered_by_cutting_plane << std::endl;
+    std::cout << "grasp_filtered_by_orientation   " << grasp_filtered_by_orientation << std::endl;
+    std::cout << "grasp_filtered_by_ik            " << grasp_filtered_by_ik << std::endl;
+    std::cout << "pregrasp_filtered_by_ik         " << pregrasp_filtered_by_ik << std::endl;
+    std::cout << "remaining grasps                " << remaining_grasps << std::endl;
+    std::cout << "time duration:                  " << duration << std::endl;
+    std::cout << "average time duration:          " << average_duration << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+  }
 
   return remaining_grasps;
 }

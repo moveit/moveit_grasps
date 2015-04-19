@@ -283,7 +283,7 @@ private:
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
-  // Display more output both in console and in Rviz (with arrows and markers)
+  // Display more output both in console
   bool verbose_;
 
   // Shared node handle
