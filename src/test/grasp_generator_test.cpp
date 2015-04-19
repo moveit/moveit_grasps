@@ -143,13 +143,12 @@ public:
       double depth = 0.05;
       double width = 0.05;
       double height = 0.05;
-      double max_grasp_size = 0.1; // TODO: verify max object size Open Hand can grasp
 
       visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT);
       visual_tools_->publishAxis(object_pose);
 
-      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
-                                              grasp_data_, possible_grasps);
+      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, possible_grasps);
+                                              
 
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);

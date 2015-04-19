@@ -76,12 +76,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   std::vector<double> grasp_pose_to_eef_transform;
   double pregrasp_time_from_start;
   double grasp_time_from_start;
-  // double finger_to_palm_depth;
-  // double angle_resolution;
-  // double grasp_resolution;
-  // double grasp_depth_resolution;
-  // double grasp_min_depth;
-  // double gripper_width;
   std::string end_effector_name;
 
   // Helper to let user know what is wrong
@@ -101,7 +95,8 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "finger_to_palm_depth", finger_to_palm_depth_);
-  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "gripper_width", gripper_width_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);

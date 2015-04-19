@@ -65,7 +65,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
                                               grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
-                                              std::vector<GraspCandidatePtr>& possible_grasps)
+                                              std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   double finger_depth = grasp_data->finger_to_palm_depth_ - grasp_data->grasp_min_depth_;
   double length_along_a, length_along_b;
@@ -151,39 +151,39 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   /***** Create grasps along faces of cuboid, grasps are axis aligned *****/
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding face grasps...");
   // get exact deltas for sides from desired delta
-  std::size_t num_grasps_along_a = floor( (length_along_a - grasp_data->gripper_width_) / grasp_data->grasp_resolution_ ) + 1;
-  std::size_t num_grasps_along_b = floor( (length_along_b - grasp_data->gripper_width_) / grasp_data->grasp_resolution_ ) + 1; 
+  std::size_t num_grasps_along_a = floor( (length_along_a - grasp_data->gripper_finger_width_) / grasp_data->grasp_resolution_ ) + 1;
+  std::size_t num_grasps_along_b = floor( (length_along_b - grasp_data->gripper_finger_width_) / grasp_data->grasp_resolution_ ) + 1; 
 
   // if the gripper fingers are wider than the object we're trying to grasp, try with gripper aligned with top/center/bottom of object
-  // note that current implementation limits objects that are the same size as the gripper_width to 1 grasp
+  // note that current implementation limits objects that are the same size as the gripper_finger_width to 1 grasp
   if (num_grasps_along_a <= 0)
   {
-    delta_a = length_along_a - grasp_data->gripper_width_ / 2.0;
+    delta_a = length_along_a - grasp_data->gripper_finger_width_ / 2.0;
     num_grasps_along_a = 3;
   }
   if (num_grasps_along_b <= 0)
   {
-    delta_b = length_along_b - grasp_data->gripper_width_ / 2.0;
+    delta_b = length_along_b - grasp_data->gripper_finger_width_ / 2.0;
     num_grasps_along_b = 3;
   }
 
   if (num_grasps_along_a == 1)
     delta_a = 0;
   else
-    delta_a = (length_along_a - grasp_data->gripper_width_) / (double)(num_grasps_along_a - 1);
+    delta_a = (length_along_a - grasp_data->gripper_finger_width_) / (double)(num_grasps_along_a - 1);
 
   if (num_grasps_along_b == 1)
     delta_b = 0;
   else
-    delta_b = (length_along_b - grasp_data->gripper_width_) / (double)(num_grasps_along_b - 1);
+    delta_b = (length_along_b - grasp_data->gripper_finger_width_) / (double)(num_grasps_along_b - 1);
 
   // ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","delta_a : delta_b = " << delta_a << " : " << delta_b);
   // ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","num_grasps_along_a : num_grasps_along_b  = " << num_grasps_along_a << " : " << 
   //                        num_grasps_along_b);
 
   Eigen::Vector3d a_translation = -(0.5 * (length_along_a + offset) * a_dir) -
-    0.5 * (length_along_b - grasp_data->gripper_width_) * b_dir - delta_b * b_dir;
-  Eigen::Vector3d b_translation = -0.5 * (length_along_a - grasp_data->gripper_width_) * a_dir - 
+    0.5 * (length_along_b - grasp_data->gripper_finger_width_) * b_dir - delta_b * b_dir;
+  Eigen::Vector3d b_translation = -0.5 * (length_along_a - grasp_data->gripper_finger_width_) * a_dir - 
     delta_a * a_dir - (0.5 * (length_along_b + offset) * b_dir);
 
   // grasps along -a_dir face
@@ -285,7 +285,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   /***** add all poses as possible grasps *****/
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
   {
-    addGrasp(grasp_poses[i], grasp_data, possible_grasps, cuboid_pose);
+    addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose);
   }
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","created " << grasp_poses.size() << " grasp poses");
 
@@ -475,7 +475,7 @@ bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u
 }
 
 void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
-                              std::vector<GraspCandidatePtr>& possible_grasps, const Eigen::Affine3d& object_pose)
+                              std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose)
 {
   if (verbose_)
   {
@@ -544,7 +544,7 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   tf::poseEigenToMsg(grasp_pose * grasp_data->grasp_pose_to_eef_pose_, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
-  possible_grasps.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data)));
+  grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data)));
 }
 
 double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
@@ -595,8 +595,8 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
 }
 
 bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
-                                    double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
-                                    std::vector<GraspCandidatePtr>& possible_grasps)
+                                    const moveit_grasps::GraspDataPtr grasp_data,
+                                    std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   double depth;
   double width;
@@ -610,44 +610,44 @@ bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eige
 
   // TODO - reconcile the new mesh_pose with the input cuboid_pose
 
-  return generateGrasps(cuboid_pose, depth, width, height, max_grasp_size, grasp_data, possible_grasps);
+  return generateGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates);
 }
 
 bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
-                                    double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
-                                    std::vector<GraspCandidatePtr>& possible_grasps)
+                                    const moveit_grasps::GraspDataPtr grasp_data,
+                                    std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   // Generate grasps over axes that aren't too wide to grip
 
   // Most default type of grasp is X axis
-  if (depth <= max_grasp_size ) // depth = size along x-axis
+  if (depth <= grasp_data->max_grasp_width_ ) // depth = size along x-axis
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around x-axis of cuboid");
-    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, possible_grasps);
+    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, grasp_candidates);
   }
 
-  if (width <= max_grasp_size ) // width = size along y-axis
+  if (width <= grasp_data->max_grasp_width_ ) // width = size along y-axis
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around y-axis of cuboid");
-    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, possible_grasps);
+    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, grasp_candidates);
   }
 
-  if (height <= max_grasp_size ) // height = size along z-axis
+  if (height <= grasp_data->max_grasp_width_ ) // height = size along z-axis
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator","Generating grasps around z-axis of cuboid");
-    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, possible_grasps);
+    generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, grasp_candidates);
   }
 
-  if (!possible_grasps.size())
+  if (!grasp_candidates.size())
     ROS_WARN_STREAM_NAMED("grasp_generator","Generated 0 grasps");
   else
-    ROS_INFO_STREAM_NAMED("grasp_generator","Generated " << possible_grasps.size() << " grasps");
+    ROS_INFO_STREAM_NAMED("grasp_generator","Generated " << grasp_candidates.size() << " grasps");
 
   // Visualize animated grasps that have been generated
   if (show_prefiltered_grasps_)
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator","Animating all generated (candidate) grasps before filtering");
-    visualizeAnimatedGrasps(possible_grasps, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+    visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
   }
 
   return true;

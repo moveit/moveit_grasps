@@ -102,12 +102,12 @@ public:
    * \param mesh_msg - model of object to grasp from perception
    * \param cuboid_pose pose of cuboid 
    * \param grasp_data data describing end effector
-   * \param possible_grasps possible grasps generated
+   * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
   bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
-                            double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
-                            std::vector<GraspCandidatePtr>& possible_grasps);
+                            const moveit_grasps::GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                            
 
   /**
    * \brief Create possible grasp positions around a cuboid 
@@ -116,12 +116,12 @@ public:
    * \param width length of cuboid along local y-axis
    * \param height length of cuboid along local z-axis
    * \param grasp_data data describing end effector
-   * \param possible_grasps possible grasps generated
+   * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
-                            double max_grasp_size, const GraspDataPtr grasp_data, 
-                            std::vector<GraspCandidatePtr>& possible_grasps);
+                            const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                            
   
   /**
    * \brief Create grasp positions around one axis of a cuboid
@@ -131,12 +131,12 @@ public:
    * \param height length of cuboid along local z-axis
    * \param axis axis of cuboid to generate grasps around
    * \param grasp_data data describing end effector
-   * \param possible_grasps possible grasps generated
+   * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
                                 grasp_axis_t axis, const GraspDataPtr grasp_data, 
-                                std::vector<GraspCandidatePtr>& possible_grasps);
+                                std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief helper function for adding grasps at corner of cuboid
@@ -194,11 +194,11 @@ public:
    * \brief creates grasp messages from the generated grasp poses
    * \param pose - the grasp pose
    * \param grasp_data data describing the end effector
-   * \param possible_grasps - list possible grasps
+   * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
    * \return nothing
    */
-  void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& possible_grasps,
+  void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
                 const Eigen::Affine3d& object_pose);
 
   /**

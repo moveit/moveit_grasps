@@ -122,7 +122,8 @@ public:
   double grasp_resolution_;
   double grasp_depth_resolution_; // generate grasps at this depth resolution along finger_to_palm_depth_
   double grasp_min_depth_; // minimum amount fingers must overlap object
-  double gripper_width_; // parameter used to ensure generated grasps will overlap object
+  double gripper_finger_width_; // parameter used to ensure generated grasps will overlap object
+  double max_grasp_width_;
 
   // grasp approach and retreat parameters
   double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth

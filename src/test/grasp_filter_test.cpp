@@ -173,9 +173,7 @@ public:
       // Generate set of grasps for one object
       ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
       std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
-      double max_grasp_size = 0.10; // TODO: verify max object size that can be grasped
-      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
-                                        grasp_data_, grasp_candidates);
+      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, grasp_candidates);                                        
 
       // add grasps at variable depth
       //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);
@@ -232,9 +230,8 @@ public:
     // Generate set of grasps for one object
     ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
-    double max_grasp_size = 0.10; // TODO: verify max object size that can be grasped
-    grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
-                                      grasp_data_, grasp_candidates);
+    grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, grasp_candidates);
+                                      
 
     // add grasps at variable depth
     //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);

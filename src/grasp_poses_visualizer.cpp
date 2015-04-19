@@ -51,9 +51,6 @@ static const double CUBOID_WORKSPACE_MAX_Y = 0.5;
 static const double CUBOID_WORKSPACE_MIN_Z = 0.0;
 static const double CUBOID_WORKSPACE_MAX_Z = 1.0;
 
-// TODO: verify max object size Open Hand can grasp
-static const double MAX_GRASP_SIZE = 0.10;
-
 class GraspPosesVisualizer
 {
 
@@ -64,7 +61,6 @@ private:
   double depth_;
   double width_;
   double height_;
-  double max_grasp_size_;
   geometry_msgs::Pose cuboid_pose_;
   moveit_grasps::GraspGeneratorPtr grasp_generator_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
@@ -103,7 +99,6 @@ public:
     depth_ = CUBOID_MIN_SIZE;
     width_ = CUBOID_MIN_SIZE;
     height_ = CUBOID_MIN_SIZE;
-    max_grasp_size_ = MAX_GRASP_SIZE;
     // Seed random
     srand(ros::Time::now().toSec());
 
@@ -122,8 +117,7 @@ public:
     visual_tools_->publishAxis(cuboid_pose_, 0.05, 0.005);
     visual_tools_->publishText(cuboid_pose_,"Object Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
     grasp_candidates_.clear();
-    grasp_generator_->generateGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, 
-                                     max_grasp_size_, grasp_data_, grasp_candidates_);    
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, grasp_data_, grasp_candidates_);
 
     // SHOW EE GRASP POSE
     Eigen::Affine3d ee_pose = visual_tools_->convertPose(grasp_candidates_[50]->grasp_.grasp_pose.pose);

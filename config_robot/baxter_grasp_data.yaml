@@ -26,7 +26,10 @@ left_hand:
     finger_to_palm_depth : 0.1
 
     # width of gripper fingers
-    gripper_width : 0.015
+    gripper_finger_width : 0.015
+
+    # max object width that can fit between fingers
+    max_grasp_width : 0.1
 
     # grasp resolution parameters (angle is in degrees)
     grasp_resolution : 0.02
@@ -61,7 +64,10 @@ right_hand:
     finger_to_palm_depth : 0.1
 
     # width of gripper fingers
-    gripper_width : 0.05
+    gripper_finger_width : 0.05
+
+    # max object width that can fit between fingers
+    max_grasp_width : 0.1
 
     # grasp resolution parameters (angle is in degrees)
     grasp_resolution : 0.010
