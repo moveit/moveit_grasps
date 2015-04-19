@@ -94,7 +94,9 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const robot_model::JointModelGroup* arm_jmg, bool filter_pregrasp,
+                               const robot_model::JointModelGroup* arm_jmg, 
+                               const moveit::core::RobotStatePtr seed_state,
+                               bool filter_pregrasp,
                                bool verbose, bool verbose_if_failed)
 {
   // -----------------------------------------------------------------------------------------------
@@ -135,7 +137,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   }
 
   // Try to filter grasps not in verbose mode
-  std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, filter_pregrasp,
+  std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp,
                                                     verbose);
   if (remaining_grasps == 0)
   {
@@ -143,7 +145,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
     if (verbose_if_failed)
     {
       verbose = true;
-      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, filter_pregrasp, verbose);
+      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
     }
   }
 
@@ -232,6 +234,7 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate,
 std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                             planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                             const robot_model::JointModelGroup* arm_jmg,
+                                            const moveit::core::RobotStatePtr seed_state,
                                             bool filter_pregrasp, bool verbose)
 {
   // -----------------------------------------------------------------------------------------------
@@ -318,6 +321,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     link_transform = robot_state_->getGlobalLinkTransform(lm).inverse();
   }
 
+  // Create the seed state vector
+  std::vector<double> ik_seed_state;
+  seed_state->copyJointGroupPositions(arm_jmg, ik_seed_state);
+
   // Thread data -------------------------------------------------------------------------------
   // Allocate only once to increase performance
   std::vector<IkThreadStructPtr> ik_thread_structs;
@@ -334,7 +341,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
                                                                          filter_pregrasp,
                                                                          verbose,
                                                                          thread_id));
-    ik_thread_structs[thread_id]->ik_seed_state_.resize(num_variables_); // fill with zeros TODO- give a seed state!;
+    ik_thread_structs[thread_id]->ik_seed_state_ = ik_seed_state;
   }
 
   // Benchmark time
@@ -365,38 +372,40 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   // Count number of grasps remaining
   std::size_t remaining_grasps = 0;
   std::size_t grasp_filtered_by_ik = 0;
-  std::size_t grasp_filtered_by_collision = 0;
   std::size_t grasp_filtered_by_cutting_plane = 0;
   std::size_t grasp_filtered_by_orientation = 0;
   std::size_t pregrasp_filtered_by_ik = 0;
-  std::size_t pregrasp_filtered_by_collision = 0;
 
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
     if (grasp_candidates[i]->grasp_filtered_by_ik_)
       grasp_filtered_by_ik++;
-    else if (grasp_candidates[i]->grasp_filtered_by_collision_)
-      grasp_filtered_by_collision++;
     else if (grasp_candidates[i]->grasp_filtered_by_cutting_plane_)
       grasp_filtered_by_cutting_plane++;
     else if (grasp_candidates[i]->grasp_filtered_by_orientation_)
       grasp_filtered_by_orientation++;
     else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
       pregrasp_filtered_by_ik++;
-    else if (grasp_candidates[i]->pregrasp_filtered_by_collision_)
-      pregrasp_filtered_by_collision++;
     else
       remaining_grasps++;
   }
 
   if (remaining_grasps +
       grasp_filtered_by_ik +
-      grasp_filtered_by_collision +
       grasp_filtered_by_cutting_plane +
       grasp_filtered_by_orientation +
-      pregrasp_filtered_by_ik +
-      pregrasp_filtered_by_collision != grasp_candidates.size())
+      pregrasp_filtered_by_ik != grasp_candidates.size())      
     ROS_ERROR_STREAM_NAMED("grasp_filter","Logged filter reasons do not add up to total number of grasps. Internal error.");
+
+  // End Benchmark time
+  double duration = (ros::Time::now() - start_time).toSec();
+
+  // Keep a running average of calculation time
+  static double total_duration = 0;
+  static std::size_t total_filter_calls = 0;
+  total_duration += duration;
+  total_filter_calls += 1;
+  double average_duration = total_duration / total_filter_calls;
 
   std::cout << "-------------------------------------------------------" << std::endl;
   std::cout << "GRASPING RESULTS " << std::endl;
@@ -404,19 +413,11 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   std::cout << "grasp_filtered_by_cutting_plane " << grasp_filtered_by_cutting_plane << std::endl;
   std::cout << "grasp_filtered_by_orientation   " << grasp_filtered_by_orientation << std::endl;
   std::cout << "grasp_filtered_by_ik            " << grasp_filtered_by_ik << std::endl;
-  std::cout << "grasp_filtered_by_collision     " << grasp_filtered_by_collision << std::endl;
   std::cout << "pregrasp_filtered_by_ik         " << pregrasp_filtered_by_ik << std::endl;
-  std::cout << "pregrasp_filtered_by_collision  " << pregrasp_filtered_by_collision << std::endl;
   std::cout << "remaining grasps                " << remaining_grasps << std::endl;
+  std::cout << "time duration:                  " << duration << std::endl;
+  std::cout << "average time duration:          " << average_duration << std::endl;
   std::cout << "-------------------------------------------------------" << std::endl;
-
-  if (false)
-  {
-    // End Benchmark time
-    double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
-    ROS_INFO_STREAM_NAMED("grasp_filter","Grasp generator IK grasp filtering benchmark time:");
-    std::cout << duration << "\t" << grasp_candidates.size() << "\n";
-  }
 
   return remaining_grasps;
 }
@@ -526,8 +527,12 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
                                  grasp_candidate->grasp_data_->arm_jmg_, constraint_fn, _1, _2, _3);
 
   // Test it with IK
-  ik_thread_struct->kin_solver_->searchPositionIK(ik_thread_struct->ik_pose_.pose, ik_thread_struct->ik_seed_state_, ik_thread_struct->timeout_, ik_solution,
-                                                  ik_callback_fn, ik_thread_struct->error_code_);
+  ik_thread_struct->kin_solver_->searchPositionIK(ik_thread_struct->ik_pose_.pose, 
+                                                  ik_thread_struct->ik_seed_state_, 
+                                                  ik_thread_struct->timeout_, 
+                                                  ik_solution,
+                                                  ik_callback_fn, 
+                                                  ik_thread_struct->error_code_);
 
   // Results
   if( ik_thread_struct->error_code_.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION )
@@ -560,7 +565,7 @@ void GraspFilter::addDesiredGraspOrientation(Eigen::Affine3d pose, double max_an
   desired_grasp_orientations_.push_back(DesiredGraspOrientationPtr(new DesiredGraspOrientation(pose,max_angle_offset)));
 }
 
-bool GraspFilter::chooseBestGrasps( std::vector<GraspCandidatePtr>& grasp_candidates )
+bool GraspFilter::removeInvalidAndFilter( std::vector<GraspCandidatePtr>& grasp_candidates )
 {
   std::size_t original_num_grasps = grasp_candidates.size();
 
@@ -618,10 +623,6 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::RED);
     }
-    else if (grasp_candidates[i]->grasp_filtered_by_collision_)
-    {
-      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::PINK);
-    }
     else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::BLUE);
@@ -633,10 +634,6 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     else if (grasp_candidates[i]->grasp_filtered_by_orientation_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::YELLOW);
-    }
-    else if (grasp_candidates[i]->pregrasp_filtered_by_collision_)
-    {
-      visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::CYAN);
     }
     else
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::GREEN);

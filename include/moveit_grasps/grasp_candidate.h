@@ -66,11 +66,9 @@ public:
     : grasp_(grasp)
     , grasp_data_(grasp_data)
     , grasp_filtered_by_ik_(false)
-    , grasp_filtered_by_collision_(false)
     , grasp_filtered_by_cutting_plane_(false)
     , grasp_filtered_by_orientation_(false)
     , pregrasp_filtered_by_ik_(false)
-    , pregrasp_filtered_by_collision_(false)
   {}
 
   bool getPreGraspState(moveit::core::RobotStatePtr &robot_state)
@@ -123,11 +121,9 @@ public:
   bool isValid()
   {
     if (grasp_filtered_by_ik_ ||
-        grasp_filtered_by_collision_ ||
         grasp_filtered_by_cutting_plane_ ||
         grasp_filtered_by_orientation_ ||
-        pregrasp_filtered_by_ik_ ||
-        pregrasp_filtered_by_collision_)
+        pregrasp_filtered_by_ik_)
       return false;
     else
       return true;
@@ -197,11 +193,9 @@ public:
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
   bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_collision_; // arm is in collision with the environment
   bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
   bool grasp_filtered_by_orientation_; // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
-  bool pregrasp_filtered_by_collision_;
 }; // class
 
 typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;

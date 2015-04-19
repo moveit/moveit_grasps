@@ -168,6 +168,7 @@ public:
   bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                     const robot_model::JointModelGroup* arm_jmg,
+                    const moveit::core::RobotStatePtr seed_state,
                     bool filter_pregrasp = false,
                     bool verbose = false,
                     bool verbose_if_failed = true);
@@ -203,6 +204,7 @@ public:
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
+                                 const moveit::core::RobotStatePtr seed_state,
                                  bool filter_pregrasp,
                                  bool verbose);
 
@@ -253,7 +255,7 @@ public:
    * \brief Of an array of grasps, sort the valid ones from best score to worse score
    * \return true on success, false if no grasps remain
    */
-  bool chooseBestGrasps( std::vector<GraspCandidatePtr>& grasp_candidates );
+  bool removeInvalidAndFilter( std::vector<GraspCandidatePtr>& grasp_candidates );
 
   /**
    * \brief Show grasps after being filtered
