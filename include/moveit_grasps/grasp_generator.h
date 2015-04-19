@@ -225,6 +225,12 @@ public:
   static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
+   * \brief Get the bounding box for a mesh
+   */
+  static bool getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Eigen::Affine3d& cuboid_pose, 
+                                     double& depth, double& width, double& height);
+                                            
+  /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
    * \param grasp - the grasp to show
    * \param arm - the planning group of the arm we want to display
@@ -233,13 +239,6 @@ public:
   void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data, const rviz_visual_tools::colors &color, 
                          double approach_length = 0.1);
 
-  /**
-   * \brief get the bounding box for a mesh
-   *
-   */
-  bool getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Eigen::Affine3d& cuboid_pose, 
-                              double& depth, double& width, double& height);
-                                            
   /**
    * \brief Getter for Verbose
    */ 

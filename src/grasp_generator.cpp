@@ -757,8 +757,8 @@ bool GraspGenerator::getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Ei
   }
   ROS_DEBUG_STREAM_NAMED("bbox","centroid = \n" << centroid);
 
-  if (verbose_)
-    visual_tools_->publishSphere(centroid, rviz_visual_tools::PINK, 0.01);
+  // if (verbose_)
+  //   visual_tools_->publishSphere(centroid, rviz_visual_tools::PINK, 0.01);
 
   // Solve for principle axes of inertia
   Eigen::Matrix3d inertia_axis_aligned;
@@ -829,11 +829,11 @@ bool GraspGenerator::getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Ei
   p[6] << min(0), max(1), max(2);
   p[7] << max(0), max(1), max(2);
 
-  if (verbose_)
-  {
-    for (std::size_t i = 0; i < 8; i++)
-      visual_tools_->publishSphere(world_to_mesh_transform * p[i],rviz_visual_tools::YELLOW,0.01);
-  }
+  // if (verbose_)
+  // {
+  //   for (std::size_t i = 0; i < 8; i++)
+  //     visual_tools_->publishSphere(world_to_mesh_transform * p[i],rviz_visual_tools::YELLOW,0.01);
+  // }
 
   depth = max(0) - min(0);
   width = max(1) - min(1);
@@ -846,12 +846,12 @@ bool GraspGenerator::getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Ei
   cuboid_pose = world_to_mesh_transform;
   cuboid_pose.translation() = world_to_mesh_transform * translation;
 
-  if (verbose_)
-  {
-    visual_tools_->publishCuboid(visual_tools_->convertPose(cuboid_pose),
-                                 depth,width,height,rviz_visual_tools::TRANSLUCENT);
-    visual_tools_->publishAxis(world_to_mesh_transform);
-  }
+  // if (verbose_)
+  // {
+  //   visual_tools_->publishCuboid(visual_tools_->convertPose(cuboid_pose),
+  //                                depth,width,height,rviz_visual_tools::TRANSLUCENT);
+  //   visual_tools_->publishAxis(world_to_mesh_transform);
+  // }
 
   return true;
 }

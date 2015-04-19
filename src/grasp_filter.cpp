@@ -163,6 +163,12 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
     visualizeCandidateGrasps(grasp_candidates);
   }
 
+  if (grasp_candidates.empty())
+  {
+    ROS_WARN_STREAM_NAMED("grasp_filter","No grasps remaining after filtering");
+    return false;
+  }
+
   return true;
 }
 
@@ -494,7 +500,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     // Solve IK Problem
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
     {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter","Unable to find PRE-grasp IK solution");
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Unable to find PRE-grasp IK solution");
       grasp_candidate->pregrasp_filtered_by_ik_ = true;
       return false;
     }
