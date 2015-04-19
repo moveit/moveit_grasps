@@ -85,22 +85,11 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed", show_filtered_arm_solutions_pregrasp_speed_);
+  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed", 
+                                        show_filtered_arm_solutions_pregrasp_speed_);
 
 
   ROS_INFO_STREAM_NAMED("grasp_filter","GraspFilter Ready.");
-}
-
-std::vector<GraspCandidatePtr> GraspFilter::convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& possible_grasps,
-                                                                        const GraspDataPtr grasp_data)
-{
-  std::vector<GraspCandidatePtr> candidates;
-
-  for (std::size_t i = 0; i < possible_grasps.size(); ++i)
-  {
-    candidates.push_back(GraspCandidatePtr(new GraspCandidate(possible_grasps[i], grasp_data)));
-  }
-  return candidates;
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
@@ -118,29 +107,9 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   if (!filter_pregrasp)
     ROS_WARN_STREAM_NAMED("grasp_filter","Not filtering pre-grasp - GraspCandidate may have bad data");
 
-
   // -----------------------------------------------------------------------------------------------
   // Visualize the cutting planes if desired
-  if (show_cutting_planes_)
-  {
-    for (std::size_t i = 0; i < cutting_planes_.size(); i++)
-    {
-      switch (cutting_planes_[i]->plane_)
-      {
-        case XY:
-          visual_tools_->publishXYPlane(cutting_planes_[i]->pose_);
-          break;
-        case XZ:
-          visual_tools_->publishXZPlane(cutting_planes_[i]->pose_);
-          break;
-        case YZ:
-          visual_tools_->publishYZPlane(cutting_planes_[i]->pose_);
-          break;
-        default:
-          ROS_ERROR_STREAM_NAMED("grasp_filter","Unknown cutting plane type");
-      }
-    }
-  }
+  visualizeCuttingPlanes();
 
   // -----------------------------------------------------------------------------------------------
   // Get the solver timeout from kinematics.yaml
@@ -538,11 +507,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     ROS_WARN_STREAM_NAMED("grasp_filter","Not filtering pregrasp!!");
   }
 
-  if (grasp_candidate->pregrasp_ik_solution_.empty())
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_filter","IK solution found but vector is empty??  v1");
-  }
-
   return true;
 }
 
@@ -732,6 +696,31 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
     ros::Duration(show_filtered_arm_solutions_speed_).sleep();
   }
 
+  return true;
+}
+
+bool GraspFilter::visualizeCuttingPlanes()
+{
+  if (show_cutting_planes_)
+  {
+    for (std::size_t i = 0; i < cutting_planes_.size(); i++)
+    {
+      switch (cutting_planes_[i]->plane_)
+      {
+        case XY:
+          visual_tools_->publishXYPlane(cutting_planes_[i]->pose_);
+          break;
+        case XZ:
+          visual_tools_->publishXZPlane(cutting_planes_[i]->pose_);
+          break;
+        case YZ:
+          visual_tools_->publishYZPlane(cutting_planes_[i]->pose_);
+          break;
+        default:
+          ROS_ERROR_STREAM_NAMED("grasp_filter","Unknown cutting plane type");
+      }
+    }
+  }
   return true;
 }
 

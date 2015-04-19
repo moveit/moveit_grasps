@@ -120,7 +120,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
     geometry_msgs::Pose object_pose;
-    std::vector<moveit_msgs::Grasp> possible_grasps;
+    std::vector<moveit_grasps::GraspCandidatePtr> possible_grasps;
 
     // Loop
     int i = 0;

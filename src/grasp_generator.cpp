@@ -65,7 +65,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
                                               grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
-                                              std::vector<moveit_msgs::Grasp>& possible_grasps)
+                                              std::vector<GraspCandidatePtr>& possible_grasps)
 {
   double finger_depth = grasp_data->finger_to_palm_depth_ - grasp_data->grasp_min_depth_;
   double length_along_a, length_along_b;
@@ -475,7 +475,7 @@ bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u
 }
 
 void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
-                              std::vector<moveit_msgs::Grasp>& possible_grasps, const Eigen::Affine3d& object_pose)
+                              std::vector<GraspCandidatePtr>& possible_grasps, const Eigen::Affine3d& object_pose)
 {
   if (verbose_)
   {
@@ -544,8 +544,7 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   tf::poseEigenToMsg(grasp_pose * grasp_data->grasp_pose_to_eef_pose_, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
-  possible_grasps.push_back(new_grasp);
-  
+  possible_grasps.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data)));
 }
 
 double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
@@ -597,7 +596,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
 
 bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
                                     double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
-                                    std::vector<moveit_msgs::Grasp>& possible_grasps)
+                                    std::vector<GraspCandidatePtr>& possible_grasps)
 {
   double depth;
   double width;
@@ -616,7 +615,7 @@ bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eige
 
 bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
                                     double max_grasp_size, const moveit_grasps::GraspDataPtr grasp_data,
-                                    std::vector<moveit_msgs::Grasp>& possible_grasps)
+                                    std::vector<GraspCandidatePtr>& possible_grasps)
 {
   // Generate grasps over axes that aren't too wide to grip
 
@@ -648,7 +647,7 @@ bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double d
   if (show_prefiltered_grasps_)
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator","Animating all generated (candidate) grasps before filtering");
-    visual_tools_->publishAnimatedGrasps(possible_grasps, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+    visualizeAnimatedGrasps(possible_grasps, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
   }
 
   return true;
@@ -857,5 +856,17 @@ bool GraspGenerator::getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Ei
   return true;
 }
 
+bool GraspGenerator::visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
+                                             const moveit::core::JointModelGroup* ee_jmg, double animation_speed)
+{
+  // Convert the grasp_candidates into a format moveit_visual_tools can use
+  std::vector<moveit_msgs::Grasp> grasps;
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
+  {
+    grasps.push_back(grasp_candidates[i]->grasp_);
+  }
+
+  return visual_tools_->publishAnimatedGrasps(grasps, ee_jmg, show_prefiltered_grasps_speed_);
+}
 
 } // namespace

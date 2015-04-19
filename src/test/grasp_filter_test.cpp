@@ -172,17 +172,13 @@ public:
 
       // Generate set of grasps for one object
       ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
-      std::vector<moveit_msgs::Grasp> possible_grasps;
+      std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
       double max_grasp_size = 0.10; // TODO: verify max object size that can be grasped
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
-                                        grasp_data_, possible_grasps);
+                                        grasp_data_, grasp_candidates);
 
       // add grasps at variable depth
-      //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
-
-      // Convert to the correct type for filtering
-      std::vector<GraspCandidatePtr> grasp_candidates;
-      grasp_candidates = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps, grasp_data_);
+      //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);
 
       // Filter the grasp for only the ones that are reachable
       ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
@@ -235,17 +231,13 @@ public:
 
     // Generate set of grasps for one object
     ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
-    std::vector<moveit_msgs::Grasp> possible_grasps;
+    std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
     double max_grasp_size = 0.10; // TODO: verify max object size that can be grasped
     grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, max_grasp_size,
-                                      grasp_data_, possible_grasps);
+                                      grasp_data_, grasp_candidates);
 
     // add grasps at variable depth
-    //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, possible_grasps);
-
-    // Convert to the correct type for filtering
-    std::vector<GraspCandidatePtr> grasp_candidates;
-    grasp_candidates = grasp_filter_->convertToGraspCandidatePtrs(possible_grasps, grasp_data_);
+    //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);
 
     // Filter the grasp for only the ones that are reachable
     ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");

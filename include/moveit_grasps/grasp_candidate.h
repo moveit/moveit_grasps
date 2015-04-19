@@ -44,7 +44,8 @@
 #include <moveit_msgs/Grasp.h>
 
 // Grasping
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_data.h>
+//#include <moveit_grasps/grasp_generator.h>
 
 // MoveIt
 #include <moveit/robot_state/robot_state.h>

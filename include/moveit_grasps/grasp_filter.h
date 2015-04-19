@@ -73,16 +73,16 @@ enum grasp_parallel_plane{XY, XZ, YZ};
  */
 struct CuttingPlane
 {
-Eigen::Affine3d pose_;
-grasp_parallel_plane plane_;
-int direction_;
+  Eigen::Affine3d pose_;
+  grasp_parallel_plane plane_;
+  int direction_;
 
-CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
-  : pose_(pose)
-  , plane_(plane)
-  , direction_(direction)
-{}
-  };
+  CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
+    : pose_(pose)
+    , plane_(plane)
+    , direction_(direction)
+  {}
+};
 typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
 
 /**
@@ -90,14 +90,14 @@ typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
  */
 struct DesiredGraspOrientation
 {
-Eigen::Affine3d pose_;
-double max_angle_offset_;
+  Eigen::Affine3d pose_;
+  double max_angle_offset_;
 
-DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
-  : pose_(pose)
-  , max_angle_offset_(max_angle_offset)
-{}
-  };
+  DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
+    : pose_(pose)
+    , max_angle_offset_(max_angle_offset)
+  {}
+};
 typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
 
 
@@ -106,45 +106,45 @@ typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
  */
 struct IkThreadStruct
 {
-IkThreadStruct(
-std::vector<GraspCandidatePtr> &grasp_candidates, // the input
-  planning_scene::PlanningScenePtr planning_scene,
-  Eigen::Affine3d &link_transform,
-  std::size_t grasp_id,
-  kinematics::KinematicsBaseConstPtr kin_solver,
-  robot_state::RobotStatePtr robot_state,
-  double timeout,
-  bool filter_pregrasp,
-  bool verbose,
-  std::size_t thread_id)
-  : grasp_candidates_(grasp_candidates),
+  IkThreadStruct(
+                 std::vector<GraspCandidatePtr> &grasp_candidates, // the input
+                 planning_scene::PlanningScenePtr planning_scene,
+                 Eigen::Affine3d &link_transform,
+                 std::size_t grasp_id,
+                 kinematics::KinematicsBaseConstPtr kin_solver,
+                 robot_state::RobotStatePtr robot_state,
+                 double timeout,
+                 bool filter_pregrasp,
+                 bool verbose,
+                 std::size_t thread_id)
+    : grasp_candidates_(grasp_candidates),
     planning_scene_(planning_scene),
     link_transform_(link_transform),
     grasp_id(grasp_id),
     kin_solver_(kin_solver),
-  robot_state_(robot_state),
-  timeout_(timeout),
-  filter_pregrasp_(filter_pregrasp),
-  verbose_(verbose),
-  thread_id_(thread_id)
-{
-}
+    robot_state_(robot_state),
+    timeout_(timeout),
+    filter_pregrasp_(filter_pregrasp),
+    verbose_(verbose),
+    thread_id_(thread_id)
+  {
+  }
   std::vector<GraspCandidatePtr> &grasp_candidates_;
-planning_scene::PlanningScenePtr planning_scene_;
-Eigen::Affine3d link_transform_;
-std::size_t grasp_id;
-kinematics::KinematicsBaseConstPtr kin_solver_;
-robot_state::RobotStatePtr robot_state_;
-const robot_model::JointModelGroup* arm_jmg_;
-double timeout_;
-bool filter_pregrasp_;
-bool verbose_;
-std::size_t thread_id_;
+  planning_scene::PlanningScenePtr planning_scene_;
+  Eigen::Affine3d link_transform_;
+  std::size_t grasp_id;
+  kinematics::KinematicsBaseConstPtr kin_solver_;
+  robot_state::RobotStatePtr robot_state_;
+  const robot_model::JointModelGroup* arm_jmg_;
+  double timeout_;
+  bool filter_pregrasp_;
+  bool verbose_;
+  std::size_t thread_id_;
 
-// Used within processing function
-geometry_msgs::PoseStamped ik_pose_;
-moveit_msgs::MoveItErrorCodes error_code_;
-std::vector<double> ik_seed_state_;
+  // Used within processing function
+  geometry_msgs::PoseStamped ik_pose_;
+  moveit_msgs::MoveItErrorCodes error_code_;
+  std::vector<double> ik_seed_state_;
 };
 typedef boost::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 
@@ -153,17 +153,9 @@ class GraspFilter
 {
 public:
 
-// Constructor
-GraspFilter( robot_state::RobotStatePtr robot_state,
+  // Constructor
+  GraspFilter( robot_state::RobotStatePtr robot_state,
                moveit_visual_tools::MoveItVisualToolsPtr& visual_tools );
-
-/**
- * \brief Convert the ROS message vector into our custom struct for candidate grasps
- * \param vector of grasps generated from a grasp generator
- * \return vector of grasps in this package's proper format
- */
-  std::vector<GraspCandidatePtr> convertToGraspCandidatePtrs(const std::vector<moveit_msgs::Grasp>& grasp_candidates,
-                                                             const GraspDataPtr grasp_data);
 
   /**
    * \brief Return grasps that are kinematically feasible
@@ -233,6 +225,12 @@ GraspFilter( robot_state::RobotStatePtr robot_state,
    * \param direction - on which side of the plane the grasps will be removed
    */
   void addCuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction);
+
+  /**
+   * \brief Show all cutting planes that are currently enables
+   * \return true on success
+   */
+  bool visualizeCuttingPlanes();
 
   /**
    * \brief clear all cutting planes
