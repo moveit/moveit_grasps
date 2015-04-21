@@ -117,12 +117,12 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   // -----------------------------------------------------------------------------------------------
   // Get the solver timeout from kinematics.yaml
   solver_timeout_ = arm_jmg->getDefaultIKTimeout();
-  ROS_DEBUG_STREAM_NAMED("grasp_filter","Grasp filter IK timeout " << solver_timeout_);
+  ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Grasp filter IK timeout " << solver_timeout_);
 
   // -----------------------------------------------------------------------------------------------
   // Choose how many degrees of freedom
   num_variables_ = arm_jmg->getVariableCount();
-  ROS_DEBUG_STREAM_NAMED("grasp_filter","Solver for " << num_variables_ << " degrees of freedom");
+  ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Solver for " << num_variables_ << " degrees of freedom");
 
   // -----------------------------------------------------------------------------------------------
   // Get the end effector joint model group
@@ -317,7 +317,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   // bring the pose to the frame of the IK solver
   const std::string &ik_frame = kin_solvers_[arm_jmg->getName()][0]->getBaseFrame();
   Eigen::Affine3d link_transform;
-  ROS_DEBUG_STREAM_NAMED("grasp_filter","Frame transform from ik_frame: " << ik_frame << " and robot model frame: " << robot_state_->getRobotModel()->getModelFrame());
+  ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Frame transform from ik_frame: " << ik_frame << " and robot model frame: " << robot_state_->getRobotModel()->getModelFrame());
   if (!moveit::core::Transforms::sameFrame(ik_frame, robot_state_->getRobotModel()->getModelFrame()))
   {
     const robot_model::LinkModel *lm = robot_state_->getLinkModel((!ik_frame.empty() && ik_frame[0] == '/') ? ik_frame.substr(1) : ik_frame);
@@ -595,7 +595,8 @@ bool GraspFilter::removeInvalidAndFilter( std::vector<GraspCandidatePtr>& grasp_
       ++it; // was valid, keep
     }
   }
-  ROS_INFO_STREAM_NAMED("grasp_filter","Removed " << original_num_grasps - grasp_candidates.size() << " invalid grasp candidates");
+  ROS_INFO_STREAM_NAMED("grasp_filter","Removed " << original_num_grasps - grasp_candidates.size() << " invalid grasp candidates, " 
+                        << grasp_candidates.size() << " remaining");
 
   // Error Check
   if (grasp_candidates.empty())
