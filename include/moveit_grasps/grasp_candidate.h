@@ -54,6 +54,14 @@
 namespace moveit_grasps
 {
 
+typedef std::vector<std::vector<moveit::core::RobotStatePtr> > GraspTrajectories;
+enum GraspTrajectorySegments
+{
+  APPROACH = 0,
+  LIFT = 1,
+  RETREAT = 2
+};
+
 /**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
  *        This includes the pregrasp and grasp IK solution
@@ -196,6 +204,9 @@ public:
   bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
   bool grasp_filtered_by_orientation_; // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
+
+  // Store pregrasp, grasp, lifted, and retreat trajectories
+  GraspTrajectories segmented_cartesian_traj_;
 }; // class
 
 typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
