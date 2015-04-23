@@ -215,6 +215,7 @@ public:
    * \return the approach direction
    */
   static Eigen::Vector3d getPreGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+  //  static Eigen::Vector3d getPostGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
    * \brief Using an input grasp description, get the pregrasp pose
@@ -223,6 +224,7 @@ public:
    * \return pregrasp pose
    */
   static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+  //static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
    * \brief Get the bounding box for a mesh

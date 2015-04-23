@@ -501,6 +501,10 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.pre_grasp_approach.direction.vector.x = 0;
   new_grasp.pre_grasp_approach.direction.vector.y = 0;
   new_grasp.pre_grasp_approach.direction.vector.z = -1;
+  // new_grasp.pre_grasp_approach.direction.header.frame_id = "world";
+  // new_grasp.pre_grasp_approach.direction.vector.x = 1;
+  // new_grasp.pre_grasp_approach.direction.vector.y = 0;
+  // new_grasp.pre_grasp_approach.direction.vector.z = 0;
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
@@ -511,6 +515,10 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.post_grasp_retreat.direction.vector.x = 0;
   new_grasp.post_grasp_retreat.direction.vector.y = 0;
   new_grasp.post_grasp_retreat.direction.vector.z = 1;
+  // new_grasp.post_grasp_retreat.direction.header.frame_id = "world";
+  // new_grasp.post_grasp_retreat.direction.vector.x = 1;
+  // new_grasp.post_grasp_retreat.direction.vector.y = 0;
+  // new_grasp.post_grasp_retreat.direction.vector.z = 0;
 
   // pre-grasp and grasp postures e.g. hand open close values
   new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
@@ -667,7 +675,7 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp &g
   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
   if( grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link )
   {
-    //ROS_WARN_STREAM_NAMED("grasp_generator","Pre grasp approach direction frame_id is " << ee_parent_link);
+    ROS_WARN_STREAM_NAMED("grasp_generator","Pre grasp approach direction frame_id is " << ee_parent_link);
     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
     pre_grasp_approach_direction_local = grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
   }
@@ -703,6 +711,57 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
 
   return pre_grasp_pose;
 }
+
+// Eigen::Vector3d GraspGenerator::getPostGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
+// {
+//   // Grasp Pose Variables
+//   Eigen::Affine3d grasp_pose_eigen;
+//   tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
+
+//   // The direction of the pre-grasp
+//   Eigen::Vector3d post_grasp_approach_direction = Eigen::Vector3d(grasp.post_grasp_approach.direction.vector.x,    
+//                                                                  grasp.post_grasp_approach.direction.vector.y,
+//                                                                  grasp.post_grasp_approach.direction.vector.z);
+
+//   // Approach direction
+//   Eigen::Vector3d post_grasp_approach_direction_local;
+
+//   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
+//   if( grasp.post_grasp_approach.direction.header.frame_id == ee_parent_link )
+//   {
+//     ROS_WARN_STREAM_NAMED("grasp_generator","Post grasp approach direction frame_id is " << ee_parent_link);
+//     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
+//     post_grasp_approach_direction_local = grasp_pose_eigen.rotation() * post_grasp_approach_direction;
+//   }
+//   else
+//   {
+//     post_grasp_approach_direction_local = post_grasp_approach_direction; //grasp_pose_eigen.rotation() * post_grasp_approach_direction;
+//   }
+  
+//   return post_grasp_approach_direction_local;
+// }
+
+// geometry_msgs::PoseStamped GraspGenerator::getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
+// {
+//   // Grasp Pose Variables
+//   Eigen::Affine3d grasp_pose_eigen;
+//   tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
+
+//   // Get post-grasp pose first
+//   geometry_msgs::PoseStamped post_grasp_pose;
+//   Eigen::Affine3d post_grasp_pose_eigen = grasp_pose_eigen; // Copy original grasp pose to post-grasp pose
+
+//   // Update the grasp matrix usign the new locally-framed approach_direction
+//   post_grasp_pose_eigen.translation() += getPostGraspDirection(grasp, ee_parent_link) * grasp.post_grasp_approach.desired_distance;
+
+//   // Convert eigen post-grasp position back to regular message
+//   tf::poseEigenToMsg(post_grasp_pose_eigen, post_grasp_pose.pose);
+
+//   // Copy original header to new grasp
+//   post_grasp_pose.header = grasp.grasp_pose.header;
+
+//   return post_grasp_pose;
+// }
 
 void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
                                        const rviz_visual_tools::colors &color, double approach_length)
