@@ -484,23 +484,44 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
     ros::Duration(0.01).sleep();
   }
 
+  // The new grasp
+  moveit_msgs::Grasp new_grasp;
+
+  // Approach and retreat
+  // aligned with pose (aligned with grasp pose z-axis
+  // TODO:: Currently the pre/post approach/retreat translations are not robot agnostic.
+  // It currently being loaded with the assumption that z-axis is pointing away from object.
+
   // set pregrasp
   moveit_msgs::GripperTranslation pre_grasp_approach;
-  pre_grasp_approach.direction.header.stamp = ros::Time::now();
-  pre_grasp_approach.desired_distance = grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
-  pre_grasp_approach.min_distance = 0; // NOT IMPLEMENTED
+  new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
+  new_grasp.pre_grasp_approach.desired_distance = grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
+  new_grasp.pre_grasp_approach.min_distance = 0; // NOT IMPLEMENTED
+  new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.pre_grasp_approach.direction.vector.x = 0;
+  new_grasp.pre_grasp_approach.direction.vector.y = 0;
+  new_grasp.pre_grasp_approach.direction.vector.z = -1;
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
-  post_grasp_retreat.direction.header.stamp = ros::Time::now();
-  post_grasp_retreat.desired_distance = grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
-  post_grasp_retreat.min_distance = 0; // NOT IMPLEMENTED
+  new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
+  new_grasp.post_grasp_retreat.desired_distance = grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
+  new_grasp.post_grasp_retreat.min_distance = 0; // NOT IMPLEMENTED
+  new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.post_grasp_retreat.direction.vector.x = 0;
+  new_grasp.post_grasp_retreat.direction.vector.y = 0;
+  new_grasp.post_grasp_retreat.direction.vector.z = 1;
 
+  // pre-grasp and grasp postures e.g. hand open close values
+  new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
+  new_grasp.grasp_posture = grasp_data->grasp_posture_;
+
+  // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
   grasp_pose_msg.header.stamp = ros::Time::now();
   grasp_pose_msg.header.frame_id = grasp_data->base_link_;
 
-  moveit_msgs::Grasp new_grasp;
+  // name the grasp
   static std::size_t grasp_id = 0;
   new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
   grasp_id++;
@@ -513,30 +534,6 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
     visual_tools_->publishAxis(ideal_grasp_pose_);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * new_grasp.grasp_quality);
   }
-
-  // pre-grasp and grasp postures
-  new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
-  new_grasp.grasp_posture = grasp_data->grasp_posture_;
-
-  // Approach and retreat
-  // aligned with pose (aligned with grasp pose z-axis
-  // TODO:: Currently the pre/post approach/retreat are not being used. Either remove or make it robot agnostic.
-  // It currently being loaded with the assumption that z-axis is pointing away from object.
-  Eigen::Vector3d approach_vector;
-  approach_vector = grasp_pose * Eigen::Vector3d::UnitZ();
-  approach_vector.normalize();
-
-  pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
-  pre_grasp_approach.direction.vector.x = 0;
-  pre_grasp_approach.direction.vector.y = 0;
-  pre_grasp_approach.direction.vector.z = -1;
-  new_grasp.pre_grasp_approach = pre_grasp_approach;
-
-  post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
-  post_grasp_retreat.direction.vector.x = 0;
-  post_grasp_retreat.direction.vector.y = 0;
-  post_grasp_retreat.direction.vector.z = 1;
-  new_grasp.post_grasp_retreat = post_grasp_retreat;
 
   // translate and rotate gripper to match standard orientation
   // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
