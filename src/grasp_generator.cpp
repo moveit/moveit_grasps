@@ -675,7 +675,7 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp &g
   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
   if( grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link )
   {
-    ROS_WARN_STREAM_NAMED("grasp_generator","Pre grasp approach direction frame_id is " << ee_parent_link);
+    //ROS_WARN_STREAM_NAMED("grasp_generator","Pre grasp approach direction frame_id is " << ee_parent_link);
     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
     pre_grasp_approach_direction_local = grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
   }
