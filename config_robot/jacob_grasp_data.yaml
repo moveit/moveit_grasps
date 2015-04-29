@@ -42,5 +42,5 @@ gripper:
 
     # grasp approach and retreat parameters
     approach_distance_desired: 0.1 # this is in addition to the finger_to_palm_depth
-    retreat_distance_desired: 0.1 # this is in addition to the finger_to_palm_depth
+    retreat_distance_desired: 0.3 # this is in addition to the finger_to_palm_depth
     lift_distance_desired: 0.03
