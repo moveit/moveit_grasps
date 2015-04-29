@@ -74,7 +74,8 @@ public:
 
       ROS_DEBUG_STREAM_NAMED("bbox","getting bounding box...");
 
-      grasp_generator_->getBoundingBoxFromMesh(mesh_msg, pose_oobb, depth, width, height); // this introduces a huge delay
+      ROS_WARN_STREAM_NAMED("temp","TODO bounding box");
+      //grasp_generator_->getBoundingBoxFromMesh(mesh_msg, pose_oobb, depth, width, height); // this introduces a huge delay
       visual_tools_->publishMesh(mesh_pose, "file://" + mesh_path.string());
 
       std::cin.get();

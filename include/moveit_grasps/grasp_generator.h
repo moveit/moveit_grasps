@@ -227,12 +227,6 @@ public:
   //static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
-   * \brief Get the bounding box for a mesh
-   */
-  static bool getBoundingBoxFromMesh(const shape_msgs::Mesh& mesh_msg, Eigen::Affine3d& cuboid_pose, 
-                                     double& depth, double& width, double& height);
-                                            
-  /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
    * \param grasp - the grasp to show
    * \param arm - the planning group of the arm we want to display
