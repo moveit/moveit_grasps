@@ -41,8 +41,6 @@
 // Parameter loading
 #include <rviz_visual_tools/ros_param_utilities.h>
 
-#include <bounding_box/bounding_box.h>
-
 namespace moveit_grasps
 {
 
@@ -609,7 +607,7 @@ bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eige
   double width;
   double height;
   Eigen::Affine3d mesh_pose;  
-  if (!bounding_box::BoundingBox::getBoundingBoxFromMesh(mesh_msg, mesh_pose, depth, width, height))
+  if (!bounding_box_.getBodyAlignedBoundingBox(mesh_msg, mesh_pose, depth, width, height))
   {
     ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to get bounding box from mesh");
     return false;

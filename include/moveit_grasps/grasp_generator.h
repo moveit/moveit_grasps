@@ -67,6 +67,9 @@
 // moveit_grasps
 #include <moveit_grasps/grasp_candidate.h>
 
+// bounding_box
+#include <bounding_box/bounding_box.h>
+
 // C++
 #include <cstdlib>
 #include <string>
@@ -297,6 +300,8 @@ private:
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
+
+  bounding_box::BoundingBox bounding_box_;
 
 }; // end of class
 
