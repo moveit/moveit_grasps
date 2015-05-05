@@ -70,9 +70,10 @@ class GraspCandidate
 {
 public:
 
-  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data)
+  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose)
     : grasp_(grasp)
     , grasp_data_(grasp_data)
+    , cuboid_pose_(cuboid_pose)
     , grasp_filtered_by_ik_(false)
     , grasp_filtered_by_cutting_plane_(false)
     , grasp_filtered_by_orientation_(false)
@@ -204,6 +205,8 @@ public:
   bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
   bool grasp_filtered_by_orientation_; // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
+  // TODO possibly remove
+  Eigen::Affine3d cuboid_pose_; // pose of original object to grasp 
 
   // Store pregrasp, grasp, lifted, and retreat trajectories
   GraspTrajectories segmented_cartesian_traj_;

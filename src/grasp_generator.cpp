@@ -63,7 +63,8 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   ROS_INFO_STREAM_NAMED("grasps","GraspGenerator Ready.");
 }
 
-bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
+bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose,
+                                              double depth, double width, double height, 
                                               grasp_axis_t axis, const moveit_grasps::GraspDataPtr grasp_data,
                                               std::vector<GraspCandidatePtr>& grasp_candidates)
 {
@@ -549,7 +550,7 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   tf::poseEigenToMsg(grasp_pose * grasp_data->grasp_pose_to_eef_pose_, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
-  grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data)));
+  grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 }
 
 double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
