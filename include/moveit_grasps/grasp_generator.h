@@ -103,7 +103,7 @@ public:
   /**
    * \brief Create possible grasp positions around a cuboid 
    * \param mesh_msg - model of object to grasp from perception
-   * \param cuboid_pose pose of cuboid 
+   * \param cuboid_pose - centroid of object to grasp in world frame
    * \param grasp_data data describing end effector
    * \param grasp_candidates possible grasps generated
    * \return true if successful
@@ -114,7 +114,7 @@ public:
 
   /**
    * \brief Create possible grasp positions around a cuboid 
-   * \param cuboid_pose pose of cuboid 
+   * \param cuboid_pose - centroid of object to grasp in world frame
    * \param depth length of cuboid along local x-axis
    * \param width length of cuboid along local y-axis
    * \param height length of cuboid along local z-axis
@@ -128,7 +128,7 @@ public:
   
   /**
    * \brief Create grasp positions around one axis of a cuboid
-   * \param cuboid_pose pose of cuboid 
+   * \param cuboid_pose - centroid of object to grasp in world frame
    * \param depth length of cuboid along local x-axis
    * \param width length of cuboid along local y-axis
    * \param height length of cuboid along local z-axis
@@ -172,7 +172,7 @@ public:
 
   /**
    * \brief helper function for determining if the grasp will intersect the cuboid
-   * \param cuboid_pose - pose of cuboid
+   * \param cuboid_pose - centroid of object to grasp in world frame
    * \param depth - size of cuboid along x axis
    * \param width - size of cuboid along y axis
    * \param height - size of cuboid along z axis

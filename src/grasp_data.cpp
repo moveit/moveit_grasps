@@ -51,6 +51,9 @@
 // Parameter loading
 #include <rviz_visual_tools/ros_param_utilities.h>
 
+// Pose conversion
+#include <rviz_visual_tools/rviz_visual_tools.h>
+
 namespace moveit_grasps
 {
 
@@ -116,15 +119,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   // Orientation
   ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
-
-  Eigen::AngleAxisd rollAngle (grasp_pose_to_eef_transform[3], Eigen::Vector3d::UnitZ());
-  Eigen::AngleAxisd pitchAngle(grasp_pose_to_eef_transform[4], Eigen::Vector3d::UnitX());
-  Eigen::AngleAxisd yawAngle  (grasp_pose_to_eef_transform[5], Eigen::Vector3d::UnitY());
-  Eigen::Quaternion<double> quat = rollAngle * yawAngle * pitchAngle;
-
-  grasp_pose_to_eef_pose_ = Eigen::Translation3d(grasp_pose_to_eef_transform[0],
-                                                 grasp_pose_to_eef_transform[1],
-                                                 grasp_pose_to_eef_transform[2]) * quat;
+  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertXYZRPY(grasp_pose_to_eef_transform);
 
   // -------------------------------
   // Create pre-grasp posture if specified

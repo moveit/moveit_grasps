@@ -41,7 +41,7 @@ gripper:
     angle_resolution : 15
 
     # grasp approach and retreat parameters
-    approach_distance_desired: 0.1 # this is in addition to the finger_to_palm_depth
+    approach_distance_desired: 0.01 # this is in addition to the finger_to_palm_depth
     retreat_distance_desired: 0.3 # this is in addition to the finger_to_palm_depth
-    lift_distance_desired: 0.03
+    lift_distance_desired: 0.03 # this is really just MIN LIFT DISTANCE
     grasp_padding_on_approach: 0.005 # a 5mm padding on the finger opening on approach to object.
