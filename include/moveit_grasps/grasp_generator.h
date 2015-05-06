@@ -202,7 +202,7 @@ public:
    * \return nothing
    */
   void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                const Eigen::Affine3d& object_pose);
+                const Eigen::Affine3d& object_pose, double object_width);
 
   /**
    * \brief Score the generated grasp poses
