@@ -531,7 +531,7 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.grasp_posture = grasp_data->grasp_posture_;
 
   // set minimum opening of fingers for pre grasp approach
-  new_grasp.min_finger_open_on_approach = object_width;
+  new_grasp.min_finger_open_on_approach = object_width + 2 * grasp_data->min_finger_open_on_approach_;
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
