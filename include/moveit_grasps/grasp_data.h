@@ -129,6 +129,7 @@ public:
   double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
   double retreat_distance_desired_; // this is in addition to the finger_to_palm_depth
   double lift_distance_desired_;
+  double grasp_padding_on_approach_;
 
   // Duplicate end effector data copied from RobotModel
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"

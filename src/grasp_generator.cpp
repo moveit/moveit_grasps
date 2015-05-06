@@ -71,6 +71,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   double length_along_a, length_along_b;
   double delta_a, delta_b, delta_f;
   double alpha_x, alpha_y, alpha_z;
+  double object_width;
   std::vector<Eigen::Affine3d> grasp_poses;
 
   Eigen::Affine3d grasp_pose = cuboid_pose;
@@ -86,6 +87,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
       alpha_x = -M_PI / 2.0;
       alpha_y = 0;
       alpha_z = -M_PI / 2.0;
+      object_width = depth;
       break;
     case Y_AXIS:
       length_along_a = depth;
@@ -95,6 +97,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
       alpha_x = 0;
       alpha_y = M_PI / 2.0;
       alpha_z = M_PI;
+      object_width = width;
       break;
     case Z_AXIS:
       length_along_a = depth;
@@ -104,6 +107,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
       alpha_x = M_PI / 2.0;
       alpha_y = M_PI / 2.0;
       alpha_z = 0;
+      object_width = height;
       break;
     default:
       ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","axis not defined properly");
@@ -285,7 +289,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   /***** add all poses as possible grasps *****/
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
   {
-    addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose);
+    addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose, object_width);
   }
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","created " << grasp_poses.size() << " grasp poses");
 
@@ -475,7 +479,8 @@ bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u
 }
 
 void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
-                              std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose)
+                              std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose, 
+                              double object_width)
 {
   if (verbose_)
   {
@@ -523,6 +528,9 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // pre-grasp and grasp postures e.g. hand open close values
   new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
   new_grasp.grasp_posture = grasp_data->grasp_posture_;
+
+  // set minimum opening of fingers for pre grasp approach
+  new_grasp.min_finger_open_on_approach = object_width;
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;

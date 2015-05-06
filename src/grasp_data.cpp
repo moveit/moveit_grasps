@@ -109,7 +109,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_posture", grasp_posture);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
-
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
 
   // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
@@ -208,6 +208,7 @@ void GraspData::print()
   std::cout << "grasp_depth_: " << grasp_depth_ << std::endl;
   std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
   std::cout << "finger_to_palm_depth_: " << finger_to_palm_depth_ << std::endl;
+  std::cout << "grasp_padding_on_approach_: " << grasp_padding_on_approach_ << std::endl;
 }
 
 } // namespace
