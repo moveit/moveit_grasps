@@ -608,24 +608,24 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
   return ( score_sum / (double)num_tests );
 }
 
-bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
-                                    const moveit_grasps::GraspDataPtr grasp_data,
-                                    std::vector<GraspCandidatePtr>& grasp_candidates)
-{
-  double depth;
-  double width;
-  double height;
-  Eigen::Affine3d mesh_pose;  
-  if (!bounding_box_.getBodyAlignedBoundingBox(mesh_msg, mesh_pose, depth, width, height))
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to get bounding box from mesh");
-    return false;
-  }
+// bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
+//                                     const moveit_grasps::GraspDataPtr grasp_data,
+//                                     std::vector<GraspCandidatePtr>& grasp_candidates)
+// {
+//   double depth;
+//   double width;
+//   double height;
+//   Eigen::Affine3d mesh_pose;  
+//   if (!bounding_box_.getBodyAlignedBoundingBox(mesh_msg, mesh_pose, depth, width, height))
+//   {
+//     ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to get bounding box from mesh");
+//     return false;
+//   }
 
-  // TODO - reconcile the new mesh_pose with the input cuboid_pose
+//   // TODO - reconcile the new mesh_pose with the input cuboid_pose
 
-  return generateGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates);
-}
+//   return generateGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates);
+// }
 
 bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
                                     const moveit_grasps::GraspDataPtr grasp_data,

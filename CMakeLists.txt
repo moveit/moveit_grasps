@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   moveit_msgs
   cmake_modules
-  bounding_box
 )
 
 find_package(Eigen REQUIRED)
@@ -54,7 +53,6 @@ catkin_package(
     std_msgs
     message_runtime
     moveit_visual_tools
-    bounding_box
   INCLUDE_DIRS include
 )
 

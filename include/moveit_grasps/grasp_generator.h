@@ -68,7 +68,7 @@
 #include <moveit_grasps/grasp_candidate.h>
 
 // bounding_box
-#include <bounding_box/bounding_box.h>
+//#include <bounding_box/bounding_box.h>
 
 // C++
 #include <cstdlib>
@@ -108,8 +108,8 @@ public:
    * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
-  bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
-                            const moveit_grasps::GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+  //bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
+  //                          const moveit_grasps::GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
                             
 
   /**
@@ -301,7 +301,7 @@ private:
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
 
-  bounding_box::BoundingBox bounding_box_;
+  //bounding_box::BoundingBox bounding_box_;
 
 }; // end of class
 
