@@ -45,3 +45,6 @@ gripper:
     retreat_distance_desired: 0.3 # this is in addition to the finger_to_palm_depth
     lift_distance_desired: 0.03 # this is really just MIN LIFT DISTANCE
     grasp_padding_on_approach: 0.005 # minimum padding on each side of the object on approach
+
+    # Convert distance between fingers to joint values with this ratio
+    finger_distance_to_joint_ratio: 1

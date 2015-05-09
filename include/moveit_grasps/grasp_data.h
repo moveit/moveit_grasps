@@ -131,6 +131,9 @@ public:
   double lift_distance_desired_;
   double grasp_padding_on_approach_;
 
+  // Ratio for finger distance apart and joint values
+  double finger_distance_to_joint_ratio_;
+
   // Duplicate end effector data copied from RobotModel
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"
 }; // class

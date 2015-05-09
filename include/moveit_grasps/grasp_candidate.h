@@ -139,9 +139,8 @@ public:
   }
 
   moveit_msgs::Grasp grasp_;
-  /*
-    CONTENTS OF moveit_msgs::GRASP
-
+  /*# Contents of moveit_msgs::Grasp for reference
+    
     # A name for this grasp
     string id
 
@@ -196,6 +195,9 @@ public:
     # an optional list of obstacles that we have semantic information about
     # and that can be touched/pushed/moved in the course of grasping
     string[] allowed_touch_objects
+
+    # The minimum opening that the fingers can have as it approaches an object
+    float64 min_finger_open_on_approach
   */
 
   const GraspDataPtr grasp_data_;

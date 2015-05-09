@@ -38,7 +38,6 @@
 
 #include <moveit_grasps/grasp_generator.h>
 
-// Parameter loading
 #include <rviz_visual_tools/ros_param_utilities.h>
 
 namespace moveit_grasps
@@ -608,25 +607,6 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
   return ( score_sum / (double)num_tests );
 }
 
-// bool GraspGenerator::generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
-//                                     const moveit_grasps::GraspDataPtr grasp_data,
-//                                     std::vector<GraspCandidatePtr>& grasp_candidates)
-// {
-//   double depth;
-//   double width;
-//   double height;
-//   Eigen::Affine3d mesh_pose;  
-//   if (!bounding_box_.getBodyAlignedBoundingBox(mesh_msg, mesh_pose, depth, width, height))
-//   {
-//     ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to get bounding box from mesh");
-//     return false;
-//   }
-
-//   // TODO - reconcile the new mesh_pose with the input cuboid_pose
-
-//   return generateGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates);
-// }
-
 bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
                                     const moveit_grasps::GraspDataPtr grasp_data,
                                     std::vector<GraspCandidatePtr>& grasp_candidates)
@@ -720,57 +700,6 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
 
   return pre_grasp_pose;
 }
-
-// Eigen::Vector3d GraspGenerator::getPostGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
-// {
-//   // Grasp Pose Variables
-//   Eigen::Affine3d grasp_pose_eigen;
-//   tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
-
-//   // The direction of the pre-grasp
-//   Eigen::Vector3d post_grasp_approach_direction = Eigen::Vector3d(grasp.post_grasp_approach.direction.vector.x,    
-//                                                                  grasp.post_grasp_approach.direction.vector.y,
-//                                                                  grasp.post_grasp_approach.direction.vector.z);
-
-//   // Approach direction
-//   Eigen::Vector3d post_grasp_approach_direction_local;
-
-//   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
-//   if( grasp.post_grasp_approach.direction.header.frame_id == ee_parent_link )
-//   {
-//     ROS_WARN_STREAM_NAMED("grasp_generator","Post grasp approach direction frame_id is " << ee_parent_link);
-//     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
-//     post_grasp_approach_direction_local = grasp_pose_eigen.rotation() * post_grasp_approach_direction;
-//   }
-//   else
-//   {
-//     post_grasp_approach_direction_local = post_grasp_approach_direction; //grasp_pose_eigen.rotation() * post_grasp_approach_direction;
-//   }
-  
-//   return post_grasp_approach_direction_local;
-// }
-
-// geometry_msgs::PoseStamped GraspGenerator::getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link)
-// {
-//   // Grasp Pose Variables
-//   Eigen::Affine3d grasp_pose_eigen;
-//   tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
-
-//   // Get post-grasp pose first
-//   geometry_msgs::PoseStamped post_grasp_pose;
-//   Eigen::Affine3d post_grasp_pose_eigen = grasp_pose_eigen; // Copy original grasp pose to post-grasp pose
-
-//   // Update the grasp matrix usign the new locally-framed approach_direction
-//   post_grasp_pose_eigen.translation() += getPostGraspDirection(grasp, ee_parent_link) * grasp.post_grasp_approach.desired_distance;
-
-//   // Convert eigen post-grasp position back to regular message
-//   tf::poseEigenToMsg(post_grasp_pose_eigen, post_grasp_pose.pose);
-
-//   // Copy original header to new grasp
-//   post_grasp_pose.header = grasp.grasp_pose.header;
-
-//   return post_grasp_pose;
-// }
 
 void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
                                        const rviz_visual_tools::colors &color, double approach_length)
