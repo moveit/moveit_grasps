@@ -525,13 +525,6 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // new_grasp.post_grasp_retreat.direction.vector.y = 0;
   // new_grasp.post_grasp_retreat.direction.vector.z = 0;
 
-  // pre-grasp and grasp postures e.g. hand open close values
-  new_grasp.pre_grasp_posture = grasp_data->pre_grasp_posture_;
-  new_grasp.grasp_posture = grasp_data->grasp_posture_;
-
-  // set minimum opening of fingers for pre grasp approach
-  new_grasp.min_finger_open_on_approach = object_width + 2 * grasp_data->grasp_padding_on_approach_;
-
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
   grasp_pose_msg.header.stamp = ros::Time::now();
@@ -557,6 +550,29 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   tf::poseEigenToMsg(grasp_pose * grasp_data->grasp_pose_to_eef_pose_, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
+
+  // set grasp postures e.g. hand closed
+  new_grasp.grasp_posture = grasp_data->grasp_posture_;
+
+  // set minimum opening of fingers for pre grasp approach
+  double min_finger_open_on_approach = object_width + 2 * grasp_data->grasp_padding_on_approach_;
+  new_grasp.min_finger_open_on_approach = min_finger_open_on_approach;
+  double percent_open;
+
+  std::cout << std::endl;std::cout << std::endl;std::cout << std::endl;
+  // Create grasp with widest fingers possible ----------------------------------------------
+  percent_open = 1.0;
+  grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);
+  grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+
+  // Create grasp with middle width fingers -------------------------------------------------
+  percent_open = 0.5;
+  grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);
+  grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+
+  // Create grasp with fingers at minimum width ---------------------------------------------
+  percent_open = 0.0;
+  grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 }
 

@@ -98,6 +98,26 @@ public:
    * \return true on success
    */
   bool setRobotState( robot_state::RobotStatePtr &robot_state, const trajectory_msgs::JointTrajectory &posture );
+
+  /**
+   * \brief Set the width between fingers as a percentage of object size and max finger width
+   * \return true on success
+   */
+  bool setGraspWidth(const double& percent_open, const double& min_finger_width, 
+                     trajectory_msgs::JointTrajectory& grasp_posture);
+
+  /**
+   * \brief Convert width between fingers to joint positions
+   * \return true on success
+   */
+  bool fingerWidthToGraspPosture(const double& distance_btw_fingers, trajectory_msgs::JointTrajectory& grasp_posture);
+                                 
+  /**
+   * \brief Convert joint positions to full grasp posture
+   * \return true on success
+   */
+  bool jointPositionsToGraspPosture(std::vector<double> joint_positions,
+                                    trajectory_msgs::JointTrajectory &grasp_posture);
   
   /**
    * \brief Debug data to console
@@ -132,7 +152,8 @@ public:
   double grasp_padding_on_approach_;
 
   // Ratio for finger distance apart and joint values
-  double finger_distance_to_joint_ratio_;
+  double max_finger_width_;
+  double min_finger_width_;
 
   // Duplicate end effector data copied from RobotModel
   const robot_model::LinkModel* parent_link_; // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link"

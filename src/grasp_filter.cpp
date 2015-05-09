@@ -442,7 +442,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   // Helper pointer
   GraspCandidatePtr& grasp_candidate = ik_thread_struct->grasp_candidates_[ik_thread_struct->grasp_id];
 
-
   // Get pose
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
@@ -479,8 +478,9 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     = boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
                   collision_verbose_ || ik_thread_struct->verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
-  // Set gripper position (how open the fingers are) to OPEN
-  grasp_candidate->grasp_data_->setRobotStatePreGrasp(ik_thread_struct->robot_state_);
+  // Set gripper position (how open the fingers are) to the custom open position
+  grasp_candidate->grasp_data_->setRobotState(ik_thread_struct->robot_state_, 
+                                              grasp_candidate->grasp_.pre_grasp_posture);
 
   // Solve IK Problem
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_,

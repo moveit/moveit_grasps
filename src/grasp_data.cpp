@@ -113,7 +113,8 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_posture", grasp_posture);
   rviz_visual_tools::getDoubleParameters(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
   rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
-  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "finger_distance_to_joint_ratio", finger_distance_to_joint_ratio_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "max_finger_width", max_finger_width_);
+  rviz_visual_tools::getDoubleParameter(parent_name, child_nh, "min_finger_width", min_finger_width_);
 
   // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
@@ -193,6 +194,118 @@ bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state, const tr
   return true;
 }
 
+bool GraspData::setGraspWidth(const double& percent_open, const double& min_finger_width, 
+                              trajectory_msgs::JointTrajectory& grasp_posture)
+{
+  ROS_INFO_STREAM_NAMED("grasp_data","----------------------------------------");
+
+  if (percent_open < 0 || percent_open > 1)
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data","Invalid percentage passed in " << percent_open);
+    return false;
+  }
+
+  // Ensure min_finger_width is not less than actual min finger width
+  double min_finger_width_adjusted = std::max(min_finger_width, min_finger_width_);
+
+  // Max width = max_finger_width_
+  // Min width = min_finger_width_adjusted
+  double distance_btw_fingers = min_finger_width_adjusted + (max_finger_width_ - min_finger_width_adjusted) * percent_open;
+  return fingerWidthToGraspPosture(distance_btw_fingers, grasp_posture);
+}
+
+bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers, 
+                                         trajectory_msgs::JointTrajectory& grasp_posture)
+{
+  ROS_DEBUG_STREAM_NAMED("grasp_data","Setting grasp posture to have distance_between_fingers of "
+                         << distance_btw_fingers);
+
+  // Error check
+  if (distance_btw_fingers > max_finger_width_ || distance_btw_fingers < min_finger_width_)
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data","Requested " << distance_btw_fingers << " is beyond limits of "
+                           << min_finger_width_ << "," << max_finger_width_);
+    return false;
+  }
+
+  // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
+  static const double SLOPE = -6.881728199; //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
+  static const double INTERCEPT = 0.7097604907; //0.7097604907; //10.36703297;
+  double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
+
+  ROS_DEBUG_STREAM_NAMED("grasp_data","Converted to joint position " << joint_position);
+
+  std::vector<double> joint_positions;
+  joint_positions.resize(6);
+  joint_positions[0] = joint_position;
+  joint_positions[1] = joint_position;
+
+  // JACO SPECIFIC
+  static const double FINGER_3_OFFSET = -0.1; // open more than the others
+
+  // TODO get these values from joint_model, jaco specific
+  static const double MIN_JOINT_POSITION = 0.0;
+  static const double MAX_JOINT_POSITION = 0.742;
+
+  // special treatment - this joint should be opened more than the others
+  joint_positions[2] = joint_position + FINGER_3_OFFSET;
+  if (joint_positions[2] < MIN_JOINT_POSITION)
+  {
+    joint_positions[2] = MIN_JOINT_POSITION;
+  }
+  if (joint_positions[2] > MAX_JOINT_POSITION)
+  {    
+    joint_positions[2] = MAX_JOINT_POSITION;
+  }
+
+  joint_positions[3] = 0;
+  joint_positions[4] = 0;
+  joint_positions[5] = 0;
+
+  return jointPositionsToGraspPosture(joint_positions, grasp_posture);
+}
+
+bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions,
+                                             trajectory_msgs::JointTrajectory &grasp_posture)
+{
+  //ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
+  //                       << joint_positions.size());
+
+  // TODO get these values from joint_model, jaco specific
+  static const double MIN_JOINT_POSITION = 0.0;
+  static const double MAX_JOINT_POSITION = 0.742;
+
+  for (std::size_t i = 0; i < joint_positions.size(); ++i)
+  {
+    // Error check
+    if (joint_positions[i] > MAX_JOINT_POSITION || joint_positions[i] < MIN_JOINT_POSITION)
+    {
+      ROS_ERROR_STREAM_NAMED("grasp_data","Requested joint " << i << " with value " << joint_positions[i] 
+                             << " is beyond limits of "
+                             << MIN_JOINT_POSITION << ", " << MAX_JOINT_POSITION);
+      return false;
+    }
+  }
+
+  // Get default grasp posture
+  grasp_posture = grasp_posture_;
+
+  // Error check
+  if (joint_positions.size() != grasp_posture.points.front().positions.size())
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data","Not enough finger joints passed in: " << joint_positions.size() 
+                           << " positions but expect " << grasp_posture.points.front().positions.size());
+    return false;
+  }
+
+  // Set joint positions
+  grasp_posture.points.front().positions = joint_positions;
+
+  //std::cout << "grasp_posture:\n " << grasp_posture << std::endl;
+
+  return true;
+}
+
 void GraspData::print()
 {
   ROS_WARN_STREAM_NAMED("grasp_data","Debug Grasp Data variable values:");
@@ -205,7 +318,8 @@ void GraspData::print()
   std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
   std::cout << "finger_to_palm_depth_: " << finger_to_palm_depth_ << std::endl;
   std::cout << "grasp_padding_on_approach_: " << grasp_padding_on_approach_ << std::endl;
-  std::cout << "finger_distance_to_joint_ratio_: " << finger_distance_to_joint_ratio_ << std::endl;
+  std::cout << "max_finger_width_: " << max_finger_width_ << std::endl;
+  std::cout << "min_finger_width_: " << min_finger_width_ << std::endl;
 }
 
 } // namespace
