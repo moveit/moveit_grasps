@@ -14,7 +14,7 @@ gripper:
     #close position
     #grasp_posture : [0.697, 0.697, 0.697, 0, 0, 0]
     #partially close position
-    grasp_posture : [0.6, 0.6, 0.6, 0, 0, 0]
+    grasp_posture : [0.65, 0.65, 0.65, 0, 0, 0]
 
     grasp_time_from_start : 4.0
 
