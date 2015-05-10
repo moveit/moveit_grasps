@@ -45,7 +45,6 @@
 
 // Grasping
 #include <moveit_grasps/grasp_data.h>
-//#include <moveit_grasps/grasp_generator.h>
 
 // MoveIt
 #include <moveit/robot_state/robot_state.h>
@@ -215,16 +214,6 @@ public:
 }; // class
 
 typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
-
-/**
- * \brief Used for sorting an array of CandidateGrasps
- * \return true if A is less than B
- */
-bool compareGraspScores (GraspCandidatePtr grasp_a, GraspCandidatePtr grasp_b)
-{
-  // Determine if A or B has higher quality
-  return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
-}
 
 } // namespace
 

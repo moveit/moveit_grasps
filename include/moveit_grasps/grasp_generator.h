@@ -32,8 +32,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-// Author: Dave Coleman
-// Desc:   Generates grasps for a cube
+/* Author: Dave Coleman <dave@dav.ee>, Andy McEvoy
+   Desc:   Generates geometric grasps for cuboids and blocks, not using physics or contact wrenches
+*/
 
 #ifndef MOVEIT_GRASPS__GRASP_GENERATOR_H_
 #define MOVEIT_GRASPS__GRASP_GENERATOR_H_

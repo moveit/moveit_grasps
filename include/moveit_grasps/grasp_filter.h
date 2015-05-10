@@ -170,7 +170,6 @@ public:
                     const robot_model::JointModelGroup* arm_jmg,
                     const moveit::core::RobotStatePtr seed_state,
                     bool filter_pregrasp = false,
-                    bool verbose = false,
                     bool verbose_if_failed = true);
 
   /**
@@ -277,6 +276,23 @@ public:
    */
   bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
 
+  /**
+   * \brief Add a cutting plane filter for a shelf bin
+   * \return true on success
+   */
+  bool addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, const Eigen::Affine3d& bin_to_product,
+                              const double& bin_width, const double& bin_height);
+
+  /**
+   * \brief Used for sorting an array of CandidateGrasps
+   * \return true if A is less than B
+   */
+  static bool compareGraspScores(GraspCandidatePtr grasp_a, GraspCandidatePtr grasp_b)
+  {
+    // Determine if A or B has higher quality
+    return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
+  }
+
 private:
 
   // Allow a writeable robot state
@@ -320,12 +336,5 @@ typedef boost::shared_ptr<GraspFilter> GraspFilterPtr;
 typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
 } // namespace
-
-namespace
-{
-bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose, double verbose_speed,
-                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *state,
-                       const robot_state::JointModelGroup *group, const double *ik_solution);
-}
 
 #endif

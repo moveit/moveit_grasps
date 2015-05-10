@@ -36,7 +36,11 @@
    Desc:   Filters grasps based on kinematic feasibility and collision
 */
 
+// moveit_grasps
 #include <moveit_grasps/grasp_filter.h>
+#include <moveit_grasps/state_validity_callback.h>
+
+// moveit
 #include <moveit/transforms/transforms.h>
 #include <moveit/collision_detection/collision_tools.h>
 
@@ -86,7 +90,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
   rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed", 
+  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed",
                                         show_filtered_arm_solutions_pregrasp_speed_);
 
 
@@ -95,11 +99,13 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const robot_model::JointModelGroup* arm_jmg, 
+                               const robot_model::JointModelGroup* arm_jmg,
                                const moveit::core::RobotStatePtr seed_state,
                                bool filter_pregrasp,
-                               bool verbose, bool verbose_if_failed)
+                               bool verbose_if_failed)
 {
+  bool verbose = false;
+
   // -----------------------------------------------------------------------------------------------
   // Error check
   if( grasp_candidates.empty() )
@@ -150,7 +156,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
       remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
     }
     else
-      ROS_INFO_STREAM_NAMED("grasp_filter","NOT re-running in verbose mode");    
+      ROS_INFO_STREAM_NAMED("grasp_filter","NOT re-running in verbose mode");
   }
 
   // Visualize valid grasps as arrows with cartesian path as well
@@ -404,7 +410,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
       grasp_filtered_by_ik +
       grasp_filtered_by_cutting_plane +
       grasp_filtered_by_orientation +
-      pregrasp_filtered_by_ik != grasp_candidates.size())      
+      pregrasp_filtered_by_ik != grasp_candidates.size())
     ROS_ERROR_STREAM_NAMED("grasp_filter","Logged filter reasons do not add up to total number of grasps. Internal error.");
 
   // End Benchmark time
@@ -479,7 +485,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
                   collision_verbose_ || ik_thread_struct->verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Set gripper position (how open the fingers are) to the custom open position
-  grasp_candidate->grasp_data_->setRobotState(ik_thread_struct->robot_state_, 
+  grasp_candidate->grasp_data_->setRobotState(ik_thread_struct->robot_state_,
                                               grasp_candidate->grasp_.pre_grasp_posture);
 
   // Solve IK Problem
@@ -540,11 +546,11 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
                                  grasp_candidate->grasp_data_->arm_jmg_, constraint_fn, _1, _2, _3);
 
   // Test it with IK
-  ik_thread_struct->kin_solver_->searchPositionIK(ik_thread_struct->ik_pose_.pose, 
-                                                  ik_thread_struct->ik_seed_state_, 
-                                                  ik_thread_struct->timeout_, 
+  ik_thread_struct->kin_solver_->searchPositionIK(ik_thread_struct->ik_pose_.pose,
+                                                  ik_thread_struct->ik_seed_state_,
+                                                  ik_thread_struct->timeout_,
                                                   ik_solution,
-                                                  ik_callback_fn, 
+                                                  ik_callback_fn,
                                                   ik_thread_struct->error_code_);
 
   // Results
@@ -595,7 +601,7 @@ bool GraspFilter::removeInvalidAndFilter( std::vector<GraspCandidatePtr>& grasp_
       ++it; // was valid, keep
     }
   }
-  ROS_INFO_STREAM_NAMED("grasp_filter","Removed " << original_num_grasps - grasp_candidates.size() << " invalid grasp candidates, " 
+  ROS_INFO_STREAM_NAMED("grasp_filter","Removed " << original_num_grasps - grasp_candidates.size() << " invalid grasp candidates, "
                         << grasp_candidates.size() << " remaining");
 
   // Error Check
@@ -745,35 +751,35 @@ void GraspFilter::clearDesiredGraspOrientations()
   desired_grasp_orientations_.clear();
 }
 
+bool GraspFilter::addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, const Eigen::Affine3d& bin_to_product,
+                                         const double& bin_width, const double& bin_height)
+{
+  // Add grasp filters
+  clearCuttingPlanes();
+  clearDesiredGraspOrientations();
+
+  // Bottom of bin
+  addCuttingPlane(world_to_bin, XY, -1);
+
+  // Right wall of bin
+  addCuttingPlane(world_to_bin, XZ, -1);
+
+  // Top of bin
+  Eigen::Affine3d world_to_bin_top = world_to_bin;
+  world_to_bin_top.translation() += Eigen::Vector3d(0, bin_width, bin_height);
+  addCuttingPlane(world_to_bin_top, XY, 1);
+
+  // Left wall of bin
+  addCuttingPlane(world_to_bin, XZ, 1);
+
+  // Back half of product
+  Eigen::Affine3d world_to_bin_back = world_to_bin;
+  world_to_bin_back.translation() += Eigen::Vector3d(bin_to_product.translation().x(),
+                                                    bin_width / 2.0, bin_height / 2.0);
+
+  addCuttingPlane(world_to_bin, YZ, 1);
+  return true;
+}
+
 } // namespace
 
-namespace
-{
-bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose, double verbose_speed,
-                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *robot_state,
-                       const robot_state::JointModelGroup *group, const double *ik_solution)
-{
-  robot_state->setJointGroupPositions(group, ik_solution);
-  robot_state->update();
-
-  if (!planning_scene)
-  {
-    ROS_ERROR_STREAM_NAMED("manipulation","No planning scene provided");
-    return false;
-  }
-  if (!planning_scene->isStateColliding(*robot_state, group->getName()))
-    return true; // not in collision
-
-  // Display more info about the collision
-  if (verbose)
-  {
-    visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
-    planning_scene->isStateColliding(*robot_state, group->getName(), true);
-    visual_tools->publishContactPoints(*robot_state, planning_scene);
-    ros::Duration(verbose_speed).sleep();
-  }
-  return false;
-}
-
-
-}

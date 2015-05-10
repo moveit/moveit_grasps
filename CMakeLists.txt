@@ -65,7 +65,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-# Grasp Generator Library
+# Grasp Library
 add_library(${PROJECT_NAME}
   src/grasp_generator.cpp
   src/grasp_data.cpp
@@ -77,6 +77,7 @@ target_link_libraries(${PROJECT_NAME}
 # Grasp Filter Library
 add_library(${PROJECT_NAME}_filter
   src/grasp_filter.cpp
+  src/grasp_planner.cpp
 )
 target_link_libraries(${PROJECT_NAME}_filter
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
@@ -104,6 +105,7 @@ target_link_libraries(bounding_box_test
   ${Boost_LIBRARIES} 
 )
 
+# Test grasp data settings
 add_executable(grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
 target_link_libraries(grasp_poses_visualizer
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}

@@ -559,7 +559,6 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.min_finger_open_on_approach = min_finger_open_on_approach;
   double percent_open;
 
-  std::cout << std::endl;std::cout << std::endl;std::cout << std::endl;
   // Create grasp with widest fingers possible ----------------------------------------------
   percent_open = 1.0;
   grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);

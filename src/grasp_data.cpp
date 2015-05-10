@@ -33,7 +33,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Authors: Bence Magyar, Dave Coleman
+/* Authors: Dave Coleman, Bence Magyar
    Description: Data class used by the grasp generator.
 */
 
@@ -197,8 +197,6 @@ bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state, const tr
 bool GraspData::setGraspWidth(const double& percent_open, const double& min_finger_width, 
                               trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  ROS_INFO_STREAM_NAMED("grasp_data","----------------------------------------");
-
   if (percent_open < 0 || percent_open > 1)
   {
     ROS_ERROR_STREAM_NAMED("grasp_data","Invalid percentage passed in " << percent_open);
@@ -300,8 +298,6 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
 
   // Set joint positions
   grasp_posture.points.front().positions = joint_positions;
-
-  //std::cout << "grasp_posture:\n " << grasp_posture << std::endl;
 
   return true;
 }

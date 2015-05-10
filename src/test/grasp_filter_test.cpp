@@ -201,8 +201,9 @@ public:
       // grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
 
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
-                                                             arm_jmg_, visual_tools_->getSharedRobotState(), filter_pregrasps,
-                                                             verbose, verbose_if_failed);
+                                                             arm_jmg_, visual_tools_->getSharedRobotState(), 
+                                                             filter_pregrasps,
+                                                             verbose_if_failed);
 
       if (valid_grasps == 0)
       {
@@ -260,7 +261,7 @@ public:
 
     std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                            arm_jmg_, visual_tools_->getSharedRobotState(), filter_pregrasps,
-                                                           verbose, verbose_if_failed);
+                                                           verbose_if_failed);
 
     if (valid_grasps == 0)
     {
