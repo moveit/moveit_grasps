@@ -30,4 +30,4 @@ moveit_grasps:
     # Cartesian planning
     verbose_cartesian_filtering: true
     show_cartesian_waypoints: true
-        
+    collision_checking_verbose: true

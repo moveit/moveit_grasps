@@ -168,14 +168,18 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
 bool GraspData::setRobotStatePreGrasp( robot_state::RobotStatePtr &robot_state )
 {
+  ROS_WARN_STREAM_NAMED("grasp_data","setRobotStatePreGrasp is probably wrong");
   return setRobotState( robot_state, pre_grasp_posture_ );
 }
+
 bool GraspData::setRobotStateGrasp( robot_state::RobotStatePtr &robot_state )
 {
+  ROS_WARN_STREAM_NAMED("grasp_data","setRobotStateGrasp is probably wrong");
   return setRobotState( robot_state, grasp_posture_ );
 }
 
-bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state, const trajectory_msgs::JointTrajectory &posture )
+bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state, 
+                               const trajectory_msgs::JointTrajectory &posture )
 {
   // Assume joint trajectory has only 1 waypoint
   if (posture.points.size() < 1)
@@ -184,6 +188,7 @@ bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state, const tr
     return false;
   }
 
+  // TODO make this more efficient
   // Do for every joint in end effector
   for (std::size_t i = 0; i < posture.joint_names.size(); ++i)
   {

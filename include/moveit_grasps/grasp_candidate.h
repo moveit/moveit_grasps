@@ -92,7 +92,8 @@ public:
     robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
 
     // Set end effector to correct configuration
-    grasp_data_->setRobotStatePreGrasp(robot_state);
+    //grasp_data_->setRobotStatePreGrasp(robot_state);
+    grasp_data_->setRobotState( robot_state, grasp_.pre_grasp_posture );
 
     return true;
   }
@@ -110,9 +111,12 @@ public:
     robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
 
     // Set end effector to correct configuration
-    grasp_data_->setRobotStatePreGrasp(robot_state);
+    return getGraspStateOpenEEOnly(robot_state);
+  }
 
-    return true;
+  bool getGraspStateOpenEEOnly(moveit::core::RobotStatePtr robot_state)
+  {
+    return grasp_data_->setRobotState( robot_state, grasp_.pre_grasp_posture );
   }
 
   bool getGraspStateClosed(moveit::core::RobotStatePtr robot_state)
@@ -121,9 +125,12 @@ public:
     robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
 
     // Set end effector to correct configuration
-    grasp_data_->setRobotStateGrasp(robot_state);
+    return getGraspStateClosedEEOnly(robot_state);
+  }
 
-    return true;
+  bool getGraspStateClosedEEOnly(moveit::core::RobotStatePtr robot_state)
+  {
+    return grasp_data_->setRobotState( robot_state, grasp_.grasp_posture );
   }
 
   bool isValid()

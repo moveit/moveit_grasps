@@ -278,7 +278,8 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     num_threads = 1;
     ROS_WARN_STREAM_NAMED("grasp_filter","Using only " << num_threads << " threads because verbose is true");
   }
-  ROS_INFO_STREAM_NAMED("grasp_filter", "Filtering possible grasps with " << num_threads << " threads");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "Filtering " << grasp_candidates.size() << " candidate grasps with " 
+                        << num_threads << " threads");
 
   // -----------------------------------------------------------------------------------------------
   // Load kinematic solvers if not already loaded
@@ -489,8 +490,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
                   _1, _2, _3);
 
   // Set gripper position (how open the fingers are) to the custom open position
-  grasp_candidate->grasp_data_->setRobotState(ik_thread_struct->robot_state_,
-                                              grasp_candidate->grasp_.pre_grasp_posture);
+  grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
 
   // Solve IK Problem
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_,
@@ -512,7 +512,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
 
     // Set gripper position (how open the fingers are) to CLOSED
-    grasp_candidate->grasp_data_->setRobotStateGrasp(ik_thread_struct->robot_state_);
+    grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
 
     // Solve IK Problem
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
