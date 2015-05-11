@@ -202,11 +202,11 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
 
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
 
-    waitForNextStep("continue see closed grasp state");
+    waitForNextStep("see closed grasp state");
     grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
 
-    waitForNextStep("continue see pre grasp state");
+    waitForNextStep("see pre grasp state");
     grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState());
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
 
