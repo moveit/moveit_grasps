@@ -48,6 +48,9 @@
 namespace moveit_grasps
 {
 
+// Allow an interrupt to be called that waits for user input, useful for debugging
+typedef boost::function<void(std::string message)> WaitForNextStepCallback;
+
 class GraspPlanner
 {
 public:
@@ -91,14 +94,27 @@ public:
                                     const EigenSTL::vector_Affine3d &waypoints,
                                     GraspTrajectories &segmented_cartesian_traj);
 
+  /**
+   * \brief Wait for user input to proceeed
+   * \param message - text to display to user when waiting
+   */
+  void waitForNextStep(const std::string& message);
+
+  /**
+   * \brief Allow an interrupt to be called that waits for user input, useful for debugging
+   * \param message - text to display to user when waiting
+   */
+  void setWaitForNextStepCallback(WaitForNextStepCallback callback);
+
 private:
 
   // A shared node handle
   ros::NodeHandle nh_;
 
   // Class for publishing stuff to rviz
-
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+
+  WaitForNextStepCallback wait_for_next_step_callback_;
 
 }; // end class
 

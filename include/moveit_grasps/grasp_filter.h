@@ -162,15 +162,13 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \param verbose_if_failed - show debug markers and logging if no grasps where found the first time
    * \return number of grasps remaining
    */
   bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                     const robot_model::JointModelGroup* arm_jmg,
                     const moveit::core::RobotStatePtr seed_state,
-                    bool filter_pregrasp = false,
-                    bool verbose_if_failed = true);
+                    bool filter_pregrasp = false);
 
   /**
    * \brief Filter grasps by cutting plane
@@ -322,6 +320,7 @@ private:
   bool show_cutting_planes_;
   double show_filtered_arm_solutions_speed_;
   double show_filtered_arm_solutions_pregrasp_speed_;
+  bool show_grasp_filter_collision_if_failed_;
 
   // Shared node handle
   ros::NodeHandle nh_;

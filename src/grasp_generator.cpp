@@ -47,7 +47,7 @@ namespace moveit_grasps
 GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
   : visual_tools_(visual_tools)
   , verbose_(verbose)
-  , nh_("~/generator")
+  , nh_("~/moveit_grasps/generator")
 {
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages

@@ -17,6 +17,8 @@ moveit_grasps:
     # Collision checking in verbose
     collision_verbose: false
     collision_verbose_speed: 0.5
+    # Collision checking in verbose on second pass (after all failed)
+    show_grasp_filter_collision_if_failed: true
     # Show post-filter arrows
     show_filtered_grasps: true
     # Show pose-filter arm ik solutions
@@ -27,5 +29,5 @@ moveit_grasps:
   planner:
     # Cartesian planning
     verbose_cartesian_filtering: true
-    show_grasp_filter_collision_if_failed: true
+    show_cartesian_waypoints: true
         

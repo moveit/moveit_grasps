@@ -75,7 +75,7 @@ namespace moveit_grasps
 GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
                           moveit_visual_tools::MoveItVisualToolsPtr& visual_tools )
   : visual_tools_(visual_tools)
-  , nh_("~/filter")
+  , nh_("~/moveit_grasps/filter")
 {
   // Make a copy of the robot state so that we are sure outside influence does not break our grasp filter
   robot_state_.reset(new moveit::core::RobotState(*robot_state));
@@ -92,6 +92,7 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed",
                                         show_filtered_arm_solutions_pregrasp_speed_);
+  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_grasp_filter_collision_if_failed", show_grasp_filter_collision_if_failed_);
 
 
   ROS_INFO_STREAM_NAMED("grasp_filter","GraspFilter Ready.");
@@ -101,8 +102,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                const robot_model::JointModelGroup* arm_jmg,
                                const moveit::core::RobotStatePtr seed_state,
-                               bool filter_pregrasp,
-                               bool verbose_if_failed)
+                               bool filter_pregrasp)
 {
   bool verbose = false;
 
@@ -144,16 +144,18 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   }
 
   // Try to filter grasps not in verbose mode
-  std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp,
+  std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, 
+                                                    filter_pregrasp,
                                                     verbose);
   if (remaining_grasps == 0)
   {
     ROS_WARN_STREAM_NAMED("grasp_filter","Grasp filters removed all grasps!");
-    if (verbose_if_failed)
+    if (show_grasp_filter_collision_if_failed_)
     {
-      ROS_INFO_STREAM_NAMED("grasp_filter","Re-running in verbose mode");
+      ROS_INFO_STREAM_NAMED("grasp_filter","Re-running in verbose mode since it failed");
       verbose = true;
-      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
+      remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, 
+                                            filter_pregrasp, verbose);
     }
     else
       ROS_INFO_STREAM_NAMED("grasp_filter","NOT re-running in verbose mode");
@@ -455,7 +457,8 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   if (ik_thread_struct->verbose_ && false)
   {
     ik_thread_struct->ik_pose_.header.frame_id = ik_thread_struct->kin_solver_->getBaseFrame();
-    visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR, 0.1);
+    visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, 
+                                 rviz_visual_tools::REGULAR, 0.1);
   }
 
   // Filter by cutting planes
@@ -482,7 +485,8 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn
     = boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
-                  collision_verbose_ || ik_thread_struct->verbose_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
+                  collision_verbose_ || ik_thread_struct->verbose_, collision_verbose_speed_, visual_tools_, 
+                  _1, _2, _3);
 
   // Set gripper position (how open the fingers are) to the custom open position
   grasp_candidate->grasp_data_->setRobotState(ik_thread_struct->robot_state_,
@@ -770,14 +774,14 @@ bool GraspFilter::addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, co
   addCuttingPlane(world_to_bin_top, XY, 1);
 
   // Left wall of bin
-  addCuttingPlane(world_to_bin, XZ, 1);
+  addCuttingPlane(world_to_bin_top, XZ, 1);
 
-  // Back half of product
+  // // Back half of product
   Eigen::Affine3d world_to_bin_back = world_to_bin;
   world_to_bin_back.translation() += Eigen::Vector3d(bin_to_product.translation().x(),
                                                     bin_width / 2.0, bin_height / 2.0);
+  addCuttingPlane(world_to_bin_back, YZ, 1);
 
-  addCuttingPlane(world_to_bin, YZ, 1);
   return true;
 }
 

@@ -182,7 +182,6 @@ public:
       ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
       bool filter_pregrasps = true;
       bool verbose = false; // note: setting this to true will disable threading
-      bool verbose_if_failed = true;
       //int direction = 1;
 
       // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
@@ -202,8 +201,8 @@ public:
 
       std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
                                                              arm_jmg_, visual_tools_->getSharedRobotState(), 
-                                                             filter_pregrasps,
-                                                             verbose_if_failed);
+                                                             filter_pregrasps);
+                                                             
 
       if (valid_grasps == 0)
       {
@@ -241,7 +240,6 @@ public:
     ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
     bool filter_pregrasps = true;
     bool verbose = false; // note: setting this to true will disable threading
-    bool verbose_if_failed = true;
     int direction = 1;
 
     // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
@@ -260,8 +258,7 @@ public:
     grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
 
     std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
-                                                           arm_jmg_, visual_tools_->getSharedRobotState(), filter_pregrasps,
-                                                           verbose_if_failed);
+                                                           arm_jmg_, visual_tools_->getSharedRobotState(), filter_pregrasps);
 
     if (valid_grasps == 0)
     {
