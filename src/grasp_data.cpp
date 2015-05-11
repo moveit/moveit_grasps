@@ -224,7 +224,8 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
                          << distance_btw_fingers);
 
   // Error check
-  if (distance_btw_fingers > max_finger_width_ || distance_btw_fingers < min_finger_width_)
+  const double EPSILON = 0.0000001;
+  if (distance_btw_fingers > max_finger_width_ + EPSILON || distance_btw_fingers < min_finger_width_ - EPSILON)
   {
     ROS_ERROR_STREAM_NAMED("grasp_data","Requested " << distance_btw_fingers << " is beyond limits of "
                            << min_finger_width_ << "," << max_finger_width_);

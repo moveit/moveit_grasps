@@ -256,7 +256,9 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
   // Save this result
   grasp_candidate->segmented_cartesian_traj_ = segmented_cartesian_traj;
 
-  waitForNextStep("try next candidate grasp");
+  if (verbose_cartesian_filtering)
+    waitForNextStep("try next candidate grasp");
+
   return true;
 }
 

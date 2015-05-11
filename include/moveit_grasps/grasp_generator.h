@@ -200,9 +200,9 @@ public:
    * \param grasp_data data describing the end effector
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
-   * \return nothing
+   * \return true on success
    */
-  void addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+  bool addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
                 const Eigen::Affine3d& object_pose, double object_width);
 
   /**
