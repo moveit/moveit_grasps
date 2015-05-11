@@ -149,12 +149,10 @@ public:
 
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, possible_grasps);
                                               
-
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
       //double animate_speed = 0.1;
       //visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
-
       
       // Test if done
       ++i;

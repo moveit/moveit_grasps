@@ -581,6 +581,9 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();
   ideal_grasp_pose_ *= Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY()) * 
     Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ());
+
+  visual_tools_->publishAxisLabeled(ideal_grasp_pose_ , "SCORING_IDEAL_POSE");
+
   std::size_t num_tests = 3;
 
   double individual_scores[num_tests];
@@ -590,18 +593,22 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
   for (std::size_t i = 0; i < num_tests; i++)
     score_weights[i] = 1;
   
+  /***** TEST 1 *****/
   // how close is z-axis of grasp to desired orientation? (0 = 180 degrees of, 100 = 0 degrees off)
   Eigen::Vector3d axis_grasp = pose.rotation() * Eigen::Vector3d::UnitZ();
   Eigen::Vector3d axis_desired = ideal_grasp_pose_.rotation() * Eigen::Vector3d::UnitZ();
   double angle = acos( axis_grasp.dot(axis_desired) );
   individual_scores[0] = ( M_PI - angle ) / M_PI;
 
-  // is camera pointed up? (angle betweeen y-axes) (0 = 180 degrees of, 100 = 0 degrees off)
+  /***** TEST 2 *****/
+  // is hand pointed up? (angle betweeen y-axes) (0 = 180 degrees of, 100 = 0 degrees off)
+  // TODO: should just test angle against plane.
   axis_grasp = pose.rotation() * Eigen::Vector3d::UnitY();
   axis_desired = ideal_grasp_pose_.rotation() * Eigen::Vector3d::UnitY();
   angle = acos( axis_grasp.dot(axis_desired) );
   individual_scores[1] = ( M_PI - angle ) / M_PI;
 
+  /***** TEST 3 *****/
   // how close is the palm to the object? (0 = at finger length, 100 = in palm)
   // TODO: not entierly correct since measuring from centroid of object.
   double finger_length = grasp_data->finger_to_palm_depth_ - grasp_data->grasp_min_depth_;
@@ -612,6 +619,10 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPt
   else
     individual_scores[2] = ( finger_length - distance ) / finger_length;
   
+  /***** TEST 4 *****/
+  // The object is most likely sitting on something. How high off that surface would we like to grab it?
+
+
   // compute combined score
   double score_sum = 0;
   for (std::size_t i = 0; i < num_tests; i++)
