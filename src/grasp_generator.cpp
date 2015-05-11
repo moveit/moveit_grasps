@@ -289,7 +289,10 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   /***** add all poses as possible grasps *****/
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
   {
-    addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose, object_width);
+    if (!addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose, object_width))
+    {
+      ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to add grasp");
+    }
   }
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","created " << grasp_poses.size() << " grasp poses");
 
@@ -478,7 +481,7 @@ bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u
   return false;
 }
 
-void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
+bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
                               std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose, 
                               double object_width)
 {
@@ -561,18 +564,32 @@ void GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   // Create grasp with widest fingers possible ----------------------------------------------
   percent_open = 1.0;
-  grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);
+  if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    return false;
+  }
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
   // Create grasp with middle width fingers -------------------------------------------------
   percent_open = 0.5;
-  grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);
+  if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    return false;
+  }
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
   // Create grasp with fingers at minimum width ---------------------------------------------
   percent_open = 0.0;
-  grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture);
+  if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    return false;
+  }
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+
+  return true;
 }
 
 double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
