@@ -155,7 +155,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
   Eigen::Affine3d grasp_pose = visual_tools_->convertPose(grasp_pose_msg.pose);
   Eigen::Affine3d lifted_grasp_pose = grasp_pose;
   lifted_grasp_pose.translation().z() += lift_distance;
-std::cout << "here " << std::endl;
+
   // Error checking for lift distance
   // if ( lifted_grasp_pose.translation().z() > bin->getTopLeft().translation().z())
   // {
@@ -179,7 +179,7 @@ std::cout << "here " << std::endl;
   waypoints.push_back(lifted_grasp_pose);
   //waypoints.push_back(lifted_pregrasp_pose);
   waypoints.push_back(retreat_pose);
-std::cout << "here " << std::endl;
+
   // Visualize waypoints
   bool show_cartesian_waypoints = visual_tools_->isEnabled("show_cartesian_waypoints");
   if (show_cartesian_waypoints)
@@ -198,9 +198,8 @@ std::cout << "here " << std::endl;
     visual_tools_->publishAxisLabeled(retreat_pose, "retreat");
 
     // Show the grasp state
-    std::cout << "before " << std::endl;
     grasp_candidate->getGraspStateOpen(visual_tools_->getSharedRobotState());
-    std::cout << "after " << std::endl;
+
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
 
     waitForNextStep("continue see closed grasp state");
