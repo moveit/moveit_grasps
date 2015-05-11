@@ -566,7 +566,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 1.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
@@ -575,7 +575,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.5;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
@@ -584,7 +584,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
