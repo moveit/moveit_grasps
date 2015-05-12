@@ -89,18 +89,6 @@ static const double MIN_GRASP_DISTANCE = 0.001; //m between grasps
 // Grasp axis orientation
 enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
 
-// Information about generated grasps for scoring purposes
-struct ScoringData
-{
-  // ideal world pose of grasp
-  Eigen::Vector3d desired_pose;
-
-  // bounds on generated grasps in world coordinate frame
-  Eigen::Vector3d min_world_bounds;
-  Eigen::Vector3d max_world_bounds;
-
-};
-
 // Class
 class GraspGenerator
 {
