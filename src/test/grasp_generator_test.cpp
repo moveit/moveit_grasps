@@ -96,6 +96,20 @@ public:
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, true) );
     grasp_generator_->setVerbose(true);
 
+    grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ * 
+      Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) * 
+      Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitX());
+    grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
+
+    // Visualize poses
+    visual_tools_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+
+    Eigen::Affine3d grasp_to_eef = grasp_data_->grasp_pose_to_eef_pose_;
+    visual_tools_->publishAxisLabeled(grasp_to_eef, "GRASP_POSE_TO_EEF_POSE_");
+
+    // publish world coordinate system
+    visual_tools_->publishAxis(Eigen::Affine3d::Identity());
+
     geometry_msgs::Pose pose;
     visual_tools_->generateEmptyPose(pose);
 
@@ -166,9 +180,9 @@ public:
     // Position
     geometry_msgs::Pose start_object_pose;
 
-    start_object_pose.position.x = 0.4;
-    start_object_pose.position.y = -0.2;
-    start_object_pose.position.z = 0.0;
+    start_object_pose.position.x = 0.5;
+    start_object_pose.position.y = 0.0;
+    start_object_pose.position.z = 0.5;
 
     // Orientation
     double angle = M_PI / 1.5;

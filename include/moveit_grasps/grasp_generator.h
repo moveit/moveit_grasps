@@ -67,6 +67,7 @@
 
 // moveit_grasps
 #include <moveit_grasps/grasp_candidate.h>
+#include <moveit_grasps/grasp_scorer.h>
 
 // bounding_box
 //#include <bounding_box/bounding_box.h>
@@ -278,6 +279,9 @@ public:
   bool visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
                                const moveit::core::JointModelGroup* ee_jmg, double animation_speed);
 
+  // Ideal grasp pose for scoring purposes
+  Eigen::Affine3d ideal_grasp_pose_;
+
 private:
 
   // class for publishing stuff to rviz
@@ -292,9 +296,6 @@ private:
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
 
-  // Ideal grasp pose for scoring purposes
-  Eigen::Affine3d ideal_grasp_pose_;
-
   // Visualization levels
   bool show_grasp_arrows_;
   double show_grasp_arrows_speed_;
@@ -303,8 +304,6 @@ private:
   double show_prefiltered_grasps_speed_;
 
   //bounding_box::BoundingBox bounding_box_;
-
-  ScoringData scoring_data_;
 
 }; // end of class
 

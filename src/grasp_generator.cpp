@@ -60,6 +60,9 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
 
   ROS_INFO_STREAM_NAMED("grasps","GraspGenerator Ready.");
+
+  // Set ideal grasp pose (currently only uses orientation of pose)
+  ideal_grasp_pose_ = Eigen::Affine3d::Identity();
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose,
@@ -557,17 +560,13 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 1.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
 
   // Show visualization for widest grasp
-  if (verbose_)
-  {
-    visual_tools_->publishAxis(ideal_grasp_pose_);
-    visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * new_grasp.grasp_quality);
-  }
+
 
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
@@ -575,7 +574,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.5;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
@@ -585,7 +584,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
+    // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
@@ -594,8 +593,32 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   return true;
 }
 
-double GraspGenerator::scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
+double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
 {
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp","starting to score grasp...");
+
+  // get portion of score based on the gripper's opening width on approach
+  double width_score = GraspScorer::scoreGraspWidth(grasp_pose, grasp_data, object_pose);
+
+  // get portion of score based on the pinchers being down
+  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose, grasp_data, object_pose);
+
+  // get portion of score based on the distance of the grasp pose to the object pose
+  // TODO: we don't have any reference to the size of the object at this point
+  double max_grasp_distance = 0.200;
+  //  double distance_score = GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, max_grasp_distance);
+
+  double total_score = (width_score + orientation_scores[1]) / 2.0;
+
+  if (verbose_)
+  {
+    // DEBUG
+    visual_tools_->publishAxis(ideal_grasp_pose_);
+    visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
+
+    ros::Duration(2.0).sleep();
+  }
+
   // // set ideal grasp pose (TODO: remove this and set programatically)
   // ideal_grasp_pose_ = Eigen::Affine3d::Identity();
   // ideal_grasp_pose_ *= Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY()) * 

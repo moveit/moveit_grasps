@@ -32,14 +32,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 /**
- * Authors : Andy Mcevoy
+ * Authors : Andy McEvoy
  * Desc    : Functions for scoreing generated grasps
  */
 
 #ifndef MOVEIT_GRASPS_GRASP_SCORER_
 #define MOVEIT_GRASPS_GRASP_SCORER_
 
+#include <cmath>
+
+#include <ros/ros.h>
+
+#include <moveit_grasps/grasp_data.h>
+
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 namespace moveit_grasps
 {
@@ -75,12 +82,16 @@ public:
    * \param grasp_pose - the pose of the end effector
    * \param grasp_data - pointer to grasp info
    * \param object_pose - the pose of the object being grasped
-   * \return the unweighted score: 1.0 -> object is touching the palm, 0.0 -> object is at max distanct
+   * \param max_grasp_distance - the maximum acceptable distance from palm 
+   * \return the unweighted score: 1.0 -> object pose and grasp pose have same translation values 
+   *                               0.0 -> object is at max distanct
+   *                             < 0.0 -> object is beyond the max_grasp_distance
    */
   static double scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, 
                                     const GraspDataPtr grasp_data, 
-                                    const Eigen::Affine3d& object_pose);
-
+                                    const Eigen::Affine3d& object_pose, 
+                                    const double max_grasp_distance);
+  
 };
 
 } // end namespace moveit_grasps

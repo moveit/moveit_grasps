@@ -70,6 +70,7 @@ add_library(${PROJECT_NAME}
   src/grasp_generator.cpp
   src/grasp_data.cpp
   src/grasp_candidate.cpp
+  src/grasp_scorer.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
@@ -88,6 +89,15 @@ target_link_libraries(${PROJECT_NAME}_filter
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}") # for threading
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
+# Grasp Scoring Library
+add_library(${PROJECT_NAME}_scorer
+  src/grasp_scorer.cpp
+)
+target_link_libraries(${PROJECT_NAME}_scorer
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
 # Test filter executable
 add_executable(${PROJECT_NAME}_filter_test src/test/grasp_filter_test.cpp)
 target_link_libraries(${PROJECT_NAME}_filter_test
@@ -97,7 +107,9 @@ target_link_libraries(${PROJECT_NAME}_filter_test
 # Test grasp executable
 add_executable(${PROJECT_NAME}_test src/test/grasp_generator_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test
-  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+  ${PROJECT_NAME} 
+  ${catkin_LIBRARIES} 
+  ${Boost_LIBRARIES}
 )
 
 # Test mesh bounding box
