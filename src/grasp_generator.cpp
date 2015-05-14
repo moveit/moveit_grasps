@@ -563,7 +563,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
     // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
     return false;
   }
-  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
+  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose, percent_open);
 
   // Show visualization for widest grasp
 
@@ -577,7 +577,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
     // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
     return false;
   }
-  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
+  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose, percent_open);
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
   // Create grasp with fingers at minimum width ---------------------------------------------
@@ -587,89 +587,50 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
     // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width");
     return false;
   }
-  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose);
+  new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose, percent_open);
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
   return true;
 }
 
-double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose)
+double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
+                                  const Eigen::Affine3d object_pose, double percent_open)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp","starting to score grasp...");
 
   // get portion of score based on the gripper's opening width on approach
-  double width_score = GraspScorer::scoreGraspWidth(grasp_pose, grasp_data, object_pose);
+  double width_score = GraspScorer::scoreGraspWidth(grasp_data, percent_open);
 
   // get portion of score based on the pinchers being down
-  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose, grasp_data, object_pose);
+  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose, ideal_grasp_pose_);
 
   // get portion of score based on the distance of the grasp pose to the object pose
-  // TODO: we don't have any reference to the size of the object at this point
+
+  // DEV NOTE: when this function is called we've lost the references to the acutal size of the object.
+  // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
+  // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
+  // arbitrary number given our target object set (i.e. I based it off of the cheese it box)
   double max_grasp_distance = 0.200;
-  //  double distance_score = GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, max_grasp_distance);
+  double distance_score = GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, max_grasp_distance);
 
-  double total_score = (width_score + orientation_scores[1]) / 2.0;
+  // Get total score
+  // TODO: implement a weighting function
+  double total_score = (width_score + orientation_scores[1] + distance_score) / 3.0;
 
-  if (verbose_)
-  {
-    // DEBUG
-    visual_tools_->publishAxis(ideal_grasp_pose_);
-    visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
-
-    ros::Duration(2.0).sleep();
-  }
-
-  // // set ideal grasp pose (TODO: remove this and set programatically)
-  // ideal_grasp_pose_ = Eigen::Affine3d::Identity();
-  // ideal_grasp_pose_ *= Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY()) * 
-  //   Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ());
-
-  // visual_tools_->publishAxisLabeled(ideal_grasp_pose_ , "SCORING_IDEAL_POSE");
-
-  // std::size_t num_tests = 3;
-
-  // double individual_scores[num_tests];
-  // double score_weights[num_tests];
-  
-  // // initialize score_weights as 1
-  // for (std::size_t i = 0; i < num_tests; i++)
-  //   score_weights[i] = 1;
-  
-  // /***** TEST 1 *****/
-  // // how close is z-axis of grasp to desired orientation? (0 = 180 degrees of, 100 = 0 degrees off)
-  // Eigen::Vector3d axis_grasp = pose.rotation() * Eigen::Vector3d::UnitZ();
-  // Eigen::Vector3d axis_desired = ideal_grasp_pose_.rotation() * Eigen::Vector3d::UnitZ();
-  // double angle = acos( axis_grasp.dot(axis_desired) );
-  // individual_scores[0] = ( M_PI - angle ) / M_PI;
-
-  // /***** TEST 2 *****/
-  // // is hand pointed up? (angle betweeen y-axes) (0 = 180 degrees of, 100 = 0 degrees off)
-  // // TODO: should just test angle against plane.
-  // axis_grasp = pose.rotation() * Eigen::Vector3d::UnitY();
-  // axis_desired = ideal_grasp_pose_.rotation() * Eigen::Vector3d::UnitY();
-  // angle = acos( axis_grasp.dot(axis_desired) );
-  // individual_scores[1] = ( M_PI - angle ) / M_PI;
-
-  // /***** TEST 3 *****/
-  // // how close is the palm to the object? (0 = at finger length, 100 = in palm)
-  // // TODO: not entierly correct since measuring from centroid of object.
-  // double finger_length = grasp_data->finger_to_palm_depth_ - grasp_data->grasp_min_depth_;
-  // Eigen::Vector3d delta = pose.translation() - object_pose.translation();
-  // double distance = delta.norm();
-  // if (distance > finger_length)
-  //   individual_scores[2] = 0;
-  // else
-  //   individual_scores[2] = ( finger_length - distance ) / finger_length;
-  
-  // /***** TEST 4 *****/
-  // // The object is most likely sitting on something. How high off that surface would we like to grab it?
-
-
-  // // compute combined score
-  // double score_sum = 0;
-  // for (std::size_t i = 0; i < num_tests; i++)
+  // if (verbose_)
   // {
-  //   score_sum += individual_scores[i] * score_weights[i];
+  //   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp","Grasp score: \n " << 
+  //                          "\twidth_score         = " << width_score << "\n" <<
+  //                          "\torientation_score.x = " << orientation_scores[0] << "\n"
+  //                          "\torientation_score.y = " << orientation_scores[1] << "\n"
+  //                          "\torientation_score.z = " << orientation_scores[2] << "\n"
+  //                          "\tdistance_score      = " << distance_score << "\n" <<
+  //                          "\tweights             = 1, 0, 1, 0, 0, 1\n" <<
+  //                          "\ttotal_score         + " << total_score);
+  //   visual_tools_->publishAxis(ideal_grasp_pose_);
+  //   visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
+
+  //   ros::Duration(1.0).sleep();
   // }
   
   return 1.0;

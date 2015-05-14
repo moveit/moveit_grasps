@@ -1,28 +1,28 @@
 moveit_grasps:
   generator:
     # Other verbose stuff
-    verbose: true
+    verbose: false
     # Show the generated grasp arrows
-    show_grasp_arrows: true
+    show_grasp_arrows: false
     show_grasp_arrows_speed: 0.001
     # Show hand of generated grasps
-    show_prefiltered_grasps: true
+    show_prefiltered_grasps: false
     show_prefiltered_grasps_speed: 0.01
 
   filter:
     # Show summary statistics
-    statistics_verbose: true
+    statistics_verbose: false
     # Visualize the planes used by the filter
-    show_cutting_planes: true
+    show_cutting_planes: false
     # Collision checking in verbose
-    collision_verbose: true
+    collision_verbose: false
     collision_verbose_speed: 0.5
     # Collision checking in verbose on second pass (after all failed)
-    show_grasp_filter_collision_if_failed: true
+    show_grasp_filter_collision_if_failed: false
     # Show post-filter arrows
     show_filtered_grasps: true
     # Show pose-filter arm ik solutions
-    show_filtered_arm_solutions: true
+    show_filtered_arm_solutions: false
     show_filtered_arm_solutions_pregrasp_speed: 0.25
     show_filtered_arm_solutions_speed: 0.5
 

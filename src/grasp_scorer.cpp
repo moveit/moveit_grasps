@@ -41,39 +41,49 @@
 namespace moveit_grasps
 {
 
-double GraspScorer::scoreGraspWidth(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
-                             const Eigen::Affine3d& object_pose)
+double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open)
 {
- ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspWidth","starting to score grasp based on approach width...");
-
- return 1.0;
+  return percent_open;
 }
 
-static double scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
-                                  const Eigen::Affine3d& object_pose, const double max_grasp_distance)
+double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
+                                  const Eigen::Affine3d& object_pose, const double& max_grasp_distance)
 {
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspWidth","starting to score grasp based on object's distance to palm.. ");
+  // DEV NOTE: grasp_data is not used but should be. See *.h for explaination.
 
   double distance = ( grasp_pose.translation() - object_pose.translation() ).norm();
+  double score = ( max_grasp_distance - std::abs(distance) ) / max_grasp_distance;
 
-  double max_distance = grasp_data->finger_to_palm_depth_;
-
-  double score = ( max_distance - abs(distance) ) / max_distance;
-
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspWidth","Score data: \n" <<
-                         "\tdistance from grasp to object = " << distance << 
-                         "\tmax distance possible         = " << max_distance << 
-                         "\tscore                         = " << score);
-   
   return score;
 }
 
-Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
-                                              const Eigen::Affine3d& object_pose)
+Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose, 
+                                                       const Eigen::Affine3d& ideal_pose)
 {
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspWidth","starting to score grasp based on rotations...");
+  Eigen::Vector3d grasp_pose_axis;
+  Eigen::Vector3d ideal_pose_axis;
+  Eigen::Vector3d scores;
+  double angle;
 
-  return Eigen::Vector3d::Zero();
+  // get angle between x-axes
+  grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitX();
+  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
+  angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
+  scores[0] = (M_PI - angle) / M_PI;
+
+  // get angle between y-axes
+  grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitY();
+  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
+  angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
+  scores[1] = (M_PI - angle) / M_PI;
+
+  // get angle between z-axes
+  grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitZ();
+  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
+  angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
+  scores[2] = (M_PI - angle) / M_PI;
+
+  return scores;
 }
 
 } // end namespace moveit_grasps

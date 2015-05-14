@@ -102,9 +102,9 @@ public:
     grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
 
     // Visualize poses
-    visual_tools_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+    visual_tools_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_EE_GRASP_POSE");
 
-    Eigen::Affine3d grasp_to_eef = grasp_data_->grasp_pose_to_eef_pose_;
+    Eigen::Affine3d grasp_to_eef = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
     visual_tools_->publishAxisLabeled(grasp_to_eef, "GRASP_POSE_TO_EEF_POSE_");
 
     // publish world coordinate system

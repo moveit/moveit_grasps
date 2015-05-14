@@ -208,10 +208,14 @@ public:
 
   /**
    * \brief Score the generated grasp poses
-   * \param 
+   * \param grasp_pose - the pose of the grasp
+   * \param grasp_data - data describing the end effector
+   * \param object_pose - the pose of the object being grasped
+   * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return
    */
-  double scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose);
+  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
+                    const Eigen::Affine3d object_pose, double percent_open);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
