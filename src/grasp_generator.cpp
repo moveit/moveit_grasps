@@ -66,6 +66,9 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   ideal_grasp_pose_ = ideal_grasp_pose_ * 
     Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) * 
     Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
+  ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
+
+  visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "IDEAL_GRASP_POSE");
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose,
@@ -240,6 +243,76 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     addFaceGraspsHelper(cuboid_pose, rotation_angles, b_translation, delta, rotation, num_grasps_along_b, grasp_poses);  
   }
 
+  /***** Add grasps at variable depths *****/
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding depth grasps...");
+  std::size_t num_depth_grasps = ceil( finger_depth / grasp_data->grasp_depth_resolution_ );
+  if (num_depth_grasps <= 0)
+    num_depth_grasps = 1;
+  delta_f = finger_depth / (double)(num_depth_grasps);
+
+  std::size_t num_grasps = grasp_poses.size();
+  Eigen::Vector3d grasp_dir;
+  Eigen::Affine3d depth_pose;
+
+  if (only_edge_grasps == false)
+  {
+    for (std::size_t i = 0; i < num_grasps; i++)
+    {
+      grasp_dir = grasp_poses[i].rotation() * Eigen::Vector3d::UnitZ();
+      depth_pose = grasp_poses[i];
+      for (std::size_t j = 0; j < num_depth_grasps; j++)
+      {
+        depth_pose.translation() -= delta_f * grasp_dir;
+        grasp_poses.push_back(depth_pose);
+      }
+    }
+  }
+
+  /***** add grasps at variable angles *****/
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding variable angle grasps...");
+  Eigen::Affine3d base_pose;
+  num_grasps = grasp_poses.size();
+  if (only_edge_grasps == false)
+  {
+    for (std::size_t i = num_corner_grasps; i < num_grasps; i++) // corner grasps at zero depth don't need variable angles
+    {
+      base_pose = grasp_poses[i];
+
+      grasp_pose = base_pose * Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());
+      std::size_t max_iterations = M_PI / angle_res + 1;
+      std::size_t iterations = 0;
+      while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose, grasp_data) )
+      {
+        grasp_poses.push_back(grasp_pose);
+        //visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
+        grasp_pose *= Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());    
+        //ros::Duration(0.2).sleep();
+        iterations++;
+        if (iterations > max_iterations)
+        {
+          ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","exceeded max iterations while creating variable angle grasps");
+          break;
+        }
+      }
+    
+      iterations = 0;
+      grasp_pose = base_pose * Eigen::AngleAxisd(-angle_res, Eigen::Vector3d::UnitY());  
+      while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose, grasp_data) )
+      {
+        grasp_poses.push_back(grasp_pose);
+        //visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::CYAN, rviz_visual_tools::XSMALL, 0.02);
+        grasp_pose *= Eigen::AngleAxisd(-angle_res, Eigen::Vector3d::UnitY());    
+        //ros::Duration(0.2).sleep();
+        iterations++;
+        if (iterations > max_iterations)
+        {
+          ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","exceeded max iterations while creating variable angle grasps");
+          break;
+        }
+      }
+    }
+  }
+
   /***** Add grasps along edges *****/
   // move grasp pose to edge of cuboid
   double a_sign = 1.0; 
@@ -292,69 +365,6 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   addEdgeGraspsHelper(cuboid_pose, rotation_angles, b_translation, delta, rotation, 
                       num_grasps_along_b, grasp_poses, -M_PI / 4.0 * b_rot_sign);    
 
-  /***** Add grasps at variable depths *****/
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding depth grasps...");
-  std::size_t num_depth_grasps = ceil( finger_depth / grasp_data->grasp_depth_resolution_ );
-  if (num_depth_grasps <= 0)
-    num_depth_grasps = 1;
-  delta_f = finger_depth / (double)(num_depth_grasps);
-
-  std::size_t num_grasps = grasp_poses.size();
-  Eigen::Vector3d grasp_dir;
-  Eigen::Affine3d depth_pose;
-
-  for (std::size_t i = 0; i < num_grasps; i++)
-  {
-    grasp_dir = grasp_poses[i].rotation() * Eigen::Vector3d::UnitZ();
-    depth_pose = grasp_poses[i];
-    for (std::size_t j = 0; j < num_depth_grasps; j++)
-    {
-      depth_pose.translation() -= delta_f * grasp_dir;
-      grasp_poses.push_back(depth_pose);
-    }
-  }
-
-  /***** add grasps at variable angles *****/
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding variable angle grasps...");
-  Eigen::Affine3d base_pose;
-  num_grasps = grasp_poses.size();
-  for (std::size_t i = num_corner_grasps; i < num_grasps; i++) // corner grasps at zero depth don't need variable angles
-  {
-    base_pose = grasp_poses[i];
-
-    grasp_pose = base_pose * Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());
-    std::size_t max_iterations = M_PI / angle_res + 1;
-    std::size_t iterations = 0;
-    while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose, grasp_data) )
-    {
-      grasp_poses.push_back(grasp_pose);
-      //visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
-      grasp_pose *= Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());    
-      //ros::Duration(0.2).sleep();
-      iterations++;
-      if (iterations > max_iterations)
-      {
-        ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","exceeded max iterations while creating variable angle grasps");
-        break;
-      }
-    }
-    
-    iterations = 0;
-    grasp_pose = base_pose * Eigen::AngleAxisd(-angle_res, Eigen::Vector3d::UnitY());  
-    while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose, grasp_data) )
-    {
-      grasp_poses.push_back(grasp_pose);
-      //visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::CYAN, rviz_visual_tools::XSMALL, 0.02);
-      grasp_pose *= Eigen::AngleAxisd(-angle_res, Eigen::Vector3d::UnitY());    
-      //ros::Duration(0.2).sleep();
-      iterations++;
-      if (iterations > max_iterations)
-      {
-        ROS_WARN_STREAM_NAMED("cuboid_axis_grasps","exceeded max iterations while creating variable angle grasps");
-        break;
-      }
-    }
-  }
 
   /***** add grasps in both directions *****/
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","adding bi-directional grasps...");
@@ -596,8 +606,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 {
   if (verbose_)
   {
-    visual_tools_->publishAxis(grasp_pose, 0.02, 0.002);
-    //visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.01);
+    //visual_tools_->publishAxis(grasp_pose, 0.02, 0.002);
+    visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.01);
     ros::Duration(0.01).sleep();
   }
 
