@@ -98,7 +98,7 @@ public:
 
     grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ * 
       Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) * 
-      Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitX());
+      Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
     grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
 
     // Visualize poses
@@ -158,7 +158,7 @@ public:
       double width = 0.05;
       double height = 0.05;
 
-      visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT);
+      visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       visual_tools_->publishAxis(object_pose);
 
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, possible_grasps);

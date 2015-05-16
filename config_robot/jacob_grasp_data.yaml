@@ -7,14 +7,14 @@ gripper:
     joints : ['jaco2_joint_finger_1','jaco2_joint_finger_2','jaco2_joint_finger_3','jaco2_joint_finger_1_tip','jaco2_joint_finger_2_tip','jaco2_joint_finger_3_tip']
 
     #open position
-    pregrasp_posture : [0.2, 0.2, 0.2, 0, 0, 0]
+    pregrasp_posture : [0.0, 0.0, 0.0, 0, 0, 0]
     #xopregrasp_posture : [0.0, 0.0, 0.0]
     pregrasp_time_from_start : 4.0
 
     #close position
     #grasp_posture : [0.697, 0.697, 0.697, 0, 0, 0]
     #partially close position
-    grasp_posture : [0.7, 0.7, 0.7, 0, 0, 0]
+    grasp_posture : [0.77, 0.77, 0.77, 0, 0, 0]
 
     grasp_time_from_start : 4.0
 
@@ -23,7 +23,7 @@ gripper:
     #z-axis pointing toward object to grasp
     #x-axis perp. to movement of grippers
     #y-axis parallel to movement of grippers
-    grasp_pose_to_eef_transform :  [0, 0, -0.115, -1.5708, 3.14159, 0]
+    grasp_pose_to_eef_transform :  [0, 0, -0.10, -1.5708, 3.14159, 0]
 
     # length of grippers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.085

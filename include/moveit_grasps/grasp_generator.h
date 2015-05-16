@@ -137,11 +137,12 @@ public:
    * \param axis axis of cuboid to generate grasps around
    * \param grasp_data data describing end effector
    * \param grasp_candidates possible grasps generated
+   * \param only_edge_grasps - set to true if object is too wide to grap the face in this axis
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
                                 grasp_axis_t axis, const GraspDataPtr grasp_data, 
-                                std::vector<GraspCandidatePtr>& grasp_candidates);
+                                std::vector<GraspCandidatePtr>& grasp_candidates, bool only_edge_grasps);
 
   /**
    * \brief helper function for adding grasps at corner of cuboid
@@ -171,6 +172,21 @@ public:
   std::size_t addFaceGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
                                   std::vector<Eigen::Affine3d>& grasp_poses);
+
+  /**
+   * \brief helper function for adding grasps along the edges of the cuboid
+   * \param pose - pose of the object to grasp
+   * \param rotation_angles - rotation angles to go from cuboid pose to standard grasping pose
+   * \param delta - distance to move away from cuboid at each step
+   * \param translation - translation to go from cuboid centroid to grasping location
+   * \param alignment_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
+   * \param num_grasps - the number of grasps to generate around the corner
+   * \param grasp_poses - list of grasp poses generated
+   * \return the number of poses generated
+   */
+  std::size_t addEdgeGraspsHelper(Eigen::Affine3d cuboid_pose, double rotation_angles[3], Eigen::Vector3d translation,
+                                  Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
+                                  std::vector<Eigen::Affine3d>& grasp_poses, double corner_rotation);                            
 
   /**
    * \brief helper function for determining if the grasp will intersect the cuboid
