@@ -733,6 +733,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   // C++11 -> std::vector<double> weights = {1, 2, 3}; Here we use Eigen
   Eigen::Vector3d weights, scores;
   weights << 1, 1, 1;
+  // Every score is normalized to be in the same range, so new scoring features should also be normalized
   scores << width_score, orientation_scores[1], distance_score;
   double total_score = weights.dot(scores);
 
