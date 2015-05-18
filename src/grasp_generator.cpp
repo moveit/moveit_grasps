@@ -749,7 +749,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   //   ros::Duration(1.0).sleep();
   // }
   
-  return 1.0;
+  return total_score;
 }
 
 bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
