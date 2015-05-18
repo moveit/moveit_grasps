@@ -730,8 +730,11 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   double distance_score = GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, max_grasp_distance);
 
   // Get total score
-  // TODO: implement a weighting function
-  double total_score = (width_score + orientation_scores[1] + distance_score) / 3.0;
+  // C++11 -> std::vector<double> weights = {1, 2, 3}; Here we use Eigen
+  Eigen::Vector3d weights, scores;
+  weights << 1, 1, 1;
+  scores << width_score, orientation_scores[1], distance_score;
+  double total_score = weights.dot(scores);
 
   // if (verbose_)
   // {
