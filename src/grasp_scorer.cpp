@@ -43,7 +43,7 @@ namespace moveit_grasps
 
 double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open)
 {
-  return percent_open;
+  return pow(percent_open,4);
 }
 
 double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
@@ -54,7 +54,7 @@ double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const
   double distance = ( grasp_pose.translation() - object_pose.translation() ).norm();
   double score = ( max_grasp_distance - std::abs(distance) ) / max_grasp_distance;
 
-  return score;
+  return pow(score,4);
 }
 
 Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose, 

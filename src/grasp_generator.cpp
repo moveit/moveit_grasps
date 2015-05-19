@@ -725,16 +725,16 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   // DEV NOTE: when this function is called we've lost the references to the acutal size of the object.
   // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
-  // arbitrary number given our target object set (i.e. I based it off of the cheese it box)
+  // arbitrary number given our target object set (I based it off of the cheese it box)
   double max_grasp_distance = 0.200;
   double distance_score = GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, max_grasp_distance);
 
   // Get total score
-  // C++11 -> std::vector<double> weights = {1, 2, 3}; Here we use Eigen
-  Eigen::Vector3d weights, scores;
-  weights << 1, 1, 1;
+  Eigen::Vector4d weights, scores;
+  weights << 1.5, 1.0, 1.0, 2.0;
+
   // Every score is normalized to be in the same range, so new scoring features should also be normalized
-  scores << width_score, orientation_scores[1], distance_score;
+  scores << width_score, orientation_scores[1], orientation_scores[2], distance_score;
   double total_score = weights.dot(scores);
 
   // if (verbose_)
