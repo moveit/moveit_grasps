@@ -769,11 +769,13 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   scores[4] = distance_score;
 
   double total_score = 0;
-
+  double high_score = 0;
   for (std::size_t i = 0; i < 5; i++)
   {
     total_score += weights[i] * scores[i];
+    high_score += weights[i];
   }
+  total_score /= high_score;
 
   // char entry[256];
 
