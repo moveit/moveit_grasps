@@ -96,6 +96,7 @@ public:
   static double scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, 
                                     const GraspDataPtr grasp_data, 
                                     const Eigen::Affine3d& object_pose, 
+                                    const double& min_grasp_distance, 
                                     const double& max_grasp_distance);
   
 };

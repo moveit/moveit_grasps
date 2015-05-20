@@ -43,17 +43,25 @@ namespace moveit_grasps
 
 double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open)
 {
-  return pow(percent_open,4);
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.graspWidth","raw score = " << percent_open);
+  return pow(percent_open,2);
 }
 
 double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
-                                  const Eigen::Affine3d& object_pose, const double& max_grasp_distance)
+                                        const Eigen::Affine3d& object_pose, const double& min_grasp_distance,
+                                        const double& max_grasp_distance)
 {
   // DEV NOTE: grasp_data is not used but should be. See *.h for explaination.
 
   double distance = ( grasp_pose.translation() - object_pose.translation() ).norm();
-  double score = ( max_grasp_distance - std::abs(distance) ) / max_grasp_distance;
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance","distance = " << distance << ", " << min_grasp_distance << ":"
+                         << max_grasp_distance);
 
+  double score = 1.0 - (distance - min_grasp_distance) / (max_grasp_distance - min_grasp_distance);
+
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance","raw score = " << score);
+  if (score < 0)
+    ROS_WARN_STREAM_NAMED("grasp_scorer.distance","score < 0!");
   return pow(score,4);
 }
 
@@ -69,22 +77,25 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitX();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
   angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle","x angle = " << angle * 180.0 / M_PI);
   scores[0] = (M_PI - angle) / M_PI;
-  scores[0] = pow(scores[0],2);
+  // scores[0] = pow(scores[0],2);
   
   // get angle between y-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitY();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
   angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle","y angle = " << angle * 180.0 / M_PI);
   scores[1] = (M_PI - angle) / M_PI;
-  scores[1] = pow(scores[1],2);
+  // scores[1] = pow(scores[1],2);
 
   // get angle between z-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitZ();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
   angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle","z angle = " << angle * 180.0 / M_PI);
   scores[2] = (M_PI - angle) / M_PI;
-  scores[2] = pow(scores[2],2);
+  // scores[2] = pow(scores[2],2);
 
   return scores;
 }

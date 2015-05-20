@@ -323,6 +323,8 @@ private:
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
 
+  double min_grasp_distance_, max_grasp_distance_;
+
   //bounding_box::BoundingBox bounding_box_;
 
 }; // end of class

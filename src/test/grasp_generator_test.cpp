@@ -61,6 +61,7 @@ private:
 
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+  rviz_visual_tools::RvizVisualToolsPtr grasp_visuals_;
 
   // robot-specific data for generating grasps
   moveit_grasps::GraspDataPtr grasp_data_;
@@ -85,6 +86,9 @@ public:
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base"));
     visual_tools_->deleteAllMarkers();
 
+    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("base","grasp_visuals"));
+    grasp_visuals_->deleteAllMarkers();    
+
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
     grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
@@ -96,19 +100,20 @@ public:
     grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, true) );
     grasp_generator_->setVerbose(true);
 
+    grasp_generator_->ideal_grasp_pose_ = Eigen::Affine3d::Identity();
     grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ * 
       Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) * 
       Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
     grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
 
     // Visualize poses
-    visual_tools_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_EE_GRASP_POSE");
+    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_EE_GRASP_POSE");
 
     Eigen::Affine3d grasp_to_eef = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
-    visual_tools_->publishAxisLabeled(grasp_to_eef, "GRASP_POSE_TO_EEF_POSE_");
+    grasp_visuals_->publishAxisLabeled(grasp_to_eef, "GRASP_POSE_TO_EEF_POSE_");
 
     // publish world coordinate system
-    visual_tools_->publishAxis(Eigen::Affine3d::Identity());
+    grasp_visuals_->publishAxis(Eigen::Affine3d::Identity());
 
     geometry_msgs::Pose pose;
     visual_tools_->generateEmptyPose(pose);
@@ -154,12 +159,12 @@ public:
       possible_grasps.clear();
 
       // Generate set of grasps for one object
-      double depth = 0.05;
+      double depth = 0.15;
       double width = 0.05;
-      double height = 0.05;
+      double height = 0.15;
 
-      visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
-      visual_tools_->publishAxis(object_pose);
+      grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
+      grasp_visuals_->publishAxis(object_pose);
 
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, possible_grasps);
                                               
@@ -194,7 +199,6 @@ public:
 
     // Choose which object to test
     object_pose = start_object_pose;
-
     //visual_tools_->publishObject( object_pose, OBJECT_SIZE, true );
   }
 
