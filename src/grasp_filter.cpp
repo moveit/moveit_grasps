@@ -643,7 +643,7 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
 
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    double size = 0.1 * grasp_candidates[i]->grasp_.grasp_quality;
+    double size = 0.01 * grasp_candidates[i]->grasp_.grasp_quality;
 
     if (grasp_candidates[i]->grasp_filtered_by_ik_)
     {

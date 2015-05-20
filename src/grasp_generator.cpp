@@ -377,14 +377,17 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   }
 
   /***** add all poses as possible grasps *****/
+  std::size_t num_grasps_added = 0;
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
   {
     if (!addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose, object_width))
     {
-      ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to add grasp");
+      ROS_DEBUG_STREAM_NAMED("grasp_generator","Unable to add grasp");
     }
+    else
+      num_grasps_added++;
   }
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","created " << grasp_poses.size() << " grasp poses");
+  ROS_INFO_STREAM_NAMED("cuboid_axis_grasps","\033[1;36madded " << num_grasps_added << " of " << grasp_poses.size() << " grasp poses created\033[0m");
 
   return true;
 }
@@ -607,7 +610,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   if (verbose_)
   {
     //visual_tools_->publishAxis(grasp_pose, 0.02, 0.002);
-    visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.01);
+    visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL, 0.01);
     ros::Duration(0.01).sleep();
   }
 
@@ -731,7 +734,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
 
   // Get total score
   Eigen::Vector4d weights, scores;
-  weights << 1.5, 1.0, 1.0, 2.0;
+  weights << 1, 4, 2, 3;
 
   // Every score is normalized to be in the same range, so new scoring features should also be normalized
   scores << width_score, orientation_scores[1], orientation_scores[2], distance_score;

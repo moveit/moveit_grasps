@@ -70,18 +70,21 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
   angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
   scores[0] = (M_PI - angle) / M_PI;
-
+  scores[0] = pow(scores[0],2);
+  
   // get angle between y-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitY();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
   angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
   scores[1] = (M_PI - angle) / M_PI;
+  scores[1] = pow(scores[1],2);
 
   // get angle between z-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitZ();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
   angle = acos( grasp_pose_axis.dot(ideal_pose_axis) );
   scores[2] = (M_PI - angle) / M_PI;
+  scores[2] = pow(scores[2],2);
 
   return scores;
 }

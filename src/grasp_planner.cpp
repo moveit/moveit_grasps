@@ -302,8 +302,8 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
   {
     if (attempts > 0)
     {
-      std::cout << std::endl;
-      std::cout << "-------------------------------------------------------" << std::endl;
+      // std::cout << std::endl;
+      // std::cout << "-------------------------------------------------------" << std::endl;
       ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints","Attempting IK solution, attempt # " << attempts + 1);
     }
     attempts++;
