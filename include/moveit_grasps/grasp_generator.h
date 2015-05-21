@@ -324,6 +324,17 @@ private:
   double show_prefiltered_grasps_speed_;
 
   double min_grasp_distance_, max_grasp_distance_;
+  Eigen::Vector3d min_translations_, max_translations_;
+
+  double depth_score_weight_;
+  double width_score_weight_;
+  double height_score_weight_;
+  double orientation_x_score_weight_;
+  double orientation_y_score_weight_;
+  double orientation_z_score_weight_;
+  double translation_x_score_weight_;
+  double translation_y_score_weight_;
+  double translation_z_score_weight_;
 
   //bounding_box::BoundingBox bounding_box_;
 

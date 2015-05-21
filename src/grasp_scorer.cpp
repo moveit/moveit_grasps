@@ -65,6 +65,31 @@ double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const
   return pow(score,4);
 }
 
+
+Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
+                                                   const Eigen::Vector3d& min_translations,
+                                                   const Eigen::Vector3d& max_translations)
+{
+  Eigen::Vector3d scores;
+
+  for (std::size_t i = 0; i < 3; i++)
+  {
+    double translation = grasp_pose.translation()[i] - min_translations[i];
+    double delta = max_translations[i] - min_translations[i];
+    double score = translation / delta;
+
+    scores[i] = pow(score,2);
+  }
+
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.translation","value, min, max, score:\n" <<
+                         grasp_pose.translation()[0] << ", " << min_translations[0] << ", " << max_translations[0] << ", " << scores[0] << "\n" <<
+                         grasp_pose.translation()[1] << ", " << min_translations[1] << ", " << max_translations[1] << ", " << scores[1] << "\n" <<
+                         grasp_pose.translation()[2] << ", " << min_translations[2] << ", " << max_translations[2] << ", " << scores[2] << "\n");
+
+  return scores;
+}
+
+
 Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose, 
                                                        const Eigen::Affine3d& ideal_pose)
 {

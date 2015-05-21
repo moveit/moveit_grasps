@@ -33,7 +33,7 @@
  *********************************************************************/
 /**
  * Authors : Andy McEvoy
- * Desc    : Functions for scoreing generated grasps
+ * Desc    : Functions for scoring generated grasps
  */
 
 #ifndef MOVEIT_GRASPS_GRASP_SCORER_
@@ -98,7 +98,19 @@ public:
                                     const Eigen::Affine3d& object_pose, 
                                     const double& min_grasp_distance, 
                                     const double& max_grasp_distance);
-  
+
+  /**
+   * \brief Score the grasp based on the translation values of the grasp pose
+   * \param grasp_pose - the pose of the end effector
+   * \param min_translations - the minimum translation values for all grasp poses
+   * \param max_translations - the maximum translation values for all grasp poses
+   * \return the unweighted scores:
+   *         0.0 -> pose is at the minimum translation in that axis
+   *         1.0 -> pose is at the maximum translation in that axis
+   */
+  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
+                                               const Eigen::Vector3d& min_translations,
+                                               const Eigen::Vector3d& max_translations);
 };
 
 } // end namespace moveit_grasps
