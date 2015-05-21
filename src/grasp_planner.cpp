@@ -78,8 +78,8 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr> &gr
     if (!ros::ok())
       return false;
     
-    ROS_DEBUG_STREAM_NAMED("grasp_planner","----------------------------------------------------------------");
-    ROS_DEBUG_STREAM_NAMED("grasp_planner","Attempting to plan cartesian grasp path #" << count++);
+    ROS_INFO_STREAM_NAMED("grasp_planner","");
+    ROS_INFO_STREAM_NAMED("grasp_planner","Attempting to plan cartesian grasp path #" << count++);
 
     if (!planApproachLiftRetreat(*grasp_it, current_state, planning_scene_monitor, grasp_data,
                                  verbose_cartesian_filtering, bin_height, bin_to_object))
@@ -93,6 +93,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr> &gr
       //++grasp_it; // move to next grasp
 
       // Once we have one valid path, just quit so we can use that one
+      ROS_INFO_STREAM_NAMED("grasp_planner","Valid grasp plan generated");
       break;
     }
 
@@ -148,7 +149,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
 
     lift_distance = grasp_candidate->grasp_data_->lift_distance_desired_;
   }
-  ROS_DEBUG_STREAM_NAMED("grasp_planner","Lift distance calculated to be " << lift_distance);
+  ROS_DEBUG_STREAM_NAMED("grasp_planner.lift_distance","Lift distance calculated to be " << lift_distance);
 
   // Create waypoints
   Eigen::Affine3d pregrasp_pose = visual_tools_->convertPose(pregrasp_pose_msg.pose);
@@ -225,7 +226,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
   if (!computeCartesianWaypointPath(grasp_candidate->grasp_data_->arm_jmg_, grasp_data,
                                     planning_scene_monitor, start_state, waypoints, segmented_cartesian_traj))
   {
-    ROS_INFO_STREAM_NAMED("grasp_planner.waypoints","Unable to plan approach lift retreat path");
+    ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints","Unable to plan approach lift retreat path");
 
     waitForNextStep("try next candidate grasp");
 
@@ -351,7 +352,7 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
 
   if (!valid_path_found)
   {
-    ROS_INFO_STREAM_NAMED("grasp_planner.waypoints","UNABLE to find valid waypoint cartesian path after "
+    ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints","UNABLE to find valid waypoint cartesian path after "
                           << MAX_IK_ATTEMPTS << " attempts");
     return false;
   }
