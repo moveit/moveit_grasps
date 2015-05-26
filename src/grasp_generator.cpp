@@ -78,7 +78,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
     Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
   ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
-  visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+  //visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "IDEAL_GRASP_POSE");
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose,
