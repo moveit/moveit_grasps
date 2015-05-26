@@ -67,6 +67,7 @@
 
 // moveit_grasps
 #include <moveit_grasps/grasp_candidate.h>
+#include <moveit_grasps/grasp_scorer.h>
 
 // bounding_box
 //#include <bounding_box/bounding_box.h>
@@ -136,11 +137,12 @@ public:
    * \param axis axis of cuboid to generate grasps around
    * \param grasp_data data describing end effector
    * \param grasp_candidates possible grasps generated
+   * \param only_edge_grasps - set to true if object is too wide to grap the face in this axis
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
                                 grasp_axis_t axis, const GraspDataPtr grasp_data, 
-                                std::vector<GraspCandidatePtr>& grasp_candidates);
+                                std::vector<GraspCandidatePtr>& grasp_candidates, bool only_edge_grasps);
 
   /**
    * \brief helper function for adding grasps at corner of cuboid
@@ -170,6 +172,21 @@ public:
   std::size_t addFaceGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
                                   std::vector<Eigen::Affine3d>& grasp_poses);
+
+  /**
+   * \brief helper function for adding grasps along the edges of the cuboid
+   * \param pose - pose of the object to grasp
+   * \param rotation_angles - rotation angles to go from cuboid pose to standard grasping pose
+   * \param delta - distance to move away from cuboid at each step
+   * \param translation - translation to go from cuboid centroid to grasping location
+   * \param alignment_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
+   * \param num_grasps - the number of grasps to generate around the corner
+   * \param grasp_poses - list of grasp poses generated
+   * \return the number of poses generated
+   */
+  std::size_t addEdgeGraspsHelper(Eigen::Affine3d cuboid_pose, double rotation_angles[3], Eigen::Vector3d translation,
+                                  Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
+                                  std::vector<Eigen::Affine3d>& grasp_poses, double corner_rotation);                            
 
   /**
    * \brief helper function for determining if the grasp will intersect the cuboid
@@ -207,10 +224,14 @@ public:
 
   /**
    * \brief Score the generated grasp poses
-   * \param 
+   * \param grasp_pose - the pose of the grasp
+   * \param grasp_data - data describing the end effector
+   * \param object_pose - the pose of the object being grasped
+   * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return
    */
-  double scoreGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose);
+  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
+                    const Eigen::Affine3d object_pose, double percent_open);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
@@ -278,6 +299,9 @@ public:
   bool visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
                                const moveit::core::JointModelGroup* ee_jmg, double animation_speed);
 
+  // Ideal grasp pose for scoring purposes
+  Eigen::Affine3d ideal_grasp_pose_;
+
 private:
 
   // class for publishing stuff to rviz
@@ -292,15 +316,25 @@ private:
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
 
-  // Ideal grasp pose for scoring purposes
-  Eigen::Affine3d ideal_grasp_pose_;
-
   // Visualization levels
   bool show_grasp_arrows_;
   double show_grasp_arrows_speed_;
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
+
+  double min_grasp_distance_, max_grasp_distance_;
+  Eigen::Vector3d min_translations_, max_translations_;
+
+  double depth_score_weight_;
+  double width_score_weight_;
+  double height_score_weight_;
+  double orientation_x_score_weight_;
+  double orientation_y_score_weight_;
+  double orientation_z_score_weight_;
+  double translation_x_score_weight_;
+  double translation_y_score_weight_;
+  double translation_z_score_weight_;
 
   //bounding_box::BoundingBox bounding_box_;
 
