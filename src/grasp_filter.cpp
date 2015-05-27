@@ -269,10 +269,8 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   // -----------------------------------------------------------------------------------------------
   // Choose Number of cores
   std::size_t num_threads = omp_get_max_threads();
-  ROS_WARN_STREAM_NAMED("grasp_filter","num threads is " << num_threads << " and " << grasp_candidates.size());
   if( num_threads > grasp_candidates.size() )
   {
-    std::cout << "here " << std::endl;
     num_threads = grasp_candidates.size();
   }
 

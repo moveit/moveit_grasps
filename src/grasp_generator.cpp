@@ -429,7 +429,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   {
     if (!addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_pose, object_width))
     {
-      ROS_DEBUG_STREAM_NAMED("grasp_generator.add","Unable to add grasp");
+      ROS_DEBUG_STREAM_NAMED("grasp_generator.add","Unable to add grasp - function returned false");
     }
     else
       num_grasps_added++;
