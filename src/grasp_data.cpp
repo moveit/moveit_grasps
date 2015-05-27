@@ -62,16 +62,16 @@ GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
   : base_link_("/base_link")
   , grasp_depth_(0.12)
   , angle_resolution_(16)
+  , robot_model_(robot_model)
 {
-  if (!loadGraspData(nh, end_effector, robot_model))
+  if (!loadGraspData(nh, end_effector))
   {
     ROS_ERROR_STREAM_NAMED("grasp_data","Error loading grasp data, shutting down");
     exit(-1);
   }
 }
 
-bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                              moveit::core::RobotModelConstPtr robot_model)
+bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)
 {
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture; // todo: remove all underscore post-fixes
@@ -156,9 +156,9 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   //angle_resolution_ = 32; //TODO parametrize this, or move to action interface
 
   // Copy values from RobotModel
-  ee_jmg_ = robot_model->getJointModelGroup(end_effector_name);
-  arm_jmg_ = robot_model->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
-  parent_link_ = robot_model->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
+  ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
+  arm_jmg_ = robot_model_->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
+  parent_link_ = robot_model_->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
 
   // Debug
   //moveit_grasps::Grasps::printObjectGraspData(grasp_data);
@@ -275,18 +275,17 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   //ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  // TODO get these values from joint_model, jaco specific
-  static const double MIN_JOINT_POSITION = 0.0;
-  static const double MAX_JOINT_POSITION = 0.742;
+  const moveit::core::JointModel* joint = robot_model_->getJointModel("jaco2_joint_finger_1");
+  const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
   for (std::size_t i = 0; i < joint_positions.size(); ++i)
   {
     // Error check
-    if (joint_positions[i] > MAX_JOINT_POSITION || joint_positions[i] < MIN_JOINT_POSITION)
+    if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
     {
       ROS_ERROR_STREAM_NAMED("grasp_data","Requested joint " << i << " with value " << joint_positions[i] 
                              << " is beyond limits of "
-                             << MIN_JOINT_POSITION << ", " << MAX_JOINT_POSITION);
+                             << bound.min_position_ << ", " << bound.max_position_);
       return false;
     }
   }

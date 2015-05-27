@@ -145,8 +145,8 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 
   // Try to filter grasps not in verbose mode
   std::size_t remaining_grasps = filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, 
-                                                    filter_pregrasp,
-                                                    verbose);
+                                                    filter_pregrasp, verbose);
+                                                    
   if (remaining_grasps == 0)
   {
     ROS_WARN_STREAM_NAMED("grasp_filter","Grasp filters removed all grasps!");
@@ -305,7 +305,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   }
 
   // Robot states -------------------------------------------------------------------------------
-  // Create an robot state for every thread
+  // Create a robot state for every thread
   if( robot_states_.size() != num_threads )
   {
     robot_states_.clear();
@@ -494,7 +494,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   // Set gripper position (how open the fingers are) to the custom open position
   grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
 
-  // Solve IK Problem
+  // Solve IK Problem for grasp posture
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_,
                       ik_thread_struct, grasp_candidate, constraint_fn))
   {
@@ -506,6 +506,15 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   // Copy solution to seed state so that next solution is faster
   ik_thread_struct->ik_seed_state_ = grasp_candidate->grasp_ik_solution_;
 
+  // Check if IK solution for grasp pose is valid for fingers closed as well
+  if (!checkFingersClosedIK(grasp_candidate->grasp_ik_solution_,
+                            ik_thread_struct, grasp_candidate, constraint_fn))
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Unable to find the-grasp IK solution with CLOSED fingers");
+    grasp_candidate->grasp_filtered_by_ik_closed_ = true;
+    return false;
+  }
+
   // Start pre-grasp section ----------------------------------------------------------
   if (ik_thread_struct->filter_pregrasp_)       // optionally check the pregrasp
   {
@@ -514,9 +523,9 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
 
     // Set gripper position (how open the fingers are) to CLOSED
-    grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
+    //grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
 
-    // Solve IK Problem
+    // Solve IK Problem for pregrasp
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
     {
       ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug","Unable to find PRE-grasp IK solution");
@@ -574,6 +583,23 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   else if( ik_thread_struct->error_code_.val != moveit_msgs::MoveItErrorCodes::SUCCESS )
   {
     ROS_ERROR_STREAM_NAMED("grasp_filter","Unknown MoveItErrorCode from IK solver: " << ik_thread_struct->error_code_.val);
+    return false;
+  }
+
+  return true;
+}
+
+bool GraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, 
+                                       GraspCandidatePtr& grasp_candidate,
+                                       const moveit::core::GroupStateValidityCallbackFn &constraint_fn)
+{
+  // Set gripper position (how open the fingers are) to CLOSED
+  grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
+
+  // Set callback function
+  if (!constraint_fn(ik_thread_struct->robot_state_.get(), grasp_candidate->grasp_data_->arm_jmg_, &ik_solution[0]))
+  {
+    ROS_WARN_STREAM_NAMED("grasp_filter","Grasp filtered because in collision with fingers CLOSED");
     return false;
   }
 

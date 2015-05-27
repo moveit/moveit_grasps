@@ -214,8 +214,17 @@ public:
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
-  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, GraspCandidatePtr& grasp_candidate,
+  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, 
+                      GraspCandidatePtr& grasp_candidate,
                       const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
+
+  /**
+   * \brief Check if ik solution is in collision with fingers closed
+   * \return true on success
+   */
+  bool checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, 
+                            GraspCandidatePtr& grasp_candidate,
+                            const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
 
   /**
    * \brief add a cutting plane

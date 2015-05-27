@@ -75,8 +75,8 @@ public:
    * \brief Helper function for constructor
    * \return true on success
    */
-  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                     moveit::core::RobotModelConstPtr robot_model);
+  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector);
+
   /**
    * \brief Alter a robot state so that the end effector corresponding to this grasp data is in pre-grasp state (OPEN)
    * \param joint state of robot
@@ -134,6 +134,7 @@ public:
   //std::string ee_group_name_; // the end effector name
   const robot_model::JointModelGroup* ee_jmg_; // this end effector
   const robot_model::JointModelGroup* arm_jmg_; // the arm that attaches to this end effector
+  const robot_model::RobotModelConstPtr robot_model_;
 
   double grasp_depth_; // distance from center point of object to end effector
   int angle_resolution_; // generate grasps at PI/angle_resolution increments
