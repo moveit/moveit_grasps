@@ -106,8 +106,20 @@ public:
    */
   void setWaitForNextStepCallback(WaitForNextStepCallback callback);
 
+  /**
+   * \brief Load parameter settings of the server under ~/debug_level
+   * \param parent_name - only used for debugging, allows one to see what paremeters are loaded in what namespace
+   * \param setting_namespace - where on this node's namespace to load settings 
+   *        e.g. /this_name/setting_namespace/some_parameter
+   * \return true on success
+   */
   bool loadEnabledSettings(const std::string& parent_name, const std::string& setting_namespace);
 
+  /**
+   * \brief Check if a setting is enabled
+   * \param setting_name - name of key on the parameter server as loaded in the 'setting_namespace'
+   * \return true if setting is enabled
+   */
   bool isEnabled(const std::string& setting_name);
 
 private:
