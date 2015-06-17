@@ -41,7 +41,7 @@
 #include <moveit_grasps/state_validity_callback.h>
 
 // Parameter loading
-#include <rviz_visual_tools/ros_param_utilities.h>
+#include <ros_param_shortcuts/ros_param_utilities.h>
 
 namespace moveit_grasps
 {
@@ -49,74 +49,74 @@ namespace moveit_grasps
 GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools )
   : visual_tools_(visual_tools)
 {
-  // Load verbose/visualization settings
-  const std::string parent_name = "grasp_planner"; // for namespacing logging messages
-  const std::string settings_namespace = "moveit_grasps/planner";
-  visual_tools_->loadEnabledSettings(parent_name, settings_namespace);
+// Load verbose/visualization settings
+const std::string parent_name = "grasp_planner"; // for namespacing logging messages
+const std::string settings_namespace = "moveit_grasps/planner";
+loadEnabledSettings(parent_name, settings_namespace);
 
-  ROS_INFO_STREAM_NAMED("grasp_planner","GraspPlanner Ready.");
+ROS_INFO_STREAM_NAMED("grasp_planner","GraspPlanner Ready.");
 }
 
 bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr> &grasp_candidates,
-                                              robot_state::RobotStatePtr current_state,
-                                              planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                              const GraspDataPtr grasp_data,
-                                              const double& bin_height, Eigen::Affine3d bin_to_object)
+                                                robot_state::RobotStatePtr current_state,
+                                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                                const GraspDataPtr grasp_data,
+                                                const double& bin_height, Eigen::Affine3d bin_to_object)
 {
-  std::cout << std::endl;
-  ROS_INFO_STREAM_NAMED("grasp_planner","Planning all remaining grasps with approach lift retreat cartesian path");
+std::cout << std::endl;
+ROS_INFO_STREAM_NAMED("grasp_planner","Planning all remaining grasps with approach lift retreat cartesian path");
 
-  // For each remaining grasp, calculate entire approach, lift, and retreat path.
-  // Remove those that have no valid path
-  bool verbose_cartesian_filtering = visual_tools_->isEnabled("verbose_cartesian_filtering");
-  std::size_t grasp_candidates_before_cartesian_path = grasp_candidates.size();
+// For each remaining grasp, calculate entire approach, lift, and retreat path.
+// Remove those that have no valid path
+bool verbose_cartesian_filtering = isEnabled("verbose_cartesian_filtering");
+std::size_t grasp_candidates_before_cartesian_path = grasp_candidates.size();
 
-  std::size_t count = 0;
-  for(std::vector<GraspCandidatePtr>::iterator grasp_it = grasp_candidates.begin();
-      grasp_it != grasp_candidates.end(); )
-  {
-    if (!ros::ok())
-      return false;
-    
-    ROS_INFO_STREAM_NAMED("grasp_planner","");
-    ROS_INFO_STREAM_NAMED("grasp_planner","Attempting to plan cartesian grasp path #" << count++);
+std::size_t count = 0;
+for(std::vector<GraspCandidatePtr>::iterator grasp_it = grasp_candidates.begin();
+grasp_it != grasp_candidates.end(); )
+ {
+if (!ros::ok())
+  return false;
 
-    if (!planApproachLiftRetreat(*grasp_it, current_state, planning_scene_monitor, grasp_data,
-                                 verbose_cartesian_filtering, bin_height, bin_to_object))
-    {
-      ROS_INFO_STREAM_NAMED("grasp_planner","Grasp candidate was unable to find valid cartesian waypoint path");
+ROS_INFO_STREAM_NAMED("grasp_planner","");
+ROS_INFO_STREAM_NAMED("grasp_planner","Attempting to plan cartesian grasp path #" << count++);
 
-      grasp_it = grasp_candidates.erase(grasp_it); // not valid
-    }
-    else
-    {
-      //++grasp_it; // move to next grasp
+if (!planApproachLiftRetreat(*grasp_it, current_state, planning_scene_monitor, grasp_data,
+                               verbose_cartesian_filtering, bin_height, bin_to_object))
+ {
+ROS_INFO_STREAM_NAMED("grasp_planner","Grasp candidate was unable to find valid cartesian waypoint path");
 
-      // Once we have one valid path, just quit so we can use that one
-      ROS_INFO_STREAM_NAMED("grasp_planner","Valid grasp plan generated");
-      break;
-    }
+grasp_it = grasp_candidates.erase(grasp_it); // not valid
+}
+ else
+ {
+//++grasp_it; // move to next grasp
 
-    if (verbose_cartesian_filtering)
-    {
-      visual_tools_->deleteAllMarkers();
-    }
-  }
+// Once we have one valid path, just quit so we can use that one
+ROS_INFO_STREAM_NAMED("grasp_planner","Valid grasp plan generated");
+break;
+}
 
-  // Results
-  if (verbose_cartesian_filtering)
-  {
-    std::cout << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "Total grasp candidates: " << grasp_candidates_before_cartesian_path << std::endl;
-    std::cout << "Failed due to invalid cartesian path: " << grasp_candidates_before_cartesian_path
-      - grasp_candidates.size() << std::endl;
-    std::cout << "Remaining grasp candidates: " << grasp_candidates.size() << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << std::endl;
-  }
+if (verbose_cartesian_filtering)
+ {
+visual_tools_->deleteAllMarkers();
+}
+}
 
-  return true;
+// Results
+if (verbose_cartesian_filtering)
+ {
+std::cout << std::endl;
+std::cout << "-------------------------------------------------------" << std::endl;
+std::cout << "Total grasp candidates: " << grasp_candidates_before_cartesian_path << std::endl;
+std::cout << "Failed due to invalid cartesian path: " << grasp_candidates_before_cartesian_path
+- grasp_candidates.size() << std::endl;
+std::cout << "Remaining grasp candidates: " << grasp_candidates.size() << std::endl;
+std::cout << "-------------------------------------------------------" << std::endl;
+std::cout << std::endl;
+ }
+
+ return true;
 }
 
 bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
@@ -182,7 +182,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
   waypoints.push_back(retreat_pose);
 
   // Visualize waypoints
-  bool show_cartesian_waypoints = visual_tools_->isEnabled("show_cartesian_waypoints");
+  bool show_cartesian_waypoints = isEnabled("show_cartesian_waypoints");
   if (show_cartesian_waypoints)
   {
     //bool static_id = false;
@@ -280,7 +280,7 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
   const double jump_threshold = 4; //config_->jump_threshold_; // aka jump factor
 
   // Collision setting
-  const bool collision_checking_verbose = visual_tools_->isEnabled("collision_checking_verbose");
+  const bool collision_checking_verbose = isEnabled("collision_checking_verbose");
   const bool only_check_self_collision = false;
 
   // Reference frame setting
@@ -353,7 +353,7 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
   if (!valid_path_found)
   {
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints","UNABLE to find valid waypoint cartesian path after "
-                          << MAX_IK_ATTEMPTS << " attempts");
+                           << MAX_IK_ATTEMPTS << " attempts");
     return false;
   }
 
@@ -369,6 +369,33 @@ void GraspPlanner::waitForNextStep(const std::string& message)
 void GraspPlanner::setWaitForNextStepCallback(WaitForNextStepCallback callback)
 {
   wait_for_next_step_callback_ = callback;
+}
+
+bool GraspPlanner::loadEnabledSettings(const std::string& parent_name, const std::string& setting_namespace)
+{
+  // Check if the map has been loaded yet
+  if (!enabled_setttings_loaded_)
+  {
+    enabled_setttings_loaded_ = true;
+    return rviz_visual_tools::getBoolMap(parent_name, nh_, setting_namespace, enabled_);
+  }
+  return true;
+}
+
+bool GraspPlanner::isEnabled(const std::string& setting_name)
+{
+  // Check if the map has been loaded yet. it is preferred if this is manually
+  if (!enabled_setttings_loaded_)
+    ROS_ERROR_STREAM_NAMED("rviz_visual_tools","Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
+
+  std::map<std::string,bool>::iterator it = enabled_.find(setting_name);
+  if(it != enabled_.end())
+  {
+    // Element found;
+    return it->second;
+  }
+  ROS_ERROR_STREAM_NAMED("rviz_visual_tools","isEnabled() key '" << setting_name << "' does not exist on the parameter server");
+  return false;
 }
 
 } // end namespace

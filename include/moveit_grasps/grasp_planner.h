@@ -106,6 +106,10 @@ public:
    */
   void setWaitForNextStepCallback(WaitForNextStepCallback callback);
 
+  bool loadEnabledSettings(const std::string& parent_name, const std::string& setting_namespace);
+
+  bool isEnabled(const std::string& setting_name);
+
 private:
 
   // A shared node handle
@@ -115,6 +119,11 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   WaitForNextStepCallback wait_for_next_step_callback_;
+
+  // Visualization settings
+  bool enabled_setttings_loaded_;
+  std::map<std::string, bool> enabled_;
+
 
 }; // end class
 

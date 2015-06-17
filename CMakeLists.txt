@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning_interface
   moveit_core
   moveit_visual_tools
+  ros_param_shortcuts
   tf
   tf_conversions
   trajectory_msgs
@@ -53,6 +54,7 @@ catkin_package(
     std_msgs
     message_runtime
     moveit_visual_tools
+    ros_param_shortcuts
   INCLUDE_DIRS include
 )
 

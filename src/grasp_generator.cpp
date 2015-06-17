@@ -38,7 +38,7 @@
 
 #include <moveit_grasps/grasp_generator.h>
 
-#include <rviz_visual_tools/ros_param_utilities.h>
+#include <ros_param_shortcuts/ros_param_utilities.h>
 
 namespace moveit_grasps
 {
