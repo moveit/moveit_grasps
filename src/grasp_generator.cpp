@@ -51,23 +51,23 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 {
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "verbose", verbose_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "verbose", verbose_);
 
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_grasp_arrows", show_grasp_arrows_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_grasp_arrows_speed", show_grasp_arrows_speed_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_grasp_arrows", show_grasp_arrows_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "show_grasp_arrows_speed", show_grasp_arrows_speed_);
 
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
 
   // Load scoring weights
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "depth_score_weight", depth_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "width_score_weight", width_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "depth_score_weight", depth_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "width_score_weight", width_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
 
   ROS_INFO_STREAM_NAMED("grasps","GraspGenerator Ready.");
 
@@ -818,8 +818,6 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   }
   total_score /= high_score;
 
-  // char entry[256];
-
   if (verbose_)
   {
     // visual_tools_->deleteAllMarkers();
@@ -836,15 +834,17 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
                            << weights[2] << ", " << weights[3] << ", " << weights[4] << ", " << 
                            weights[5] << ", " << weights[6] << ", " << weights[7] << "\n" <<
                            "\ttotal_score         = " << total_score);
-    visual_tools_->publishAxis(grasp_pose);
+    //visual_tools_->publishAxis(grasp_pose);
+    visual_tools_->publishZArrow(grasp_pose);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
     
-    ROS_INFO_STREAM_NAMED("grasp_generator","\033[1;36m\nPress 'Enter' to continue. Enter 'y' to skip scoring info...\033[0m");
-    
-    // std::cin.getline(entry,256);
-
-    // if (entry[0] == 'y')
-    //   verbose_ = false;
+    if (false) {
+      char entry[256];
+      ROS_INFO_STREAM_NAMED("grasp_generator","\033[1;36m\nPress 'Enter' to continue. Enter 'y' to skip scoring info...\033[0m");    
+      std::cin.getline(entry,256);
+      if (entry[0] == 'y')
+        verbose_ = false;
+    }
   }
   
   return total_score;

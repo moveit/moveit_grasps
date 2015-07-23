@@ -83,16 +83,16 @@ GraspFilter::GraspFilter( robot_state::RobotStatePtr robot_state,
 
   // Load visulization settings
   const std::string parent_name = "grasp_filter"; // for namespacing logging messages
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "collision_verbose", collision_verbose_);
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "statistics_verbose", statistics_verbose_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
-  rviz_visual_tools::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed",
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "collision_verbose", collision_verbose_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "statistics_verbose", statistics_verbose_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
+  ros_param_utilities::getDoubleParameter(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed",
                                         show_filtered_arm_solutions_pregrasp_speed_);
-  rviz_visual_tools::getBoolParameter(parent_name, nh_, "show_grasp_filter_collision_if_failed", show_grasp_filter_collision_if_failed_);
+  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_grasp_filter_collision_if_failed", show_grasp_filter_collision_if_failed_);
 
 
   ROS_INFO_STREAM_NAMED("grasp_filter","GraspFilter Ready.");
@@ -668,38 +668,39 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     CYAN - pregrasp filtered by collision
     GREEN - valid
   */
-
+  std::cout << "HERE " << std::endl;
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    double size = 0.01 * grasp_candidates[i]->grasp_.grasp_quality;
+    double size = 0.1; //0.01 * grasp_candidates[i]->grasp_.grasp_quality;
 
     if (grasp_candidates[i]->grasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, 
-                                   rviz_visual_tools::RED, rviz_visual_tools::SMALL, size);
+                                   rviz_visual_tools::RED, rviz_visual_tools::REGULAR, size);
     }
     else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, 
-                                   rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, size);
+                                   rviz_visual_tools::BLUE, rviz_visual_tools::REGULAR, size);
     }
     else if (grasp_candidates[i]->grasp_filtered_by_cutting_plane_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, 
-                                   rviz_visual_tools::MAGENTA, rviz_visual_tools::SMALL, size);
+                                   rviz_visual_tools::MAGENTA, rviz_visual_tools::REGULAR, size);
     }
     else if (grasp_candidates[i]->grasp_filtered_by_orientation_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, 
-                                   rviz_visual_tools::YELLOW, rviz_visual_tools::SMALL, size);
+                                   rviz_visual_tools::YELLOW, rviz_visual_tools::REGULAR, size);
     }
     else
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, 
-                                   rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, size);
+                                   rviz_visual_tools::GREEN, rviz_visual_tools::REGULAR, size);
   }
 
   // Publish in batch
   visual_tools_->triggerBatchPublishAndDisable();
+  ros::Duration(4).sleep();
 
   return true;
 }

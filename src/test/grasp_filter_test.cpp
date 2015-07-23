@@ -90,8 +90,8 @@ public:
   {
     // Get arm info from param server
     const std::string parent_name = "grasp_filter_test"; // for namespacing logging messages
-    rviz_visual_tools::getStringParameter(parent_name, nh_, "planning_group_name", planning_group_name_);
-    rviz_visual_tools::getStringParameter(parent_name, nh_, "ee_group_name", ee_group_name_);
+    ros_param_utilities::getStringParameter(parent_name, nh_, "planning_group_name", planning_group_name_);
+    ros_param_utilities::getStringParameter(parent_name, nh_, "ee_group_name", ee_group_name_);
 
     ROS_INFO_STREAM_NAMED("test","End Effector: " << ee_group_name_);
     ROS_INFO_STREAM_NAMED("test","Planning Group: " << planning_group_name_);
