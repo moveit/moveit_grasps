@@ -38,7 +38,7 @@
 
 #include <moveit_grasps/grasp_generator.h>
 
-#include <ros_param_utilities/ros_param_utilities.h>
+#include <ros_param_shortcuts/ros_param_shortcuts.h>
 
 namespace moveit_grasps
 {
@@ -51,23 +51,23 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 {
   // Load visulization settings
   const std::string parent_name = "grasps"; // for namespacing logging messages
-  ros_param_utilities::getBoolParameter(parent_name, nh_, "verbose", verbose_);
+  ros_param_shortcuts::getBoolParam(parent_name, nh_, "verbose", verbose_);
 
-  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_grasp_arrows", show_grasp_arrows_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "show_grasp_arrows_speed", show_grasp_arrows_speed_);
+  ros_param_shortcuts::getBoolParam(parent_name, nh_, "show_grasp_arrows", show_grasp_arrows_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "show_grasp_arrows_speed", show_grasp_arrows_speed_);
 
-  ros_param_utilities::getBoolParameter(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
+  ros_param_shortcuts::getBoolParam(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
 
   // Load scoring weights
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "depth_score_weight", depth_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "width_score_weight", width_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
-  ros_param_utilities::getDoubleParameter(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "depth_score_weight", depth_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "width_score_weight", width_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
+  ros_param_shortcuts::getDoubleParam(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
 
   ROS_INFO_STREAM_NAMED("grasps","GraspGenerator Ready.");
 

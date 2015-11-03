@@ -41,7 +41,7 @@
 #include <moveit_grasps/state_validity_callback.h>
 
 // Parameter loading
-#include <ros_param_utilities/ros_param_utilities.h>
+#include <ros_param_shortcuts/ros_param_shortcuts.h>
 
 namespace moveit_grasps
 {
@@ -378,7 +378,7 @@ bool GraspPlanner::loadEnabledSettings(const std::string& parent_name, const std
     if (!enabled_setttings_loaded_)
     {
         enabled_setttings_loaded_ = true;
-        return ros_param_utilities::getBoolMap(parent_name, nh_, setting_namespace, enabled_);
+        return ros_param_shortcuts::getBoolMap(parent_name, nh_, setting_namespace, enabled_);
     }
     return true;
 }
@@ -387,7 +387,7 @@ bool GraspPlanner::isEnabled(const std::string& setting_name)
 {
     // Check if the map has been loaded yet. it is preferred if this is manually
     if (!enabled_setttings_loaded_)
-        ROS_ERROR_STREAM_NAMED("ros_param_utilities","Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
+        ROS_ERROR_STREAM_NAMED("ros_param_shortcuts","Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
 
     std::map<std::string,bool>::iterator it = enabled_.find(setting_name);
     if(it != enabled_.end())
@@ -395,7 +395,7 @@ bool GraspPlanner::isEnabled(const std::string& setting_name)
         // Element found;
         return it->second;
     }
-    ROS_ERROR_STREAM_NAMED("ros_param_utilities","isEnabled() key '" << setting_name << "' does not exist on the parameter server");
+    ROS_ERROR_STREAM_NAMED("ros_param_shortcuts","isEnabled() key '" << setting_name << "' does not exist on the parameter server");
     return false;
 }
 
