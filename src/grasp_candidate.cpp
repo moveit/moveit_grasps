@@ -40,7 +40,6 @@
 
 namespace moveit_grasps
 {
-
 GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose)
   : grasp_(grasp)
   , grasp_data_(grasp_data)
@@ -49,14 +48,15 @@ GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr gras
   , grasp_filtered_by_cutting_plane_(false)
   , grasp_filtered_by_orientation_(false)
   , pregrasp_filtered_by_ik_(false)
-{}
+{
+}
 
 bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr &robot_state)
 {
   // Error check
   if (pregrasp_ik_solution_.empty())
   {
-    ROS_ERROR_STREAM_NAMED("grasp_candidate","No pregrasp ik solution available to set");
+    ROS_ERROR_STREAM_NAMED("grasp_candidate", "No pregrasp ik solution available to set");
     return false;
   }
 
@@ -64,8 +64,8 @@ bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr &robot_state)
   robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
 
   // Set end effector to correct configuration
-  //grasp_data_->setRobotStatePreGrasp(robot_state);
-  grasp_data_->setRobotState( robot_state, grasp_.pre_grasp_posture );
+  // grasp_data_->setRobotStatePreGrasp(robot_state);
+  grasp_data_->setRobotState(robot_state, grasp_.pre_grasp_posture);
 
   return true;
 }
@@ -75,7 +75,7 @@ bool GraspCandidate::getGraspStateOpen(moveit::core::RobotStatePtr robot_state)
   // Error check
   if (grasp_ik_solution_.empty())
   {
-    ROS_ERROR_STREAM_NAMED("grasp_candidate","No grasp ik solution available to set");
+    ROS_ERROR_STREAM_NAMED("grasp_candidate", "No grasp ik solution available to set");
     return false;
   }
 
@@ -88,7 +88,7 @@ bool GraspCandidate::getGraspStateOpen(moveit::core::RobotStatePtr robot_state)
 
 bool GraspCandidate::getGraspStateOpenEEOnly(moveit::core::RobotStatePtr robot_state)
 {
-  return grasp_data_->setRobotState( robot_state, grasp_.pre_grasp_posture );
+  return grasp_data_->setRobotState(robot_state, grasp_.pre_grasp_posture);
 }
 
 bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr robot_state)
@@ -102,18 +102,16 @@ bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr robot_state
 
 bool GraspCandidate::getGraspStateClosedEEOnly(moveit::core::RobotStatePtr robot_state)
 {
-  return grasp_data_->setRobotState( robot_state, grasp_.grasp_posture );
+  return grasp_data_->setRobotState(robot_state, grasp_.grasp_posture);
 }
 
 bool GraspCandidate::isValid()
 {
-  if (grasp_filtered_by_ik_ ||
-      grasp_filtered_by_cutting_plane_ ||
-      grasp_filtered_by_orientation_ ||
+  if (grasp_filtered_by_ik_ || grasp_filtered_by_cutting_plane_ || grasp_filtered_by_orientation_ ||
       pregrasp_filtered_by_ik_)
     return false;
   else
     return true;
 }
 
-} // namespace
+}  // namespace

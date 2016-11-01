@@ -52,7 +52,6 @@
 
 namespace moveit_grasps
 {
-
 typedef std::vector<std::vector<moveit::core::RobotStatePtr> > GraspTrajectories;
 enum GraspTrajectorySegments
 {
@@ -68,7 +67,6 @@ enum GraspTrajectorySegments
 class GraspCandidate
 {
 public:
-
   GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose);
 
   bool getPreGraspState(moveit::core::RobotStatePtr &robot_state);
@@ -85,7 +83,7 @@ public:
 
   moveit_msgs::Grasp grasp_;
   /*# Contents of moveit_msgs::Grasp for reference
-    
+
     # A name for this grasp
     string id
 
@@ -149,19 +147,20 @@ public:
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
   bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_ik_closed_; // ik solution was fine with fingers opened, but failed with fingers closed
-  bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
-  bool grasp_filtered_by_orientation_; // grasp pose is not desireable
+  bool grasp_filtered_by_ik_closed_;      // ik solution was fine with fingers opened, but failed with fingers closed
+  bool grasp_filtered_by_cutting_plane_;  // grasp pose is in an unreachable part of the environment (ex: inside or
+                                          // behind a wall)
+  bool grasp_filtered_by_orientation_;    // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
   // TODO possibly remove
-  Eigen::Affine3d cuboid_pose_; // pose of original object to grasp 
+  Eigen::Affine3d cuboid_pose_;  // pose of original object to grasp
 
   // Store pregrasp, grasp, lifted, and retreat trajectories
   GraspTrajectories segmented_cartesian_traj_;
-}; // class
+};  // class
 
 typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
-} // namespace
+}  // namespace
 
 #endif

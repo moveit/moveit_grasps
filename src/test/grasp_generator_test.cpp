@@ -47,7 +47,6 @@
 
 namespace moveit_grasps
 {
-
 static const double BLOCK_SIZE = 0.04;
 
 class GraspGeneratorTest
@@ -71,22 +70,20 @@ private:
   std::string planning_group_name_;
 
 public:
-
   // Constructor
-  GraspGeneratorTest(int num_tests)
-    : nh_("~")
+  GraspGeneratorTest(int num_tests) : nh_("~")
   {
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
 
-    ROS_INFO_STREAM_NAMED("test","End Effector: " << ee_group_name_);
-    ROS_INFO_STREAM_NAMED("test","Planning Group: " << planning_group_name_);
+    ROS_INFO_STREAM_NAMED("test", "End Effector: " << ee_group_name_);
+    ROS_INFO_STREAM_NAMED("test", "Planning Group: " << planning_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base"));
     visual_tools_->deleteAllMarkers();
 
-    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("base","grasp_visuals"));
+    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("base", "grasp_visuals"));
     grasp_visuals_->deleteAllMarkers();
 
     // ---------------------------------------------------------------------------------------------
@@ -97,13 +94,13 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_, true) );
+    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, true));
     grasp_generator_->setVerbose(true);
 
     grasp_generator_->ideal_grasp_pose_ = Eigen::Affine3d::Identity();
     grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ *
-      Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
-      Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
+                                          Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
+                                          Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
     grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
 
     // Visualize poses
@@ -125,12 +122,12 @@ public:
       for (std::size_t i = 0; i < 4; ++i)
       {
         // Test visualization of end effector in OPEN position
-        grasp_data_->setRobotStatePreGrasp( visual_tools_->getSharedRobotState() );
+        grasp_data_->setRobotStatePreGrasp(visual_tools_->getSharedRobotState());
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::ORANGE, "test_eef");
         ros::Duration(1.0).sleep();
 
         // Test visualization of end effector in CLOSED position
-        grasp_data_->setRobotStateGrasp( visual_tools_->getSharedRobotState() );
+        grasp_data_->setRobotStateGrasp(visual_tools_->getSharedRobotState());
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::GREEN, "test_eef");
         ros::Duration(1.0).sleep();
       }
@@ -143,9 +140,9 @@ public:
 
     // Loop
     int i = 0;
-    while(ros::ok())
+    while (ros::ok())
     {
-      ROS_INFO_STREAM_NAMED("test","Adding random object " << i+1 << " of " << num_tests);
+      ROS_INFO_STREAM_NAMED("test", "Adding random object " << i + 1 << " of " << num_tests);
 
       // Remove randomness when we are only running one test
       if (num_tests == 1)
@@ -154,7 +151,7 @@ public:
         generateRandomObject(object_pose);
 
       // Show the block
-      //visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
+      // visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
 
       possible_grasps.clear();
 
@@ -166,16 +163,17 @@ public:
       grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
 
-      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, possible_grasps);
+      grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
+                                       possible_grasps);
 
       // Visualize them
-      //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
-      //double animate_speed = 0.1;
-      //visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
+      // visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
+      // double animate_speed = 0.1;
+      // visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
 
       // Test if done
       ++i;
-      if( i >= num_tests )
+      if (i >= num_tests)
         break;
     }
   }
@@ -199,18 +197,18 @@ public:
 
     // Choose which object to test
     object_pose = start_object_pose;
-    //visual_tools_->publishObject( object_pose, OBJECT_SIZE, true );
+    // visual_tools_->publishObject( object_pose, OBJECT_SIZE, true );
   }
 
   void generateRandomObject(geometry_msgs::Pose& object_pose)
   {
     // Position
-    object_pose.position.x = fRand(0.1,0.9); //0.55);
-    object_pose.position.y = fRand(-0.28,0.28);
+    object_pose.position.x = fRand(0.1, 0.9);  // 0.55);
+    object_pose.position.y = fRand(-0.28, 0.28);
     object_pose.position.z = 0.02;
 
     // Orientation
-    double angle = M_PI * fRand(0.1,1);
+    double angle = M_PI * fRand(0.1, 1);
     Eigen::Quaterniond quat(Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
     object_pose.orientation.x = quat.x();
     object_pose.orientation.y = quat.y();
@@ -224,17 +222,16 @@ public:
     return fMin + f * (fMax - fMin);
   }
 
-}; // end of class
+};  // end of class
 
-} // namespace
+}  // namespace
 
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   int num_tests = 1;
   ros::init(argc, argv, "grasp_generator_test");
 
-  ROS_INFO_STREAM_NAMED("main","GraspGenerator Test");
+  ROS_INFO_STREAM_NAMED("main", "GraspGenerator Test");
 
   ros::AsyncSpinner spinner(2);
   spinner.start();
@@ -251,8 +248,8 @@ int main(int argc, char *argv[])
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
-  ROS_INFO_STREAM_NAMED("","Total time: " << duration);
-  //std::cout << duration << "\t" << num_tests << std::endl;
+  ROS_INFO_STREAM_NAMED("", "Total time: " << duration);
+  // std::cout << duration << "\t" << num_tests << std::endl;
 
   return 0;
 }

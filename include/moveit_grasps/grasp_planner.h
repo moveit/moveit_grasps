@@ -47,52 +47,47 @@
 
 namespace moveit_grasps
 {
-
 // Allow an interrupt to be called that waits for user input, useful for debugging
 typedef boost::function<void(std::string message)> WaitForNextStepCallback;
 
 class GraspPlanner
 {
 public:
-
   /**
    * \brief Constructor
    */
-  GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools );
+  GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Plan entire cartesian manipulation sequence
    * \param input - description
    * \return true on success
    */
-  bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr> &grasp_candidates,
-                               robot_state::RobotStatePtr current_state,
-                               planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const GraspDataPtr grasp_data,
-                                  const double& bin_height, Eigen::Affine3d bin_to_object);
+  bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                  robot_state::RobotStatePtr current_state,
+                                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                  const GraspDataPtr grasp_data, const double& bin_height,
+                                  Eigen::Affine3d bin_to_object);
 
   /**
    * \brief Plan entire cartesian manipulation sequence
    * \param input - description
    * \return true on success
    */
-  bool planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
-                               robot_state::RobotStatePtr current_state,
+  bool planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, robot_state::RobotStatePtr current_state,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const GraspDataPtr grasp_data,
-                               bool verbose_cartesian_filtering,
+                               const GraspDataPtr grasp_data, bool verbose_cartesian_filtering,
                                const double& bin_height, Eigen::Affine3d bin_to_object);
 
   /**
    * \brief Compute a cartesian path along waypoints
    * \return true on success
    */
-  bool computeCartesianWaypointPath(const moveit::core::JointModelGroup* arm_jmg,
-                                    const GraspDataPtr grasp_data,
+  bool computeCartesianWaypointPath(const moveit::core::JointModelGroup* arm_jmg, const GraspDataPtr grasp_data,
                                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                     const moveit::core::RobotStatePtr start_state,
-                                    const EigenSTL::vector_Affine3d &waypoints,
-                                    GraspTrajectories &segmented_cartesian_traj);
+                                    const EigenSTL::vector_Affine3d& waypoints,
+                                    GraspTrajectories& segmented_cartesian_traj);
 
   /**
    * \brief Wait for user input to proceeed
@@ -109,7 +104,7 @@ public:
   /**
    * \brief Load parameter settings of the server under ~/debug_level
    * \param parent_name - only used for debugging, allows one to see what paremeters are loaded in what namespace
-   * \param setting_namespace - where on this node's namespace to load settings 
+   * \param setting_namespace - where on this node's namespace to load settings
    *        e.g. /this_name/setting_namespace/some_parameter
    * \return true on success
    */
@@ -123,7 +118,6 @@ public:
   bool isEnabled(const std::string& setting_name);
 
 private:
-
   // A shared node handle
   ros::NodeHandle nh_;
 
@@ -136,13 +130,12 @@ private:
   bool enabled_setttings_loaded_;
   std::map<std::string, bool> enabled_;
 
-
-}; // end class
+};  // end class
 
 // Create boost pointers for this class
 typedef boost::shared_ptr<GraspPlanner> GraspPlannerPtr;
 typedef boost::shared_ptr<const GraspPlanner> GraspPlannerConstPtr;
 
-} // end namespace
+}  // end namespace
 
 #endif

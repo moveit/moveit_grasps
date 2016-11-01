@@ -83,39 +83,43 @@
 
 namespace moveit_grasps
 {
-
 static const double RAD2DEG = 57.2957795;
-static const double MIN_GRASP_DISTANCE = 0.001; //m between grasps
+static const double MIN_GRASP_DISTANCE = 0.001;  // m between grasps
 
 // Grasp axis orientation
-enum grasp_axis_t {X_AXIS, Y_AXIS, Z_AXIS};
+enum grasp_axis_t
+{
+  X_AXIS,
+  Y_AXIS,
+  Z_AXIS
+};
 
 // Class
 class GraspGenerator
 {
-
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles). With GCC, this is done with a attribute ((aligned(16))).
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles).
+                                   // With GCC, this is done with a attribute ((aligned(16))).
+
+      /**
+       * \brief Constructor
+       */
+      GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
   /**
-   * \brief Constructor
-   */
-  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
-
-  /**
-   * \brief Create possible grasp positions around a cuboid 
+   * \brief Create possible grasp positions around a cuboid
    * \param mesh_msg - model of object to grasp from perception
    * \param cuboid_pose - centroid of object to grasp in world frame
    * \param grasp_data data describing end effector
    * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
-  //bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
-  //                          const moveit_grasps::GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
-                            
+  // bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Affine3d& cuboid_pose,
+  //                          const moveit_grasps::GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>&
+  //                          grasp_candidates);
 
   /**
-   * \brief Create possible grasp positions around a cuboid 
+   * \brief Create possible grasp positions around a cuboid
    * \param cuboid_pose - centroid of object to grasp in world frame
    * \param depth length of cuboid along local x-axis
    * \param width length of cuboid along local y-axis
@@ -124,10 +128,9 @@ public:
    * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
-  bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,double height, 
-                            const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
-                            
-  
+  bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
+                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+
   /**
    * \brief Create grasp positions around one axis of a cuboid
    * \param cuboid_pose - centroid of object to grasp in world frame
@@ -140,8 +143,8 @@ public:
    * \param only_edge_grasps - set to true if object is too wide to grap the face in this axis
    * \return true if successful
    */
-  bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height, 
-                                grasp_axis_t axis, const GraspDataPtr grasp_data, 
+  bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
+                                grasp_axis_t axis, const GraspDataPtr grasp_data,
                                 std::vector<GraspCandidatePtr>& grasp_candidates, bool only_edge_grasps);
 
   /**
@@ -152,10 +155,10 @@ public:
    * \param corner_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
    * \param num_radial_grasps - the number of grasps to generate around the corner
    * \param grasp_poses - list of grasp poses generated
-   * \return the number of poses generated 
+   * \return the number of poses generated
    */
   std::size_t addCornerGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
-                                    double corner_rotation, std::size_t num_radial_grasps, 
+                                    double corner_rotation, std::size_t num_radial_grasps,
                                     std::vector<Eigen::Affine3d>& grasp_poses);
 
   /**
@@ -167,7 +170,7 @@ public:
    * \param alignment_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
    * \param num_grasps - the number of grasps to generate around the corner
    * \param grasp_poses - list of grasp poses generated
-   * \return the number of poses generated 
+   * \return the number of poses generated
    */
   std::size_t addFaceGraspsHelper(Eigen::Affine3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
@@ -186,7 +189,7 @@ public:
    */
   std::size_t addEdgeGraspsHelper(Eigen::Affine3d cuboid_pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
-                                  std::vector<Eigen::Affine3d>& grasp_poses, double corner_rotation);                            
+                                  std::vector<Eigen::Affine3d>& grasp_poses, double corner_rotation);
 
   /**
    * \brief helper function for determining if the grasp will intersect the cuboid
@@ -209,7 +212,8 @@ public:
    * \param u, v - location of intersection
    * \return true if the line intersects the plane
    */
-  bool intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b, double& u, double& v);
+  bool intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b, double& u,
+                          double& v);
 
   /**
    * \brief creates grasp messages from the generated grasp poses
@@ -219,8 +223,9 @@ public:
    * \param object_pose - pose of object to grasp
    * \return true on success
    */
-  bool addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                const Eigen::Affine3d& object_pose, double object_width);
+  bool addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data,
+                std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose,
+                double object_width);
 
   /**
    * \brief Score the generated grasp poses
@@ -230,26 +235,27 @@ public:
    * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return
    */
-  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, 
-                    const Eigen::Affine3d object_pose, double percent_open);
+  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose,
+                    double percent_open);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
-   * \param grasp 
+   * \param grasp
    * \param name of parent link
    * \return the approach direction
    */
-  static Eigen::Vector3d getPreGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+  static Eigen::Vector3d getPreGraspDirection(const moveit_msgs::Grasp& grasp, const std::string& ee_parent_link);
   //  static Eigen::Vector3d getPostGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
    * \brief Using an input grasp description, get the pregrasp pose
-   * \param grasp 
+   * \param grasp
    * \param name of parent link
    * \return pregrasp pose
    */
-  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
-  //static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp& grasp, const std::string& ee_parent_link);
+  // static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string
+  // &ee_parent_link);
 
   /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
@@ -257,19 +263,19 @@ public:
    * \param arm - the planning group of the arm we want to display
    * \return true on success
    */
-  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data, const rviz_visual_tools::colors &color, 
-                         double approach_length = 0.1);
+  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
+                         const rviz_visual_tools::colors& color, double approach_length = 0.1);
 
   /**
    * \brief Getter for Verbose
-   */ 
+   */
   bool getVerbose()
   {
     return verbose_;
   }
 
-  /** 
-   * \brief Getter for ideal grasp pose 
+  /**
+   * \brief Getter for ideal grasp pose
    */
   Eigen::Affine3d getIdealGraspPose()
   {
@@ -303,7 +309,6 @@ public:
   Eigen::Affine3d ideal_grasp_pose_;
 
 private:
-
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
@@ -336,13 +341,13 @@ private:
   double translation_y_score_weight_;
   double translation_z_score_weight_;
 
-  //bounding_box::BoundingBox bounding_box_;
+  // bounding_box::BoundingBox bounding_box_;
 
-}; // end of class
+};  // end of class
 
 typedef boost::shared_ptr<GraspGenerator> GraspGeneratorPtr;
 typedef boost::shared_ptr<const GraspGenerator> GraspGeneratorConstPtr;
 
-} // namespace
+}  // namespace
 
 #endif

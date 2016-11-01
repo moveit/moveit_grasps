@@ -56,17 +56,13 @@
 
 namespace moveit_grasps
 {
-
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link")
-  , grasp_depth_(0.12)
-  , angle_resolution_(16)
-  , robot_model_(robot_model)
+  : base_link_("/base_link"), grasp_depth_(0.12), angle_resolution_(16), robot_model_(robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data","Error loading grasp data, shutting down");
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Error loading grasp data, shutting down");
     exit(-1);
   }
 }
@@ -74,7 +70,7 @@ GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
 bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)
 {
   std::vector<std::string> joint_names;
-  std::vector<double> pre_grasp_posture; // todo: remove all underscore post-fixes
+  std::vector<double> pre_grasp_posture;  // todo: remove all underscore post-fixes
   std::vector<double> grasp_posture;
   std::vector<double> grasp_pose_to_eef_transform;
   double pregrasp_time_from_start;
@@ -84,12 +80,15 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // Helper to let user know what is wrong
   if (!nh.hasParam("base_link"))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader","Grasp configuration parameter `base_link` missing from rosparam server. Did you load your end effector's configuration yaml file? Searching in namespace: " << nh.getNamespace());
+    ROS_ERROR_STREAM_NAMED("grasp_data_loader", "Grasp configuration parameter `base_link` missing from rosparam "
+                                                "server. Did you load your end effector's configuration yaml file? "
+                                                "Searching in namespace: "
+                                                    << nh.getNamespace());
     return false;
   }
 
   // Load all other parameters
-  const std::string parent_name = "grasp_data"; // for namespacing logging messages
+  const std::string parent_name = "grasp_data";  // for namespacing logging messages
   rosparam_shortcuts::get(parent_name, nh, "base_link", base_link_);
 
   // Search within the sub-namespace of this end effector name
@@ -125,7 +124,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   // -------------------------------
   // Create pre-grasp posture if specified
-  if(!pre_grasp_posture.empty())
+  if (!pre_grasp_posture.empty())
   {
     pre_grasp_posture_.header.frame_id = base_link_;
     pre_grasp_posture_.header.stamp = ros::Time::now();
@@ -150,10 +149,10 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // -------------------------------
   // Nums
   // distance from center point of object to end effector
-  grasp_depth_ = 0.06;// in negative or 0 this makes the grasps on the other side of the object! (like from below)
+  grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
 
   // generate grasps at PI/angle_resolution increments
-  //angle_resolution_ = 32; //TODO parametrize this, or move to action interface
+  // angle_resolution_ = 32; //TODO parametrize this, or move to action interface
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
@@ -161,30 +160,29 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   parent_link_ = robot_model_->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
 
   // Debug
-  //moveit_grasps::Grasps::printObjectGraspData(grasp_data);
+  // moveit_grasps::Grasps::printObjectGraspData(grasp_data);
 
   return true;
 }
 
-bool GraspData::setRobotStatePreGrasp( robot_state::RobotStatePtr &robot_state )
+bool GraspData::setRobotStatePreGrasp(robot_state::RobotStatePtr& robot_state)
 {
-  ROS_WARN_STREAM_NAMED("grasp_data","setRobotStatePreGrasp is probably wrong");
-  return setRobotState( robot_state, pre_grasp_posture_ );
+  ROS_WARN_STREAM_NAMED("grasp_data", "setRobotStatePreGrasp is probably wrong");
+  return setRobotState(robot_state, pre_grasp_posture_);
 }
 
-bool GraspData::setRobotStateGrasp( robot_state::RobotStatePtr &robot_state )
+bool GraspData::setRobotStateGrasp(robot_state::RobotStatePtr& robot_state)
 {
-  ROS_WARN_STREAM_NAMED("grasp_data","setRobotStateGrasp is probably wrong");
-  return setRobotState( robot_state, grasp_posture_ );
+  ROS_WARN_STREAM_NAMED("grasp_data", "setRobotStateGrasp is probably wrong");
+  return setRobotState(robot_state, grasp_posture_);
 }
 
-bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state,
-                               const trajectory_msgs::JointTrajectory &posture )
+bool GraspData::setRobotState(robot_state::RobotStatePtr& robot_state, const trajectory_msgs::JointTrajectory& posture)
 {
   // Assume joint trajectory has only 1 waypoint
   if (posture.points.size() < 1)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data","Posture trajectory must have at least 1 waypoint");
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Posture trajectory must have at least 1 waypoint");
     return false;
   }
 
@@ -193,8 +191,7 @@ bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state,
   for (std::size_t i = 0; i < posture.joint_names.size(); ++i)
   {
     // Set joint position
-    robot_state->setJointPositions( posture.joint_names[i],
-                                    posture.points[0].positions );
+    robot_state->setJointPositions(posture.joint_names[i], posture.points[0].positions);
   }
   return true;
 }
@@ -204,7 +201,7 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
 {
   if (percent_open < 0 || percent_open > 1)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data","Invalid percentage passed in " << percent_open);
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Invalid percentage passed in " << percent_open);
     return false;
   }
 
@@ -213,31 +210,33 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
 
   // Max width = max_finger_width_
   // Min width = min_finger_width_adjusted
-  double distance_btw_fingers = min_finger_width_adjusted + (max_finger_width_ - min_finger_width_adjusted) * percent_open;
+  double distance_btw_fingers =
+      min_finger_width_adjusted + (max_finger_width_ - min_finger_width_adjusted) * percent_open;
   return fingerWidthToGraspPosture(distance_btw_fingers, grasp_posture);
 }
 
 bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
-                                         trajectory_msgs::JointTrajectory& grasp_posture)
+                                          trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  ROS_DEBUG_STREAM_NAMED("grasp_data","Setting grasp posture to have distance_between_fingers of "
-                         << distance_btw_fingers);
+  ROS_DEBUG_STREAM_NAMED("grasp_data", "Setting grasp posture to have distance_between_fingers of "
+                                           << distance_btw_fingers);
 
   // Error check
   const double EPSILON = 0.0000001;
   if (distance_btw_fingers > max_finger_width_ + EPSILON || distance_btw_fingers < min_finger_width_ - EPSILON)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_data","Requested " << distance_btw_fingers << " is beyond limits of "
-                           << min_finger_width_ << "," << max_finger_width_);
+    ROS_DEBUG_STREAM_NAMED("grasp_data", "Requested " << distance_btw_fingers << " is beyond limits of "
+                                                      << min_finger_width_ << "," << max_finger_width_);
     return false;
   }
 
   // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
-  static const double SLOPE = -6.881728199; //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
-  static const double INTERCEPT = 0.7097604907; //0.7097604907; //10.36703297;
+  static const double SLOPE =
+      -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
+  static const double INTERCEPT = 0.7097604907;  // 0.7097604907; //10.36703297;
   double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
 
-  ROS_DEBUG_STREAM_NAMED("grasp_data","Converted to joint position " << joint_position);
+  ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << joint_position);
 
   std::vector<double> joint_positions;
   joint_positions.resize(6);
@@ -245,7 +244,7 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
   joint_positions[1] = joint_position;
 
   // JACO SPECIFIC
-  static const double FINGER_3_OFFSET = -0.1; // open more than the others
+  static const double FINGER_3_OFFSET = -0.1;  // open more than the others
 
   // TODO get these values from joint_model, jaco specific
   static const double MIN_JOINT_POSITION = 0.0;
@@ -270,9 +269,9 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
 }
 
 bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions,
-                                             trajectory_msgs::JointTrajectory &grasp_posture)
+                                             trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  //ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
+  // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
   const moveit::core::JointModel* joint = robot_model_->getJointModel("jaco2_joint_finger_1");
@@ -283,9 +282,9 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
     // Error check
     if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
     {
-      ROS_ERROR_STREAM_NAMED("grasp_data","Requested joint " << i << " with value " << joint_positions[i]
-                             << " is beyond limits of "
-                             << bound.min_position_ << ", " << bound.max_position_);
+      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << i << " with value " << joint_positions[i]
+                                                              << " is beyond limits of " << bound.min_position_ << ", "
+                                                              << bound.max_position_);
       return false;
     }
   }
@@ -296,8 +295,9 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // Error check
   if (joint_positions.size() != grasp_posture.points.front().positions.size())
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data","Not enough finger joints passed in: " << joint_positions.size()
-                           << " positions but expect " << grasp_posture.points.front().positions.size());
+    ROS_ERROR_STREAM_NAMED("grasp_data",
+                           "Not enough finger joints passed in: " << joint_positions.size() << " positions but expect "
+                                                                  << grasp_posture.points.front().positions.size());
     return false;
   }
 
@@ -309,12 +309,13 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
 
 void GraspData::print()
 {
-  ROS_WARN_STREAM_NAMED("grasp_data","Debug Grasp Data variable values:");
-  std::cout << "grasp_pose_to_eef_pose_: \n" << grasp_pose_to_eef_pose_.translation() << "\n" << grasp_pose_to_eef_pose_.rotation() <<std::endl;
+  ROS_WARN_STREAM_NAMED("grasp_data", "Debug Grasp Data variable values:");
+  std::cout << "grasp_pose_to_eef_pose_: \n" << grasp_pose_to_eef_pose_.translation() << "\n"
+            << grasp_pose_to_eef_pose_.rotation() << std::endl;
   std::cout << "pre_grasp_posture_: \n" << pre_grasp_posture_ << std::endl;
   std::cout << "grasp_posture_: \n" << grasp_posture_ << std::endl;
   std::cout << "base_link_: " << base_link_ << std::endl;
-  std::cout << "ee_group_: " << ee_jmg_->getName()  <<  std::endl;
+  std::cout << "ee_group_: " << ee_jmg_->getName() << std::endl;
   std::cout << "grasp_depth_: " << grasp_depth_ << std::endl;
   std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
   std::cout << "finger_to_palm_depth_: " << finger_to_palm_depth_ << std::endl;
@@ -323,4 +324,4 @@ void GraspData::print()
   std::cout << "min_finger_width_: " << min_finger_width_ << std::endl;
 }
 
-} // namespace
+}  // namespace

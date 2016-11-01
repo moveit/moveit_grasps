@@ -50,11 +50,11 @@ bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool
 
   if (!planning_scene)
   {
-    ROS_ERROR_STREAM_NAMED("manipulation","No planning scene provided");
+    ROS_ERROR_STREAM_NAMED("manipulation", "No planning scene provided");
     return false;
   }
   if (!planning_scene->isStateColliding(*robot_state, group->getName()))
-    return true; // not in collision
+    return true;  // not in collision
 
   // Display more info about the collision
   if (verbose)
@@ -67,6 +67,6 @@ bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool
   return false;
 }
 
-} // namespace
+}  // namespace
 
 #endif

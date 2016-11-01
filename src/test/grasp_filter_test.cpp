@@ -69,32 +69,29 @@
 
 namespace moveit_grasps
 {
-
 // Table dimensions
 static const double TABLE_HEIGHT = .92;
 static const double TABLE_WIDTH = .85;
 static const double TABLE_DEPTH = .47;
 static const double TABLE_X = 0.66;
 static const double TABLE_Y = 0;
-static const double TABLE_Z = -0.9/2+0.01;
+static const double TABLE_Z = -0.9 / 2 + 0.01;
 
 static const double BLOCK_SIZE = 0.04;
 
 class GraspGeneratorTest
 {
 public:
-
   // Constructor
-  GraspGeneratorTest()
-    : nh_("~")
+  GraspGeneratorTest() : nh_("~")
   {
     // Get arm info from param server
-    const std::string parent_name = "grasp_filter_test"; // for namespacing logging messages
+    const std::string parent_name = "grasp_filter_test";  // for namespacing logging messages
     rosparam_shortcuts::get(parent_name, nh_, "planning_group_name", planning_group_name_);
     rosparam_shortcuts::get(parent_name, nh_, "ee_group_name", ee_group_name_);
 
-    ROS_INFO_STREAM_NAMED("test","End Effector: " << ee_group_name_);
-    ROS_INFO_STREAM_NAMED("test","Planning Group: " << planning_group_name_);
+    ROS_INFO_STREAM_NAMED("test", "End Effector: " << ee_group_name_);
+    ROS_INFO_STREAM_NAMED("test", "Planning Group: " << planning_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load planning scene to share
@@ -107,7 +104,7 @@ public:
     }
     else
     {
-      ROS_ERROR_STREAM_NAMED("test","Planning scene not configured");
+      ROS_ERROR_STREAM_NAMED("test", "Planning scene not configured");
       return;
     }
 
@@ -135,11 +132,11 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset( new moveit_grasps::GraspGenerator(visual_tools_) );
+    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
-    grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_) );
+    grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_));
 
     // ---------------------------------------------------------------------------------------------
     // Clear Markers
@@ -155,34 +152,37 @@ public:
     // Loop
     for (std::size_t i = 0; i < num_tests; ++i)
     {
-      if(!ros::ok())
+      if (!ros::ok())
         break;
 
-      ROS_INFO_STREAM_NAMED("test","Adding random object " << i+1 << " of " << num_tests);
+      ROS_INFO_STREAM_NAMED("test", "Adding random object " << i + 1 << " of " << num_tests);
 
       // Generate random cuboid
       geometry_msgs::Pose object_pose;
       double depth;
       double width;
       double height;
-      rviz_visual_tools::RandomPoseBounds pose_bounds(0.4, 0.6, -0.25, 0.25, 0, 0.5); // xmin, xmax, ymin, ymax, zmin, zmax
+      rviz_visual_tools::RandomPoseBounds pose_bounds(0.4, 0.6, -0.25, 0.25, 0,
+                                                      0.5);  // xmin, xmax, ymin, ymax, zmin, zmax
       visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
       visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
 
       // Generate set of grasps for one object
-      ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
+      ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
       std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
-      grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, grasp_candidates);
+      grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
+                                       grasp_candidates);
 
       // add grasps at variable depth
-      //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);
+      // grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_,
+      // grasp_candidates);
 
       // Filter the grasp for only the ones that are reachable
-      ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
+      ROS_INFO_STREAM_NAMED("test", "Filtering grasps kinematically");
       bool filter_pregrasps = true;
-      bool verbose = false; // note: setting this to true will disable threading
-      //int direction = 1;
+      bool verbose = false;  // note: setting this to true will disable threading
+      // int direction = 1;
 
       // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
       // Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
@@ -199,20 +199,18 @@ public:
       // grasp_filter_->clearDesiredGraspOrientations();
       // grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
 
-      std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
-                                                             arm_jmg_, visual_tools_->getSharedRobotState(),
-                                                             filter_pregrasps);
-
+      std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
+                                                             visual_tools_->getSharedRobotState(), filter_pregrasps);
 
       if (valid_grasps == 0)
       {
-        ROS_ERROR_STREAM_NAMED("test","No valid grasps found after IK filtering");
+        ROS_ERROR_STREAM_NAMED("test", "No valid grasps found after IK filtering");
         continue;
       }
 
-      ROS_INFO_STREAM_NAMED("test","finished trial, wating 5s to start next trial");
-      ros::Duration(5.0).sleep(); // give some time to look at results of each trial
-    } // for each trial
+      ROS_INFO_STREAM_NAMED("test", "finished trial, wating 5s to start next trial");
+      ros::Duration(5.0).sleep();  // give some time to look at results of each trial
+    }                              // for each trial
     return true;
   }
 
@@ -228,24 +226,24 @@ public:
     visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
 
     // Generate set of grasps for one object
-    ROS_INFO_STREAM_NAMED("test","Generating cuboid grasps");
+    ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
-    grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, grasp_candidates);
-
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
+                                     grasp_candidates);
 
     // add grasps at variable depth
-    //grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);
+    // grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_, grasp_candidates);
 
     // Filter the grasp for only the ones that are reachable
-    ROS_INFO_STREAM_NAMED("test","Filtering grasps kinematically");
+    ROS_INFO_STREAM_NAMED("test", "Filtering grasps kinematically");
     bool filter_pregrasps = true;
-    bool verbose = false; // note: setting this to true will disable threading
+    bool verbose = false;  // note: setting this to true will disable threading
     int direction = 1;
 
     // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
     Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
     filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
-    //visual_tools_->publishAxis(filter_pose);
+    // visual_tools_->publishAxis(filter_pose);
     grasp_filter_->clearCuttingPlanes();
     grasp_filter_->addCuttingPlane(filter_pose, moveit_grasps::YZ, direction);
 
@@ -253,16 +251,16 @@ public:
     filter_pose = Eigen::Affine3d::Identity();
     filter_pose = filter_pose * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY());
     filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
-    //visual_tools_->publishAxis(filter_pose);
+    // visual_tools_->publishAxis(filter_pose);
     grasp_filter_->clearDesiredGraspOrientations();
     grasp_filter_->addDesiredGraspOrientation(filter_pose, M_PI / 4.0);
 
-    std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_,
-                                                           arm_jmg_, visual_tools_->getSharedRobotState(), filter_pregrasps);
+    std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
+                                                           visual_tools_->getSharedRobotState(), filter_pregrasps);
 
     if (valid_grasps == 0)
     {
-      ROS_ERROR_STREAM_NAMED("test","No valid grasps found after IK filtering");
+      ROS_ERROR_STREAM_NAMED("test", "No valid grasps found after IK filtering");
       return false;
     }
     return true;
@@ -310,12 +308,11 @@ private:
   std::string ee_group_name_;
   std::string planning_group_name_;
 
-}; // end of class
+};  // end of class
 
-} // namespace
+}  // namespace
 
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   int num_tests = 1;
 
@@ -335,15 +332,14 @@ int main(int argc, char *argv[])
   // Run Tests
   moveit_grasps::GraspGeneratorTest tester;
   tester.testRandomGrasps(num_tests);
-  //tester.unitTest();
+  // tester.unitTest();
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
-  ROS_INFO_STREAM_NAMED("","Total time: " << duration);
+  ROS_INFO_STREAM_NAMED("", "Total time: " << duration);
   std::cout << duration << "\t" << num_tests << std::endl;
 
-  ros::Duration(1.0).sleep(); // let rviz markers finish publishing
+  ros::Duration(1.0).sleep();  // let rviz markers finish publishing
 
   return 0;
-
 }

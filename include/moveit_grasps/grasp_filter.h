@@ -65,8 +65,12 @@
 
 namespace moveit_grasps
 {
-
-enum grasp_parallel_plane{XY, XZ, YZ};
+enum grasp_parallel_plane
+{
+  XY,
+  XZ,
+  YZ
+};
 
 /**
  * \brief Contains information to filter grasps by a cutting plane
@@ -78,10 +82,9 @@ struct CuttingPlane
   int direction_;
 
   CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
-    : pose_(pose)
-    , plane_(plane)
-    , direction_(direction)
-  {}
+    : pose_(pose), plane_(plane), direction_(direction)
+  {
+  }
 };
 typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
 
@@ -94,42 +97,34 @@ struct DesiredGraspOrientation
   double max_angle_offset_;
 
   DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
-    : pose_(pose)
-    , max_angle_offset_(max_angle_offset)
-  {}
+    : pose_(pose), max_angle_offset_(max_angle_offset)
+  {
+  }
 };
 typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
-
 
 /**
  * \brief Struct for passing parameters to threads, for cleaner code
  */
 struct IkThreadStruct
 {
-  IkThreadStruct(
-                 std::vector<GraspCandidatePtr> &grasp_candidates, // the input
-                 planning_scene::PlanningScenePtr planning_scene,
-                 Eigen::Affine3d &link_transform,
-                 std::size_t grasp_id,
-                 kinematics::KinematicsBaseConstPtr kin_solver,
-                 robot_state::RobotStatePtr robot_state,
-                 double timeout,
-                 bool filter_pregrasp,
-                 bool verbose,
-                 std::size_t thread_id)
-    : grasp_candidates_(grasp_candidates),
-    planning_scene_(planning_scene),
-    link_transform_(link_transform),
-    grasp_id(grasp_id),
-    kin_solver_(kin_solver),
-    robot_state_(robot_state),
-    timeout_(timeout),
-    filter_pregrasp_(filter_pregrasp),
-    verbose_(verbose),
-    thread_id_(thread_id)
+  IkThreadStruct(std::vector<GraspCandidatePtr>& grasp_candidates,  // the input
+                 planning_scene::PlanningScenePtr planning_scene, Eigen::Affine3d& link_transform, std::size_t grasp_id,
+                 kinematics::KinematicsBaseConstPtr kin_solver, robot_state::RobotStatePtr robot_state, double timeout,
+                 bool filter_pregrasp, bool verbose, std::size_t thread_id)
+    : grasp_candidates_(grasp_candidates)
+    , planning_scene_(planning_scene)
+    , link_transform_(link_transform)
+    , grasp_id(grasp_id)
+    , kin_solver_(kin_solver)
+    , robot_state_(robot_state)
+    , timeout_(timeout)
+    , filter_pregrasp_(filter_pregrasp)
+    , verbose_(verbose)
+    , thread_id_(thread_id)
   {
   }
-  std::vector<GraspCandidatePtr> &grasp_candidates_;
+  std::vector<GraspCandidatePtr>& grasp_candidates_;
   planning_scene::PlanningScenePtr planning_scene_;
   Eigen::Affine3d link_transform_;
   std::size_t grasp_id;
@@ -152,10 +147,8 @@ typedef boost::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 class GraspFilter
 {
 public:
-
   // Constructor
-  GraspFilter( robot_state::RobotStatePtr robot_state,
-               moveit_visual_tools::MoveItVisualToolsPtr& visual_tools );
+  GraspFilter(robot_state::RobotStatePtr robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Return grasps that are kinematically feasible
@@ -166,8 +159,7 @@ public:
    */
   bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                    const robot_model::JointModelGroup* arm_jmg,
-                    const moveit::core::RobotStatePtr seed_state,
+                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
                     bool filter_pregrasp = false);
 
   /**
@@ -178,13 +170,16 @@ public:
    * \param direction - which side of this plane to cut (+/- 1)
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose,
-                          grasp_parallel_plane plane, int direction);
+  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose, grasp_parallel_plane plane,
+                          int direction);
 
   /**
-   * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand a tiny
-   *        amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't removed
-   *        by the cutting plane operations. We know we'll never get to them because they deviate too much from the desired
+   * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
+   * a tiny
+   *        amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't
+   * removed
+   *        by the cutting plane operations. We know we'll never get to them because they deviate too much from the
+   * desired
    *        grasping pose... straight in.
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param desired_pose - the desired grasp pose ( using standard grasping orientation )
@@ -201,9 +196,7 @@ public:
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
-                                 const moveit::core::RobotStatePtr seed_state,
-                                 bool filter_pregrasp,
-                                 bool verbose);
+                                 const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp, bool verbose);
 
   /**
    * \brief Thread for checking part of the possible grasps list
@@ -214,17 +207,17 @@ public:
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
-  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, 
+  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
                       GraspCandidatePtr& grasp_candidate,
-                      const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
+                      const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
 
   /**
    * \brief Check if ik solution is in collision with fingers closed
    * \return true on success
    */
-  bool checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct, 
+  bool checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
                             GraspCandidatePtr& grasp_candidate,
-                            const moveit::core::GroupStateValidityCallbackFn &constraint_fn);
+                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
 
   /**
    * \brief add a cutting plane
@@ -261,14 +254,14 @@ public:
    * \brief Of an array of grasps, sort the valid ones from best score to worse score
    * \return true on success, false if no grasps remain
    */
-  bool removeInvalidAndFilter( std::vector<GraspCandidatePtr>& grasp_candidates );
+  bool removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief Show grasps after being filtered
    * \return true on success
    */
   bool visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
-                       const moveit::core::JointModelGroup *arm_jmg);
+                       const moveit::core::JointModelGroup* arm_jmg);
 
   /**
    * \brief Show IK solutions of entire arm
@@ -301,7 +294,6 @@ public:
   }
 
 private:
-
   // Allow a writeable robot state
   robot_state::RobotStatePtr robot_state_;
 
@@ -338,11 +330,11 @@ private:
   std::vector<CuttingPlanePtr> cutting_planes_;
   std::vector<DesiredGraspOrientationPtr> desired_grasp_orientations_;
 
-}; // end of class
+};  // end of class
 
 typedef boost::shared_ptr<GraspFilter> GraspFilterPtr;
 typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
-} // namespace
+}  // namespace
 
 #endif
