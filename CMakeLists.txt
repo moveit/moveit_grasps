@@ -1,6 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(moveit_grasps)
 
+add_compile_options(-std=c++11)
+
+find_package(Eigen3 REQUIRED)
+
+# Eigen 3.2 (Wily) only provides EIGEN3_INCLUDE_DIR, not EIGEN3_INCLUDE_DIRS
+if(NOT EIGEN3_INCLUDE_DIRS)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
+
+find_package(Boost REQUIRED thread system)
+find_package(OpenMP)
+
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -10,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning_interface
   moveit_core
   moveit_visual_tools
-  ros_param_shortcuts
+  rosparam_shortcuts
   tf
   tf_conversions
   trajectory_msgs
@@ -19,12 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   moveit_msgs
-  cmake_modules
 )
-
-find_package(Eigen REQUIRED)
-find_package(Boost REQUIRED thread system)
-find_package(OpenMP)
 
 add_message_files(DIRECTORY msg FILES
   GraspGeneratorOptions.msg
@@ -54,8 +61,11 @@ catkin_package(
     std_msgs
     message_runtime
     moveit_visual_tools
-    ros_param_shortcuts
-  INCLUDE_DIRS include
+    rosparam_shortcuts
+  INCLUDE_DIRS
+    include
+  DEPENDS
+    EIGEN3
 )
 
 ###########
@@ -65,6 +75,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 # Grasp Library
@@ -85,7 +96,7 @@ add_library(${PROJECT_NAME}_filter
 )
 target_link_libraries(${PROJECT_NAME}_filter
   ${PROJECT_NAME}
-  ${catkin_LIBRARIES} 
+  ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}") # for threading
@@ -100,17 +111,17 @@ target_link_libraries(${PROJECT_NAME}_filter_test
 # Test grasp executable
 add_executable(${PROJECT_NAME}_test src/test/grasp_generator_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test
-  ${PROJECT_NAME} 
-  ${catkin_LIBRARIES} 
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
 # Test mesh bounding box
 add_executable(bounding_box_test src/test/mesh_bounding_box_test.cpp)
 target_link_libraries(bounding_box_test
-  ${PROJECT_NAME} 
-  ${catkin_LIBRARIES} 
-  ${Boost_LIBRARIES} 
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 # Test grasp data settings

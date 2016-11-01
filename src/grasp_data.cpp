@@ -49,7 +49,7 @@
 #define _USE_MATH_DEFINES
 
 // Parameter loading
-#include <ros_param_shortcuts/ros_param_shortcuts.h>
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 // Pose conversion
 #include <rviz_visual_tools/rviz_visual_tools.h>
@@ -90,38 +90,38 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   // Load all other parameters
   const std::string parent_name = "grasp_data"; // for namespacing logging messages
-  ros_param_shortcuts::getStringParam(parent_name, nh, "base_link", base_link_);
+  rosparam_shortcuts::get(parent_name, nh, "base_link", base_link_);
 
   // Search within the sub-namespace of this end effector name
   ros::NodeHandle child_nh(nh, end_effector);
 
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "finger_to_palm_depth", finger_to_palm_depth_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
-  ros_param_shortcuts::getIntParam(parent_name, child_nh, "angle_resolution", angle_resolution_);
-  ros_param_shortcuts::getStringParam(parent_name, child_nh, "end_effector_name", end_effector_name);
-  ros_param_shortcuts::getStringParams(parent_name, child_nh, "joints", joint_names);
-  ros_param_shortcuts::getDoubleParams(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
-  ros_param_shortcuts::getDoubleParams(parent_name, child_nh, "grasp_posture", grasp_posture);
-  ros_param_shortcuts::getDoubleParams(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "max_finger_width", max_finger_width_);
-  ros_param_shortcuts::getDoubleParam(parent_name, child_nh, "min_finger_width", min_finger_width_);
+  rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
+  rosparam_shortcuts::get(parent_name, child_nh, "finger_to_palm_depth", finger_to_palm_depth_);
+  rosparam_shortcuts::get(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
+  rosparam_shortcuts::get(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
+  rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
+  rosparam_shortcuts::get(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
+  rosparam_shortcuts::get(parent_name, child_nh, "angle_resolution", angle_resolution_);
+  rosparam_shortcuts::get(parent_name, child_nh, "end_effector_name", end_effector_name);
+  rosparam_shortcuts::get(parent_name, child_nh, "joints", joint_names);
+  rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
+  rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
+  rosparam_shortcuts::get(parent_name, child_nh, "min_finger_width", min_finger_width_);
 
   // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
 
   // Orientation
   ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
-  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertXYZRPY(grasp_pose_to_eef_transform);
+  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform);
 
   // -------------------------------
   // Create pre-grasp posture if specified
@@ -178,7 +178,7 @@ bool GraspData::setRobotStateGrasp( robot_state::RobotStatePtr &robot_state )
   return setRobotState( robot_state, grasp_posture_ );
 }
 
-bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state, 
+bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state,
                                const trajectory_msgs::JointTrajectory &posture )
 {
   // Assume joint trajectory has only 1 waypoint
@@ -199,7 +199,7 @@ bool GraspData::setRobotState( robot_state::RobotStatePtr &robot_state,
   return true;
 }
 
-bool GraspData::setGraspWidth(const double& percent_open, const double& min_finger_width, 
+bool GraspData::setGraspWidth(const double& percent_open, const double& min_finger_width,
                               trajectory_msgs::JointTrajectory& grasp_posture)
 {
   if (percent_open < 0 || percent_open > 1)
@@ -217,7 +217,7 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
   return fingerWidthToGraspPosture(distance_btw_fingers, grasp_posture);
 }
 
-bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers, 
+bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
                                          trajectory_msgs::JointTrajectory& grasp_posture)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_data","Setting grasp posture to have distance_between_fingers of "
@@ -258,7 +258,7 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     joint_positions[2] = MIN_JOINT_POSITION;
   }
   if (joint_positions[2] > MAX_JOINT_POSITION)
-  {    
+  {
     joint_positions[2] = MAX_JOINT_POSITION;
   }
 
@@ -283,7 +283,7 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
     // Error check
     if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
     {
-      ROS_ERROR_STREAM_NAMED("grasp_data","Requested joint " << i << " with value " << joint_positions[i] 
+      ROS_ERROR_STREAM_NAMED("grasp_data","Requested joint " << i << " with value " << joint_positions[i]
                              << " is beyond limits of "
                              << bound.min_position_ << ", " << bound.max_position_);
       return false;
@@ -296,7 +296,7 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // Error check
   if (joint_positions.size() != grasp_posture.points.front().positions.size())
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data","Not enough finger joints passed in: " << joint_positions.size() 
+    ROS_ERROR_STREAM_NAMED("grasp_data","Not enough finger joints passed in: " << joint_positions.size()
                            << " positions but expect " << grasp_posture.points.front().positions.size());
     return false;
   }

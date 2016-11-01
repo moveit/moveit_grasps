@@ -41,7 +41,7 @@
 #include <moveit_grasps/state_validity_callback.h>
 
 // Parameter loading
-#include <ros_param_shortcuts/ros_param_shortcuts.h>
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace moveit_grasps
 {
@@ -322,11 +322,12 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
 
         // Compute Cartesian Path
         segmented_cartesian_traj.clear();
-        last_valid_percentage = start_state_copy.computeCartesianPathSegmented(arm_jmg, segmented_cartesian_traj,
-                                                                               ik_tip_link,
-                                                                               waypoints, global_reference_frame,
-                                                                               max_step, jump_threshold, constraint_fn,
-                                                                               kinematics::KinematicsQueryOptions());
+        ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "computeCartesianPathSegmented was never merged into main moveit");
+        // last_valid_percentage = start_state_copy.computeCartesianPathSegmented(arm_jmg, segmented_cartesian_traj,
+        //                                                                        ik_tip_link,
+        //                                                                        waypoints, global_reference_frame,
+        //                                                                        max_step, jump_threshold, constraint_fn,
+        //                                                                        kinematics::KinematicsQueryOptions());
 
         ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints","Cartesian last_valid_percentage: " << last_valid_percentage
                                << " number of segments in trajectory: " << segmented_cartesian_traj.size());
@@ -378,7 +379,7 @@ bool GraspPlanner::loadEnabledSettings(const std::string& parent_name, const std
     if (!enabled_setttings_loaded_)
     {
         enabled_setttings_loaded_ = true;
-        return ros_param_shortcuts::getBoolMap(parent_name, nh_, setting_namespace, enabled_);
+        return rosparam_shortcuts::get(parent_name, nh_, setting_namespace, enabled_);
     }
     return true;
 }
@@ -387,7 +388,7 @@ bool GraspPlanner::isEnabled(const std::string& setting_name)
 {
     // Check if the map has been loaded yet. it is preferred if this is manually
     if (!enabled_setttings_loaded_)
-        ROS_ERROR_STREAM_NAMED("ros_param_shortcuts","Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
+        ROS_ERROR_STREAM_NAMED("rosparam_shortcuts","Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
 
     std::map<std::string,bool>::iterator it = enabled_.find(setting_name);
     if(it != enabled_.end())
@@ -395,7 +396,7 @@ bool GraspPlanner::isEnabled(const std::string& setting_name)
         // Element found;
         return it->second;
     }
-    ROS_ERROR_STREAM_NAMED("ros_param_shortcuts","isEnabled() key '" << setting_name << "' does not exist on the parameter server");
+    ROS_ERROR_STREAM_NAMED("rosparam_shortcuts","isEnabled() key '" << setting_name << "' does not exist on the parameter server");
     return false;
 }
 

@@ -87,7 +87,7 @@ public:
     visual_tools_->deleteAllMarkers();
 
     grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("base","grasp_visuals"));
-    grasp_visuals_->deleteAllMarkers();    
+    grasp_visuals_->deleteAllMarkers();
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
@@ -101,8 +101,8 @@ public:
     grasp_generator_->setVerbose(true);
 
     grasp_generator_->ideal_grasp_pose_ = Eigen::Affine3d::Identity();
-    grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ * 
-      Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) * 
+    grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ *
+      Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
       Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
     grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
 
@@ -132,7 +132,7 @@ public:
         // Test visualization of end effector in CLOSED position
         grasp_data_->setRobotStateGrasp( visual_tools_->getSharedRobotState() );
         visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::GREEN, "test_eef");
-        ros::Duration(1.0).sleep();      
+        ros::Duration(1.0).sleep();
       }
     }
 
@@ -164,15 +164,15 @@ public:
       double height = 0.15;
 
       grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
-      grasp_visuals_->publishAxis(object_pose);
+      grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
 
       grasp_generator_->generateGrasps( visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_, possible_grasps);
-                                              
+
       // Visualize them
       //visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
       //double animate_speed = 0.1;
       //visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
-      
+
       // Test if done
       ++i;
       if( i >= num_tests )

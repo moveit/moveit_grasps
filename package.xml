@@ -2,7 +2,7 @@
   <name>moveit_grasps</name>
   <version>2.0.0</version>
   <description>
-    A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt! pick and place pipeline. 
+    A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt! pick and place pipeline.
     Does not consider friction cones or other dynamics.
   </description>
   <maintainer email="davetcoleman@gmail.com">Dave Coleman</maintainer>
@@ -29,13 +29,12 @@
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>moveit_core</build_depend>
   <build_depend>moveit_visual_tools</build_depend>
-  <build_depend>ros_param_shortcuts</build_depend>
+  <build_depend>rosparam_shortcuts</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>actionlib</build_depend>
-  <build_depend>moveit_msgs</build_depend>  
+  <build_depend>moveit_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>actionlib_msgs</build_depend>
-  <build_depend>cmake_modules</build_depend>
 
   <run_depend>std_msgs</run_depend>
   <run_depend>trajectory_msgs</run_depend>
@@ -44,6 +43,6 @@
   <run_depend>actionlib_msgs</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>moveit_visual_tools</run_depend>
-  <run_depend>ros_param_shortcuts</run_depend>
+  <run_depend>rosparam_shortcuts</run_depend>
 
 </package>
