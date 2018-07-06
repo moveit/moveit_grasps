@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2015, University of Colorado, Boulder
+ *  Copyright (c) 2014, University of Colorado, Boulder
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,24 +33,140 @@
  *********************************************************************/
 
 /* Author: Dave Coleman
-   Desc:   Tests the grasp generator
+   Desc:   Tests the grasp generator filter
 */
 
 // ROS
 #include <ros/ros.h>
 #include <geometry_msgs/PoseArray.h>
+#include <sensor_msgs/JointState.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-// Grasp generation
+// MoveIt
+#include <moveit_msgs/MoveGroupAction.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit_msgs/RobotState.h>
+#include <moveit/kinematic_constraints/utils.h>
+#include <moveit/robot_state/robot_state.h>
+#include <moveit/robot_state/conversions.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
+
+// Rviz
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
+
+// Grasp
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_filter.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
+
+// Baxter specific properties
+#include <moveit_grasps/grasp_data.h>
+
+// Parameter loading
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace moveit_grasps
 {
+// Table dimensions
+static const double TABLE_HEIGHT = .92;
+static const double TABLE_WIDTH = .85;
+static const double TABLE_DEPTH = .47;
+static const double TABLE_X = 0.66;
+static const double TABLE_Y = 0;
+static const double TABLE_Z = -0.9 / 2 + 0.01;
+
 static const double BLOCK_SIZE = 0.04;
 
 class GraspGeneratorTest
 {
+public:
+  // Constructor
+  GraspGeneratorTest() : nh_("~")
+  {
+    // Get arm info from param server
+    const std::string parent_name = "grasp_generation_test";  // for namespacing logging messages
+    // rosparam_shortcuts::get(parent_name, nh_, "planning_group_name", planning_group_name_);
+    // rosparam_shortcuts::get(parent_name, nh_, "ee_group_name", ee_group_name_);
+
+    ee_group_name_ = "hand";
+    planning_group_name_ = "panda_arm";
+
+    ROS_INFO_STREAM_NAMED("test", "End Effector: " << ee_group_name_);
+    ROS_INFO_STREAM_NAMED("test", "Planning Group: " << planning_group_name_);
+
+    // ---------------------------------------------------------------------------------------------
+    // Load planning scene to share
+    planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+    if (planning_scene_monitor_->getPlanningScene())
+    {
+      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+                                                            "grasping_planning_scene");
+      planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
+    }
+    else
+    {
+      ROS_ERROR_STREAM_NAMED("test", "Planning scene not configured");
+      return;
+    }
+
+    const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor_->getRobotModel();
+    // get the joint model group for the main robot arm
+    arm_jmg_ = robot_model->getJointModelGroup(planning_group_name_);
+
+    // ---------------------------------------------------------------------------------------------
+    // Load the Robot Viz Tools for publishing to Rviz
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/rviz_visual_tools",
+                                                                   planning_scene_monitor_));
+
+    visual_tools_->loadTrajectoryPub();
+    visual_tools_->loadRobotStatePub();
+    visual_tools_->loadSharedRobotState();
+    visual_tools_->getSharedRobotState()->setToDefaultValues();
+    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState());
+    robot_state::RobotStatePtr kinematic_state = visual_tools_->getSharedRobotState();
+
+    // ---------------------------------------------------------------------------------------------
+    // Load grasp data specific to our robot
+    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+
+    // ---------------------------------------------------------------------------------------------
+    // Clear out old collision objects
+    visual_tools_->removeAllCollisionObjects();
+
+    // ---------------------------------------------------------------------------------------------
+    // Load grasp generator
+    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
+
+    // ---------------------------------------------------------------------------------------------
+    // Clear Markers
+    visual_tools_->deleteAllMarkers();
+    Eigen::Affine3d world_cs = Eigen::Affine3d::Identity();
+    visual_tools_->publishAxis(world_cs);
+  }
+
+  bool unitTest()
+  {
+    geometry_msgs::Pose object_pose;
+    object_pose.position.x = 0.5;
+    object_pose.position.y = 0.0;
+    object_pose.position.z = 0.5;
+    double depth = 0.03;
+    double width = 0.03;
+    double height = 0.15;
+
+    visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
+    visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+    visual_tools_->trigger();
+
+    // Generate set of grasps for one object
+    ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
+    std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
+                                     grasp_candidates);
+  }
+
 private:
   // A shared node handle
   ros::NodeHandle nh_;
@@ -58,169 +174,24 @@ private:
   // Grasp generator
   moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
-  // class for publishing stuff to rviz
+  // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  rviz_visual_tools::RvizVisualToolsPtr grasp_visuals_;
 
-  // robot-specific data for generating grasps
+  // Grasp filter
+  moveit_grasps::GraspFilterPtr grasp_filter_;
+
+  // data for generating grasps
   moveit_grasps::GraspDataPtr grasp_data_;
+
+  // Shared planning scene (load once for everything)
+  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+
+  // Arm
+  const robot_model::JointModelGroup* arm_jmg_;
 
   // which baxter arm are we using
   std::string ee_group_name_;
   std::string planning_group_name_;
-
-public:
-  // Constructor
-  GraspGeneratorTest(int num_tests) : nh_("~")
-  {
-    nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
-
-    ROS_INFO_STREAM_NAMED("test", "End Effector: " << ee_group_name_);
-    ROS_INFO_STREAM_NAMED("test", "Planning Group: " << planning_group_name_);
-
-    // ---------------------------------------------------------------------------------------------
-    // Load the Robot Viz Tools for publishing to Rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base"));
-    visual_tools_->deleteAllMarkers();
-
-    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("base", "grasp_visuals"));
-    grasp_visuals_->deleteAllMarkers();
-
-    // ---------------------------------------------------------------------------------------------
-    // Load grasp data specific to our robot
-    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
-
-    const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
-
-    // ---------------------------------------------------------------------------------------------
-    // Load grasp generator
-    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, true));
-    grasp_generator_->setVerbose(true);
-
-    grasp_generator_->ideal_grasp_pose_ = Eigen::Affine3d::Identity();
-    grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ *
-                                          Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
-                                          Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
-    grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
-
-    // Visualize poses
-    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_EE_GRASP_POSE");
-
-    Eigen::Affine3d grasp_to_eef = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
-    grasp_visuals_->publishAxisLabeled(grasp_to_eef, "GRASP_POSE_TO_EEF_POSE_");
-
-    // publish world coordinate system
-    grasp_visuals_->publishAxis(Eigen::Affine3d::Identity());
-
-    geometry_msgs::Pose pose;
-    visual_tools_->generateEmptyPose(pose);
-
-    // ---------------------------------------------------------------------------------------------
-    // Animate open and closing end effector
-    if (false)
-    {
-      for (std::size_t i = 0; i < 4; ++i)
-      {
-        // Test visualization of end effector in OPEN position
-        grasp_data_->setRobotStatePreGrasp(visual_tools_->getSharedRobotState());
-        visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::ORANGE, "test_eef");
-        ros::Duration(1.0).sleep();
-
-        // Test visualization of end effector in CLOSED position
-        grasp_data_->setRobotStateGrasp(visual_tools_->getSharedRobotState());
-        visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::GREEN, "test_eef");
-        ros::Duration(1.0).sleep();
-      }
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // Generate grasps for a bunch of random objects
-    geometry_msgs::Pose object_pose;
-    std::vector<moveit_grasps::GraspCandidatePtr> possible_grasps;
-
-    // Loop
-    int i = 0;
-    while (ros::ok())
-    {
-      ROS_INFO_STREAM_NAMED("test", "Adding random object " << i + 1 << " of " << num_tests);
-
-      // Remove randomness when we are only running one test
-      if (num_tests == 1)
-        generateTestObject(object_pose);
-      else
-        generateRandomObject(object_pose);
-
-      // Show the block
-      // visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
-
-      possible_grasps.clear();
-
-      // Generate set of grasps for one object
-      double depth = 0.15;
-      double width = 0.05;
-      double height = 0.15;
-
-      grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
-      grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
-
-      grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                       possible_grasps);
-
-      // Visualize them
-      // visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
-      // double animate_speed = 0.1;
-      // visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
-
-      // Test if done
-      ++i;
-      if (i >= num_tests)
-        break;
-    }
-  }
-
-  void generateTestObject(geometry_msgs::Pose& object_pose)
-  {
-    // Position
-    geometry_msgs::Pose start_object_pose;
-
-    start_object_pose.position.x = 0.5;
-    start_object_pose.position.y = 0.0;
-    start_object_pose.position.z = 0.5;
-
-    // Orientation
-    double angle = M_PI / 1.5;
-    Eigen::Quaterniond quat(Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
-    start_object_pose.orientation.x = quat.x();
-    start_object_pose.orientation.y = quat.y();
-    start_object_pose.orientation.z = quat.z();
-    start_object_pose.orientation.w = quat.w();
-
-    // Choose which object to test
-    object_pose = start_object_pose;
-    // visual_tools_->publishObject( object_pose, OBJECT_SIZE, true );
-  }
-
-  void generateRandomObject(geometry_msgs::Pose& object_pose)
-  {
-    // Position
-    object_pose.position.x = fRand(0.1, 0.9);  // 0.55);
-    object_pose.position.y = fRand(-0.28, 0.28);
-    object_pose.position.z = 0.02;
-
-    // Orientation
-    double angle = M_PI * fRand(0.1, 1);
-    Eigen::Quaterniond quat(Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
-    object_pose.orientation.x = quat.x();
-    object_pose.orientation.y = quat.y();
-    object_pose.orientation.z = quat.z();
-    object_pose.orientation.w = quat.w();
-  }
-
-  double fRand(double fMin, double fMax)
-  {
-    double f = (double)rand() / RAND_MAX;
-    return fMin + f * (fMax - fMin);
-  }
 
 };  // end of class
 
@@ -229,10 +200,10 @@ public:
 int main(int argc, char* argv[])
 {
   int num_tests = 1;
-  ros::init(argc, argv, "grasp_generator_test");
 
-  ROS_INFO_STREAM_NAMED("main", "GraspGenerator Test");
+  ros::init(argc, argv, "ik_filter_test");
 
+  // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(2);
   spinner.start();
 
@@ -244,12 +215,16 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  moveit_grasps::GraspGeneratorTest tester(num_tests);
+  moveit_grasps::GraspGeneratorTest tester;
+  // tester.testRandomGrasps(num_tests);
+  tester.unitTest();
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
   ROS_INFO_STREAM_NAMED("", "Total time: " << duration);
-  // std::cout << duration << "\t" << num_tests << std::endl;
+  std::cout << duration << "\t" << num_tests << std::endl;
+
+  ros::Duration(1.0).sleep();  // let rviz markers finish publishing
 
   return 0;
 }
