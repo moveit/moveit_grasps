@@ -1,4 +1,5 @@
 <launch>
+  <arg name="ns" default="moveit_grasps_test" />
     <!-- Debug -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
@@ -11,6 +12,7 @@
 
   <include file="$(find moveit_grasps)launch/initialize_robot.launch" >
     <arg name="debug" value="$(arg debug)" />
+    <arg name="ns" value="$(arg ns)" />
   </include>
 
   <!-- Start the test -->
