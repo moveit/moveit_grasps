@@ -76,13 +76,15 @@ public:
   GraspPosesVisualizer(bool verbose) : nh_("~")
   {
     // get arm parameters
-    nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
+    // nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
+    ee_group_name_ = "hand";
+    planning_group_name_ = "panda_arm";
 
     ROS_INFO_STREAM_NAMED("init", "End Effector: " << ee_group_name_);
     ROS_INFO_STREAM_NAMED("init", "Planning Group: " << planning_group_name_);
 
     // set up rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base", "/rviz_visual_tools"));
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("panda_link0", "/rviz_visual_tools"));
     visual_tools_->loadMarkerPub();
 
     // Load grasp data
