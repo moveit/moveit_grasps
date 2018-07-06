@@ -58,7 +58,7 @@ namespace moveit_grasps
 {
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), grasp_depth_(0.12), angle_resolution_(16), robot_model_(robot_model)
+  : base_link_("/base_link"), grasp_depth_(0.12), angle_resolution_(1), robot_model_(robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
@@ -152,7 +152,8 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
 
   // generate grasps at PI/angle_resolution increments
-  // angle_resolution_ = 32; //TODO parametrize this, or move to action interface
+  // angle_resolution_ = 32; //TODODO parametrize this, or move to action interface
+  std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
@@ -207,6 +208,7 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
 
   // Ensure min_finger_width is not less than actual min finger width
   double min_finger_width_adjusted = std::max(min_finger_width, min_finger_width_);
+  // ROS_INFO_STREAM_NAMED("width_test", "min_fin" << min_finger_width << "\n" << min_finger_width_);
 
   // Max width = max_finger_width_
   // Min width = min_finger_width_adjusted
@@ -230,40 +232,43 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     return false;
   }
 
+  // TODODO - generalise all this, since all this is static the best thing would be to just get this from file
   // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
-  static const double SLOPE =
-      -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
-  static const double INTERCEPT = 0.7097604907;  // 0.7097604907; //10.36703297;
-  double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
+  // static const double SLOPE =
+  //     -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
+  // static const double INTERCEPT = 0.7097604907;  // 0.7097604907; //10.36703297;
+  // double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
+  double joint_position = 0.04;
 
   ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << joint_position);
 
   std::vector<double> joint_positions;
-  joint_positions.resize(6);
+  // joint_positions.resize(6);
+  joint_positions.resize(2);
   joint_positions[0] = joint_position;
   joint_positions[1] = joint_position;
 
-  // JACO SPECIFIC
-  static const double FINGER_3_OFFSET = -0.1;  // open more than the others
+  // // JACO SPECIFIC
+  // static const double FINGER_3_OFFSET = -0.1;  // open more than the others
 
-  // TODO get these values from joint_model, jaco specific
-  static const double MIN_JOINT_POSITION = 0.0;
-  static const double MAX_JOINT_POSITION = 0.742;
+  // // TODO get these values from joint_model, jaco specific
+  // static const double MIN_JOINT_POSITION = 0.0;
+  // static const double MAX_JOINT_POSITION = 0.742;
 
-  // special treatment - this joint should be opened more than the others
-  joint_positions[2] = joint_position + FINGER_3_OFFSET;
-  if (joint_positions[2] < MIN_JOINT_POSITION)
-  {
-    joint_positions[2] = MIN_JOINT_POSITION;
-  }
-  if (joint_positions[2] > MAX_JOINT_POSITION)
-  {
-    joint_positions[2] = MAX_JOINT_POSITION;
-  }
+  // // special treatment - this joint should be opened more than the others
+  // joint_positions[2] = joint_position + FINGER_3_OFFSET;
+  // if (joint_positions[2] < MIN_JOINT_POSITION)
+  // {
+  //   joint_positions[2] = MIN_JOINT_POSITION;
+  // }
+  // if (joint_positions[2] > MAX_JOINT_POSITION)
+  // {
+  //   joint_positions[2] = MAX_JOINT_POSITION;
+  // }
 
-  joint_positions[3] = 0;
-  joint_positions[4] = 0;
-  joint_positions[5] = 0;
+  // joint_positions[3] = 0;
+  // joint_positions[4] = 0;
+  // joint_positions[5] = 0;
 
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
 }
@@ -274,7 +279,8 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  const moveit::core::JointModel* joint = robot_model_->getJointModel("jaco2_joint_finger_1");
+  // TODODO - generalise this, figure out what is happening
+  const moveit::core::JointModel* joint = robot_model_->getJointModel("panda_joint7");
   const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
   for (std::size_t i = 0; i < joint_positions.size(); ++i)

@@ -314,6 +314,7 @@ private:
 
   // Display more output both in console
   bool verbose_;
+  bool deeper_;
 
   // Shared node handle
   ros::NodeHandle nh_;
