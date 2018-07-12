@@ -146,7 +146,8 @@ public:
     visual_tools_->publishAxis(world_cs);
   }
 
-  bool unitTest()
+  // tododo - add tests for cylinder and cuboid
+  bool cuboidTest()
   {
     geometry_msgs::Pose object_pose;
     object_pose.position.x = 0.5;
@@ -164,6 +165,26 @@ public:
     ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
     grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
+                                     grasp_candidates);
+  }
+
+  bool cylinderTest()
+  {
+    geometry_msgs::Pose object_pose;
+    object_pose.position.x = 0.5;
+    object_pose.position.y = 0.0;
+    object_pose.position.z = 0.5;
+    double radius = 0.015;
+    double height = 0.15;
+
+    // visual_tools_->publishCollisionCylinder(object_pose, "test_cylinder", radius, height, rviz_visual_tools::TRANSLUCENT_DARK);
+    visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+    visual_tools_->trigger();
+
+    // Generate set of grasps for one object
+    ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
+    std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), radius, height, grasp_data_,
                                      grasp_candidates);
   }
 
@@ -216,8 +237,8 @@ int main(int argc, char* argv[])
 
   // Run Tests
   moveit_grasps::GraspGeneratorTest tester;
-  // tester.testRandomGrasps(num_tests);
-  tester.unitTest();
+  // tester.cuboidTest();
+  tester.cylinderTest();
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;

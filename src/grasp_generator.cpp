@@ -72,6 +72,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
   ROS_INFO_STREAM_NAMED("grasps", "GraspGenerator Ready.");
 
+  // TODODO - find out a way to make this either more intelligent or to take this value from user
   // Set ideal grasp pose (currently only uses orientation of pose)
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();
   ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
@@ -282,17 +283,17 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
         iterations++;
         if (iterations > max_iterations)
         {
-          // TODODO - figure out what this is and generalise
-          // grasp_pose = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY());
-          // if (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose, grasp_data))
-          // {
-          //   grasp_poses.push_back(grasp_pose);
-          //   if (deeper_)
-          //   {
-          //     visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
-          //     visual_tools_->trigger();
-          //   }
-          // }
+          grasp_pose = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY());
+          if (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose, grasp_data))
+          {
+            grasp_poses.push_back(grasp_pose);
+            // TODODO - Generalise this
+            if (false)
+            {
+              visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
+              visual_tools_->trigger();
+            }
+          }
           ROS_WARN_STREAM_NAMED("cuboid_axis_grasps", "exceeded max iterations while creating variable angle grasps");
           break;
         }
@@ -700,40 +701,25 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   // Approach and retreat
   // aligned with pose (aligned with grasp pose z-axis
-  // TODODO:: Currently the pre/post approach/retreat translations are not robot agnostic.
   // It currently being loaded with the assumption that z-axis is pointing away from object.
 
   // set pregrasp
   moveit_msgs::GripperTranslation pre_grasp_approach;
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
-  new_grasp.pre_grasp_approach.desired_distance = 0.115;
-      // grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
+  new_grasp.pre_grasp_approach.desired_distance = 
+      grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
-  // new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.pre_grasp_approach.direction.header.frame_id = "panda_link0";
-  new_grasp.pre_grasp_approach.direction.vector.x = 1;
-  // new_grasp.pre_grasp_approach.direction.vector.y = 0;
-  // new_grasp.pre_grasp_approach.direction.vector.z = -1;
-  // new_grasp.pre_grasp_approach.direction.header.frame_id = "world";
-  // new_grasp.pre_grasp_approach.direction.vector.x = 1;
-  // new_grasp.pre_grasp_approach.direction.vector.y = 0;
-  // new_grasp.pre_grasp_approach.direction.vector.z = 0;
+  new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.pre_grasp_approach.direction.vector.z = 1;
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
   new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
-  new_grasp.post_grasp_retreat.desired_distance = 0.25;
-      // grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
+  new_grasp.post_grasp_retreat.desired_distance = 
+      grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
-  // new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.post_grasp_retreat.direction.header.frame_id = "panda_link0";
-  // new_grasp.post_grasp_retreat.direction.vector.x = 0;
-  // new_grasp.post_grasp_retreat.direction.vector.y = 0;
-  new_grasp.post_grasp_retreat.direction.vector.z = 1;
-  // new_grasp.post_grasp_retreat.direction.header.frame_id = "world";
-  // new_grasp.post_grasp_retreat.direction.vector.x = 1;
-  // new_grasp.post_grasp_retreat.direction.vector.y = 0;
-  // new_grasp.post_grasp_retreat.direction.vector.z = 0;
+  new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.post_grasp_retreat.direction.vector.z = -1;
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
@@ -935,6 +921,43 @@ bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double d
     only_edge_grasps = true;
 
   generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, grasp_candidates, only_edge_grasps);
+
+  if (!grasp_candidates.size())
+    ROS_WARN_STREAM_NAMED("grasp_generator", "Generated 0 grasps");
+  else
+    ROS_INFO_STREAM_NAMED("grasp_generator", "Generated " << grasp_candidates.size() << " grasps");
+
+  // Visualize animated grasps that have been generated
+  if (show_prefiltered_grasps_)
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Animating all generated (candidate) grasps before filtering");
+    visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+  }
+
+  return true;
+}
+
+// TODODO - improve this functionality to generate grasps for cylinders
+bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double radius, double height,
+                                    const moveit_grasps::GraspDataPtr grasp_data,
+                                    std::vector<GraspCandidatePtr>& grasp_candidates)
+{
+  // Since the grasps will be symmetric around the cylinder we need generate only for one axis.
+
+  // Most default type of grasp is X axis
+  if (radius * 2 <= grasp_data->max_grasp_width_)  // depth = size along x-axis
+    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Generating grasps around x-axis of cuboid");
+  else
+    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Can't generate grasps for cylinder around x or y axis as radius is too big.");
+
+  generateCuboidAxisGrasps(cuboid_pose, radius*2, radius*2, height, X_AXIS, grasp_data, grasp_candidates, false);
+
+  if (height <= grasp_data->max_grasp_width_)  // height = size along z-axis
+    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Generating grasps around z-axis of cuboid");
+  else
+    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Can't generate grasps for cylinder around z axis as height is too big.");
+
+  generateCuboidAxisGrasps(cuboid_pose, radius*2, radius*2, height, Z_AXIS, grasp_data, grasp_candidates, false);
 
   if (!grasp_candidates.size())
     ROS_WARN_STREAM_NAMED("grasp_generator", "Generated 0 grasps");

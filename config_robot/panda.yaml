@@ -38,7 +38,7 @@ hand:
     angle_resolution : 20
 
     # grasp approach and retreat parameters
-    approach_distance_desired: 0.125 # 0.2 # this is in addition to the finger_to_palm_depth
+    approach_distance_desired: 0.109 # 0.2 # this is in addition to the finger_to_palm_depth
     retreat_distance_desired: 0.3 # this is in addition to the finger_to_palm_depth
     lift_distance_desired: 0.015 # this is really just MIN LIFT DISTANCE
     grasp_padding_on_approach: 0.010 # minimum padding on each side of the object on approach

@@ -159,6 +159,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
   arm_jmg_ = robot_model_->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
   parent_link_ = robot_model_->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
+  ROS_INFO_STREAM_NAMED("GRASP_DATA", "PARENT_LINK_ = " << parent_link_->getName());
 
   // Debug
   // moveit_grasps::Grasps::printObjectGraspData(grasp_data);
