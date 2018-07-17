@@ -58,7 +58,7 @@ namespace moveit_grasps
 {
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), grasp_depth_(0.12), angle_resolution_(1), robot_model_(robot_model)
+  : base_link_("/base_link"), grasp_depth_(0.12), robot_model_(robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
@@ -102,7 +102,9 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  rosparam_shortcuts::get(parent_name, child_nh, "approach_direction", approach_direction_);
   rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
+  rosparam_shortcuts::get(parent_name, child_nh, "retreat_direction", retreat_direction_);
   rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
   rosparam_shortcuts::get(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
   rosparam_shortcuts::get(parent_name, child_nh, "angle_resolution", angle_resolution_);
@@ -152,8 +154,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
 
   // generate grasps at PI/angle_resolution increments
-  // angle_resolution_ = 32; //TODODO parametrize this, or move to action interface
-  std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);

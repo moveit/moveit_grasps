@@ -3,8 +3,9 @@ moveit_grasps:
     # Other verbose stuff
     verbose: false
     # Show the generated grasp arrows
-    show_grasp_arrows: false
+    show_grasp_arrows: true
     show_grasp_arrows_speed: 0.001
+    show_grasp_axis: false
     # Show hand of generated grasps
     show_prefiltered_grasps: false
     show_prefiltered_grasps_speed: 0.01

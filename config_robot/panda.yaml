@@ -38,7 +38,11 @@ hand:
     angle_resolution : 20
 
     # grasp approach and retreat parameters
+    # direction vector wrt end effector link
+    approach_direction: [1, 0, 0]
     approach_distance_desired: 0.109 # 0.2 # this is in addition to the finger_to_palm_depth
+    # direction vector wrt end effector link
+    retreat_direction: [0, 0, -1]
     retreat_distance_desired: 0.3 # this is in addition to the finger_to_palm_depth
     lift_distance_desired: 0.015 # this is really just MIN LIFT DISTANCE
     grasp_padding_on_approach: 0.010 # minimum padding on each side of the object on approach

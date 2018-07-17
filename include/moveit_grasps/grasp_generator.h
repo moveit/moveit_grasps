@@ -340,6 +340,7 @@ private:
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
+  bool show_grasp_axis_;
 
   double min_grasp_distance_, max_grasp_distance_;
   Eigen::Vector3d min_translations_, max_translations_;
