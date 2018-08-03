@@ -233,43 +233,15 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     return false;
   }
 
-  // TODODO - generalise all this, since all this is static the best thing would be to just get this from file
-  // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
-  // static const double SLOPE =
-  //     -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
-  // static const double INTERCEPT = 0.7097604907;  // 0.7097604907; //10.36703297;
-  // double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
-  double joint_position = 0.04;
-
-  ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << joint_position);
-
+  // TODO(@Ridhwanluthra) - I am pretty sure this is panda specific, make it not so.
   std::vector<double> joint_positions;
-  // joint_positions.resize(6);
-  joint_positions.resize(2);
-  joint_positions[0] = joint_position;
-  joint_positions[1] = joint_position;
+  joint_positions.resize(grasp_posture_.points.front().positions.size());
+  for (std::size_t i = 0; i < joint_positions.size(); i++)
+  {
+    joint_positions[i] = distance_btw_fingers / 2;
+  }
 
-  // // JACO SPECIFIC
-  // static const double FINGER_3_OFFSET = -0.1;  // open more than the others
-
-  // // TODO get these values from joint_model, jaco specific
-  // static const double MIN_JOINT_POSITION = 0.0;
-  // static const double MAX_JOINT_POSITION = 0.742;
-
-  // // special treatment - this joint should be opened more than the others
-  // joint_positions[2] = joint_position + FINGER_3_OFFSET;
-  // if (joint_positions[2] < MIN_JOINT_POSITION)
-  // {
-  //   joint_positions[2] = MIN_JOINT_POSITION;
-  // }
-  // if (joint_positions[2] > MAX_JOINT_POSITION)
-  // {
-  //   joint_positions[2] = MAX_JOINT_POSITION;
-  // }
-
-  // joint_positions[3] = 0;
-  // joint_positions[4] = 0;
-  // joint_positions[5] = 0;
+  ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << distance_btw_fingers/2);
 
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
 }
@@ -281,20 +253,30 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   //                       << joint_positions.size());
 
   // TODODO - generalise this, figure out what is happening
-  const moveit::core::JointModel* joint = robot_model_->getJointModel("panda_joint7");
-  const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
+  // const moveit::core::JointBoundsVector bounds = arm_jmg_->getActiveJointModelsBounds();
+  // std::cout<< bounds.size() <<std::endl;
+  // std::cout<< bounds[0]->size() <<std::endl;
+  // std::cout<< bounds[0][0].size() <<std::endl;
+  // std::cout<< bounds[0][0][0].max_position_ <<std::endl;
+  // // const moveit::core::JointModel* joint = robot_model_->getJointModel("panda_joint7");
+  // for (auto i: arm_jmg_->getActiveJointModelNames())
+  // {
+  //   std::cout << i<<std::endl;
+  // }
+  // const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
-  for (std::size_t i = 0; i < joint_positions.size(); ++i)
-  {
-    // Error check
-    if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
-    {
-      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << i << " with value " << joint_positions[i]
-                                                              << " is beyond limits of " << bound.min_position_ << ", "
-                                                              << bound.max_position_);
-      return false;
-    }
-  }
+  // for (std::size_t i = 0; i < joint_positions.size(); ++i)
+  // {
+  //   // Error check
+  //   // if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
+  //   if (joint_positions[i] > bounds[i][i][i]->max_position_ || joint_positions[i] < bounds[i][i][i]->min_position_)
+  //   {
+  //     ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << i << " with value " << joint_positions[i]
+  //                                                             << " is beyond limits of " << bounds[i][0]->min_position_ << ", "
+  //                                                             << bounds[i][0]->max_position_);
+  //     return false;
+  //   }
+  // }
 
   // Get default grasp posture
   grasp_posture = grasp_posture_;

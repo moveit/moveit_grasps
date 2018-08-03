@@ -146,7 +146,6 @@ public:
     visual_tools_->publishAxis(world_cs);
   }
 
-  // tododo - add tests for cylinder and cuboid
   bool cuboidTest()
   {
     geometry_msgs::Pose object_pose;
@@ -222,7 +221,7 @@ int main(int argc, char* argv[])
 {
   int num_tests = 1;
 
-  ros::init(argc, argv, "ik_filter_test");
+  ros::init(argc, argv, "grasp_generation_test");
 
   // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(2);
@@ -237,8 +236,8 @@ int main(int argc, char* argv[])
 
   // Run Tests
   moveit_grasps::GraspGeneratorTest tester;
-  // tester.cuboidTest();
-  tester.cylinderTest();
+  tester.cuboidTest();
+  // tester.cylinderTest();
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;

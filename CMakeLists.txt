@@ -84,6 +84,7 @@ add_library(${PROJECT_NAME}
   src/grasp_data.cpp
   src/grasp_candidate.cpp
   src/grasp_scorer.cpp
+  src/grasp_plan.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
@@ -116,6 +117,14 @@ target_link_libraries(${PROJECT_NAME}_test
   ${Boost_LIBRARIES}
 )
 
+# Test plan executable
+add_executable(${PROJECT_NAME}_planner_test src/test/grasp_planner_test.cpp)
+target_link_libraries(${PROJECT_NAME}_planner_test
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
+
 # Test mesh bounding box
 add_executable(bounding_box_test src/test/mesh_bounding_box_test.cpp)
 target_link_libraries(bounding_box_test
@@ -127,6 +136,12 @@ target_link_libraries(bounding_box_test
 # Test grasp data settings
 add_executable(grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
 target_link_libraries(grasp_poses_visualizer
+  ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
+# service
+add_executable(plan_grasps_service src/plan_grasps_service.cpp)
+target_link_libraries(plan_grasps_service
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
