@@ -58,7 +58,6 @@
 
 // Grasp
 #include <moveit_grasps/grasp_generator.h>
-#include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 // Baxter specific properties
@@ -196,9 +195,6 @@ private:
 
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-
-  // Grasp filter
-  moveit_grasps::GraspFilterPtr grasp_filter_;
 
   // data for generating grasps
   moveit_grasps::GraspDataPtr grasp_data_;
