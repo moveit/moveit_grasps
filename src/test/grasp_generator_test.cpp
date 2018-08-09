@@ -157,6 +157,7 @@ public:
 
     visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
     visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+    visual_tools_->publishArrow(object_pose, rviz_visual_tools::GREEN);
     visual_tools_->trigger();
 
     // Generate set of grasps for one object

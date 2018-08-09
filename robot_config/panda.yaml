@@ -1,25 +1,25 @@
 base_link: 'panda_link0'
 # =====================================================
 hand:
-    # planning_group: 'panda_arm'
+    planning_group: 'panda_arm'
     end_effector_name: 'hand'  #ee group name
 
-    #actuated joints in end effector
+    # actuated joints in end effector
     joints : ['panda_finger_joint1', 'panda_finger_joint2']
 
-    #open position
+    # open position of the gripper
     pregrasp_posture : [0.04, 0.04]
     pregrasp_time_from_start : 4.0
 
-    #close position
+    # close position of the gripper
     grasp_posture : [0.0, 0.0]
     grasp_time_from_start : 8.0
 
     # Distance from wrist joint to palm of end effector [x, y, z, r, p, y]
     # Rotation from wrist joint to std end effector orientation
-    #z-axis pointing toward object to grasp
-    #x-axis perp. to movement of grippers
-    #y-axis parallel to movement of grippers
+    # z-axis pointing toward object to grasp
+    # x-axis perp. to movement of grippers
+    # y-axis parallel to movement of grippers
     grasp_pose_to_eef_transform :  [0, 0, 0.165, 0, 0, -1.5707963267948966]
 
     # length of grippers (distance from finger tip to inner palm)
@@ -40,12 +40,16 @@ hand:
     # grasp approach and retreat parameters
     # direction vector wrt end effector link
     approach_direction: [1, 0, 0]
-    approach_distance_desired: 0.109 # 0.2 # this is in addition to the finger_to_palm_depth
+    # this is in addition to the finger_to_palm_depth
+    approach_distance_desired: 0.109
     # direction vector wrt end effector link
     retreat_direction: [0, 0, -1]
-    retreat_distance_desired: 0.3 # this is in addition to the finger_to_palm_depth
-    lift_distance_desired: 0.015 # this is really just MIN LIFT DISTANCE
-    grasp_padding_on_approach: 0.010 # minimum padding on each side of the object on approach
+    # this is in addition to the finger_to_palm_depth
+    retreat_distance_desired: 0.3
+    # this is really just MIN LIFT DISTANCE
+    lift_distance_desired: 0.015
+    # minimum padding on each side of the object on approach
+    grasp_padding_on_approach: 0.010
 
     # Distance between fingers, in meters
     max_finger_width: 0.08

@@ -691,7 +691,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
   new_grasp.pre_grasp_approach.desired_distance = 
       grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
-  new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
+  new_grasp.pre_grasp_approach.min_distance = new_grasp.pre_grasp_approach.desired_distance;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
   new_grasp.pre_grasp_approach.direction.vector.x = grasp_data->approach_direction_[0];
   new_grasp.pre_grasp_approach.direction.vector.y = grasp_data->approach_direction_[1];
@@ -701,7 +701,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
   new_grasp.post_grasp_retreat.desired_distance = 
       grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
-  new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
+  new_grasp.post_grasp_retreat.min_distance = new_grasp.pre_grasp_approach.desired_distance;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
   new_grasp.post_grasp_retreat.direction.vector.x = grasp_data->retreat_direction_[0];
   new_grasp.post_grasp_retreat.direction.vector.y = grasp_data->retreat_direction_[1];
@@ -724,6 +724,10 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   Eigen::Affine3d eef_pose = grasp_pose * grasp_data->grasp_pose_to_eef_pose_;
   tf::poseEigenToMsg(eef_pose, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
+
+  visual_tools_->publishZArrow(eef_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
+  visual_tools_->trigger();
+  ros::Duration(show_grasp_arrows_speed_).sleep();
 
   // set grasp postures e.g. hand closed
   new_grasp.grasp_posture = grasp_data->grasp_posture_;
@@ -768,6 +772,11 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
   grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+
+  // if (show_grasp_animation)
+  // {
+  //   visual_tools_->publishAnimatedGrasp(new_grasp, ee_jmg_, show_grasp_)
+  // }
 
   return true;
 }
@@ -927,7 +936,7 @@ bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double d
   // Visualize animated grasps that have been generated
   if (show_prefiltered_grasps_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Animating all generated (candidate) grasps before filtering");
+    ROS_INFO_STREAM_NAMED("grasp_generator", "Animating all generated (candidate) grasps before filtering");
     visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
   }
 
@@ -1042,14 +1051,38 @@ void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDat
 bool GraspGenerator::visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
                                              const moveit::core::JointModelGroup* ee_jmg, double animation_speed)
 {
+  geometry_msgs::Pose object_pose;
+  object_pose.position.x = 0.5;
+  object_pose.position.y = 0.0;
+  object_pose.position.z = 0.5;
+  double depth = 0.03;
+  double width = 0.03;
+  double height = 0.15;
   // Convert the grasp_candidates into a format moveit_visual_tools can use
   std::vector<moveit_msgs::Grasp> grasps;
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    grasps.push_back(grasp_candidates[i]->grasp_);
+    ROS_INFO_STREAM_NAMED("moveit_grasps", "Grasp number"<< i);
+    // visual_tools_->publishZArrow()
+    visual_tools_->publishAnimatedGrasp(grasp_candidates[i]->grasp_, ee_jmg, animation_speed);
+    visual_tools_->deleteAllMarkers();
+    visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
+    visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+    visual_tools_->publishArrow(object_pose, rviz_visual_tools::GREEN);
+    visual_tools_->trigger();
+    // ros::Duration(5).sleep();
+    // visual_tools_->trigger();
+    // grasps.push_back(grasp_candidates[i]->grasp_);
   }
 
-  return visual_tools_->publishAnimatedGrasps(grasps, ee_jmg, show_prefiltered_grasps_speed_);
+  return true;
+
+  // return visual_tools_->publishAnimatedGrasps(grasps, ee_jmg, show_prefiltered_grasps_speed_);
 }
+
+// void GraspGenerator::visualizeGripperTranslation()
+// {
+//   visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
+// }
 
 }  // namespace

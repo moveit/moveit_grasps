@@ -16,9 +16,9 @@
   </include>
 
   <!-- Start the test -->
-  <node name="moveit_grasps_testsss" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+  <node name="moveit_grasps_test" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
   type="moveit_grasps_test" output="screen" args="$(arg command_args)">
-    <rosparam command="load" file="$(find moveit_grasps)/config/grasp_debug_level.yaml"/>
+    <rosparam command="load" file="$(find moveit_grasps)/visualization_config/grasp_debug_level.yaml"/>
   </node>
 
   <include file="$(find moveit_grasps)launch/rviz.launch" />
