@@ -1,0 +1,13 @@
+<launch>
+  <arg name="hand" default="false" />
+
+  <include file="$(find baxter_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+
+  <!-- Which arm to use -->
+  <param unless="$(arg hand)" name="ee_group_name" value="left_hand" />
+  <param     if="$(arg hand)" name="ee_group_name" value="right_hand" />
+
+  <rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>
+</launch>

@@ -1,0 +1,54 @@
+<launch>
+
+  <!-- Launch grap_test_rviz.launch to visualize this test -->
+
+  <!-- Debug -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Verbose mode -->
+  <arg name="verbose" default="false" />
+  <arg unless="$(arg verbose)" name="command_args" value="" />
+  <arg     if="$(arg verbose)" name="command_args" value="--verbose" />
+
+  <!-- Choose robot and hand -->
+  <arg name="jacob" default="false" />
+  <arg name="baxter" default="false" />
+  <!-- JACOB -->
+  <group if="$(arg jacob)">
+    <include file="$(find jacob_moveit_config)/launch/planning_context.launch">
+      <arg name="load_robot_description" value="true"/>
+    </include>
+
+    <group ns="moveit_grasps_filter_test">
+      <!-- Which arm to use -->
+      <param name="ee_group_name" value="gripper"/>
+      <param name="planning_group_name" value="manipulator"/>
+      <rosparam command="load" file="$(find moveit_grasps)/config_robot/jacob_grasp_data.yaml"/>
+    </group>
+  </group>
+
+  <!-- BAXTER-->
+  <group if="$(arg baxter)">
+    <include file="$(find baxter_moveit_config)/launch/planning_context.launch">
+      <arg name="load_robot_description" value="true"/>
+    </include>
+
+    <group ns="moveit_grasps_filter_test">
+      <!-- Which arm to use -->
+      <param name="ee_group_name" value="left_hand" />
+      <param name="planning_group_name" value="left_arm"/>
+
+      <rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>
+    </group>
+  </group>
+
+  <!-- Start the test -->
+  <node name="moveit_grasps_filter_test" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+	type="moveit_grasps_filter_test" output="screen" args="$(arg command_args)">
+    <rosparam command="load" file="$(find moveit_grasps)/config/grasp_debug_level.yaml"/>
+    <rosparam command="load" file="$(find moveit_grasps)/config/grasp_default_parameters.yaml"/>
+  </node>
+
+</launch>

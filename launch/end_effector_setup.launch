@@ -1,0 +1,48 @@
+<launch>
+  <!-- Launch grap_test_rviz.launch to visualize this test -->
+
+  <!-- Debug -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Choose robot and arm -->
+  <arg name="jacob" default="false" />
+  <arg name="baxter" default="false" />
+  <arg name="hand" default="false" />
+  <!-- JACOB -->
+  <group if="$(arg jacob)">
+    <include file="$(find jacob_moveit_config)/launch/planning_context.launch">
+      <arg name="load_robot_description" value="true"/>
+    </include>
+
+    <group ns="grasp_poses_visualizer">
+      <!-- Which arm to use -->
+      <param name="ee_group_name" value="gripper"/>      
+      <rosparam command="load" file="$(find moveit_grasps)/config_robot/jacob_grasp_data.yaml"/>
+    </group>
+  </group>
+
+  <!-- BAXTER-->
+  <group if="$(arg baxter)">
+    <include file="$(find baxter_moveit_config)/launch/planning_context.launch">
+      <arg name="load_robot_description" value="true"/>
+    </include>
+
+    <group ns="grasp_poses_visualizer">
+      <!-- Which arm to use -->
+      <param unless="$(arg hand)" name="ee_group_name" value="left_hand" />
+      <param     if="$(arg hand)" name="ee_group_name" value="right_hand" />
+
+      <rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>
+    </group>
+  </group>
+
+  <!-- Start the test -->
+  <node name="grasp_poses_visualizer" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+	type="grasp_poses_visualizer" output="screen" args="">
+    <rosparam command="load" file="$(find moveit_grasps)/config/grasp_debug_level.yaml"/>    
+    <rosparam command="load" file="$(find moveit_grasps)/config/grasp_default_parameters.yaml"/>    
+  </node>
+
+</launch>
