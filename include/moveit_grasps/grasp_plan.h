@@ -13,7 +13,7 @@
 // #include <moveit_grasps/grasp_data.h>
 
 // Parameter loading
-// #include <rosparam_shortcuts/rosparam_shortcuts.h>
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace moveit_grasps
 {
@@ -42,6 +42,8 @@ private:
 
   // data for generating grasps
   // moveit_grasps::GraspDataPtr grasp_data_;
+
+  bool verbose_;
 };
 
 typedef boost::shared_ptr<GraspPlanner> GraspPlannerPtr;

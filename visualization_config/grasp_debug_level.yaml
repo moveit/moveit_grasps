@@ -19,3 +19,5 @@ moveit_grasps:
     translation_x_score_weight: 0.0
     translation_y_score_weight: 0.0
     translation_z_score_weight: 4.0
+  planner:
+    verbose: false

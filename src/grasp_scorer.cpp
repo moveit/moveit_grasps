@@ -40,6 +40,16 @@
 
 namespace moveit_grasps
 {
+double GraspScorer::acosSafe(double value)
+{
+  // to ensure that we don't get nan due to rounding errors
+  if (value < -1.0)
+    value = -1.0;
+  else if (value > 1.0)
+    value = 1.0;
+  return acos(value);
+}
+
 double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.graspWidth", "raw score = " << percent_open);
@@ -101,7 +111,7 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   // get angle between x-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitX();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  angle = acosSafe(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
   scores[0] = (M_PI - angle) / M_PI;
   // scores[0] = pow(scores[0],2);
@@ -109,7 +119,7 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   // get angle between y-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitY();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  angle = acosSafe(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
   scores[1] = (M_PI - angle) / M_PI;
   // scores[1] = pow(scores[1],2);
@@ -117,7 +127,7 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   // get angle between z-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitZ();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  angle = acosSafe(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
   scores[2] = (M_PI - angle) / M_PI;
   // scores[2] = pow(scores[2],2);

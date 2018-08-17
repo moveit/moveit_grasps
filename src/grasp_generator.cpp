@@ -46,13 +46,11 @@ namespace moveit_grasps
 GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
   : visual_tools_(visual_tools)
   , verbose_(false)
-  , deeper_(false)
   , nh_("~/moveit_grasps/generator")
 {
   // Load visulization settings
   const std::string parent_name = "grasps";  // for namespacing logging messages
   rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
-  rosparam_shortcuts::get(parent_name, nh_, "deeper", deeper_);
 
   rosparam_shortcuts::get(parent_name, nh_, "show_grasp_arrows", show_grasp_arrows_);
   rosparam_shortcuts::get(parent_name, nh_, "show_grasp_arrows_speed", show_grasp_arrows_speed_);
@@ -691,8 +689,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
   new_grasp.pre_grasp_approach.desired_distance = 
       grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
-  new_grasp.pre_grasp_approach.min_distance = new_grasp.pre_grasp_approach.desired_distance;  // NOT IMPLEMENTED
-  new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.pre_grasp_approach.min_distance = new_grasp.pre_grasp_approach.desired_distance / 2;  // NOT IMPLEMENTED
+  new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->approach_frame_id_;
   new_grasp.pre_grasp_approach.direction.vector.x = grasp_data->approach_direction_[0];
   new_grasp.pre_grasp_approach.direction.vector.y = grasp_data->approach_direction_[1];
   new_grasp.pre_grasp_approach.direction.vector.z = grasp_data->approach_direction_[2];
@@ -701,8 +699,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
   new_grasp.post_grasp_retreat.desired_distance = 
       grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
-  new_grasp.post_grasp_retreat.min_distance = new_grasp.pre_grasp_approach.desired_distance;  // NOT IMPLEMENTED
-  new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.post_grasp_retreat.min_distance = new_grasp.post_grasp_retreat.desired_distance / 2;  // NOT IMPLEMENTED
+  new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->retreat_frame_id_;
   new_grasp.post_grasp_retreat.direction.vector.x = grasp_data->retreat_direction_[0];
   new_grasp.post_grasp_retreat.direction.vector.y = grasp_data->retreat_direction_[1];
   new_grasp.post_grasp_retreat.direction.vector.z = grasp_data->retreat_direction_[2];
@@ -722,11 +720,12 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // Transform the grasp pose
 
   Eigen::Affine3d eef_pose = grasp_pose * grasp_data->grasp_pose_to_eef_pose_;
+  // Eigen::Affine3d eef_pose = grasp_pose;
   tf::poseEigenToMsg(eef_pose, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
 
-  visual_tools_->publishZArrow(eef_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
-  visual_tools_->trigger();
+  // visual_tools_->publishZArrow(eef_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
+  // visual_tools_->trigger();
   ros::Duration(show_grasp_arrows_speed_).sleep();
 
   // set grasp postures e.g. hand closed
@@ -786,7 +785,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp", "starting to score grasp...");
 
-  // check if the ideal_grasp_pose_ is set.
+  // check if the ideal_grasp_pose_ is not set.
   if (ideal_grasp_pose_(3,3) == 0)
   {
     // if ideal_grasp_pose is not set, we will use the direction from base_link of robot to object as the ideal grasp pose direction
@@ -854,7 +853,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
   if (verbose_)
   {
     // visual_tools_->deleteAllMarkers();
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
+    ROS_INFO_STREAM_NAMED("grasp_generator.scoreGrasp",
                            "Grasp score: \n "
                                << "\twidth_score         = " << width_score << "\n"
                                << "\torientation_score.x = " << orientation_scores[0] << "\n"
@@ -876,7 +875,7 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
     visual_tools_->publishZArrow(grasp_pose);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
 
-    if (false)
+    if (true)
     {
       char entry[256];
       ROS_INFO_STREAM_NAMED("grasp_generator", "\033[1;36m\nPress 'Enter' to continue. Enter 'y' to skip scoring "

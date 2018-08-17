@@ -9,18 +9,18 @@ hand:
 
     # open position of the gripper
     pregrasp_posture : [0.04, 0.04]
-    pregrasp_time_from_start : 4.0
+    pregrasp_time_from_start : 0.5
 
     # close position of the gripper
     grasp_posture : [0.0, 0.0]
-    grasp_time_from_start : 8.0
+    grasp_time_from_start : 0.5
 
     # Distance from wrist joint to palm of end effector [x, y, z, r, p, y]
     # Rotation from wrist joint to std end effector orientation
     # z-axis pointing toward object to grasp
     # x-axis perp. to movement of grippers
     # y-axis parallel to movement of grippers
-    grasp_pose_to_eef_transform :  [0, 0, 0.165, 0, 0, -1.5707963267948966]
+    grasp_pose_to_eef_transform :  [0, 0, -0.165, 0, 0, -1.5707963267948966]
 
     # length of grippers (distance from finger tip to inner palm)
     finger_to_palm_depth : 0.06
@@ -38,14 +38,18 @@ hand:
     angle_resolution : 20
 
     # grasp approach and retreat parameters
-    # direction vector wrt end effector link
-    approach_direction: [1, 0, 0]
+    # direction wrt to this frame
+    approach_frame_id: "panda_link8"
+    # direction vector
+    approach_direction: [0, 0, 1]
     # this is in addition to the finger_to_palm_depth
     approach_distance_desired: 0.109
-    # direction vector wrt end effector link
-    retreat_direction: [0, 0, -1]
+    # direction wrt to this frame
+    retreat_frame_id: "panda_link0"
+    # direction vector
+    retreat_direction: [0, 0, 1]
     # this is in addition to the finger_to_palm_depth
-    retreat_distance_desired: 0.3
+    retreat_distance_desired: 0.19
     # this is really just MIN LIFT DISTANCE
     lift_distance_desired: 0.015
     # minimum padding on each side of the object on approach

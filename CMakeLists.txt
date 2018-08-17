@@ -11,7 +11,7 @@ if(NOT EIGEN3_INCLUDE_DIRS)
 endif()
 
 find_package(Boost REQUIRED thread system)
-find_package(OpenMP)
+# find_package(OpenMP)
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
@@ -52,7 +52,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
-    ${PROJECT_NAME}_filter
+    # ${PROJECT_NAME}_filter
   CATKIN_DEPENDS
     # actionlib_msgs
     geometry_msgs

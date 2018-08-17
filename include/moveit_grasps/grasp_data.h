@@ -144,6 +144,8 @@ public:
   double max_grasp_width_;
 
   // grasp approach and retreat parameters
+  std::string approach_frame_id_;
+  std::string retreat_frame_id_;
   std::vector<double> approach_direction_;
   std::vector<double> retreat_direction_;
   double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth

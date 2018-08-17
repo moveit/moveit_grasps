@@ -102,8 +102,10 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  rosparam_shortcuts::get(parent_name, child_nh, "approach_frame_id", approach_frame_id_);
   rosparam_shortcuts::get(parent_name, child_nh, "approach_direction", approach_direction_);
   rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
+  rosparam_shortcuts::get(parent_name, child_nh, "retreat_frame_id", retreat_frame_id_);
   rosparam_shortcuts::get(parent_name, child_nh, "retreat_direction", retreat_direction_);
   rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
   rosparam_shortcuts::get(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
@@ -122,7 +124,8 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   // Orientation
   ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
-  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform);
+  rviz_visual_tools::EulerConvention convention = rviz_visual_tools::EulerConvention::XYZ;
+  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform, convention);
 
   // -------------------------------
   // Create pre-grasp posture if specified
@@ -252,7 +255,7 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  // TODODO - generalise this, figure out what is happening
+  // TODO(@Ridhwanluthra) - panda specific, generalise it
   // const moveit::core::JointBoundsVector bounds = arm_jmg_->getActiveJointModelsBounds();
   // std::cout<< bounds.size() <<std::endl;
   // std::cout<< bounds[0]->size() <<std::endl;
