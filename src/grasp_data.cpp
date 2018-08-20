@@ -255,17 +255,6 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  // TODO(@Ridhwanluthra) - panda specific, generalise it
-  // const moveit::core::JointBoundsVector bounds = arm_jmg_->getActiveJointModelsBounds();
-  // std::cout<< bounds.size() <<std::endl;
-  // std::cout<< bounds[0]->size() <<std::endl;
-  // std::cout<< bounds[0][0].size() <<std::endl;
-  // std::cout<< bounds[0][0][0].max_position_ <<std::endl;
-  // // const moveit::core::JointModel* joint = robot_model_->getJointModel("panda_joint7");
-  // for (auto i: arm_jmg_->getActiveJointModelNames())
-  // {
-  //   std::cout << i<<std::endl;
-  // }
   // const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
   // for (std::size_t i = 0; i < joint_positions.size(); ++i)
