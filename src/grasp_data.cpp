@@ -58,7 +58,7 @@ namespace moveit_grasps
 {
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), grasp_depth_(0.12), angle_resolution_(16), robot_model_(robot_model)
+  : base_link_("/base_link"), grasp_depth_(0.12), robot_model_(robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
@@ -102,7 +102,11 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  rosparam_shortcuts::get(parent_name, child_nh, "approach_frame_id", approach_frame_id_);
+  rosparam_shortcuts::get(parent_name, child_nh, "approach_direction", approach_direction_);
   rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
+  rosparam_shortcuts::get(parent_name, child_nh, "retreat_frame_id", retreat_frame_id_);
+  rosparam_shortcuts::get(parent_name, child_nh, "retreat_direction", retreat_direction_);
   rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
   rosparam_shortcuts::get(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
   rosparam_shortcuts::get(parent_name, child_nh, "angle_resolution", angle_resolution_);
@@ -120,7 +124,8 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   // Orientation
   ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
-  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform);
+  rviz_visual_tools::EulerConvention convention = rviz_visual_tools::EulerConvention::XYZ;
+  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform, convention);
 
   // -------------------------------
   // Create pre-grasp posture if specified
@@ -152,12 +157,12 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
 
   // generate grasps at PI/angle_resolution increments
-  // angle_resolution_ = 32; //TODO parametrize this, or move to action interface
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
   arm_jmg_ = robot_model_->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
   parent_link_ = robot_model_->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
+  ROS_INFO_STREAM_NAMED("GRASP_DATA", "PARENT_LINK_ = " << parent_link_->getName());
 
   // Debug
   // moveit_grasps::Grasps::printObjectGraspData(grasp_data);
@@ -207,6 +212,7 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
 
   // Ensure min_finger_width is not less than actual min finger width
   double min_finger_width_adjusted = std::max(min_finger_width, min_finger_width_);
+  // ROS_INFO_STREAM_NAMED("width_test", "min_fin" << min_finger_width << "\n" << min_finger_width_);
 
   // Max width = max_finger_width_
   // Min width = min_finger_width_adjusted
@@ -230,40 +236,15 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     return false;
   }
 
-  // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
-  static const double SLOPE =
-      -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
-  static const double INTERCEPT = 0.7097604907;  // 0.7097604907; //10.36703297;
-  double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
-
-  ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << joint_position);
-
+  // TODO(@Ridhwanluthra) - I am pretty sure this is panda specific, make it not so.
   std::vector<double> joint_positions;
-  joint_positions.resize(6);
-  joint_positions[0] = joint_position;
-  joint_positions[1] = joint_position;
-
-  // JACO SPECIFIC
-  static const double FINGER_3_OFFSET = -0.1;  // open more than the others
-
-  // TODO get these values from joint_model, jaco specific
-  static const double MIN_JOINT_POSITION = 0.0;
-  static const double MAX_JOINT_POSITION = 0.742;
-
-  // special treatment - this joint should be opened more than the others
-  joint_positions[2] = joint_position + FINGER_3_OFFSET;
-  if (joint_positions[2] < MIN_JOINT_POSITION)
+  joint_positions.resize(grasp_posture_.points.front().positions.size());
+  for (std::size_t i = 0; i < joint_positions.size(); i++)
   {
-    joint_positions[2] = MIN_JOINT_POSITION;
-  }
-  if (joint_positions[2] > MAX_JOINT_POSITION)
-  {
-    joint_positions[2] = MAX_JOINT_POSITION;
+    joint_positions[i] = distance_btw_fingers / 2;
   }
 
-  joint_positions[3] = 0;
-  joint_positions[4] = 0;
-  joint_positions[5] = 0;
+  ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << distance_btw_fingers/2);
 
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
 }
@@ -274,20 +255,20 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  const moveit::core::JointModel* joint = robot_model_->getJointModel("jaco2_joint_finger_1");
-  const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
+  // const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
-  for (std::size_t i = 0; i < joint_positions.size(); ++i)
-  {
-    // Error check
-    if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
-    {
-      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << i << " with value " << joint_positions[i]
-                                                              << " is beyond limits of " << bound.min_position_ << ", "
-                                                              << bound.max_position_);
-      return false;
-    }
-  }
+  // for (std::size_t i = 0; i < joint_positions.size(); ++i)
+  // {
+  //   // Error check
+  //   // if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
+  //   if (joint_positions[i] > bounds[i][i][i]->max_position_ || joint_positions[i] < bounds[i][i][i]->min_position_)
+  //   {
+  //     ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << i << " with value " << joint_positions[i]
+  //                                                             << " is beyond limits of " << bounds[i][0]->min_position_ << ", "
+  //                                                             << bounds[i][0]->max_position_);
+  //     return false;
+  //   }
+  // }
 
   // Get default grasp posture
   grasp_posture = grasp_posture_;

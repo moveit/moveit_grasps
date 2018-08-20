@@ -84,6 +84,7 @@ add_library(${PROJECT_NAME}
   src/grasp_data.cpp
   src/grasp_candidate.cpp
   src/grasp_scorer.cpp
+  src/grasp_plan.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}

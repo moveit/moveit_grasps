@@ -132,6 +132,18 @@ public:
                       const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
+   * \brief Create possible grasp positions around a cylinder
+   * \param cuboid_pose - centroid of object to grasp in world frame
+   * \param radius of the cylinder
+   * \param height of cylinder along local z-axis
+   * \param grasp_data data describing end effector
+   * \param grasp_candidates possible grasps generated
+   * \return true if successful
+   */
+  bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double radius, double height,
+                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+
+  /**
    * \brief Create grasp positions around one axis of a cuboid
    * \param cuboid_pose - centroid of object to grasp in world frame
    * \param depth length of cuboid along local x-axis
@@ -327,6 +339,7 @@ private:
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
+  bool show_grasp_axis_;
 
   double min_grasp_distance_, max_grasp_distance_;
   Eigen::Vector3d min_translations_, max_translations_;

@@ -1,0 +1,23 @@
+moveit_grasps:
+  generator:
+    # Other verbose stuff
+    verbose: false
+    # Show the generated grasp arrows
+    show_grasp_arrows: false
+    show_grasp_arrows_speed: 0.001
+    show_grasp_axis: false
+    # Show hand of generated grasps
+    show_prefiltered_grasps: false
+    show_prefiltered_grasps_speed: 0.01
+
+    # Don't know if this should go here... seems like config_robot/*.yaml is a better place
+    depth_score_weight: 3.0
+    width_score_weight: 1.0
+    orientation_x_score_weight: 0.0
+    orientation_y_score_weight: 5.0
+    orientation_z_score_weight: 2.0
+    translation_x_score_weight: 0.0
+    translation_y_score_weight: 0.0
+    translation_z_score_weight: 4.0
+  planner:
+    verbose: false

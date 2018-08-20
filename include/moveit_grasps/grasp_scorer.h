@@ -107,6 +107,13 @@ public:
   static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
                                                const Eigen::Vector3d& min_translations,
                                                const Eigen::Vector3d& max_translations);
+
+  /**
+   * \brief Ensure that there is no nan in the acos due to rounding errors
+   * \param value - value of which acos needs to be computed
+   * \return the safely calculated acos
+   */
+  static double acosSafe(double value);
 };
 
 }  // end namespace moveit_grasps
