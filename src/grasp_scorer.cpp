@@ -134,47 +134,4 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
 
   return scores;
 }
-
-// Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose,
-//                                                        const Eigen::Affine3d& ideal_pose)
-// {
-//   Eigen::Vector3d ideal_pose_axis;
-//   Eigen::Affine3d temp;
-//   temp = Eigen::Affine3d::Identity();
-//   double angle;
-
-//   // get angle between x-axes
-//   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
-//   angle = acos(ideal_pose_axis.dot(Eigen::Vector3d::UnitX()));
-//   ROS_INFO_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
-//   // scores[0] = pow(scores[0],2);
-//   temp = temp * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
-//   ideal_pose_axis = temp.rotation() * Eigen::Vector3d::UnitX();
-//   angle = acos(ideal_pose_axis.dot(Eigen::Vector3d::UnitX()));
-//   ROS_INFO_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
-
-//   // get angle between y-axes
-//   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
-//   angle = acos(ideal_pose_axis.dot(Eigen::Vector3d::UnitY()));
-//   ROS_INFO_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
-//   // scores[1] = pow(scores[1],2);
-//   temp = temp * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitX());
-//   ideal_pose_axis = temp.rotation() * Eigen::Vector3d::UnitY();
-//   angle = acos(ideal_pose_axis.dot(Eigen::Vector3d::UnitY()));
-//   ROS_INFO_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
-
-//   // get angle between z-axes
-//   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
-//   angle = acos(ideal_pose_axis.dot(Eigen::Vector3d::UnitZ()));
-//   ROS_INFO_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
-//   // scores[2] = pow(scores[2],2);
-//   temp = temp * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
-//   ideal_pose_axis = temp.rotation() * Eigen::Vector3d::UnitZ();
-//   angle = acos(ideal_pose_axis.dot(Eigen::Vector3d::UnitZ()));
-//   ROS_INFO_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
-
-//   // std::cout<<temp.isApprox(ideal_pose)<<std::endl;
-//   return ideal_pose_axis;
-// }
-
 }  // end namespace moveit_grasps
