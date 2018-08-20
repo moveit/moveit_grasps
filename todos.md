@@ -25,10 +25,11 @@
 
 ## Grasping Tutorial
 ### TODO
-* [ ] Fixing links
-* [ ] Adding demo
+* [ ] The links need to be updated according to whatever happens with the package
+* [ ] Once the packing is working reliably we need to add a demo to the tutorial
 * [ ] once the scoring and setting of ideal_grasp_pose is handled need to add that here also.
 * [ ] Link with the perception pipeline demo
 
 ### Blockers
 * [ ] The package needs to work reliably.
+* [ ] It is not straightforward to directly link the perception pipeline and grasp generator. we either need to modify perception pipeline to publish some info or call it in the generator.
