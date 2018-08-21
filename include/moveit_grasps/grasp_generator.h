@@ -133,14 +133,14 @@ public:
 
   /**
    * \brief Create grasp positions around one axis of a cuboid
-   * \param cuboid_pose - centroid of object to grasp in world frame
-   * \param depth length of cuboid along local x-axis
-   * \param width length of cuboid along local y-axis
-   * \param height length of cuboid along local z-axis
-   * \param axis axis of cuboid to generate grasps around
-   * \param grasp_data data describing end effector
-   * \param grasp_candidates possible grasps generated
-   * \param only_edge_grasps - set to true if object is too wide to grap the face in this axis
+   * \param cuboid_pose:      centroid of object to grasp in world frame
+   * \param depth:            length of cuboid along local x-axis
+   * \param width:            length of cuboid along local y-axis
+   * \param height:           length of cuboid along local z-axis
+   * \param axis:             axis of cuboid to generate grasps around
+   * \param grasp_data:       data describing end effector
+   * \param grasp_candidates: possible grasps generated
+   * \param only_edge_grasps: set to true if object is too wide to grap the face in this axis
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,

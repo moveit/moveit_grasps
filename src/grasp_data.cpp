@@ -159,9 +159,10 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   arm_jmg_ = robot_model_->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
   parent_link_ = robot_model_->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
 
-  // Debug
-  // moveit_grasps::Grasps::printObjectGraspData(grasp_data);
-
+  ROS_INFO_NAMED("grasp_data", "ee_name: %s, arm_jmg: %s, parent_link: %s",
+                                ee_jmg_->getName().c_str(),
+                                arm_jmg_->getName().c_str(),
+                                parent_link_->getName().c_str());
   return true;
 }
 
@@ -274,7 +275,7 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  const moveit::core::JointModel* joint = robot_model_->getJointModel("jaco2_joint_finger_1");
+  const moveit::core::JointModel* joint = robot_model_->getJointModel(grasp_posture_.joint_names[0]);
   const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
   for (std::size_t i = 0; i < joint_positions.size(); ++i)
