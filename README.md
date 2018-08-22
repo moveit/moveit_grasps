@@ -14,7 +14,9 @@ This package includes:
 
 Developed by [Dave Coleman](http://dav.ee) at the Correll Robotics Lab, University of Colorado Boulder with outside contributors.
 
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/demo.png" />
+[![Build Status](https://travis-ci.org/davetcoleman/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/davetcoleman/moveit_grasps)
+
+<img src="https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/demo.png" />
 
 ## Install
 
@@ -71,7 +73,7 @@ Within that file you can specify the following (example taken from jaco):
 
 These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
 The result should look like the following:
-![Grasp Poses Visualization](https://bytebucket.org/cuamazonchallenge/moveit_grasps/raw/6a0397bce5a309428e0fa25366e0d58015c93433/resources/moveit_grasps_poses.jpeg?token=ca124fc4d9cd8f2678a7392b3a568f7883f8ee3b)
+![Grasp Poses Visualization](https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/moveit_grasps_poses.jpeg)
 
 Poses Visualized: Object, Grasp, EE
 Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
