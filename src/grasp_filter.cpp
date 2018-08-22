@@ -92,8 +92,6 @@ GraspFilter::GraspFilter(robot_state::RobotStatePtr robot_state,
                           show_filtered_arm_solutions_pregrasp_speed_);
   rosparam_shortcuts::get(parent_name, nh_, "show_grasp_filter_collision_if_failed",
                           show_grasp_filter_collision_if_failed_);
-
-  ROS_INFO_STREAM_NAMED("grasp_filter", "GraspFilter Ready.");
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,

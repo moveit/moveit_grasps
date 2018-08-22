@@ -10,7 +10,6 @@ compiler: gcc
 notifications:
   email:
     recipients:
-      - dave@picknik.ai
 env:
   global:
     - TEST_BLACKLIST=moveit,moveit_ros,moveit_runtime,moveit_ros_perception  # mesh_filter_test fails due to broken Mesa OpenGL
