@@ -46,6 +46,7 @@
 
 // C++
 #include <math.h>
+// TODO(davetcoleman): remove this
 #define _USE_MATH_DEFINES
 
 // Parameter loading
@@ -115,14 +116,13 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
   rosparam_shortcuts::get(parent_name, child_nh, "min_finger_width", min_finger_width_);
 
-  // -------------------------------
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
 
   // Orientation
   ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
-  grasp_pose_to_eef_pose_ = rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform, rviz_visual_tools::XYZ);
+  grasp_pose_to_eef_pose_ =
+      rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform, rviz_visual_tools::XYZ);
 
-  // -------------------------------
   // Create pre-grasp posture if specified
   if (!pre_grasp_posture.empty())
   {
@@ -135,7 +135,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
     pre_grasp_posture_.points[0].positions = pre_grasp_posture;
     pre_grasp_posture_.points[0].time_from_start = ros::Duration(pregrasp_time_from_start);
   }
-  // -------------------------------
+
   // Create grasp posture
   grasp_posture_.header.frame_id = base_link_;
   grasp_posture_.header.stamp = ros::Time::now();
@@ -146,7 +146,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_posture_.points[0].positions = grasp_posture;
   grasp_posture_.points[0].time_from_start = ros::Duration(grasp_time_from_start);
 
-  // -------------------------------
   // Nums
   // distance from center point of object to end effector
   grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
@@ -159,10 +158,8 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   arm_jmg_ = robot_model_->getJointModelGroup(ee_jmg_->getEndEffectorParentGroup().first);
   parent_link_ = robot_model_->getLinkModel(ee_jmg_->getEndEffectorParentGroup().second);
 
-  ROS_INFO_NAMED("grasp_data", "ee_name: %s, arm_jmg: %s, parent_link: %s",
-                                ee_jmg_->getName().c_str(),
-                                arm_jmg_->getName().c_str(),
-                                parent_link_->getName().c_str());
+  ROS_INFO_NAMED("grasp_data", "ee_name: %s, arm_jmg: %s, parent_link: %s", ee_jmg_->getName().c_str(),
+                 arm_jmg_->getName().c_str(), parent_link_->getName().c_str());
   return true;
 }
 
@@ -187,7 +184,7 @@ bool GraspData::setRobotState(robot_state::RobotStatePtr& robot_state, const tra
     return false;
   }
 
-  // TODO make this more efficient
+  // TODO(davetcoleman): make this more efficient
   // Do for every joint in end effector
   for (std::size_t i = 0; i < posture.joint_names.size(); ++i)
   {
@@ -231,6 +228,7 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     return false;
   }
 
+  // TODO(davetcoleman): this is disgusting robot-specific code that must be removed
   // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
   static const double SLOPE =
       -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
@@ -320,7 +318,8 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
 void GraspData::print()
 {
   ROS_WARN_STREAM_NAMED("grasp_data", "Debug Grasp Data variable values:");
-  std::cout << "grasp_pose_to_eef_pose_: \n" << grasp_pose_to_eef_pose_.translation() << "\n"
+  std::cout << "grasp_pose_to_eef_pose_: \n"
+            << grasp_pose_to_eef_pose_.translation() << "\n"
             << grasp_pose_to_eef_pose_.rotation() << std::endl;
   std::cout << "pre_grasp_posture_: \n" << pre_grasp_posture_ << std::endl;
   std::cout << "grasp_posture_: \n" << grasp_posture_ << std::endl;

@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>
+/* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Callback for checking if a state is in collision
 */
 
@@ -41,9 +41,9 @@
 
 namespace
 {
-bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose, double verbose_speed,
-                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *robot_state,
-                       const robot_state::JointModelGroup *group, const double *ik_solution)
+bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool verbose, double verbose_speed,
+                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState* robot_state,
+                       const robot_state::JointModelGroup* group, const double* ik_solution)
 {
   robot_state->setJointGroupPositions(group, ik_solution);
   robot_state->update();

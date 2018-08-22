@@ -33,7 +33,7 @@
  *********************************************************************/
 
 /* Author: Andy McEvoy
-   Desc:   creates a vizualization of all the poses used in the graping pipeline
+   Desc:   Creates a vizualization of all the poses used in the graping pipeline
 */
 
 #include <moveit_grasps/grasp_generator.h>
@@ -52,25 +52,6 @@ static const double CUBOID_WORKSPACE_MAX_Z = 1.0;
 
 class GraspPosesVisualizer
 {
-private:
-  ros::NodeHandle nh_;
-
-  // cuboid dimensions
-  double depth_;
-  double width_;
-  double height_;
-  geometry_msgs::Pose cuboid_pose_;
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
-  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  std::vector<GraspCandidatePtr> grasp_candidates_;
-  moveit_grasps::GraspDataPtr grasp_data_;
-
-  // TODO: read in from param
-
-  // arm description
-  std::string ee_group_name_;
-  std::string planning_group_name_;
-
 public:
   // Constructor
   GraspPosesVisualizer(bool verbose) : nh_("~")
@@ -232,6 +213,25 @@ public:
   {
     return fMin + ((double)rand() / RAND_MAX) * (fMax - fMin);
   }
+
+private:
+  ros::NodeHandle nh_;
+
+  // cuboid dimensions
+  double depth_;
+  double width_;
+  double height_;
+  geometry_msgs::Pose cuboid_pose_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+  std::vector<GraspCandidatePtr> grasp_candidates_;
+  moveit_grasps::GraspDataPtr grasp_data_;
+
+  // TODO(mcevoyandy): read in from param
+
+  // arm description
+  std::string ee_group_name_;
+  std::string planning_group_name_;
 
 };  // class
 

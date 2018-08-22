@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>
+/* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Filters grasps based on kinematic feasibility and collision
 */
 
@@ -69,7 +69,7 @@ class GraspCandidate
 public:
   GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose);
 
-  bool getPreGraspState(moveit::core::RobotStatePtr &robot_state);
+  bool getPreGraspState(moveit::core::RobotStatePtr& robot_state);
 
   bool getGraspStateOpen(moveit::core::RobotStatePtr robot_state);
 
@@ -82,6 +82,7 @@ public:
   bool isValid();
 
   moveit_msgs::Grasp grasp_;
+
   /*# Contents of moveit_msgs::Grasp for reference
 
     # A name for this grasp
@@ -152,7 +153,7 @@ public:
                                           // behind a wall)
   bool grasp_filtered_by_orientation_;    // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
-  // TODO possibly remove
+  // TODO(davetcoleman): possibly remove
   Eigen::Affine3d cuboid_pose_;  // pose of original object to grasp
 
   // Store pregrasp, grasp, lifted, and retreat trajectories

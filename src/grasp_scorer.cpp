@@ -31,6 +31,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
+
 /**
  * Authors : Andy McEvoy ( mcevoy.andy@gmail.com )
  * Desc    : Functions for scoring grasps. See *.h file for documentation
@@ -50,7 +51,7 @@ double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const
                                         const Eigen::Affine3d& object_pose, const double& min_grasp_distance,
                                         const double& max_grasp_distance)
 {
-  // DEV NOTE: grasp_data is not used but should be. See *.h for explaination.
+  // TODO(mcevoyandy): grasp_data is not used but should be. See *.h for explaination.
 
   double distance = (grasp_pose.translation() - object_pose.translation()).norm();
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "distance = " << distance << ", " << min_grasp_distance << ":"
@@ -104,7 +105,6 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
   scores[0] = (M_PI - angle) / M_PI;
-  // scores[0] = pow(scores[0],2);
 
   // get angle between y-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitY();
@@ -112,7 +112,6 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
   scores[1] = (M_PI - angle) / M_PI;
-  // scores[1] = pow(scores[1],2);
 
   // get angle between z-axes
   grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitZ();
@@ -120,7 +119,6 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& gr
   angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
   scores[2] = (M_PI - angle) / M_PI;
-  // scores[2] = pow(scores[2],2);
 
   return scores;
 }

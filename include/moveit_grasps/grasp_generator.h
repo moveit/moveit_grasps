@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>, Andy McEvoy
+/* Author: Dave Coleman <dave@picknik.ai>, Andy McEvoy
    Desc:   Generates geometric grasps for cuboids and blocks, not using physics or contact wrenches
 */
 
