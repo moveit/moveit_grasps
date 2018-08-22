@@ -662,6 +662,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   {
     // visual_tools_->publishAxis(grasp_pose, 0.02, 0.002);
     visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL, 0.01);
+    visual_tools_->trigger();
     ros::Duration(0.01).sleep();
   }
 
