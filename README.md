@@ -1,7 +1,7 @@
 MoveIt! Grasps
-====================
+==============
 
-A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt! pick and place pipeline. Does not consider friction cones or other dynamics. 
+A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt! pick and place pipeline. Does not consider friction cones or other dynamics.
 
 Its current implementation takes as input a pose vector (postition and orientation) and generates a large number of potential grasp approaches and directions. Also includes a grasp filter for removing kinematically infeasible grasps via threaded IK solvers.
 
@@ -14,36 +14,36 @@ This package includes:
 
 Developed by [Dave Coleman](http://dav.ee) at the Correll Robotics Lab, University of Colorado Boulder with outside contributors.
 
-<img align="right" src="https://raw.github.com/davetcoleman/moveit_grasps/hydro-devel/resources/demo.png" /> 
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/demo.png" />
 
 ## Install
 
 ### Ubuntu Debian
 
-Indigo:
+Kinetic:
 ```
-sudo apt-get install ros-indigo-moveit-grasps
+sudo apt-get install ros-kinetic-moveit-grasps
 ```
 
 ### Install From Source
 
 Clone this repository into a catkin workspace, then use the rosdep install tool to automatically download its dependencies. Depending on your current version of ROS, use:
 
-Indigo:
+Kinetic:
 ```
-rosdep install --from-paths src --ignore-src --rosdistro indigo
+rosdep install --from-paths src --ignore-src --rosdistro kinetic
 ```
 
 ## Robot-Agnostic Configuration
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations. 
+You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/kinetic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
 
-To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/davetcoleman/moveit_grasps/blob/indigo-devel/launch/grasp_test.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>``.
+To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/davetcoleman/moveit_grasps/blob/kinetic-devel/launch/grasp_test.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>``.
 
 Within that file you can specify the following (example taken from jaco):
 
     # ee group name as defined in the MoveIt! SRDF
-    end_effector_name: 'gripper'  
+    end_effector_name: 'gripper'
 
     # actuated joints in end effector
     joints : ['jaco_joint_finger_1','jaco_joint_finger_2','jaco_joint_finger_3']
@@ -90,7 +90,7 @@ There are two tests scripts in this package. To view the tests, first start Rviz
 
 To test just grasp generation for randomly placed blocks:
 
-    roslaunch moveit_grasps test_grasp_generator.launch 
+    roslaunch moveit_grasps test_grasp_generator.launch
 
 To also test the grasp filtering:
 
@@ -126,7 +126,7 @@ A new (still in development) example tool is ``moveit_blocks.h`` located in the 
 
 There are currently example implementations:
 
- - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/indigo-devel/baxter_pick_place)
+ - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/kinetic-devel/baxter_pick_place)
  - [reem_tabletop_grasping](https://github.com/pal-robotics/reem_tabletop_grasping)
 
 ## TODO
