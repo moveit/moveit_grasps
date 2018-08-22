@@ -33,13 +33,14 @@
  *********************************************************************/
 
 /* Author: Andy McEvoy
-   Desc:   creates a vizualization of all the poses used in the graping pipeline
+   Desc:   Creates a vizualization of all the poses used in the graping pipeline
 */
 
 #include <moveit_grasps/grasp_generator.h>
 
 namespace moveit_grasps
 {
+
 // Size and location for randomly generated cuboids
 static const double CUBOID_MIN_SIZE = 0.02;
 static const double CUBOID_MAX_SIZE = 0.07;
@@ -52,25 +53,6 @@ static const double CUBOID_WORKSPACE_MAX_Z = 1.0;
 
 class GraspPosesVisualizer
 {
-private:
-  ros::NodeHandle nh_;
-
-  // cuboid dimensions
-  double depth_;
-  double width_;
-  double height_;
-  geometry_msgs::Pose cuboid_pose_;
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
-  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  std::vector<GraspCandidatePtr> grasp_candidates_;
-  moveit_grasps::GraspDataPtr grasp_data_;
-
-  // TODO: read in from param
-
-  // arm description
-  std::string ee_group_name_;
-  std::string planning_group_name_;
-
 public:
   // Constructor
   GraspPosesVisualizer(bool verbose) : nh_("~")
@@ -101,7 +83,7 @@ public:
     visual_tools_->deleteAllMarkers();
 
     ROS_INFO_STREAM_NAMED("viz_test", "\n************* \nStarting Vizualization"
-                                          << "\n*************");
+                          << "\n*************");
 
     ROS_INFO_STREAM_NAMED("viz_test", "generating random cuboid");
     generateRandomCuboid(cuboid_pose_, depth_, width_, height_);
@@ -232,6 +214,26 @@ public:
   {
     return fMin + ((double)rand() / RAND_MAX) * (fMax - fMin);
   }
+
+private:
+
+  ros::NodeHandle nh_;
+
+  // cuboid dimensions
+  double depth_;
+  double width_;
+  double height_;
+  geometry_msgs::Pose cuboid_pose_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+  std::vector<GraspCandidatePtr> grasp_candidates_;
+  moveit_grasps::GraspDataPtr grasp_data_;
+
+  // TODO(mcevoyandy): read in from param
+
+  // arm description
+  std::string ee_group_name_;
+  std::string planning_group_name_;
 
 };  // class
 

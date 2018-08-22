@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>
+/* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Filters grasps based on kinematic feasibility and collision
 */
 
@@ -64,7 +64,6 @@ bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr &robot_state)
   robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
 
   // Set end effector to correct configuration
-  // grasp_data_->setRobotStatePreGrasp(robot_state);
   grasp_data_->setRobotState(robot_state, grasp_.pre_grasp_posture);
 
   return true;

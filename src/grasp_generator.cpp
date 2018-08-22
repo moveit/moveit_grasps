@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>, Andy McEvoy
+/* Author: Dave Coleman <dave@picknik.ai>, Andy McEvoy
    Desc:   Generates geometric grasps for cuboids and blocks, not using physics or contact wrenches
 */
 
@@ -41,6 +41,7 @@
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace moveit_grasps
+
 {
 // Constructor
 GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
@@ -74,7 +75,8 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
                       Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
   ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
-  // visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+  // TODO(davetcoleman): make this an option
+  visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "IDEAL_GRASP_POSE");
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,
@@ -144,7 +146,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   b_dir = b_dir.normalized();
   c_dir = c_dir.normalized();
 
-  /***** Add grasps at corners, grasps are centroid aligned *****/
+  // Add grasps at corners, grasps are centroid aligned
   double offset = 0.001;  // back the palm off of the object slightly
   Eigen::Vector3d corner_translation_a;
   Eigen::Vector3d corner_translation_b;
@@ -179,7 +181,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   }
   std::size_t num_corner_grasps = grasp_poses.size();
 
-  /***** Create grasps along faces of cuboid, grasps are axis aligned *****/
+  // Create grasps along faces of cuboid, grasps are axis aligned
   std::size_t num_grasps_along_a;
   std::size_t num_grasps_along_b;
   double rotation;
@@ -215,10 +217,9 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   else
     delta_b = (length_along_b - grasp_data->gripper_finger_width_) / (double)(num_grasps_along_b - 1);
 
-  // ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","delta_a : delta_b = " << delta_a << " : " << delta_b);
-  // ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","num_grasps_along_a : num_grasps_along_b  = " << num_grasps_along_a <<
-  // " : " <<
-  //                        num_grasps_along_b);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","delta_a : delta_b = " << delta_a << " : " << delta_b);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","num_grasps_along_a : num_grasps_along_b  = " << num_grasps_along_a << " : " << num_grasps_along_b);
+
   if (only_edge_grasps == false)
   {
     ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "adding face grasps...");
@@ -249,7 +250,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     addFaceGraspsHelper(cuboid_pose, rotation_angles, b_translation, delta, rotation, num_grasps_along_b, grasp_poses);
   }
 
-  /***** add grasps at variable angles *****/
+  // add grasps at variable angles
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "adding variable angle grasps...");
   Eigen::Affine3d base_pose;
   std::size_t num_grasps = grasp_poses.size();
@@ -295,7 +296,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     }
   }
 
-  /***** Add grasps along edges *****/
+  // Add grasps along edges
   // move grasp pose to edge of cuboid
   double a_sign = 1.0;
   double b_sign = 1.0;
@@ -346,7 +347,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   addEdgeGraspsHelper(cuboid_pose, rotation_angles, b_translation, delta, rotation, num_grasps_along_b, grasp_poses,
                       -M_PI / 4.0 * b_rot_sign);
 
-  /***** Add grasps at variable depths *****/
+  // Add grasps at variable depths
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "adding depth grasps...");
   std::size_t num_depth_grasps = ceil(finger_depth / grasp_data->grasp_depth_resolution_);
   if (num_depth_grasps <= 0)
@@ -368,7 +369,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     }
   }
 
-  /***** add grasps in both directions *****/
+  // add grasps in both directions
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "adding bi-directional grasps...");
   num_grasps = grasp_poses.size();
   for (std::size_t i = 0; i < num_grasps; i++)
@@ -378,7 +379,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     grasp_poses.push_back(grasp_pose);
   }
 
-  /***** compute min/max distances to object *****/
+  // compute min/max distances to object
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "computing min/max grasp distance...");
   num_grasps = grasp_poses.size();
   min_grasp_distance_ = std::numeric_limits<double>::max();
@@ -409,19 +410,10 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     }
   }
 
-  // ROS_DEBUG_STREAM_NAMED("test","translations = \n" << grasp_pose.translation());
-  // visual_tools_->publishAxisLabeled(grasp_pose, "GRASP_POSE");
-  // ros::Duration(30.0).sleep();
-
-  // get translation from an ideal pose to the eef pose
-  // double eef_distance = (grasp_data->grasp_pose_to_eef_pose_.translation()).norm();
-  // min_grasp_distance_ += eef_distance;
-  // max_grasp_distance_ += eef_distance;
-
   ROS_DEBUG_STREAM_NAMED("grasp_generator.add", "min/max distance = " << min_grasp_distance_ << ", "
                                                                       << max_grasp_distance_);
 
-  /***** add all poses as possible grasps *****/
+ // add all poses as possible grasps
   std::size_t num_grasps_added = 0;
 
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
@@ -529,7 +521,7 @@ std::size_t GraspGenerator::addCornerGraspsHelper(Eigen::Affine3d pose, double r
 bool GraspGenerator::graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double depth, double width, double height,
                                              Eigen::Affine3d grasp_pose, const GraspDataPtr grasp_data)
 {
-  // TODO: remove vizualization commented lines after further testing
+  // TODO(davetcoleman): add parameter to enable vizualization commented lines after further testing
 
   // get line segment from grasp point to fingertip
   Eigen::Vector3d point_a = grasp_pose.translation();
@@ -640,7 +632,6 @@ bool GraspGenerator::graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double
 bool GraspGenerator::intersectionHelper(double t, double u1, double v1, double u2, double v2, double a, double b,
                                         double& u, double& v)
 {
-  // double u, v;
   // plane must cross through our line segment
   if (t >= 0 && t <= 1)
   {
@@ -669,9 +660,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // The new grasp
   moveit_msgs::Grasp new_grasp;
 
-  // Approach and retreat
-  // aligned with pose (aligned with grasp pose z-axis
-  // TODO:: Currently the pre/post approach/retreat translations are not robot agnostic.
+  // Approach and retreat - aligned with pose (aligned with grasp pose z-axis
+  // TODO(davetcoleman): Currently the pre/post approach/retreat translations are not robot agnostic.
   // It currently being loaded with the assumption that z-axis is pointing away from object.
 
   // set pregrasp
@@ -684,10 +674,6 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.pre_grasp_approach.direction.vector.x = 0;
   new_grasp.pre_grasp_approach.direction.vector.y = 0;
   new_grasp.pre_grasp_approach.direction.vector.z = -1;
-  // new_grasp.pre_grasp_approach.direction.header.frame_id = "world";
-  // new_grasp.pre_grasp_approach.direction.vector.x = 1;
-  // new_grasp.pre_grasp_approach.direction.vector.y = 0;
-  // new_grasp.pre_grasp_approach.direction.vector.z = 0;
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
@@ -699,10 +685,6 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.post_grasp_retreat.direction.vector.x = 0;
   new_grasp.post_grasp_retreat.direction.vector.y = 0;
   new_grasp.post_grasp_retreat.direction.vector.z = 1;
-  // new_grasp.post_grasp_retreat.direction.header.frame_id = "world";
-  // new_grasp.post_grasp_retreat.direction.vector.x = 1;
-  // new_grasp.post_grasp_retreat.direction.vector.y = 0;
-  // new_grasp.post_grasp_retreat.direction.vector.z = 0;
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
@@ -714,7 +696,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
   grasp_id++;
 
-  // translate and rotate gripper to match standard orientation
+  // Translate and rotate gripper to match standard orientation
   // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
   // Transform the grasp pose
 
@@ -734,8 +716,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 1.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and
-    // min_finger_open_on_approach=" << min_finger_open_on_approach);
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -748,8 +729,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.5;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and
-    // min_finger_open_on_approach=" << min_finger_open_on_approach);
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -759,8 +739,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    // ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and
-    // min_finger_open_on_approach=" << min_finger_open_on_approach);
+    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -782,10 +761,10 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
 
   // get portion of score based on the distance of the grasp pose to the object pose
 
-  // DEV NOTE: when this function is called we've lost the references to the acutal size of the object.
+  // NOTE: when this function is called we've lost the references to the acutal size of the object.
   // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
-  // arbitrary number given our target object set (I based it off of the cheese it box)
+  // arbitrary number given our target object set
   double distance_score =
       GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, min_grasp_distance_, max_grasp_distance_);
 
@@ -830,7 +809,6 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
 
   if (verbose_)
   {
-    // visual_tools_->deleteAllMarkers();
     ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
                            "Grasp score: \n "
                                << "\twidth_score         = " << width_score << "\n"
@@ -849,7 +827,6 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
                                << ", " << weights[3] << ", " << weights[4] << ", " << weights[5] << ", " << weights[6]
                                << ", " << weights[7] << "\n"
                                << "\ttotal_score         = " << total_score);
-    // visual_tools_->publishAxis(grasp_pose);
     visual_tools_->publishZArrow(grasp_pose);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
 
@@ -937,7 +914,6 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp& g
   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
   if (grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link)
   {
-    // ROS_WARN_STREAM_NAMED("grasp_generator","Pre grasp approach direction frame_id is " << ee_parent_link);
     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
     pre_grasp_approach_direction_local = grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
   }
@@ -979,13 +955,7 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
 void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
                                        const rviz_visual_tools::colors& color, double approach_length)
 {
-  // Eigen::Affine3d eigen_grasp_pose;
-  // Convert each grasp back to forward-facing error (undo end effector custom rotation)
-  // tf::poseMsgToEigen(grasp, eigen_grasp_pose);
-  // eigen_grasp_pose = eigen_grasp_pose * grasp_data->grasp_pose_to_eef_pose_.inverse();
-
-  // visual_tools_->publishArrow(eigen_grasp_pose, color, rviz_visual_tools::REGULAR);
-  visual_tools_->publishArrow(grasp, color, rviz_visual_tools::REGULAR);
+  visual_tools_->publishArrow(grasp, color, rviz_visual_tools::MEDIUM);
 }
 
 bool GraspGenerator::visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,

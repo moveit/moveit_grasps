@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>
+/* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Callback for checking if a state is in collision
 */
 

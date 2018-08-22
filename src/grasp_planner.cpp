@@ -32,7 +32,7 @@
    *  POSSIBILITY OF SUCH DAMAGE.
    *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>
+/* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Find the approach, lift, and retreat path for a candidate grasp (if a valid one exists)
 */
 
@@ -45,6 +45,7 @@
 
 namespace moveit_grasps
 {
+
 GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : visual_tools_(visual_tools), nh_("~")
 {
@@ -62,7 +63,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
                                               const GraspDataPtr grasp_data, const double& bin_height,
                                               Eigen::Affine3d bin_to_object)
 {
-  std::cout << std::endl;
+  ROS_INFO_STREAM_NAMED("grasp_planner", "");
   ROS_INFO_STREAM_NAMED("grasp_planner", "Planning all remaining grasps with approach lift retreat cartesian path");
 
   // For each remaining grasp, calculate entire approach, lift, and retreat path.
@@ -161,11 +162,6 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, ro
   //   return false;
   // }
 
-  // METHOD 1 - retreat in same direction as approach
-  // Eigen::Affine3d lifted_pregrasp_pose = pregrasp_pose;
-  // lifted_pregrasp_pose.translation().z() += grasp_candidate->grasp_data_->lift_distance_desired_;
-
-  // METHOD 2
   Eigen::Affine3d retreat_pose = lifted_grasp_pose;
   retreat_pose.translation().x() -= grasp_candidate->grasp_data_->retreat_distance_desired_;
 
@@ -180,17 +176,12 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, ro
   bool show_cartesian_waypoints = isEnabled("show_cartesian_waypoints");
   if (show_cartesian_waypoints)
   {
-    // bool static_id = false;
-    // visual_tools_->publishZArrow(pregrasp_pose, rvt::GREEN, rvt::SMALL);
     visual_tools_->publishAxisLabeled(pregrasp_pose, "pregrasp");
 
-    // visual_tools_->publishZArrow(grasp_pose, rvt::YELLOW, rvt::SMALL);
     visual_tools_->publishAxisLabeled(grasp_pose, "grasp");
 
-    // visual_tools_->publishZArrow(lifted_grasp_pose, rviz_visual_tools::ORANGE, rviz_visual_tools::SMALL);
     visual_tools_->publishAxisLabeled(lifted_grasp_pose, "lifted");
 
-    // visual_tools_->publishZArrow(retreat_pose, rviz_visual_tools::RED, rviz_visual_tools::SMALL);
     visual_tools_->publishAxisLabeled(retreat_pose, "retreat");
 
     // Show the grasp state
@@ -247,8 +238,6 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, ro
     visual_tools_->publishTrajectoryPoints(segmented_cartesian_traj[RETREAT], grasp_data->parent_link_,
                                            rviz_visual_tools::RED);
   }
-  // Turn off auto mode
-  // remote_control_->setStop();
 
   // Save this result
   grasp_candidate->segmented_cartesian_traj_ = segmented_cartesian_traj;
@@ -270,8 +259,8 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
   const moveit::core::LinkModel* ik_tip_link = grasp_data->parent_link_;
 
   // Resolution of trajectory
-  const double max_step =
-      0.01;  // The maximum distance in Cartesian space between consecutive points on the resulting path
+  // The maximum distance in Cartesian space between consecutive points on the resulting path
+  const double max_step = 0.01;
 
   // Jump threshold for preventing consequtive joint values from 'jumping' by a large amount in joint space
   const double jump_threshold = 4;  // config_->jump_threshold_; // aka jump factor
@@ -301,8 +290,6 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
   {
     if (attempts > 0)
     {
-      // std::cout << std::endl;
-      // std::cout << "-------------------------------------------------------" << std::endl;
       ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Attempting IK solution, attempt # " << attempts + 1);
     }
     attempts++;

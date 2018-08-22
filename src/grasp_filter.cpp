@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@dav.ee>
+/* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Filters grasps based on kinematic feasibility and collision
 */
 
@@ -103,7 +103,6 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 {
   bool verbose = false;
 
-  // -----------------------------------------------------------------------------------------------
   // Error check
   if (grasp_candidates.empty())
   {
@@ -113,21 +112,17 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   if (!filter_pregrasp)
     ROS_WARN_STREAM_NAMED("grasp_filter", "Not filtering pre-grasp - GraspCandidate may have bad data");
 
-  // -----------------------------------------------------------------------------------------------
   // Visualize the cutting planes if desired
   visualizeCuttingPlanes();
 
-  // -----------------------------------------------------------------------------------------------
   // Get the solver timeout from kinematics.yaml
   solver_timeout_ = arm_jmg->getDefaultIKTimeout();
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Grasp filter IK timeout " << solver_timeout_);
 
-  // -----------------------------------------------------------------------------------------------
   // Choose how many degrees of freedom
   num_variables_ = arm_jmg->getVariableCount();
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Solver for " << num_variables_ << " degrees of freedom");
 
-  // -----------------------------------------------------------------------------------------------
   // Get the end effector joint model group
   if (arm_jmg->getAttachedEndEffectorNames().size() == 0)
   {
@@ -192,7 +187,7 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::A
   grasp_position = filter_pose.inverse() * grasp_pose.translation();
 
   // filter grasps by cutting plane
-  double epsilon = 0.00000001;  //
+  double epsilon = 0.00000001;
   switch (plane)
   {
     case XY:
@@ -248,7 +243,6 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
                                             const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp,
                                             bool verbose)
 {
-  // -----------------------------------------------------------------------------------------------
   // Setup collision checking
 
   // Copy planning scene that is locked
@@ -259,7 +253,6 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   }
   *robot_state_ = cloned_scene->getCurrentState();
 
-  // -----------------------------------------------------------------------------------------------
   // Choose Number of cores
   std::size_t num_threads = omp_get_max_threads();
   if (num_threads > grasp_candidates.size())
@@ -276,7 +269,6 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   ROS_INFO_STREAM_NAMED("grasp_filter", "Filtering " << grasp_candidates.size() << " candidate grasps with "
                                                      << num_threads << " threads");
 
-  // -----------------------------------------------------------------------------------------------
   // Load kinematic solvers if not already loaded
   if (kin_solvers_[arm_jmg->getName()].size() != num_threads)
   {
@@ -297,7 +289,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     }
   }
 
-  // Robot states -------------------------------------------------------------------------------
+  // Robot states
   // Create a robot state for every thread
   if (robot_states_.size() != num_threads)
   {
@@ -317,7 +309,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     }
   }
 
-  // Transform poses -------------------------------------------------------------------------------
+  // Transform poses
   // bring the pose to the frame of the IK solver
   const std::string& ik_frame = kin_solvers_[arm_jmg->getName()][0]->getBaseFrame();
   Eigen::Affine3d link_transform;
@@ -342,7 +334,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   std::vector<double> ik_seed_state;
   seed_state->copyJointGroupPositions(arm_jmg, ik_seed_state);
 
-  // Thread data -------------------------------------------------------------------------------
+  // Thread data
   // Allocate only once to increase performance
   std::vector<IkThreadStructPtr> ik_thread_structs;
   ik_thread_structs.resize(num_threads);
@@ -360,7 +352,6 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   ros::Time start_time;
   start_time = ros::Time::now();
 
-  // -----------------------------------------------------------------------------------------------
   // Loop through poses and find those that are kinematically feasible
 
   omp_set_num_threads(num_threads);
@@ -450,7 +441,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   if (ik_thread_struct->verbose_ && false)
   {
     ik_thread_struct->ik_pose_.header.frame_id = ik_thread_struct->kin_solver_->getBaseFrame();
-    visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR,
+    visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, rviz_visual_tools::MEDIUM,
                                  0.1);
   }
 
@@ -502,7 +493,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     return false;
   }
 
-  // Start pre-grasp section ----------------------------------------------------------
+  // Start pre-grasp section
   if (ik_thread_struct->filter_pregrasp_)  // optionally check the pregrasp
   {
     // Convert to a pre-grasp
@@ -658,7 +649,6 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     CYAN - pregrasp filtered by collision
     GREEN - valid
   */
-  std::cout << "HERE " << std::endl;
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
     double size = 0.1;  // 0.01 * grasp_candidates[i]->grasp_.grasp_quality;
@@ -666,26 +656,26 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     if (grasp_candidates[i]->grasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::RED,
-                                   rviz_visual_tools::REGULAR, size);
+                                   rviz_visual_tools::MEDIUM, size);
     }
     else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::BLUE,
-                                   rviz_visual_tools::REGULAR, size);
+                                   rviz_visual_tools::MEDIUM, size);
     }
     else if (grasp_candidates[i]->grasp_filtered_by_cutting_plane_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::MAGENTA,
-                                   rviz_visual_tools::REGULAR, size);
+                                   rviz_visual_tools::MEDIUM, size);
     }
     else if (grasp_candidates[i]->grasp_filtered_by_orientation_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::YELLOW,
-                                   rviz_visual_tools::REGULAR, size);
+                                   rviz_visual_tools::MEDIUM, size);
     }
     else
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::GREEN,
-                                   rviz_visual_tools::REGULAR, size);
+                                   rviz_visual_tools::MEDIUM, size);
   }
 
   // Publish in batch
