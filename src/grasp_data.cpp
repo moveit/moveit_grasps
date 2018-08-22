@@ -275,7 +275,16 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
   //                       << joint_positions.size());
 
-  const moveit::core::JointModel* joint = robot_model_->getJointModel(grasp_posture_.joint_names[0]);
+  // TODO (mlautman): This assumes that there is a single joint in the joints array defined in your yaml
+  //                  This is a bad assumption. Really this should look at all joints in the end effector
+  //                  group individual
+  if (grasp_posture_.joint_names.size() < 1)
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_data", "You must have at least one joint defined in joint_names");
+    return false;
+  }
+
+  const moveit::core::JointModel* joint = robot_model_->getJointModel(grasp_posture_.joint_names.front());
   const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
   for (std::size_t i = 0; i < joint_positions.size(); ++i)
