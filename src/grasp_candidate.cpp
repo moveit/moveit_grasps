@@ -51,7 +51,7 @@ GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr gras
 {
 }
 
-bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr &robot_state)
+bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr& robot_state)
 {
   // Error check
   if (pregrasp_ik_solution_.empty())

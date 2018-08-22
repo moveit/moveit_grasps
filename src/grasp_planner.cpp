@@ -45,7 +45,6 @@
 
 namespace moveit_grasps
 {
-
 GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : visual_tools_(visual_tools), nh_("~")
 {
@@ -309,23 +308,17 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
     segmented_cartesian_traj.resize(3);
     ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "computeCartesianPathSegmented was never merged into main "
                                                       "moveit");
-    last_valid_percentage = start_state_copy.computeCartesianPath(arm_jmg, segmented_cartesian_traj[APPROACH],
-                                                                 ik_tip_link,
-                                                                 waypoints[APPROACH], global_reference_frame,
-                                                                 max_step, jump_threshold, constraint_fn,
-                                                                 kinematics::KinematicsQueryOptions());
+    last_valid_percentage = start_state_copy.computeCartesianPath(
+        arm_jmg, segmented_cartesian_traj[APPROACH], ik_tip_link, waypoints[APPROACH], global_reference_frame, max_step,
+        jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
 
-    last_valid_percentage *= start_state_copy.computeCartesianPath(arm_jmg, segmented_cartesian_traj[LIFT],
-                                                                   ik_tip_link,
-                                                                   waypoints[LIFT], global_reference_frame,
-                                                                   max_step, jump_threshold, constraint_fn,
-                                                                   kinematics::KinematicsQueryOptions());
+    last_valid_percentage *= start_state_copy.computeCartesianPath(
+        arm_jmg, segmented_cartesian_traj[LIFT], ik_tip_link, waypoints[LIFT], global_reference_frame, max_step,
+        jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
 
-    last_valid_percentage *= start_state_copy.computeCartesianPath(arm_jmg, segmented_cartesian_traj[RETREAT],
-                                                                   ik_tip_link,
-                                                                   waypoints[RETREAT], global_reference_frame,
-                                                                   max_step, jump_threshold, constraint_fn,
-                                                                   kinematics::KinematicsQueryOptions());
+    last_valid_percentage *= start_state_copy.computeCartesianPath(
+        arm_jmg, segmented_cartesian_traj[RETREAT], ik_tip_link, waypoints[RETREAT], global_reference_frame, max_step,
+        jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
 
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints",
                            "Cartesian last_valid_percentage: " << last_valid_percentage

@@ -40,7 +40,6 @@
 
 namespace moveit_grasps
 {
-
 // Size and location for randomly generated cuboids
 static const double CUBOID_MIN_SIZE = 0.02;
 static const double CUBOID_MAX_SIZE = 0.07;
@@ -83,7 +82,7 @@ public:
     visual_tools_->deleteAllMarkers();
 
     ROS_INFO_STREAM_NAMED("viz_test", "\n************* \nStarting Vizualization"
-                          << "\n*************");
+                                          << "\n*************");
 
     ROS_INFO_STREAM_NAMED("viz_test", "generating random cuboid");
     generateRandomCuboid(cuboid_pose_, depth_, width_, height_);
@@ -216,7 +215,6 @@ public:
   }
 
 private:
-
   ros::NodeHandle nh_;
 
   // cuboid dimensions

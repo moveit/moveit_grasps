@@ -69,7 +69,7 @@ class GraspCandidate
 public:
   GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose);
 
-  bool getPreGraspState(moveit::core::RobotStatePtr &robot_state);
+  bool getPreGraspState(moveit::core::RobotStatePtr& robot_state);
 
   bool getGraspStateOpen(moveit::core::RobotStatePtr robot_state);
 

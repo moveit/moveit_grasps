@@ -217,8 +217,9 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   else
     delta_b = (length_along_b - grasp_data->gripper_finger_width_) / (double)(num_grasps_along_b - 1);
 
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","delta_a : delta_b = " << delta_a << " : " << delta_b);
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps","num_grasps_along_a : num_grasps_along_b  = " << num_grasps_along_a << " : " << num_grasps_along_b);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "delta_a : delta_b = " << delta_a << " : " << delta_b);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "num_grasps_along_a : num_grasps_along_b  = "
+                                                   << num_grasps_along_a << " : " << num_grasps_along_b);
 
   if (only_edge_grasps == false)
   {
@@ -413,7 +414,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   ROS_DEBUG_STREAM_NAMED("grasp_generator.add", "min/max distance = " << min_grasp_distance_ << ", "
                                                                       << max_grasp_distance_);
 
- // add all poses as possible grasps
+  // add all poses as possible grasps
   std::size_t num_grasps_added = 0;
 
   for (std::size_t i = 0; i < grasp_poses.size(); i++)
@@ -716,7 +717,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 1.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
+    ROS_ERROR_STREAM_NAMED("grasp_generator",
+                           "Unable to set grasp width with %"
+                               << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -729,7 +732,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.5;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
+    ROS_ERROR_STREAM_NAMED("grasp_generator",
+                           "Unable to set grasp width with %"
+                               << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -739,7 +744,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator","Unable to set grasp width with %" << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
+    ROS_ERROR_STREAM_NAMED("grasp_generator",
+                           "Unable to set grasp width with %"
+                               << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -815,17 +822,18 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
                                << "\torientation_score.x = " << orientation_scores[0] << "\n"
                                                                                          "\torientation_score.y = "
                                << orientation_scores[1] << "\n"
-                                                           "\torientation_score.z = " << orientation_scores[2]
-                               << "\n"
-                                  "\tdistance_score      = " << distance_score << "\n"
+                                                           "\torientation_score.z = "
+                               << orientation_scores[2] << "\n"
+                                                           "\tdistance_score      = "
+                               << distance_score << "\n"
                                << "\ttranslation_score.x = " << translation_scores[0] << "\n"
                                                                                          "\ttranslation_score.y = "
                                << translation_scores[1] << "\n"
-                                                           "\ttranslation_score.z = " << translation_scores[2]
-                               << "\n"
-                                  "\tweights             = " << weights[0] << ", " << weights[1] << ", " << weights[2]
-                               << ", " << weights[3] << ", " << weights[4] << ", " << weights[5] << ", " << weights[6]
-                               << ", " << weights[7] << "\n"
+                                                           "\ttranslation_score.z = "
+                               << translation_scores[2] << "\n"
+                                                           "\tweights             = "
+                               << weights[0] << ", " << weights[1] << ", " << weights[2] << ", " << weights[3] << ", "
+                               << weights[4] << ", " << weights[5] << ", " << weights[6] << ", " << weights[7] << "\n"
                                << "\ttotal_score         = " << total_score);
     visual_tools_->publishZArrow(grasp_pose);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
