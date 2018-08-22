@@ -319,6 +319,7 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
 
     // Compute Cartesian Path
     segmented_cartesian_traj.clear();
+    segmented_cartesian_traj.resize(3);
     ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "computeCartesianPathSegmented was never merged into main "
                                                       "moveit");
     last_valid_percentage = start_state_copy.computeCartesianPath(arm_jmg, segmented_cartesian_traj[APPROACH],
