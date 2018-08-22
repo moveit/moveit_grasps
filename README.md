@@ -1,5 +1,4 @@
-MoveIt! Grasps
-==============
+# MoveIt! Grasps
 
 A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt! pick and place pipeline. Does not consider friction cones or other dynamics.
 
@@ -7,12 +6,12 @@ Its current implementation takes as input a pose vector (postition and orientati
 
 This package includes:
 
- - pose-based grasp generator for a block
+ - Pose-based grasp generator for a block
  - Separate grasp generators for custom objects such as rectanguar or cylindrical objects
  - Grasp filter
  - Test code and visualizations
 
-Developed by [Dave Coleman](http://dav.ee) at the Correll Robotics Lab, University of Colorado Boulder with outside contributors.
+Developed by Dave Coleman and Andy McEvoy at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
 [![Build Status](https://travis-ci.org/davetcoleman/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/davetcoleman/moveit_grasps)
 
@@ -22,7 +21,8 @@ Developed by [Dave Coleman](http://dav.ee) at the Correll Robotics Lab, Universi
 
 ### Ubuntu Debian
 
-Kinetic:
+> Note: this package has not been released yet
+
 ```
 sudo apt-get install ros-kinetic-moveit-grasps
 ```
@@ -73,6 +73,7 @@ Within that file you can specify the following (example taken from jaco):
 
 These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
 The result should look like the following:
+
 ![Grasp Poses Visualization](https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/moveit_grasps_poses.jpeg)
 
 Poses Visualized: Object, Grasp, EE
@@ -140,6 +141,7 @@ Features we'd like to see added to this project:
 
 ## Contributors
 
- - Dave Coleman, CU Boulder @davetcoleman
- - Andy McEvoy, CU Boulder @mcevoyandy
+ - Dave Coleman, PickNik @davetcoleman
+ - Andy McEvoy, PickNik @mcevoyandy
  - Bence Magyar, PAL Robotics @bmagyar
+ - Mike Lautman, PickNik @mlautman
