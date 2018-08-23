@@ -45,15 +45,13 @@
 
 namespace moveit_grasps
 {
+constexpr char ENABLED_PARENT_NAME[] = "grasp_planner";  // for namespacing logging messages
+constexpr char ENABLED_SETTINGS_NAMESPACE[] = "moveit_grasps/planner";
+
 GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : visual_tools_(visual_tools), nh_("~")
 {
-  // Load verbose/visualization settings
-  const std::string parent_name = "grasp_planner";  // for namespacing logging messages
-  const std::string settings_namespace = "moveit_grasps/planner";
-  loadEnabledSettings(parent_name, settings_namespace);
-
-  ROS_INFO_STREAM_NAMED("grasp_planner", "GraspPlanner Ready.");
+  loadEnabledSettings();
 }
 
 bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
@@ -367,31 +365,33 @@ void GraspPlanner::setWaitForNextStepCallback(WaitForNextStepCallback callback)
   wait_for_next_step_callback_ = callback;
 }
 
-bool GraspPlanner::loadEnabledSettings(const std::string& parent_name, const std::string& setting_namespace)
+bool GraspPlanner::loadEnabledSettings()
 {
   // Check if the map has been loaded yet
   if (!enabled_setttings_loaded_)
   {
     enabled_setttings_loaded_ = true;
-    return rosparam_shortcuts::get(parent_name, nh_, setting_namespace, enabled_);
+    return rosparam_shortcuts::get(ENABLED_PARENT_NAME, nh_, ENABLED_SETTINGS_NAMESPACE, enabled_setting_);
   }
   return true;
 }
 
 bool GraspPlanner::isEnabled(const std::string& setting_name)
 {
-  // Check if the map has been loaded yet. it is preferred if this is manually
+  // Check if the map has been loaded yet. it is preferred if this is called manually
   if (!enabled_setttings_loaded_)
     ROS_ERROR_STREAM_NAMED("rosparam_shortcuts", "Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
 
-  std::map<std::string, bool>::iterator it = enabled_.find(setting_name);
-  if (it != enabled_.end())
+  std::map<std::string, bool>::iterator it = enabled_setting_.find(setting_name);
+  if (it != enabled_setting_.end())
   {
     // Element found;
     return it->second;
   }
-  ROS_ERROR_STREAM_NAMED("rosparam_shortcuts", "isEnabled() key '" << setting_name << "' does not exist on the "
-                                                                                      "parameter server");
+  ROS_ERROR_STREAM_NAMED("rosparam_shortcuts", "isEnabled() key '" << nh_.getNamespace() << "/"
+                                                                   << ENABLED_SETTINGS_NAMESPACE << "/" << setting_name
+                                                                   << "' does not exist on the parameter server");
+
   return false;
 }
 
