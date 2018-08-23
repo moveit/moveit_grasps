@@ -108,7 +108,7 @@ public:
    *        e.g. /this_name/setting_namespace/some_parameter
    * \return true on success
    */
-  bool loadEnabledSettings(const std::string& parent_name, const std::string& setting_namespace);
+  bool loadEnabledSettings();
 
   /**
    * \brief Check if a setting is enabled
@@ -127,8 +127,8 @@ private:
   WaitForNextStepCallback wait_for_next_step_callback_;
 
   // Visualization settings
-  bool enabled_setttings_loaded_;
-  std::map<std::string, bool> enabled_;
+  bool enabled_setttings_loaded_ = false;
+  std::map<std::string, bool> enabled_setting_;
 
 };  // end class
 
