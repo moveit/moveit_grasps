@@ -194,6 +194,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, ro
     grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState());
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
 
+    visual_tools_->trigger();
     waitForNextStep("continue cartesian planning");
   }
 
@@ -304,8 +305,6 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
     // Compute Cartesian Path
     segmented_cartesian_traj.clear();
     segmented_cartesian_traj.resize(3);
-    ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "computeCartesianPathSegmented was never merged into main "
-                                                      "moveit");
     last_valid_percentage = start_state_copy.computeCartesianPath(
         arm_jmg, segmented_cartesian_traj[APPROACH], ik_tip_link, waypoints[APPROACH], global_reference_frame, max_step,
         jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
