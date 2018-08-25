@@ -76,7 +76,8 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
       return false;
 
     ROS_INFO_STREAM_NAMED("grasp_planner", "");
-    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #" << count++);
+    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #"
+                                               << count++ << ". " << grasp_candidates.size() << " remaining.");
 
     if (!planApproachLiftRetreat(*grasp_it, current_state, planning_scene_monitor, grasp_data,
                                  verbose_cartesian_filtering, bin_height, bin_to_object))
@@ -113,6 +114,12 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
     std::cout << std::endl;
   }
 
+  // If no grasp candidates had valid paths, then we return false
+  if (grasp_candidates.size() == 0)
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_planner", "No valid grasp plan possible");
+    return false;
+  }
   return true;
 }
 
@@ -194,6 +201,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, ro
     grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState());
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
 
+    visual_tools_->trigger();
     waitForNextStep("continue cartesian planning");
   }
 
@@ -304,8 +312,6 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
     // Compute Cartesian Path
     segmented_cartesian_traj.clear();
     segmented_cartesian_traj.resize(3);
-    ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "computeCartesianPathSegmented was never merged into main "
-                                                      "moveit");
     last_valid_percentage = start_state_copy.computeCartesianPath(
         arm_jmg, segmented_cartesian_traj[APPROACH], ik_tip_link, waypoints[APPROACH], global_reference_frame, max_step,
         jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());

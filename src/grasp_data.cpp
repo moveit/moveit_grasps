@@ -73,7 +73,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture;  // todo: remove all underscore post-fixes
   std::vector<double> grasp_posture;
-  std::vector<double> grasp_pose_to_eef_transform;
   double pregrasp_time_from_start;
   double grasp_time_from_start;
   std::string end_effector_name;
@@ -111,17 +110,12 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rosparam_shortcuts::get(parent_name, child_nh, "joints", joint_names);
   rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_transform);
+  rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_pose_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
   rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
   rosparam_shortcuts::get(parent_name, child_nh, "min_finger_width", min_finger_width_);
 
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
-
-  // Orientation
-  ROS_ASSERT(grasp_pose_to_eef_transform.size() == 6);
-  grasp_pose_to_eef_pose_ =
-      rviz_visual_tools::RvizVisualTools::convertFromXYZRPY(grasp_pose_to_eef_transform, rviz_visual_tools::XYZ);
 
   // Create pre-grasp posture if specified
   if (!pre_grasp_posture.empty())
