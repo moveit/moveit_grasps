@@ -76,7 +76,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
       return false;
 
     ROS_INFO_STREAM_NAMED("grasp_planner", "");
-    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #" << count++);
+    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #" << count++ << ". " << grasp_candidates.size() << " remaining.");
 
     if (!planApproachLiftRetreat(*grasp_it, current_state, planning_scene_monitor, grasp_data,
                                  verbose_cartesian_filtering, bin_height, bin_to_object))
@@ -84,6 +84,13 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
       ROS_INFO_STREAM_NAMED("grasp_planner", "Grasp candidate was unable to find valid cartesian waypoint path");
 
       grasp_it = grasp_candidates.erase(grasp_it);  // not valid
+
+      // If this was the last grasp candidate then we failed to find a valid one
+      if (grasp_candidates.size() == 0)
+      {
+        ROS_ERROR_STREAM_NAMED("grasp_planner", "No valid grasp plan possible");
+        return false;
+      }
     }
     else
     {
