@@ -66,7 +66,8 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
   rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
   rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "grasp_approach_vector_in_parent_frame", grasp_approach_vector_in_parent_frame_);
+  rosparam_shortcuts::get(parent_name, nh_, "grasp_approach_vector_in_parent_frame",
+                          grasp_approach_vector_in_parent_frame_);
 
   // Set ideal grasp pose (currently only uses orientation of pose)
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();

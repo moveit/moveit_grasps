@@ -76,7 +76,8 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
       return false;
 
     ROS_INFO_STREAM_NAMED("grasp_planner", "");
-    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #" << count++ << ". " << grasp_candidates.size() << " remaining.");
+    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #"
+                                               << count++ << ". " << grasp_candidates.size() << " remaining.");
 
     if (!planApproachLiftRetreat(*grasp_it, current_state, planning_scene_monitor, grasp_data,
                                  verbose_cartesian_filtering, bin_height, bin_to_object))
