@@ -10,6 +10,7 @@ moveit_grasps:
     show_prefiltered_grasps_speed: 0.01
 
     # Don't know if this should go here... seems like config_robot/*.yaml is a better place
+    # TODO (mlautman): add an integration test for checking that all required params are loaded
     depth_score_weight: 3.0
     width_score_weight: 1.0
     orientation_x_score_weight: 0.0

@@ -1,3 +1,4 @@
+# TODO (mlautman): Rememove all but one or two example grasp_data.yaml files
 base_link: 'world'
 # =====================================================
 gripper:
@@ -31,7 +32,7 @@ gripper:
     # width of gripper fingers
     # gripper_finger_width : 0.023
     gripper_finger_width: 0.012 # testing a smaller value (~half finger width)
-    
+
     # max object width that can fit between fingers
     max_grasp_width : 0.1
 

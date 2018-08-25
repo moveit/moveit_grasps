@@ -26,7 +26,7 @@ gripper:
 
     # width of gripper fingers
     gripper_finger_width: 0.012
-    
+
     # max object width that can fit between fingers
     max_grasp_width : 0.1
 
