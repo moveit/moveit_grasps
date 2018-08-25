@@ -18,6 +18,7 @@ moveit_grasps:
     translation_x_score_weight: 0.0
     translation_y_score_weight: 0.0
     translation_z_score_weight: 4.0
+    grasp_approach_vector_in_parent_frame: [0, 0, 1]
 
   filter:
     # Show summary statistics

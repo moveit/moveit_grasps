@@ -321,6 +321,9 @@ private:
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
 
+  // Approach vector in parent frame
+  std::vector<double> grasp_approach_vector_in_parent_frame_;
+
   // Visualization levels
   bool show_grasp_arrows_;
   double show_grasp_arrows_speed_;
