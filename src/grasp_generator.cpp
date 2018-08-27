@@ -67,13 +67,24 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
   rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
 
+  std::vector<double> ideal_grasp_orientation_rpy;
+  rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
+  ROS_ASSERT(ideal_grasp_orientation_rpy.size() == 3);
+
   // Set ideal grasp pose (currently only uses orientation of pose)
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();
-  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(-M_PI, Eigen::Vector3d::UnitX());
+  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[0], Eigen::Vector3d::UnitX());
+  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[1], Eigen::Vector3d::UnitY());
+  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[2], Eigen::Vector3d::UnitZ());
   ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
-  // TODO(davetcoleman): make this an option
-  visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "ideal grasp orientation");
+  bool show_ideal_grasp_orientation = false;
+  rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
+  if (show_ideal_grasp_orientation)
+  {
+    visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "ideal_grasp_orientation");
+    visual_tools_->trigger();
+  }
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,
