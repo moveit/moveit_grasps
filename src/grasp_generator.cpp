@@ -66,8 +66,6 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
   rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
   rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "grasp_approach_vector_in_parent_frame",
-                          grasp_approach_vector_in_parent_frame_);
 
   // Set ideal grasp pose (currently only uses orientation of pose)
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();
@@ -671,9 +669,13 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
       grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector_in_parent_frame_[0];
-  new_grasp.pre_grasp_approach.direction.vector.y = grasp_approach_vector_in_parent_frame_[1];
-  new_grasp.pre_grasp_approach.direction.vector.z = grasp_approach_vector_in_parent_frame_[2];
+
+  Eigen::Vector3d grasp_approach_vector = grasp_data->grasp_pose_to_eef_pose_.translation();
+  grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
+
+  new_grasp.pre_grasp_approach.direction.vector.x = -1 * grasp_approach_vector.x();
+  new_grasp.pre_grasp_approach.direction.vector.y = -1 * grasp_approach_vector.y();
+  new_grasp.pre_grasp_approach.direction.vector.z = -1 * grasp_approach_vector.z();
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
@@ -682,9 +684,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
       grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.post_grasp_retreat.direction.vector.x = -grasp_approach_vector_in_parent_frame_[0];
-  new_grasp.post_grasp_retreat.direction.vector.y = -grasp_approach_vector_in_parent_frame_[1];
-  new_grasp.post_grasp_retreat.direction.vector.z = -grasp_approach_vector_in_parent_frame_[2];
+  new_grasp.post_grasp_retreat.direction.vector.x = grasp_approach_vector.x();
+  new_grasp.post_grasp_retreat.direction.vector.y = grasp_approach_vector.y();
+  new_grasp.post_grasp_retreat.direction.vector.z = grasp_approach_vector.z();
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
