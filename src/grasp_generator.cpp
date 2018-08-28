@@ -669,10 +669,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // The new grasp
   moveit_msgs::Grasp new_grasp;
 
-  // Approach and retreat - aligned with pose (aligned with grasp pose z-axis
-  // TODO(davetcoleman): Currently the pre/post approach/retreat translations are not robot agnostic.
-  // It currently being loaded with the assumption that z-axis is pointing towards the object.
-
+  // Approach and retreat - aligned with eef to grasp transform
   // set pregrasp
   moveit_msgs::GripperTranslation pre_grasp_approach;
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
@@ -681,12 +678,12 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
 
-  Eigen::Vector3d grasp_approach_vector = grasp_data->grasp_pose_to_eef_pose_.translation();
+  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->grasp_pose_to_eef_pose_.translation();
   grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
 
-  new_grasp.pre_grasp_approach.direction.vector.x = -1 * grasp_approach_vector.x();
-  new_grasp.pre_grasp_approach.direction.vector.y = -1 * grasp_approach_vector.y();
-  new_grasp.pre_grasp_approach.direction.vector.z = -1 * grasp_approach_vector.z();
+  new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector.x();
+  new_grasp.pre_grasp_approach.direction.vector.y = grasp_approach_vector.y();
+  new_grasp.pre_grasp_approach.direction.vector.z = grasp_approach_vector.z();
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
@@ -695,9 +692,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
       grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.post_grasp_retreat.direction.vector.x = grasp_approach_vector.x();
-  new_grasp.post_grasp_retreat.direction.vector.y = grasp_approach_vector.y();
-  new_grasp.post_grasp_retreat.direction.vector.z = grasp_approach_vector.z();
+  new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
+  new_grasp.post_grasp_retreat.direction.vector.y = -1 * grasp_approach_vector.y();
+  new_grasp.post_grasp_retreat.direction.vector.z = -1 * grasp_approach_vector.z();
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
