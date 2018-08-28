@@ -67,14 +67,24 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
   rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
 
+  std::vector<double> ideal_grasp_orientation_rpy;
+  rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
+  ROS_ASSERT(ideal_grasp_orientation_rpy.size() == 3);
+
   // Set ideal grasp pose (currently only uses orientation of pose)
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();
-  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
-                      Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
+  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[0], Eigen::Vector3d::UnitX());
+  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[1], Eigen::Vector3d::UnitY());
+  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[2], Eigen::Vector3d::UnitZ());
   ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
-  // TODO(davetcoleman): make this an option
-  visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+  bool show_ideal_grasp_orientation = false;
+  rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
+  if (show_ideal_grasp_orientation)
+  {
+    visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "ideal_grasp_orientation");
+    visual_tools_->trigger();
+  }
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,
@@ -659,10 +669,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // The new grasp
   moveit_msgs::Grasp new_grasp;
 
-  // Approach and retreat - aligned with pose (aligned with grasp pose z-axis
-  // TODO(davetcoleman): Currently the pre/post approach/retreat translations are not robot agnostic.
-  // It currently being loaded with the assumption that z-axis is pointing away from object.
-
+  // Approach and retreat - aligned with eef to grasp transform
   // set pregrasp
   moveit_msgs::GripperTranslation pre_grasp_approach;
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
@@ -670,9 +677,13 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
       grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.pre_grasp_approach.direction.vector.x = 0;
-  new_grasp.pre_grasp_approach.direction.vector.y = 0;
-  new_grasp.pre_grasp_approach.direction.vector.z = -1;
+
+  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->grasp_pose_to_eef_pose_.translation();
+  grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
+
+  new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector.x();
+  new_grasp.pre_grasp_approach.direction.vector.y = grasp_approach_vector.y();
+  new_grasp.pre_grasp_approach.direction.vector.z = grasp_approach_vector.z();
 
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
@@ -681,9 +692,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
       grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.post_grasp_retreat.direction.vector.x = 0;
-  new_grasp.post_grasp_retreat.direction.vector.y = 0;
-  new_grasp.post_grasp_retreat.direction.vector.z = 1;
+  new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
+  new_grasp.post_grasp_retreat.direction.vector.y = -1 * grasp_approach_vector.y();
+  new_grasp.post_grasp_retreat.direction.vector.z = -1 * grasp_approach_vector.z();
 
   // set grasp pose
   geometry_msgs::PoseStamped grasp_pose_msg;
@@ -909,10 +920,10 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp& g
   Eigen::Affine3d grasp_pose_eigen;
   tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eigen);
 
-  // The direction of the pre-grasp
+  // The direction of the pre-grasp in the frame of the parent link
   Eigen::Vector3d pre_grasp_approach_direction =
-      -1 * Eigen::Vector3d(grasp.pre_grasp_approach.direction.vector.x, grasp.pre_grasp_approach.direction.vector.y,
-                           grasp.pre_grasp_approach.direction.vector.z);
+      Eigen::Vector3d(grasp.pre_grasp_approach.direction.vector.x, grasp.pre_grasp_approach.direction.vector.y,
+                      grasp.pre_grasp_approach.direction.vector.z);
 
   // Approach direction
   Eigen::Vector3d pre_grasp_approach_direction_local;
@@ -947,7 +958,7 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Gr
   Eigen::Vector3d pre_grasp_approach_direction_local = getPreGraspDirection(grasp, ee_parent_link);
 
   // Update the grasp matrix usign the new locally-framed approach_direction
-  pre_grasp_pose_eigen.translation() += pre_grasp_approach_direction_local * grasp.pre_grasp_approach.desired_distance;
+  pre_grasp_pose_eigen.translation() -= pre_grasp_approach_direction_local * grasp.pre_grasp_approach.desired_distance;
 
   // Convert eigen pre-grasp position back to regular message
   tf::poseEigenToMsg(pre_grasp_pose_eigen, pre_grasp_pose.pose);
