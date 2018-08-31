@@ -62,6 +62,7 @@ bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool
     visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
     planning_scene->isStateColliding(*robot_state, group->getName(), true);
     visual_tools->publishContactPoints(*robot_state, planning_scene);
+    visual_tools->trigger();
     ros::Duration(verbose_speed).sleep();
   }
   return false;
