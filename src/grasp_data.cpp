@@ -210,6 +210,8 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
 bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
                                           trajectory_msgs::JointTrajectory& grasp_posture)
 {
+  // TODO: Change this function to take in a method for translating joint values to grasp width
+  //       Currently this function simply interpolates between max open and max closed
   ROS_DEBUG_STREAM_NAMED("grasp_data", "Setting grasp posture to have distance_between_fingers of "
                                            << distance_btw_fingers);
 
@@ -222,41 +224,36 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     return false;
   }
 
-  // TODO(davetcoleman): this is disgusting robot-specific code that must be removed
-  // Data from GDoc: https://docs.google.com/spreadsheets/d/1OXLqzDU7vjZhEis64XW2ziXoY39EwoqGZP6w3LAysvo/edit#gid=0
-  static const double SLOPE =
-      -6.881728199;  //-0.06881728199; //-14.51428571;  // TODO move this to the yaml file data!!
-  static const double INTERCEPT = 0.7097604907;  // 0.7097604907; //10.36703297;
-  double joint_position = SLOPE * distance_btw_fingers + INTERCEPT;
-
-  ROS_DEBUG_STREAM_NAMED("grasp_data", "Converted to joint position " << joint_position);
-
-  std::vector<double> joint_positions;
-  joint_positions.resize(6);
-  joint_positions[0] = joint_position;
-  joint_positions[1] = joint_position;
-
-  // JACO SPECIFIC
-  static const double FINGER_3_OFFSET = -0.1;  // open more than the others
-
-  // TODO get these values from joint_model, jaco specific
-  static const double MIN_JOINT_POSITION = 0.0;
-  static const double MAX_JOINT_POSITION = 0.742;
-
-  // special treatment - this joint should be opened more than the others
-  joint_positions[2] = joint_position + FINGER_3_OFFSET;
-  if (joint_positions[2] < MIN_JOINT_POSITION)
+  // NOTE: We assume a linear relationship between the actuated joint values and the distance between fingers.
+  //       This is probably incorrect but until we expose an interface for passing in a function to translate from
+  //       joint values to grasp width, it's the best we got...
+  // TODO (mlautman): Make it so that a user can pass in a function here.
+  std::vector<std::string> joint_names = pre_grasp_posture_.joint_names;
+  std::vector<double> grasp_pose = grasp_posture_.points[0].positions;
+  std::vector<double> pre_grasp_pose = pre_grasp_posture_.points[0].positions;
+  if (joint_names.size() != grasp_pose.size() || grasp_pose.size() != pre_grasp_pose.size())
   {
-    joint_positions[2] = MIN_JOINT_POSITION;
-  }
-  if (joint_positions[2] > MAX_JOINT_POSITION)
-  {
-    joint_positions[2] = MAX_JOINT_POSITION;
+    ROS_ERROR_NAMED("grasp_data", "Mismatched vector sizes joint_names.size()=%zu, grasp_pose.size()=%zu, and pre_grasp_pose.size()=%zu", joint_names.size(), grasp_pose.size(), pre_grasp_pose.size());
+    return false;
   }
 
-  joint_positions[3] = 0;
-  joint_positions[4] = 0;
-  joint_positions[5] = 0;
+  std::vector<double> slope(joint_names.size());
+  std::vector<double> intercept(joint_names.size());
+  std::vector<double> joint_positions(joint_names.size());
+  for (std::size_t joint_index = 0; joint_index < joint_names.size(); joint_index++)
+  {
+    slope[joint_index] = (max_finger_width_ - min_finger_width_) / (pre_grasp_pose[joint_index] - grasp_pose[joint_index]);
+    intercept[joint_index] = max_finger_width_ - slope[joint_index] * pre_grasp_pose[joint_index];
+
+    // Sanity check
+    double intercept2 =  min_finger_width_ - slope[joint_index] * grasp_pose[joint_index];
+    if (intercept[joint_index] != intercept2)
+      ROS_ERROR_NAMED("grasp_data", "we got different y intercept!! %.3f and %.3f", intercept[joint_index], intercept2);
+
+    joint_positions[joint_index] = (distance_btw_fingers - intercept[joint_index]) / slope[joint_index];
+
+    ROS_DEBUG_NAMED("grasp_data", "Converted joint %s to position %.3f", joint_names[joint_index].c_str(), joint_positions[joint_index]);
+  }
 
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
 }
@@ -264,27 +261,16 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
 bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions,
                                              trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  // ROS_DEBUG_STREAM_NAMED("grasp_data","Moving fingers to joint positions using vector of size "
-  //                       << joint_positions.size());
+  std::vector<std::string> joint_names = pre_grasp_posture_.joint_names;
 
-  // TODO (mlautman): This assumes that there is a single joint in the joints array defined in your yaml
-  //                  This is a bad assumption. Really this should look at all joints in the end effector
-  //                  group individual
-  if (grasp_posture_.joint_names.size() < 1)
+  for (std::size_t joint_index=0; joint_index<joint_names.size(); joint_index++)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data", "You must have at least one joint defined in joint_names");
-    return false;
-  }
+    const moveit::core::JointModel* joint = robot_model_->getJointModel(joint_names[joint_index]);
+    const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
-  const moveit::core::JointModel* joint = robot_model_->getJointModel(grasp_posture_.joint_names.front());
-  const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
-
-  for (std::size_t i = 0; i < joint_positions.size(); ++i)
-  {
-    // Error check
-    if (joint_positions[i] > bound.max_position_ || joint_positions[i] < bound.min_position_)
+    if (joint_positions[joint_index] > bound.max_position_ || joint_positions[joint_index] < bound.min_position_)
     {
-      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << i << " with value " << joint_positions[i]
+      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << joint_names[joint_index].c_str() << "at index" << joint_index << " with value " << joint_positions[joint_index]
                                                               << " is beyond limits of " << bound.min_position_ << ", "
                                                               << bound.max_position_);
       return false;
