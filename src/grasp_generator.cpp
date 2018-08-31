@@ -303,7 +303,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     }
   }
 
-  if(grasp_candidate_config.enable_edge_grasps)
+  if (grasp_candidate_config.enable_edge_grasps)
   {
     // Add grasps along edges
     // move grasp pose to edge of cuboid
@@ -877,7 +877,8 @@ bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double d
   else
     grasp_candidate_config.onlyEdgeGrasps();
 
-  generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, grasp_candidate_config, grasp_candidates);
+  generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data, grasp_candidate_config,
+                           grasp_candidates);
 
   if (width <= grasp_data->max_grasp_width_)  // width = size along y-axis
   {
@@ -887,7 +888,8 @@ bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double d
   else
     grasp_candidate_config.onlyEdgeGrasps();
 
-  generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, grasp_candidate_config, grasp_candidates);
+  generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Y_AXIS, grasp_data, grasp_candidate_config,
+                           grasp_candidates);
 
   if (height <= grasp_data->max_grasp_width_)  // height = size along z-axis
   {
@@ -897,7 +899,8 @@ bool GraspGenerator::generateGrasps(const Eigen::Affine3d& cuboid_pose, double d
   else
     grasp_candidate_config.onlyEdgeGrasps();
 
-  generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, grasp_candidate_config, grasp_candidates);
+  generateCuboidAxisGrasps(cuboid_pose, depth, width, height, Z_AXIS, grasp_data, grasp_candidate_config,
+                           grasp_candidates);
 
   if (!grasp_candidates.size())
     ROS_WARN_STREAM_NAMED("grasp_generator", "Generated 0 grasps");

@@ -101,7 +101,8 @@ struct GraspCandidateConfig
     , enable_face_grasps(false)
     , enable_variable_angle_grasps(false)
     , enable_edge_grasps(false)
-  {}
+  {
+  }
   void enableAll()
   {
     enable_corner_grasps = true;
@@ -180,7 +181,8 @@ public:
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
-                                grasp_axis_t axis, const GraspDataPtr grasp_data, const GraspCandidateConfig& grasp_candidate_config,
+                                grasp_axis_t axis, const GraspDataPtr grasp_data,
+                                const GraspCandidateConfig& grasp_candidate_config,
                                 std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**

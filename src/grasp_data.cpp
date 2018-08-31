@@ -233,7 +233,9 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
   std::vector<double> pre_grasp_pose = pre_grasp_posture_.points[0].positions;
   if (joint_names.size() != grasp_pose.size() || grasp_pose.size() != pre_grasp_pose.size())
   {
-    ROS_ERROR_NAMED("grasp_data", "Mismatched vector sizes joint_names.size()=%zu, grasp_pose.size()=%zu, and pre_grasp_pose.size()=%zu", joint_names.size(), grasp_pose.size(), pre_grasp_pose.size());
+    ROS_ERROR_NAMED("grasp_data", "Mismatched vector sizes joint_names.size()=%zu, grasp_pose.size()=%zu, and "
+                                  "pre_grasp_pose.size()=%zu",
+                    joint_names.size(), grasp_pose.size(), pre_grasp_pose.size());
     return false;
   }
 
@@ -242,17 +244,19 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
   std::vector<double> joint_positions(joint_names.size());
   for (std::size_t joint_index = 0; joint_index < joint_names.size(); joint_index++)
   {
-    slope[joint_index] = (max_finger_width_ - min_finger_width_) / (pre_grasp_pose[joint_index] - grasp_pose[joint_index]);
+    slope[joint_index] =
+        (max_finger_width_ - min_finger_width_) / (pre_grasp_pose[joint_index] - grasp_pose[joint_index]);
     intercept[joint_index] = max_finger_width_ - slope[joint_index] * pre_grasp_pose[joint_index];
 
     // Sanity check
-    double intercept2 =  min_finger_width_ - slope[joint_index] * grasp_pose[joint_index];
+    double intercept2 = min_finger_width_ - slope[joint_index] * grasp_pose[joint_index];
     if (intercept[joint_index] != intercept2)
       ROS_ERROR_NAMED("grasp_data", "we got different y intercept!! %.3f and %.3f", intercept[joint_index], intercept2);
 
     joint_positions[joint_index] = (distance_btw_fingers - intercept[joint_index]) / slope[joint_index];
 
-    ROS_DEBUG_NAMED("grasp_data", "Converted joint %s to position %.3f", joint_names[joint_index].c_str(), joint_positions[joint_index]);
+    ROS_DEBUG_NAMED("grasp_data", "Converted joint %s to position %.3f", joint_names[joint_index].c_str(),
+                    joint_positions[joint_index]);
   }
 
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
@@ -263,16 +267,17 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
 {
   std::vector<std::string> joint_names = pre_grasp_posture_.joint_names;
 
-  for (std::size_t joint_index=0; joint_index<joint_names.size(); joint_index++)
+  for (std::size_t joint_index = 0; joint_index < joint_names.size(); joint_index++)
   {
     const moveit::core::JointModel* joint = robot_model_->getJointModel(joint_names[joint_index]);
     const moveit::core::VariableBounds& bound = joint->getVariableBounds()[0];
 
     if (joint_positions[joint_index] > bound.max_position_ || joint_positions[joint_index] < bound.min_position_)
     {
-      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << joint_names[joint_index].c_str() << "at index" << joint_index << " with value " << joint_positions[joint_index]
-                                                              << " is beyond limits of " << bound.min_position_ << ", "
-                                                              << bound.max_position_);
+      ROS_ERROR_STREAM_NAMED("grasp_data", "Requested joint " << joint_names[joint_index].c_str() << "at index"
+                                                              << joint_index << " with value "
+                                                              << joint_positions[joint_index] << " is beyond limits of "
+                                                              << bound.min_position_ << ", " << bound.max_position_);
       return false;
     }
   }
