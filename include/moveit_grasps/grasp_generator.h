@@ -94,6 +94,41 @@ enum grasp_axis_t
   Z_AXIS
 };
 
+struct GraspCandidateConfig
+{
+  GraspCandidateConfig()
+    : enable_corner_grasps_(false)
+    , enable_face_grasps_(false)
+    , enable_variable_angle_grasps_(false)
+    , enable_edge_grasps_(false)
+  {
+  }
+  void enableAll()
+  {
+    enable_corner_grasps_ = true;
+    enable_face_grasps_ = true;
+    enable_variable_angle_grasps_ = true;
+    enable_edge_grasps_ = true;
+  }
+  void disableAll()
+  {
+    enable_corner_grasps_ = false;
+    enable_face_grasps_ = false;
+    enable_variable_angle_grasps_ = false;
+    enable_edge_grasps_ = false;
+  }
+  void onlyEdgeGrasps()
+  {
+    disableAll();
+    enable_edge_grasps_ = true;
+  }
+
+  bool enable_corner_grasps_;
+  bool enable_face_grasps_;
+  bool enable_variable_angle_grasps_;
+  bool enable_edge_grasps_;
+};
+
 // Class
 class GraspGenerator
 {
@@ -137,7 +172,7 @@ public:
    * \param depth:            length of cuboid along local x-axis
    * \param width:            length of cuboid along local y-axis
    * \param height:           length of cuboid along local z-axis
-   * \param axis:             axis of cuboid to generate grasps around
+   * \param axis:             axis of cuboid to generate grasps along
    * \param grasp_data:       data describing end effector
    * \param grasp_candidates: possible grasps generated
    * \param only_edge_grasps: set to true if object is too wide to grap the face in this axis
@@ -145,7 +180,8 @@ public:
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
                                 grasp_axis_t axis, const GraspDataPtr grasp_data,
-                                std::vector<GraspCandidatePtr>& grasp_candidates, bool only_edge_grasps);
+                                const GraspCandidateConfig& grasp_candidate_config,
+                                std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief helper function for adding grasps at corner of cuboid
@@ -320,10 +356,6 @@ private:
 
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
-
-  // Visualization levels
-  bool show_grasp_arrows_;
-  double show_grasp_arrows_speed_;
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;
