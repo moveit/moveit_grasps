@@ -119,9 +119,7 @@ struct GraspCandidateConfig
   }
   void onlyEdgeGrasps()
   {
-    enable_corner_grasps = false;
-    enable_face_grasps = false;
-    enable_variable_angle_grasps = false;
+    disableAll();
     enable_edge_grasps = true;
   }
 
