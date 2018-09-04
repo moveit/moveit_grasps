@@ -141,3 +141,24 @@ Features we'd like to see added to this project:
  - Dave Coleman, CU Boulder @davetcoleman
  - Andy McEvoy, CU Boulder @mcevoyandy
  - Bence Magyar, PAL Robotics @bmagyar
+
+ Using The Generator
+-------------------
+
+In your node, include the following line: ::
+
+  #include <moveit_grasps/grasp_generator.h>
+
+You can create a pointer to the grasp_generator class: ::
+
+  moveit_grasps::GraspGeneratorPtr grasp_generator;
+
+Initialize the pointer as: ::
+
+  grasp_generator.reset()
+
+Using The Planner
+-----------------
+
+Visualizations
+--------------

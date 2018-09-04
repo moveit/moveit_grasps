@@ -1,28 +1,29 @@
 #ifndef MOVEIT_GRASPS__GRASP_PLANNER_
 #define MOVEIT_GRASPS__GRASP_PLANNER_
 
-#include "ros/ros.h"
 #include "moveit_msgs/GraspPlanning.h"
+#include "ros/ros.h"
 
 // Grasp
 #include <moveit_grasps/grasp_candidate.h>
-// #include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
-
-// robot specific properties
-// #include <moveit_grasps/grasp_data.h>
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-namespace moveit_grasps
-{
-class GraspPlanner
-{
+namespace moveit_grasps {
+/**
+* \brief Impliments the grasp_plan service which is called when calling the
+* function
+*        planGraspsAndPick().
+*/
+class GraspPlanner {
 public:
   GraspPlanner(ros::NodeHandle nh);
-  bool planGraspSrvCallback(moveit_msgs::GraspPlanning::Request  &req, moveit_msgs::GraspPlanning::Response &res);
-  void setCandidateGrasps(std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates);
+  bool planGraspSrvCallback(moveit_msgs::GraspPlanning::Request &req,
+                            moveit_msgs::GraspPlanning::Response &res);
+  void setCandidateGrasps(
+      std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates);
 
 private:
   // A shared node handle
@@ -31,17 +32,11 @@ private:
   // Grasp panning service server
   ros::ServiceServer grasp_planning_service_;
 
-  // Grasp generator
-  // moveit_grasps::GraspGeneratorPtr grasp_generator_;
-
   // Grasp candidate
   std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates_;
 
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-
-  // data for generating grasps
-  // moveit_grasps::GraspDataPtr grasp_data_;
 
   bool verbose_;
 };

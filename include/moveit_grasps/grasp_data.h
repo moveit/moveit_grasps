@@ -49,73 +49,84 @@
 
 // MoveIt
 #include <moveit/macros/class_forward.h>
-#include <moveit/robot_state/robot_state.h>
 #include <moveit/robot_model/link_model.h>
+#include <moveit/robot_state/robot_state.h>
 
-namespace moveit_grasps
-{
+namespace moveit_grasps {
 MOVEIT_CLASS_FORWARD(GraspData);
 
 // Map various arms to end effector grasp datas
-typedef std::map<const robot_model::JointModelGroup*, moveit_grasps::GraspDataPtr> GraspDatas;
+typedef std::map<const robot_model::JointModelGroup *,
+                 moveit_grasps::GraspDataPtr>
+    GraspDatas;
 
-class GraspData
-{
+class GraspData {
 public:
   /**
    * \brief Loads grasp data from a yaml file (load from roslaunch)
    * \param node handle - allows for namespacing
-   * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
+   * \param end effector name - which side of a two handed robot to load data
+   * for. should correspond to SRDF EE names
    */
-  GraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
+  GraspData(const ros::NodeHandle &nh, const std::string &end_effector,
+            moveit::core::RobotModelConstPtr robot_model);
 
   /**
    * \brief Helper function for constructor
    * \return true on success
    */
-  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector);
+  bool loadGraspData(const ros::NodeHandle &nh,
+                     const std::string &end_effector);
 
   /**
-   * \brief Alter a robot state so that the end effector corresponding to this grasp data is in pre-grasp state (OPEN)
+   * \brief Alter a robot state so that the end effector corresponding to this
+   * grasp data is in pre-grasp state (OPEN)
    * \param joint state of robot
    * \return true on success
    */
-  bool setRobotStatePreGrasp(robot_state::RobotStatePtr& robot_state);
+  bool setRobotStatePreGrasp(robot_state::RobotStatePtr &robot_state);
 
   /**
-   * \brief Alter a robot state so that the end effector corresponding to this grasp data is in grasp state (CLOSED)
+   * \brief Alter a robot state so that the end effector corresponding to this
+   * grasp data is in grasp state (CLOSED)
    * \param joint state of robot
    * \return true on success
    */
-  bool setRobotStateGrasp(robot_state::RobotStatePtr& robot_state);
+  bool setRobotStateGrasp(robot_state::RobotStatePtr &robot_state);
 
   /**
-   * \brief Alter a robot state so that the end effector corresponding to this grasp data is in a grasp posture
+   * \brief Alter a robot state so that the end effector corresponding to this
+   * grasp data is in a grasp posture
    * \param joint state of robot
    * \param posture - what state to set the end effector
    * \return true on success
    */
-  bool setRobotState(robot_state::RobotStatePtr& robot_state, const trajectory_msgs::JointTrajectory& posture);
+  bool setRobotState(robot_state::RobotStatePtr &robot_state,
+                     const trajectory_msgs::JointTrajectory &posture);
 
   /**
-   * \brief Set the width between fingers as a percentage of object size and max finger width
+   * \brief Set the width between fingers as a percentage of object size and max
+   * finger width
    * \return true on success
    */
-  bool setGraspWidth(const double& percent_open, const double& min_finger_width,
-                     trajectory_msgs::JointTrajectory& grasp_posture);
+  bool setGraspWidth(const double &percent_open, const double &min_finger_width,
+                     trajectory_msgs::JointTrajectory &grasp_posture);
 
   /**
    * \brief Convert width between fingers to joint positions
    * \return true on success
    */
-  bool fingerWidthToGraspPosture(const double& distance_btw_fingers, trajectory_msgs::JointTrajectory& grasp_posture);
+  bool
+  fingerWidthToGraspPosture(const double &distance_btw_fingers,
+                            trajectory_msgs::JointTrajectory &grasp_posture);
 
   /**
    * \brief Convert joint positions to full grasp posture
    * \return true on success
    */
-  bool jointPositionsToGraspPosture(std::vector<double> joint_positions,
-                                    trajectory_msgs::JointTrajectory& grasp_posture);
+  bool
+  jointPositionsToGraspPosture(std::vector<double> joint_positions,
+                               trajectory_msgs::JointTrajectory &grasp_posture);
 
   /**
    * \brief Debug data to console
@@ -123,24 +134,30 @@ public:
   void print();
 
 public:
-  Eigen::Affine3d grasp_pose_to_eef_pose_;  // Convert generic grasp pose to this end effector's frame of reference
-  trajectory_msgs::JointTrajectory pre_grasp_posture_;  // when the end effector is in "open" position
-  trajectory_msgs::JointTrajectory grasp_posture_;      // when the end effector is in "close" position
-  std::string base_link_;                               // name of global frame with z pointing up
+  Eigen::Affine3d grasp_pose_to_eef_pose_; // Convert generic grasp pose to this
+                                           // end effector's frame of reference
+  trajectory_msgs::JointTrajectory
+      pre_grasp_posture_; // when the end effector is in "open" position
+  trajectory_msgs::JointTrajectory
+      grasp_posture_;     // when the end effector is in "close" position
+  std::string base_link_; // name of global frame with z pointing up
 
   // std::string ee_group_name_; // the end effector name
-  const robot_model::JointModelGroup* ee_jmg_;   // this end effector
-  const robot_model::JointModelGroup* arm_jmg_;  // the arm that attaches to this end effector
+  const robot_model::JointModelGroup *ee_jmg_; // this end effector
+  const robot_model::JointModelGroup
+      *arm_jmg_; // the arm that attaches to this end effector
   const robot_model::RobotModelConstPtr robot_model_;
 
-  double grasp_depth_;    // distance from center point of object to end effector
-  int angle_resolution_;  // generate grasps at PI/angle_resolution increments
+  double grasp_depth_;   // distance from center point of object to end effector
+  int angle_resolution_; // generate grasps at PI/angle_resolution increments
 
   double finger_to_palm_depth_;
   double grasp_resolution_;
-  double grasp_depth_resolution_;  // generate grasps at this depth resolution along finger_to_palm_depth_
-  double grasp_min_depth_;         // minimum amount fingers must overlap object
-  double gripper_finger_width_;    // parameter used to ensure generated grasps will overlap object
+  double grasp_depth_resolution_; // generate grasps at this depth resolution
+                                  // along finger_to_palm_depth_
+  double grasp_min_depth_;        // minimum amount fingers must overlap object
+  double gripper_finger_width_;   // parameter used to ensure generated grasps
+                                  // will overlap object
   double max_grasp_width_;
 
   // grasp approach and retreat parameters
@@ -148,8 +165,10 @@ public:
   std::string retreat_frame_id_;
   std::vector<double> approach_direction_;
   std::vector<double> retreat_direction_;
-  double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
-  double retreat_distance_desired_;   // this is in addition to the finger_to_palm_depth
+  double approach_distance_desired_; // this is in addition to the
+                                     // finger_to_palm_depth
+  double retreat_distance_desired_;  // this is in addition to the
+                                     // finger_to_palm_depth
   double lift_distance_desired_;
   double grasp_padding_on_approach_;
 
@@ -158,10 +177,12 @@ public:
   double min_finger_width_;
 
   // Duplicate end effector data copied from RobotModel
-  const robot_model::LinkModel* parent_link_;  // the last link in the kinematic chain before the end effector, e.g.
-                                               // "/gripper_roll_link"
-};                                             // class
+  const robot_model::LinkModel *parent_link_; // the last link in the kinematic
+                                              // chain before the end effector,
+                                              // e.g.
+                                              // "/gripper_roll_link"
+};                                            // class
 
-}  // namespace
+} // namespace
 
 #endif

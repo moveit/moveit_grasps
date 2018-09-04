@@ -43,7 +43,8 @@ hand:
     # direction vector
     approach_direction: [0, 0, 1]
     # this is in addition to the finger_to_palm_depth
-    approach_distance_desired: 0.109
+    # approach_distance_desired: 0.109
+    approach_distance_desired: 0.03
     # direction wrt to this frame
     retreat_frame_id: "panda_link0"
     # direction vector

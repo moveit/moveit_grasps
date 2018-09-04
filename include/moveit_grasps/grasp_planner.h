@@ -33,7 +33,8 @@
  *********************************************************************/
 
 /* Author: Dave Coleman <dave@dav.ee>
-   Desc:   Find the approach, lift, and retreat path for a candidate grasp (if a valid one exists)
+   Desc:   Find the approach, lift, and retreat path for a candidate grasp (if a
+   valid one exists)
 */
 
 #ifndef MOVEIT_GRASPS__GRASP_PLANNER_
@@ -45,77 +46,85 @@
 // moveit_grasps
 #include <moveit_grasps/grasp_filter.h>
 
-namespace moveit_grasps
-{
-// Allow an interrupt to be called that waits for user input, useful for debugging
+namespace moveit_grasps {
+// Allow an interrupt to be called that waits for user input, useful for
+// debugging
 typedef boost::function<void(std::string message)> WaitForNextStepCallback;
 
-class GraspPlanner
-{
+class GraspPlanner {
 public:
   /**
    * \brief Constructor
    */
-  GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr &visual_tools);
 
   /**
    * \brief Plan entire cartesian manipulation sequence
    * \param input - description
    * \return true on success
    */
-  bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                  robot_state::RobotStatePtr current_state,
-                                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                  const GraspDataPtr grasp_data, const double& bin_height,
-                                  Eigen::Affine3d bin_to_object);
+  bool planAllApproachLiftRetreat(
+      std::vector<GraspCandidatePtr> &grasp_candidates,
+      robot_state::RobotStatePtr current_state,
+      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+      const GraspDataPtr grasp_data, const double &bin_height,
+      Eigen::Affine3d bin_to_object);
 
   /**
    * \brief Plan entire cartesian manipulation sequence
    * \param input - description
    * \return true on success
    */
-  bool planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, robot_state::RobotStatePtr current_state,
-                               planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const GraspDataPtr grasp_data, bool verbose_cartesian_filtering,
-                               const double& bin_height, Eigen::Affine3d bin_to_object);
+  bool planApproachLiftRetreat(
+      GraspCandidatePtr grasp_candidate,
+      robot_state::RobotStatePtr current_state,
+      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+      const GraspDataPtr grasp_data, bool verbose_cartesian_filtering,
+      const double &bin_height, Eigen::Affine3d bin_to_object);
 
   /**
    * \brief Compute a cartesian path along waypoints
    * \return true on success
    */
-  bool computeCartesianWaypointPath(const moveit::core::JointModelGroup* arm_jmg, const GraspDataPtr grasp_data,
-                                    planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                    const moveit::core::RobotStatePtr start_state,
-                                    const EigenSTL::vector_Affine3d& waypoints,
-                                    GraspTrajectories& segmented_cartesian_traj);
+  bool computeCartesianWaypointPath(
+      const moveit::core::JointModelGroup *arm_jmg,
+      const GraspDataPtr grasp_data,
+      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+      const moveit::core::RobotStatePtr start_state,
+      const EigenSTL::vector_Affine3d &waypoints,
+      GraspTrajectories &segmented_cartesian_traj);
 
   /**
    * \brief Wait for user input to proceeed
    * \param message - text to display to user when waiting
    */
-  void waitForNextStep(const std::string& message);
+  void waitForNextStep(const std::string &message);
 
   /**
-   * \brief Allow an interrupt to be called that waits for user input, useful for debugging
+   * \brief Allow an interrupt to be called that waits for user input, useful
+   * for debugging
    * \param message - text to display to user when waiting
    */
   void setWaitForNextStepCallback(WaitForNextStepCallback callback);
 
   /**
    * \brief Load parameter settings of the server under ~/debug_level
-   * \param parent_name - only used for debugging, allows one to see what paremeters are loaded in what namespace
+   * \param parent_name - only used for debugging, allows one to see what
+   * paremeters are loaded in what namespace
    * \param setting_namespace - where on this node's namespace to load settings
    *        e.g. /this_name/setting_namespace/some_parameter
    * \return true on success
    */
-  bool loadEnabledSettings(const std::string& parent_name, const std::string& setting_namespace);
+  bool loadEnabledSettings(const std::string &parent_name,
+                           const std::string &setting_namespace);
 
   /**
    * \brief Check if a setting is enabled
-   * \param setting_name - name of key on the parameter server as loaded in the 'setting_namespace'
+   * \param setting_name - name of key on the parameter server as loaded in the
+   * 'setting_namespace'
    * \return true if setting is enabled
    */
-  bool isEnabled(const std::string& setting_name);
+  bool isEnabled(const std::string &setting_name);
 
 private:
   // A shared node handle
@@ -130,12 +139,12 @@ private:
   bool enabled_setttings_loaded_;
   std::map<std::string, bool> enabled_;
 
-};  // end class
+}; // end class
 
 // Create boost pointers for this class
 typedef boost::shared_ptr<GraspPlanner> GraspPlannerPtr;
 typedef boost::shared_ptr<const GraspPlanner> GraspPlannerConstPtr;
 
-}  // end namespace
+} // end namespace
 
 #endif

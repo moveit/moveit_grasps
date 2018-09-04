@@ -48,36 +48,40 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-namespace moveit_grasps
-{
-class GraspScorer
-{
+namespace moveit_grasps {
+class GraspScorer {
 public:
   /**
-   * \brief Scores the grasp on how wide the fingers are on approach, the more open the better
+   * \brief Scores the grasp on how wide the fingers are on approach, the more
+   * open the better
    * \param grasp_data - pointer to grasp info
    * \param percent_open - amount the gripper is open
-   *                       0.0 -> gripper is open to the object width + minimum padding
+   *                       0.0 -> gripper is open to the object width + minimum
+   * padding
    *                       1.0 -> gripper is in full open position
    * \return the unweighted score:
    *         1.0 -> gripper is wide open,
    *         0.0 -> gripper is at minimum position.
    */
-  static double scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open);
+  static double scoreGraspWidth(const GraspDataPtr grasp_data,
+                                double percent_open);
 
   /**
-   * \brief Scores each axis of the grasp based on its angle to the desired pose axis.
+   * \brief Scores each axis of the grasp based on its angle to the desired pose
+   * axis.
    * \param grasp_pose - the pose of the end effector
    * \param ideal_pose - the ideal grasp pose (ex: straight into the bin)
    * \return the unweighted scores:
    *         1.0 -> 0 degrees between grasp axis and desired axis,
    *         0.0 -> 180 degrees
    */
-  static Eigen::Vector3d scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose,
-                                                   const Eigen::Affine3d& ideal_pose);
+  static Eigen::Vector3d
+  scoreRotationsFromDesired(const Eigen::Affine3d &grasp_pose,
+                            const Eigen::Affine3d &ideal_pose);
 
   /**
-   * \brief Score the grasp based on how far the object is from the palm of the hand
+   * \brief Score the grasp based on how far the object is from the palm of the
+   * hand
    * \param grasp_pose - the pose of the end effector
    * \param grasp_data - pointer to grasp info
    * \param object_pose - the pose of the object being grasped
@@ -87,26 +91,35 @@ public:
    *         0.0 -> object is at max distanct
    *       < 0.0 -> object is beyond the max_grasp_distance
    */
-  // DEV NOTE: when this function is called we've lost the references to the acutal size of the object.
-  // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
-  // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
-  // arbitrary number given our target object set (i.e. I based it off of the cheese it box)
-  static double scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
-                                    const Eigen::Affine3d& object_pose, const double& min_grasp_distance,
-                                    const double& max_grasp_distance);
+  // DEV NOTE: when this function is called we've lost the references to the
+  // acutal size of the object.
+  // max_distance should be the length of the fingers minus some minimum amount
+  // that the fingers need to grip an object
+  // since we don't know the distance from the centoid of the object to the edge
+  // of the object, this is set as an
+  // arbitrary number given our target object set (i.e. I based it off of the
+  // cheese it box)
+  static double scoreDistanceToPalm(const Eigen::Affine3d &grasp_pose,
+                                    const GraspDataPtr grasp_data,
+                                    const Eigen::Affine3d &object_pose,
+                                    const double &min_grasp_distance,
+                                    const double &max_grasp_distance);
 
   /**
    * \brief Score the grasp based on the translation values of the grasp pose
    * \param grasp_pose - the pose of the end effector
-   * \param min_translations - the minimum translation values for all grasp poses
-   * \param max_translations - the maximum translation values for all grasp poses
+   * \param min_translations - the minimum translation values for all grasp
+   * poses
+   * \param max_translations - the maximum translation values for all grasp
+   * poses
    * \return the unweighted scores:
    *         0.0 -> pose is at the minimum translation in that axis
    *         1.0 -> pose is at the maximum translation in that axis
    */
-  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
-                                               const Eigen::Vector3d& min_translations,
-                                               const Eigen::Vector3d& max_translations);
+  static Eigen::Vector3d
+  scoreGraspTranslation(const Eigen::Affine3d &grasp_pose,
+                        const Eigen::Vector3d &min_translations,
+                        const Eigen::Vector3d &max_translations);
 
   /**
    * \brief Ensure that there is no nan in the acos due to rounding errors
@@ -116,6 +129,6 @@ public:
   static double acosSafe(double value);
 };
 
-}  // end namespace moveit_grasps
+} // end namespace moveit_grasps
 
 #endif

@@ -37,20 +37,20 @@
 */
 
 // ROS
-#include <ros/ros.h>
-#include <geometry_msgs/PoseArray.h>
-#include <sensor_msgs/JointState.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <geometry_msgs/PoseArray.h>
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 
 // MoveIt
-#include <moveit_msgs/MoveGroupAction.h>
-#include <moveit_msgs/DisplayTrajectory.h>
-#include <moveit_msgs/RobotState.h>
 #include <moveit/kinematic_constraints/utils.h>
-#include <moveit/robot_state/robot_state.h>
-#include <moveit/robot_state/conversions.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_state/conversions.h>
+#include <moveit/robot_state/robot_state.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit_msgs/MoveGroupAction.h>
+#include <moveit_msgs/RobotState.h>
 
 // Rviz
 #include <visualization_msgs/Marker.h>
@@ -66,8 +66,7 @@
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-namespace moveit_grasps
-{
+namespace moveit_grasps {
 // Table dimensions
 static const double TABLE_HEIGHT = .92;
 static const double TABLE_WIDTH = .85;
@@ -78,16 +77,17 @@ static const double TABLE_Z = -0.9 / 2 + 0.01;
 
 static const double BLOCK_SIZE = 0.04;
 
-class GraspGeneratorTest
-{
+class GraspGeneratorTest {
 public:
   // Constructor
-  GraspGeneratorTest() : nh_("~")
-  {
+  GraspGeneratorTest() : nh_("~") {
     // Get arm info from param server
-    const std::string parent_name = "grasp_generation_test";  // for namespacing logging messages
-    // rosparam_shortcuts::get(parent_name, nh_, "planning_group_name", planning_group_name_);
-    // rosparam_shortcuts::get(parent_name, nh_, "ee_group_name", ee_group_name_);
+    const std::string parent_name =
+        "grasp_generation_test"; // for namespacing logging messages
+    // rosparam_shortcuts::get(parent_name, nh_, "planning_group_name",
+    // planning_group_name_);
+    // rosparam_shortcuts::get(parent_name, nh_, "ee_group_name",
+    // ee_group_name_);
 
     ee_group_name_ = "hand";
     planning_group_name_ = "panda_arm";
@@ -97,38 +97,42 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load planning scene to share
-    planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
-    if (planning_scene_monitor_->getPlanningScene())
-    {
-      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
-                                                            "grasping_planning_scene");
-      planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
-    }
-    else
-    {
+    planning_scene_monitor_.reset(
+        new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+    if (planning_scene_monitor_->getPlanningScene()) {
+      planning_scene_monitor_->startPublishingPlanningScene(
+          planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+          "grasping_planning_scene");
+      planning_scene_monitor_->getPlanningScene()->setName(
+          "grasping_planning_scene");
+    } else {
       ROS_ERROR_STREAM_NAMED("test", "Planning scene not configured");
       return;
     }
 
-    const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor_->getRobotModel();
+    const robot_model::RobotModelConstPtr robot_model =
+        planning_scene_monitor_->getRobotModel();
     // get the joint model group for the main robot arm
     arm_jmg_ = robot_model->getJointModelGroup(planning_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/rviz_visual_tools",
-                                                                   planning_scene_monitor_));
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(
+        robot_model->getModelFrame(), "/rviz_visual_tools",
+        planning_scene_monitor_));
 
     visual_tools_->loadTrajectoryPub();
     visual_tools_->loadRobotStatePub();
     visual_tools_->loadSharedRobotState();
     visual_tools_->getSharedRobotState()->setToDefaultValues();
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState());
-    robot_state::RobotStatePtr kinematic_state = visual_tools_->getSharedRobotState();
+    robot_state::RobotStatePtr kinematic_state =
+        visual_tools_->getSharedRobotState();
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    grasp_data_.reset(
+        new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
@@ -145,8 +149,7 @@ public:
     visual_tools_->publishAxis(world_cs);
   }
 
-  bool cuboidTest()
-  {
+  bool cuboidTest() {
     geometry_msgs::Pose object_pose;
     object_pose.position.x = 0.5;
     object_pose.position.y = 0.0;
@@ -155,7 +158,8 @@ public:
     double width = 0.03;
     double height = 0.15;
 
-    visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
+    visual_tools_->publishCuboid(object_pose, depth, width, height,
+                                 rviz_visual_tools::TRANSLUCENT_DARK);
     visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
     visual_tools_->publishArrow(object_pose, rviz_visual_tools::GREEN);
     visual_tools_->trigger();
@@ -163,12 +167,12 @@ public:
     // Generate set of grasps for one object
     ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
-    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose),
+                                     depth, width, height, grasp_data_,
                                      grasp_candidates);
   }
 
-  bool cylinderTest()
-  {
+  bool cylinderTest() {
     geometry_msgs::Pose object_pose;
     object_pose.position.x = 0.5;
     object_pose.position.y = 0.0;
@@ -176,14 +180,16 @@ public:
     double radius = 0.015;
     double height = 0.15;
 
-    // visual_tools_->publishCollisionCylinder(object_pose, "test_cylinder", radius, height, rviz_visual_tools::TRANSLUCENT_DARK);
+    // visual_tools_->publishCollisionCylinder(object_pose, "test_cylinder",
+    // radius, height, rviz_visual_tools::TRANSLUCENT_DARK);
     visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
     visual_tools_->trigger();
 
     // Generate set of grasps for one object
     ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
-    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), radius, height, grasp_data_,
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose),
+                                     radius, height, grasp_data_,
                                      grasp_candidates);
   }
 
@@ -204,18 +210,17 @@ private:
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
 
   // Arm
-  const robot_model::JointModelGroup* arm_jmg_;
+  const robot_model::JointModelGroup *arm_jmg_;
 
   // which baxter arm are we using
   std::string ee_group_name_;
   std::string planning_group_name_;
 
-};  // end of class
+}; // end of class
 
-}  // namespace
+} // namespace
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
   int num_tests = 1;
 
   ros::init(argc, argv, "grasp_generation_test");
@@ -241,7 +246,7 @@ int main(int argc, char* argv[])
   ROS_INFO_STREAM_NAMED("", "Total time: " << duration);
   std::cout << duration << "\t" << num_tests << std::endl;
 
-  ros::Duration(1.0).sleep();  // let rviz markers finish publishing
+  ros::Duration(1.0).sleep(); // let rviz markers finish publishing
 
   return 0;
 }

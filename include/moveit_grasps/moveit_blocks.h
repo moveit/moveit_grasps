@@ -44,23 +44,20 @@
 #include <moveit/move_group_interface/move_group.h>
 
 // Grasp generation
-#include <moveit_grasps/grasps.h>
 #include <moveit_grasps/grasp_data.h>
-#include <moveit_visual_tools/moveit_visual_tools.h>  // tool for showing graspsp
+#include <moveit_grasps/grasps.h>
+#include <moveit_visual_tools/moveit_visual_tools.h> // tool for showing graspsp
 
-namespace moveit_grasps
-{
+namespace moveit_grasps {
 static const double BLOCK_SIZE = 0.04;
 
-struct MetaBlock
-{
+struct MetaBlock {
   std::string name;
   geometry_msgs::Pose start_pose;
   geometry_msgs::Pose goal_pose;
 };
 
-class MoveItBlocks
-{
+class MoveItBlocks {
 public:
   // grasp generator
   moveit_grasps::GraspsPtr grasps_;
@@ -82,21 +79,24 @@ public:
   // settings
   bool auto_reset_;
   int auto_reset_sec_;
-  int pick_place_count_;  // tracks how many pick_places have run
+  int pick_place_count_; // tracks how many pick_places have run
 
-  MoveItBlocks() : auto_reset_(false), auto_reset_sec_(4), pick_place_count_(0), nh_("~")
-  {
+  MoveItBlocks()
+      : auto_reset_(false), auto_reset_sec_(4), pick_place_count_(0), nh_("~") {
     ROS_INFO_STREAM_NAMED("moveit_blocks", "Starting MoveIt Blocks");
 
     // Get arm info from param server
     nh_.param("ee_group_name", ee_group_name_, std::string("unknown"));
-    nh_.param("planning_group_name", planning_group_name_, std::string("unknown"));
+    nh_.param("planning_group_name", planning_group_name_,
+              std::string("unknown"));
 
     ROS_INFO_STREAM_NAMED("moveit_blocks", "End Effector: " << ee_group_name_);
-    ROS_INFO_STREAM_NAMED("moveit_blocks", "Planning Group: " << planning_group_name_);
+    ROS_INFO_STREAM_NAMED("moveit_blocks",
+                          "Planning Group: " << planning_group_name_);
 
     // Create MoveGroup for one of the planning groups
-    move_group_.reset(new move_group_interface::MoveGroup(planning_group_name_));
+    move_group_.reset(
+        new move_group_interface::MoveGroup(planning_group_name_));
     move_group_->setPlanningTime(30.0);
 
     // Load grasp generator
@@ -104,7 +104,8 @@ public:
       ros::shutdown();
 
     // Load the Robot Viz Tools for publishing to rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(grasp_data_.base_link_));
+    visual_tools_.reset(
+        new moveit_visual_tools::MoveItVisualTools(grasp_data_.base_link_));
     visual_tools_->setFloorToBaseHeight(-0.9);
     visual_tools_->loadEEMarker(grasp_data_.ee_group_, planning_group_name_);
 
@@ -117,8 +118,7 @@ public:
     startRoutine();
   }
 
-  bool startRoutine()
-  {
+  bool startRoutine() {
     // Debug - calculate and output table surface dimensions
     /*
     if( false )
@@ -126,8 +126,10 @@ public:
       double y_min, y_max, x_min, x_max;
       getTableWidthRange(y_min, y_max);
       getTableDepthRange(x_min, x_max);
-      ROS_INFO_STREAM_NAMED("table","Blocks width range: " << y_min << " <= y <= " << y_max);
-      ROS_INFO_STREAM_NAMED("table","Blocks depth range: " << x_min << " <= x <= " << x_max);
+      ROS_INFO_STREAM_NAMED("table","Blocks width range: " << y_min << " <= y <=
+    " << y_max);
+      ROS_INFO_STREAM_NAMED("table","Blocks depth range: " << x_min << " <= x <=
+    " << x_max);
     }
     */
 
@@ -135,7 +137,8 @@ public:
     std::vector<MetaBlock> blocks;
     double block_y = 0.1;
     double block_x = 0.35;
-    // Flip the side of the table the blocks are on depending on which arm we are using
+    // Flip the side of the table the blocks are on depending on which arm we
+    // are using
     // if( arm_.compare("right") == 0 )
     //  block_y *= -1;
     blocks.push_back(createStartBlock(block_x, block_y, "Block1"));
@@ -143,8 +146,7 @@ public:
     blocks.push_back(createStartBlock(block_x + 0.2, block_y, "Block3"));
 
     // The goal for each block is simply translating them on the y axis
-    for (std::size_t i = 0; i < blocks.size(); ++i)
-    {
+    for (std::size_t i = 0; i < blocks.size(); ++i) {
       blocks[i].goal_pose = blocks[i].start_pose;
       blocks[i].goal_pose.position.y += 0.2;
     }
@@ -157,31 +159,28 @@ public:
 
     // --------------------------------------------------------------------------------------------------------
     // Repeat pick and place forever
-    while (ros::ok())
-    {
+    while (ros::ok()) {
       // --------------------------------------------------------------------------------------------
       // Re-add all blocks
-      for (std::size_t i = 0; i < blocks.size(); ++i)
-      {
+      for (std::size_t i = 0; i < blocks.size(); ++i) {
         resetBlock(blocks[i]);
       }
 
       // Place on left side, then back on right side
-      for (std::size_t side = 0; side < 2; ++side)
-      {
+      for (std::size_t side = 0; side < 2; ++side) {
         // Do for all blocks
-        for (std::size_t block_id = 0; block_id < blocks.size(); ++block_id)
-        {
-          // Pick -------------------------------------------------------------------------------------
-          while (ros::ok())
-          {
-            ROS_INFO_STREAM_NAMED("pick_place", "Picking '" << blocks[block_id].name << "'");
+        for (std::size_t block_id = 0; block_id < blocks.size(); ++block_id) {
+          // Pick
+          // -------------------------------------------------------------------------------------
+          while (ros::ok()) {
+            ROS_INFO_STREAM_NAMED("pick_place",
+                                  "Picking '" << blocks[block_id].name << "'");
 
             // Visualize the block we are about to pick
-            visual_tools_->publishBlock(blocks[block_id].start_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
+            visual_tools_->publishBlock(blocks[block_id].start_pose,
+                                        rviz_visual_tools::BLUE, BLOCK_SIZE);
 
-            if (!pick(blocks[block_id].start_pose, blocks[block_id].name))
-            {
+            if (!pick(blocks[block_id].start_pose, blocks[block_id].name)) {
               ROS_ERROR_STREAM_NAMED("pick_place", "Pick failed.");
 
               // Ask user if we should try again
@@ -190,32 +189,34 @@ public:
 
               // Retry
               resetBlock(blocks[block_id]);
-            }
-            else
-            {
-              ROS_INFO_STREAM_NAMED("pick_place", "Done with pick ---------------------------");
+            } else {
+              ROS_INFO_STREAM_NAMED(
+                  "pick_place", "Done with pick ---------------------------");
               break;
             }
           }
 
-          // Place -------------------------------------------------------------------------------------
-          while (ros::ok())
-          {
-            ROS_INFO_STREAM_NAMED("pick_place", "Placing '" << blocks[block_id].name << "'");
+          // Place
+          // -------------------------------------------------------------------------------------
+          while (ros::ok()) {
+            ROS_INFO_STREAM_NAMED("pick_place",
+                                  "Placing '" << blocks[block_id].name << "'");
 
             // Publish goal block location
-            visual_tools_->publishBlock(blocks[block_id].goal_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
+            visual_tools_->publishBlock(blocks[block_id].goal_pose,
+                                        rviz_visual_tools::BLUE, BLOCK_SIZE);
 
-            if (!place(blocks[block_id].goal_pose, blocks[block_id].name))
-            {
+            if (!place(blocks[block_id].goal_pose, blocks[block_id].name)) {
               ROS_ERROR_STREAM_NAMED("pick_place", "Place failed.");
 
-              // Determine if the attached collision body as already been removed, in which case
+              // Determine if the attached collision body as already been
+              // removed, in which case
               // we can ignore the failure and just resume picking
               /*
                 if( !move_group_->hasAttachedObject(blocks[block_id].name) )
                 {
-                ROS_WARN_STREAM_NAMED("pick_place","Collision object already detached, so auto resuming pick place.");
+                ROS_WARN_STREAM_NAMED("pick_place","Collision object already
+                detached, so auto resuming pick place.");
 
                 // Ask user if we should try again
                 if( !promptUser() )
@@ -226,28 +227,29 @@ public:
               // Ask user if we should try again
               if (!promptUser())
                 exit(0);
-            }
-            else
-            {
-              ROS_INFO_STREAM_NAMED("pick_place", "Done with place ----------------------------");
+            } else {
+              ROS_INFO_STREAM_NAMED(
+                  "pick_place", "Done with place ----------------------------");
               break;
             }
-          }  // place retry loop
+          } // place retry loop
 
-          // Swap this block's start and end pose so that we can then move them back to position
+          // Swap this block's start and end pose so that we can then move them
+          // back to position
           geometry_msgs::Pose temp = blocks[block_id].start_pose;
           blocks[block_id].start_pose = blocks[block_id].goal_pose;
           blocks[block_id].goal_pose = temp;
 
           pick_place_count_++;
 
-        }  // loop through 3 blocks
+        } // loop through 3 blocks
 
-        ROS_INFO_STREAM_NAMED("pick_place", "Finished picking and placing "
-                                                << blocks.size()
-                                                << " blocks. Total pick_places: " << pick_place_count_);
+        ROS_INFO_STREAM_NAMED(
+            "pick_place", "Finished picking and placing "
+                              << blocks.size() << " blocks. Total pick_places: "
+                              << pick_place_count_);
 
-      }  // place on both sides of table
+      } // place on both sides of table
 
       // Ask user if we should repeat
       // if( !promptUser() )
@@ -259,8 +261,7 @@ public:
     return true;
   }
 
-  void resetBlock(MetaBlock block)
-  {
+  void resetBlock(MetaBlock block) {
     // Remove attached object
     visual_tools_->cleanupACO(block.name);
 
@@ -268,22 +269,24 @@ public:
     visual_tools_->cleanupCO(block.name);
 
     // Add the collision block
-    visual_tools_->publishCollisionBlock(block.start_pose, block.name, BLOCK_SIZE);
+    visual_tools_->publishCollisionBlock(block.start_pose, block.name,
+                                         BLOCK_SIZE);
   }
 
-  MetaBlock createStartBlock(double x, double y, const std::string name)
-  {
+  MetaBlock createStartBlock(double x, double y, const std::string name) {
     MetaBlock start_block;
     start_block.name = name;
 
     // Position
     start_block.start_pose.position.x = x;
     start_block.start_pose.position.y = y;
-    start_block.start_pose.position.z = BLOCK_SIZE / 2.0;  // getTableHeight(-0.9);
+    start_block.start_pose.position.z =
+        BLOCK_SIZE / 2.0; // getTableHeight(-0.9);
 
     // Orientation
-    double angle = 0;  // M_PI / 1.5;
-    Eigen::Quaterniond quat(Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
+    double angle = 0; // M_PI / 1.5;
+    Eigen::Quaterniond quat(
+        Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
     start_block.start_pose.orientation.x = quat.x();
     start_block.start_pose.orientation.y = quat.y();
     start_block.start_pose.orientation.z = quat.z();
@@ -292,15 +295,15 @@ public:
     return start_block;
   }
 
-  bool pick(const geometry_msgs::Pose& block_pose, std::string block_name)
-  {
+  bool pick(const geometry_msgs::Pose &block_pose, std::string block_name) {
     std::vector<moveit_msgs::Grasp> possible_grasps;
 
     // Pick grasp
     grasps_->generateBlockGrasps(block_pose, grasp_data_, possible_grasps);
 
     // Visualize them
-    // visual_tools_->publishAnimatedGrasps(possible_grasps, grasp_data_.ee_parent_link_);
+    // visual_tools_->publishAnimatedGrasps(possible_grasps,
+    // grasp_data_.ee_parent_link_);
     visual_tools_->publishGrasps(possible_grasps, grasp_data_.ee_parent_link_);
 
     // Prevent collision with table
@@ -308,7 +311,8 @@ public:
 
     // Allow blocks to be touched by end effector
     {
-      // an optional list of obstacles that we have semantic information about and that can be touched/pushed/moved in
+      // an optional list of obstacles that we have semantic information about
+      // and that can be touched/pushed/moved in
       // the course of grasping
       std::vector<std::string> allowed_touch_objects;
       allowed_touch_objects.push_back("Block1");
@@ -317,8 +321,7 @@ public:
       allowed_touch_objects.push_back("Block4");
 
       // Add this list to all grasps
-      for (std::size_t i = 0; i < possible_grasps.size(); ++i)
-      {
+      for (std::size_t i = 0; i < possible_grasps.size(); ++i) {
         possible_grasps[i].allowed_touch_objects = allowed_touch_objects;
       }
     }
@@ -328,8 +331,8 @@ public:
     return move_group_->pick(block_name, possible_grasps);
   }
 
-  bool place(const geometry_msgs::Pose& goal_block_pose, std::string block_name)
-  {
+  bool place(const geometry_msgs::Pose &goal_block_pose,
+             std::string block_name) {
     ROS_WARN_STREAM_NAMED("place", "Placing '" << block_name << "'");
 
     std::vector<moveit_msgs::PlaceLocation> place_locations;
@@ -340,12 +343,12 @@ public:
     pose_stamped.header.stamp = ros::Time::now();
 
     // Create 360 degrees of place location rotated around a center
-    for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 2)
-    {
+    for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 2) {
       pose_stamped.pose = goal_block_pose;
 
       // Orientation
-      Eigen::Quaterniond quat(Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
+      Eigen::Quaterniond quat(
+          Eigen::AngleAxis<double>(double(angle), Eigen::Vector3d::UnitZ()));
       pose_stamped.pose.orientation.x = quat.x();
       pose_stamped.pose.orientation.y = quat.y();
       pose_stamped.pose.orientation.z = quat.z();
@@ -356,31 +359,42 @@ public:
 
       place_loc.place_pose = pose_stamped;
 
-      visual_tools_->publishBlock(place_loc.place_pose.pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
+      visual_tools_->publishBlock(place_loc.place_pose.pose,
+                                  rviz_visual_tools::BLUE, BLOCK_SIZE);
 
       // Approach
       moveit_msgs::GripperTranslation pre_place_approach;
       pre_place_approach.direction.header.stamp = ros::Time::now();
       pre_place_approach.desired_distance =
-          grasp_data_.approach_retreat_desired_dist_;  // The distance the origin of a robot link needs to travel
-      pre_place_approach.min_distance = grasp_data_.approach_retreat_min_dist_;  // half of the desired? Untested.
+          grasp_data_.approach_retreat_desired_dist_; // The distance the origin
+                                                      // of a robot link needs
+                                                      // to travel
+      pre_place_approach.min_distance =
+          grasp_data_
+              .approach_retreat_min_dist_; // half of the desired? Untested.
       pre_place_approach.direction.header.frame_id = grasp_data_.base_link_;
       pre_place_approach.direction.vector.x = 0;
       pre_place_approach.direction.vector.y = 0;
-      pre_place_approach.direction.vector.z =
-          -1;  // Approach direction (negative z axis)  // TODO: document this assumption
+      pre_place_approach.direction.vector.z = -1; // Approach direction
+                                                  // (negative z axis)  // TODO:
+                                                  // document this assumption
       place_loc.pre_place_approach = pre_place_approach;
 
       // Retreat
       moveit_msgs::GripperTranslation post_place_retreat;
       post_place_retreat.direction.header.stamp = ros::Time::now();
       post_place_retreat.desired_distance =
-          grasp_data_.approach_retreat_desired_dist_;  // The distance the origin of a robot link needs to travel
-      post_place_retreat.min_distance = grasp_data_.approach_retreat_min_dist_;  // half of the desired? Untested.
+          grasp_data_.approach_retreat_desired_dist_; // The distance the origin
+                                                      // of a robot link needs
+                                                      // to travel
+      post_place_retreat.min_distance =
+          grasp_data_
+              .approach_retreat_min_dist_; // half of the desired? Untested.
       post_place_retreat.direction.header.frame_id = grasp_data_.base_link_;
       post_place_retreat.direction.vector.x = 0;
       post_place_retreat.direction.vector.y = 0;
-      post_place_retreat.direction.vector.z = 1;  // Retreat direction (pos z axis)
+      post_place_retreat.direction.vector.z =
+          1; // Retreat direction (pos z axis)
       place_loc.post_place_retreat = post_place_retreat;
 
       // Post place posture - use same as pre-grasp posture (the OPEN command)
@@ -397,21 +411,18 @@ public:
     return move_group_->place(block_name, place_locations);
   }
 
-  bool promptUser()
-  {
+  bool promptUser() {
     // Make sure ROS is still with us
     if (!ros::ok())
       return false;
 
-    if (auto_reset_)
-    {
-      ROS_INFO_STREAM_NAMED("pick_place", "Auto-retrying in " << auto_reset_sec_ << " seconds");
+    if (auto_reset_) {
+      ROS_INFO_STREAM_NAMED("pick_place", "Auto-retrying in " << auto_reset_sec_
+                                                              << " seconds");
       ros::Duration(auto_reset_sec_).sleep();
-    }
-    else
-    {
+    } else {
       ROS_INFO_STREAM_NAMED("pick_place", "Retry? (y/n)");
-      char input;  // used for prompting yes/no
+      char input; // used for prompting yes/no
       std::cin >> input;
       if (input == 'n')
         return false;
@@ -420,4 +431,4 @@ public:
   }
 };
 
-}  // namespace
+} // namespace

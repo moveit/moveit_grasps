@@ -39,26 +39,25 @@
 #ifndef MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
 #define MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
 
-namespace
-{
-bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool verbose, double verbose_speed,
-                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState *robot_state,
-                       const robot_state::JointModelGroup *group, const double *ik_solution)
-{
+namespace {
+bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene,
+                       bool verbose, double verbose_speed,
+                       moveit_visual_tools::MoveItVisualToolsPtr visual_tools,
+                       robot_state::RobotState *robot_state,
+                       const robot_state::JointModelGroup *group,
+                       const double *ik_solution) {
   robot_state->setJointGroupPositions(group, ik_solution);
   robot_state->update();
 
-  if (!planning_scene)
-  {
+  if (!planning_scene) {
     ROS_ERROR_STREAM_NAMED("manipulation", "No planning scene provided");
     return false;
   }
   if (!planning_scene->isStateColliding(*robot_state, group->getName()))
-    return true;  // not in collision
+    return true; // not in collision
 
   // Display more info about the collision
-  if (verbose)
-  {
+  if (verbose) {
     visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
     planning_scene->isStateColliding(*robot_state, group->getName(), true);
     visual_tools->publishContactPoints(*robot_state, planning_scene);
@@ -67,6 +66,6 @@ bool isGraspStateValid(const planning_scene::PlanningScene *planning_scene, bool
   return false;
 }
 
-}  // namespace
+} // namespace
 
 #endif

@@ -40,8 +40,8 @@
 #define MOVEIT_GRASPS__GRASP_CANDIDATE_
 
 // ROS
-#include <ros/ros.h>
 #include <moveit_msgs/Grasp.h>
+#include <ros/ros.h>
 
 // Grasping
 #include <moveit_grasps/grasp_data.h>
@@ -50,24 +50,19 @@
 #include <moveit/robot_state/robot_state.h>
 #include <moveit_msgs/Grasp.h>
 
-namespace moveit_grasps
-{
-typedef std::vector<std::vector<moveit::core::RobotStatePtr> > GraspTrajectories;
-enum GraspTrajectorySegments
-{
-  APPROACH = 0,
-  LIFT = 1,
-  RETREAT = 2
-};
+namespace moveit_grasps {
+typedef std::vector<std::vector<moveit::core::RobotStatePtr>> GraspTrajectories;
+enum GraspTrajectorySegments { APPROACH = 0, LIFT = 1, RETREAT = 2 };
 
 /**
- * \brief Contains collected data for each potential grasp after it has been verified / filtered
+ * \brief Contains collected data for each potential grasp after it has been
+ * verified / filtered
  *        This includes the pregrasp and grasp IK solution
  */
-class GraspCandidate
-{
+class GraspCandidate {
 public:
-  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose);
+  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data,
+                 Eigen::Affine3d cuboid_pose);
 
   bool getPreGraspState(moveit::core::RobotStatePtr &robot_state);
 
@@ -109,7 +104,8 @@ public:
     GripperTranslation pre_grasp_approach
     {
        # defines a translation for the gripper, used in pickup or place tasks
-       # for example for lifting an object off a table or approaching the table for placing
+       # for example for lifting an object off a table or approaching the table
+    for placing
 
        # the direction of the translation
        geometry_msgs/Vector3Stamped direction
@@ -122,7 +118,8 @@ public:
        float32 min_distance
     }
 
-    # The retreat direction to take after a grasp has been completed (object is attached)
+    # The retreat direction to take after a grasp has been completed (object is
+    attached)
     GripperTranslation post_grasp_retreat
 
     # The retreat motion to perform when releasing the object; this information
@@ -147,20 +144,22 @@ public:
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
   bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_ik_closed_;      // ik solution was fine with fingers opened, but failed with fingers closed
-  bool grasp_filtered_by_cutting_plane_;  // grasp pose is in an unreachable part of the environment (ex: inside or
-                                          // behind a wall)
-  bool grasp_filtered_by_orientation_;    // grasp pose is not desireable
+  bool grasp_filtered_by_ik_closed_; // ik solution was fine with fingers
+                                     // opened, but failed with fingers closed
+  bool grasp_filtered_by_cutting_plane_; // grasp pose is in an unreachable part
+                                         // of the environment (ex: inside or
+                                         // behind a wall)
+  bool grasp_filtered_by_orientation_;   // grasp pose is not desireable
   bool pregrasp_filtered_by_ik_;
   // TODO possibly remove
-  Eigen::Affine3d cuboid_pose_;  // pose of original object to grasp
+  Eigen::Affine3d cuboid_pose_; // pose of original object to grasp
 
   // Store pregrasp, grasp, lifted, and retreat trajectories
   GraspTrajectories segmented_cartesian_traj_;
-};  // class
+}; // class
 
 typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
-}  // namespace
+} // namespace
 
 #endif
