@@ -94,6 +94,74 @@ enum grasp_axis_t
   Z_AXIS
 };
 
+struct GraspCandidateConfig
+{
+  GraspCandidateConfig()
+    : enable_corner_grasps(true)
+    , enable_face_grasps(true)
+    , enable_variable_angle_grasps(true)
+    , enable_edge_grasps(true)
+    , generate_x_axis_grasps(true)
+    , generate_y_axis_grasps(true)
+    , generate_z_axis_grasps(true)
+  {
+  }
+  GraspCandidateConfig(const GraspCandidateConfig& config)
+    : enable_corner_grasps(config.enable_corner_grasps)
+    , enable_face_grasps(config.enable_face_grasps)
+    , enable_variable_angle_grasps(config.enable_variable_angle_grasps)
+    , enable_edge_grasps(config.enable_edge_grasps)
+    , generate_x_axis_grasps(config.generate_x_axis_grasps)
+    , generate_y_axis_grasps(config.generate_y_axis_grasps)
+    , generate_z_axis_grasps(config.generate_z_axis_grasps)
+  {
+  }
+  void enableAllTypes()
+  {
+    enable_corner_grasps = true;
+    enable_face_grasps = true;
+    enable_variable_angle_grasps = true;
+    enable_edge_grasps = true;
+  }
+  void enableAllAxes()
+  {
+    generate_x_axis_grasps = true;
+    generate_y_axis_grasps = true;
+    generate_z_axis_grasps = true;
+  }
+  void enableAll()
+  {
+    enableAllTypes();
+    enableAllAxes();
+  }
+  void disableAllTypes()
+  {
+    enable_corner_grasps = false;
+    enable_face_grasps = false;
+    enable_variable_angle_grasps = false;
+    enable_edge_grasps = false;
+  }
+  void disableAllAxes()
+  {
+    generate_x_axis_grasps = false;
+    generate_y_axis_grasps = false;
+    generate_z_axis_grasps = false;
+  }
+  void disableAll()
+  {
+    disableAllTypes();
+    disableAllAxes();
+  }
+
+  bool enable_corner_grasps;
+  bool enable_face_grasps;
+  bool enable_variable_angle_grasps;
+  bool enable_edge_grasps;
+  bool generate_x_axis_grasps;
+  bool generate_y_axis_grasps;
+  bool generate_z_axis_grasps;
+};
+
 // Class
 class GraspGenerator
 {
@@ -125,11 +193,13 @@ public:
    * \param width length of cuboid along local y-axis
    * \param height length of cuboid along local z-axis
    * \param grasp_data data describing end effector
+   * \param grasp_candidate_config parameter for selectively enabling and disabling different grasp types
    * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+                      const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
 
   /**
    * \brief Create grasp positions around one axis of a cuboid
@@ -137,7 +207,7 @@ public:
    * \param depth:            length of cuboid along local x-axis
    * \param width:            length of cuboid along local y-axis
    * \param height:           length of cuboid along local z-axis
-   * \param axis:             axis of cuboid to generate grasps around
+   * \param axis:             axis of cuboid to generate grasps along
    * \param grasp_data:       data describing end effector
    * \param grasp_candidates: possible grasps generated
    * \param only_edge_grasps: set to true if object is too wide to grap the face in this axis
@@ -145,7 +215,8 @@ public:
    */
   bool generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
                                 grasp_axis_t axis, const GraspDataPtr grasp_data,
-                                std::vector<GraspCandidatePtr>& grasp_candidates, bool only_edge_grasps);
+                                const GraspCandidateConfig& grasp_candidate_config,
+                                std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief helper function for adding grasps at corner of cuboid
@@ -320,10 +391,6 @@ private:
 
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
-
-  // Visualization levels
-  bool show_grasp_arrows_;
-  double show_grasp_arrows_speed_;
 
   bool show_prefiltered_grasps_;
   double show_prefiltered_grasps_speed_;

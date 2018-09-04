@@ -60,24 +60,26 @@ public:
 
   /**
    * \brief Plan entire cartesian manipulation sequence
-   * \param input - description
+   * \param grasp_candidates - GraspCandidates for which we will compute apprach, lift and retreat paths
+   * \param robot_state - robot_state to be used for computeCartesianPath
+   * \param planning_scene_monitor - Current state of the world
+   * \param grasp_data - robot gripper configuration
+   * \param custom_lift_height - optional parameter to override grasp_data->lift_distance_desired_
    * \return true on success
    */
   bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                  robot_state::RobotStatePtr current_state,
+                                  const robot_state::RobotStatePtr robot_state,
                                   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                  const GraspDataPtr grasp_data, const double& bin_height,
-                                  Eigen::Affine3d bin_to_object);
+                                  const double custom_lift_height = 0);
 
   /**
    * \brief Plan entire cartesian manipulation sequence
    * \param input - description
    * \return true on success
    */
-  bool planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, robot_state::RobotStatePtr current_state,
+  bool planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, const robot_state::RobotStatePtr robot_state,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                               const GraspDataPtr grasp_data, bool verbose_cartesian_filtering,
-                               const double& bin_height, Eigen::Affine3d bin_to_object);
+                               bool verbose_cartesian_filtering, const double custom_lift_height = 0);
 
   /**
    * \brief Compute a cartesian path along waypoints
