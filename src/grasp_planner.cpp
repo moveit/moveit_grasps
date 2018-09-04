@@ -87,11 +87,11 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
     }
     else
     {
-      //++grasp_it; // move to next grasp
+      ++grasp_it;  // move to next grasp
 
       // Once we have one valid path, just quit so we can use that one
-      ROS_INFO_STREAM_NAMED("grasp_planner", "Valid grasp plan generated");
-      break;
+      // ROS_INFO_STREAM_NAMED("grasp_planner", "Valid grasp plan generated");
+      // break;
     }
 
     if (verbose_cartesian_filtering)
@@ -213,6 +213,23 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
 
     return false;
   }
+  // Copy the ik solutions for grasp and pre-grasp states from the trajectories into grasp_ik_solution_ and
+  // pregrasp_ik_solution_
+  std::vector<const moveit::core::JointModel*> joint_models =
+      grasp_candidate->grasp_data_->arm_jmg_->getActiveJointModels();
+  grasp_candidate->pregrasp_ik_solution_.resize(joint_models.size());
+  grasp_candidate->grasp_ik_solution_.resize(joint_models.size());
+  for (std::size_t joint_index = 0; joint_index < joint_models.size(); ++joint_index)
+  {
+    const double* pregrasp_joint_ix_position =
+        grasp_candidate->segmented_cartesian_traj_[APPROACH].front()->getJointPositions(joint_models[joint_index]);
+    if (pregrasp_joint_ix_position)
+      grasp_candidate->pregrasp_ik_solution_[joint_index] = *pregrasp_joint_ix_position;
+    const double* grasp_joint_ix_position =
+        grasp_candidate->segmented_cartesian_traj_[APPROACH].back()->getJointPositions(joint_models[joint_index]);
+    if (grasp_joint_ix_position)
+      grasp_candidate->grasp_ik_solution_[joint_index] = *grasp_joint_ix_position;
+  }
 
   // Feedback
   ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Found valid and complete waypoint manipulation path for grasp "
@@ -319,7 +336,7 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
                                                                << " number of segments in trajectory: "
                                                                << segmented_cartesian_traj.size());
 
-    double min_allowed_valid_percentage = 0.9;
+    double min_allowed_valid_percentage = 0.99;
     if (last_valid_percentage == 0)
     {
       ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Failed to computer cartesian path: last_valid_percentage is "
