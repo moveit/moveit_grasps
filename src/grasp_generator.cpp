@@ -928,22 +928,13 @@ Eigen::Vector3d GraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp& g
       Eigen::Vector3d(grasp.pre_grasp_approach.direction.vector.x, grasp.pre_grasp_approach.direction.vector.y,
                       grasp.pre_grasp_approach.direction.vector.z);
 
-  // Approach direction
-  Eigen::Vector3d pre_grasp_approach_direction_local;
-
   // Decide if we need to change the approach_direction to the local frame of the end effector orientation
   if (grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link)
   {
     // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
-    pre_grasp_approach_direction_local = grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
+    return grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
   }
-  else
-  {
-    pre_grasp_approach_direction_local =
-        pre_grasp_approach_direction;  // grasp_pose_eigen.rotation() * pre_grasp_approach_direction;
-  }
-
-  return pre_grasp_approach_direction_local;
+  return pre_grasp_approach_direction;
 }
 
 geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const moveit_msgs::Grasp& grasp,
