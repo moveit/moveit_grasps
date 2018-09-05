@@ -1,10 +1,17 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(moveit_grasps)
 
+# C++ 11                                                                                                                                                      
 add_compile_options(-std=c++11)
 
-find_package(Eigen3 REQUIRED)
+# Warnings                                                                                                                                                    
+add_definitions(-W -Wall -Wextra
+  -Wwrite-strings -Wunreachable-code -Wpointer-arith
+  -Winit-self -Wredundant-decls
+  -Wno-unused-parameter -Wno-unused-function)
 
+# System dependencies are found with CMake's conventions                                                                                                      
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED thread system)
 find_package(OpenMP)
 
@@ -125,7 +132,9 @@ target_link_libraries(grasp_poses_visualizer
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
-## Install ---------------------------------------------------------------
+#############
+## INSTALL ##
+#############
 
 # Install libraries
 install(TARGETS
@@ -146,3 +155,9 @@ install(TARGETS
   ${PROJECT_NAME}_filter_test
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+#############                                                                                                                                                 
+## Testing ##                                                                                                                                                 
+#############    
+
+# TODO(mlautman) :-)
