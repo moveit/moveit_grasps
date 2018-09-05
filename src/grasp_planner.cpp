@@ -85,11 +85,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
     }
     else
     {
-      //++grasp_it; // move to next grasp
-
-      // Once we have one valid path, just quit so we can use that one
-      ROS_INFO_STREAM_NAMED("grasp_planner", "Valid grasp plan generated");
-      break;
+      ++grasp_it;  // move to next grasp
     }
 
     if (verbose_cartesian_filtering)
@@ -261,9 +257,6 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
     return false;
   }
 
-  // Results
-  double last_valid_percentage;
-
   std::size_t attempts = 0;
   static const std::size_t MAX_IK_ATTEMPTS = 5;
   bool valid_path_found = false;
@@ -288,37 +281,26 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
     // Compute Cartesian Path
     segmented_cartesian_traj.clear();
     segmented_cartesian_traj.resize(3);
-    last_valid_percentage = start_state_copy.computeCartesianPath(
+    double valid_approach_percentage = start_state_copy.computeCartesianPath(
         arm_jmg, segmented_cartesian_traj[APPROACH], ik_tip_link, waypoints[APPROACH], global_reference_frame, max_step,
         jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
 
-    last_valid_percentage *= start_state_copy.computeCartesianPath(
+    double valid_lift_retreat_percentage = start_state_copy.computeCartesianPath(
         arm_jmg, segmented_cartesian_traj[LIFT], ik_tip_link, waypoints[LIFT], global_reference_frame, max_step,
         jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
 
-    last_valid_percentage *= start_state_copy.computeCartesianPath(
+    valid_lift_retreat_percentage *= start_state_copy.computeCartesianPath(
         arm_jmg, segmented_cartesian_traj[RETREAT], ik_tip_link, waypoints[RETREAT], global_reference_frame, max_step,
         jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
 
-    ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints",
-                           "Cartesian last_valid_percentage: " << last_valid_percentage
-                                                               << " number of segments in trajectory: "
-                                                               << segmented_cartesian_traj.size());
+    ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "valid_approach_percentage: " << valid_approach_percentage
+                                                                                    << " \tvalid_lift_retreat_"
+                                                                                       "percentage: "
+                                                                                    << valid_lift_retreat_percentage);
 
-    double min_allowed_valid_percentage = 0.9;
-    if (last_valid_percentage == 0)
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Failed to computer cartesian path: last_valid_percentage is "
-                                                        "0");
-    }
-    else if (last_valid_percentage < min_allowed_valid_percentage)
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints",
-                             "Resulting cartesian path is less than "
-                                 << min_allowed_valid_percentage
-                                 << " % of the desired distance, % valid: " << last_valid_percentage);
-    }
-    else
+    // The retreat has to work for the most part but doesn't need to be perfect
+    double min_allowed_valid_lift_retreat_percentage = 0.90;
+    if (valid_approach_percentage == 1 && valid_lift_retreat_percentage >= min_allowed_valid_lift_retreat_percentage)
     {
       ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Found valid cartesian path");
       valid_path_found = true;

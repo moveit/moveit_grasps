@@ -101,32 +101,55 @@ struct GraspCandidateConfig
     , enable_face_grasps_(false)
     , enable_variable_angle_grasps_(false)
     , enable_edge_grasps_(false)
+    , generate_x_axis_grasps_(false)
+    , generate_y_axis_grasps_(false)
+    , generate_z_axis_grasps_(false)
   {
   }
-  void enableAll()
+  void enableAllGraspTypes()
   {
     enable_corner_grasps_ = true;
     enable_face_grasps_ = true;
     enable_variable_angle_grasps_ = true;
     enable_edge_grasps_ = true;
   }
-  void disableAll()
+  void enableAllGraspAxes()
+  {
+    generate_x_axis_grasps_ = true;
+    generate_y_axis_grasps_ = true;
+    generate_z_axis_grasps_ = true;
+  }
+  void enableAll()
+  {
+    enableAllGraspTypes();
+    enableAllGraspAxes();
+  }
+  void disableAllGraspTypes()
   {
     enable_corner_grasps_ = false;
     enable_face_grasps_ = false;
     enable_variable_angle_grasps_ = false;
     enable_edge_grasps_ = false;
   }
-  void onlyEdgeGrasps()
+  void disableAllGraspAxes()
   {
-    disableAll();
-    enable_edge_grasps_ = true;
+    generate_x_axis_grasps_ = false;
+    generate_y_axis_grasps_ = false;
+    generate_z_axis_grasps_ = false;
+  }
+  void disableAll()
+  {
+    disableAllGraspTypes();
+    disableAllGraspAxes();
   }
 
   bool enable_corner_grasps_;
   bool enable_face_grasps_;
   bool enable_variable_angle_grasps_;
   bool enable_edge_grasps_;
+  bool generate_x_axis_grasps_;
+  bool generate_y_axis_grasps_;
+  bool generate_z_axis_grasps_;
 };
 
 // Class
@@ -160,11 +183,13 @@ public:
    * \param width length of cuboid along local y-axis
    * \param height length of cuboid along local z-axis
    * \param grasp_data data describing end effector
+   * \param grasp_candidate_config parameter for selectively enabling and disabling different grasp types
    * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+                      const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
 
   /**
    * \brief Create grasp positions around one axis of a cuboid
