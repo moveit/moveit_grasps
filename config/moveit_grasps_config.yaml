@@ -43,6 +43,7 @@ moveit_grasps:
 
   planner:
     # Cartesian planning
+    statistics_verbose: false
     verbose_cartesian_filtering: false
     show_cartesian_waypoints: false
     collision_checking_verbose: false

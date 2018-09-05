@@ -71,13 +71,13 @@ public:
 
   bool getPreGraspState(moveit::core::RobotStatePtr& robot_state);
 
-  bool getGraspStateOpen(moveit::core::RobotStatePtr robot_state);
+  bool getGraspStateOpen(moveit::core::RobotStatePtr& robot_state);
 
-  bool getGraspStateOpenEEOnly(moveit::core::RobotStatePtr robot_state);
+  bool getGraspStateOpenEEOnly(moveit::core::RobotStatePtr& robot_state);
 
-  bool getGraspStateClosed(moveit::core::RobotStatePtr robot_state);
+  bool getGraspStateClosed(moveit::core::RobotStatePtr& robot_state);
 
-  bool getGraspStateClosedEEOnly(moveit::core::RobotStatePtr robot_state);
+  bool getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robot_state);
 
   bool isValid();
 

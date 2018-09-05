@@ -69,7 +69,7 @@ bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr& robot_state)
   return true;
 }
 
-bool GraspCandidate::getGraspStateOpen(moveit::core::RobotStatePtr robot_state)
+bool GraspCandidate::getGraspStateOpen(moveit::core::RobotStatePtr& robot_state)
 {
   // Error check
   if (grasp_ik_solution_.empty())
@@ -85,12 +85,12 @@ bool GraspCandidate::getGraspStateOpen(moveit::core::RobotStatePtr robot_state)
   return getGraspStateOpenEEOnly(robot_state);
 }
 
-bool GraspCandidate::getGraspStateOpenEEOnly(moveit::core::RobotStatePtr robot_state)
+bool GraspCandidate::getGraspStateOpenEEOnly(moveit::core::RobotStatePtr& robot_state)
 {
   return grasp_data_->setRobotState(robot_state, grasp_.pre_grasp_posture);
 }
 
-bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr robot_state)
+bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr& robot_state)
 {
   // Apply IK solved arm joints to state
   robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
@@ -99,7 +99,7 @@ bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr robot_state
   return getGraspStateClosedEEOnly(robot_state);
 }
 
-bool GraspCandidate::getGraspStateClosedEEOnly(moveit::core::RobotStatePtr robot_state)
+bool GraspCandidate::getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robot_state)
 {
   return grasp_data_->setRobotState(robot_state, grasp_.grasp_posture);
 }
