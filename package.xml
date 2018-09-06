@@ -10,9 +10,9 @@
 
   <license>BSD</license>
 
-  <url type="website">https://github.com/davetcoleman/moveit_grasps/</url>
-  <url type="bugtracker">https://github.com/davetcoleman/moveit_grasps/issues</url>
-  <url type="repository">https://github.com/davetcoleman/moveit_grasps</url>
+  <url type="website">https://github.com/PickNikRobotics/moveit_grasps/</url>
+  <url type="bugtracker">https://github.com/PickNikRobotics/moveit_grasps/issues</url>
+  <url type="repository">https://github.com/PickNikRobotics/moveit_grasps</url>
 
   <author email="davetcoleman@gmail.com">Dave Coleman</author>
   <author email="mcevoy.andy@gmail.com">Andy McEvoy</author>
