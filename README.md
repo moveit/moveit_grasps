@@ -11,9 +11,9 @@ This package includes:
  - Grasp filter
  - Test code and visualizations
 
-Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
+<img src="https://picknik.ai/images/logo.jpg" width="80"> Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
-<img src="https://picknik.ai/images/logo.jpg" width="100"> [![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
+[![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
 
 <img src="https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/kinetic-devel/resources/demo.png" />
 
