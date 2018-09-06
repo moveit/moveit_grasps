@@ -11,11 +11,13 @@ This package includes:
  - Grasp filter
  - Test code and visualizations
 
+<img src="https://picknik.ai/images/logo.jpg" width="100">
+
 Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
-[![Build Status](https://travis-ci.org/davetcoleman/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/davetcoleman/moveit_grasps)
+[![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
 
-<img src="https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/demo.png" />
+<img src="https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/kinetic-devel/resources/demo.png" />
 
 ## Install
 
@@ -38,9 +40,9 @@ rosdep install --from-paths src --ignore-src --rosdistro kinetic
 
 ## Robot-Agnostic Configuration
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/davetcoleman/moveit_grasps/blob/kinetic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
+You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/PickNikRobotics/moveit_grasps/blob/kinetic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
 
-To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/davetcoleman/moveit_grasps/blob/kinetic-devel/launch/grasp_test.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>``.
+To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/PickNikRobotics/moveit_grasps/blob/kinetic-devel/launch/grasp_test.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>``.
 
 Within that file you can specify the following (example taken from jaco):
 
@@ -74,7 +76,7 @@ Within that file you can specify the following (example taken from jaco):
 These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
 The result should look like the following:
 
-![Grasp Poses Visualization](https://raw.githubusercontent.com/davetcoleman/moveit_grasps/kinetic-devel/resources/moveit_grasps_poses.jpeg)
+![Grasp Poses Visualization](https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/kinetic-devel/resources/moveit_grasps_poses.jpeg)
 
 Poses Visualized: Object, Grasp, EE
 Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
@@ -126,6 +128,8 @@ Each mesh in the products folder will be displayed with the calculated bounding 
 
 ## Tested Robots
 
+ - UR5
+ - Jaco2
  - [Baxter](https://github.com/davetcoleman/baxter_cpp)
  - [REEM](http://wiki.ros.org/Robots/REEM)
 
