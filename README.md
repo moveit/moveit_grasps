@@ -13,7 +13,7 @@ This package includes:
 
 Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
-![](https://picknik.ai/images/logo.jpg | width=100)
+<img src="https://picknik.ai/images/logo.jpg" width="100">
 
 [![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
 
