@@ -75,7 +75,7 @@ public:
    * \param input - description
    * \return true on success
    */
-  bool planApproachLiftRetreat(GraspCandidatePtr grasp_candidate, const robot_state::RobotStatePtr robot_state,
+  bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr robot_state,
                                planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                bool verbose_cartesian_filtering);
 
@@ -83,11 +83,11 @@ public:
    * \brief Compute a cartesian path along waypoints
    * \return true on success
    */
-  bool computeCartesianWaypointPath(const moveit::core::JointModelGroup* arm_jmg, const GraspDataPtr grasp_data,
+  bool computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                     const moveit::core::RobotStatePtr start_state,
                                     const EigenSTL::vector_Affine3d& waypoints,
-                                    GraspTrajectories& segmented_cartesian_traj);
+                                    const std::string& grasp_object_id = "");
 
   /**
    * \brief Wait for user input to proceeed

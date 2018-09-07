@@ -73,9 +73,12 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
     if (!ros::ok())
       return false;
 
-    ROS_INFO_STREAM_NAMED("grasp_planner", "");
-    ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #"
-                                               << count++ << ". " << grasp_candidates.size() << " remaining.");
+    if (isEnabled("verbose_cartesian_filtering"))
+    {
+      ROS_INFO_STREAM_NAMED("grasp_planner", "");
+      ROS_INFO_STREAM_NAMED("grasp_planner", "Attempting to plan cartesian grasp path #"
+                                                 << count++ << ". " << grasp_candidates.size() << " remaining.");
+    }
 
     if (!planApproachLiftRetreat(*grasp_it, robot_state, planning_scene_monitor, verbose_cartesian_filtering))
     {
@@ -88,14 +91,15 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
       ++grasp_it;  // move to next grasp
     }
 
-    if (verbose_cartesian_filtering)
+    if (isEnabled("show_cartesian_waypoints"))
     {
       visual_tools_->deleteAllMarkers();
+      visual_tools_->trigger();
     }
   }
 
   // Results
-  if (verbose_cartesian_filtering)
+  if (isEnabled("statistics_verbose"))
   {
     std::cout << std::endl;
     std::cout << "-------------------------------------------------------" << std::endl;
@@ -116,7 +120,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
   return true;
 }
 
-bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
+bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
                                            const robot_state::RobotStatePtr robot_state,
                                            planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                            bool verbose_cartesian_filtering)
@@ -185,9 +189,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
     return false;
   }
 
-  GraspTrajectories segmented_cartesian_traj;
-  if (!computeCartesianWaypointPath(grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->grasp_data_,
-                                    planning_scene_monitor, start_state, waypoints, segmented_cartesian_traj))
+  if (!computeCartesianWaypointPath(grasp_candidate, planning_scene_monitor, start_state, waypoints))
   {
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Unable to plan approach lift retreat path");
 
@@ -204,20 +206,19 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
   const moveit::core::JointModelGroup* arm_jmg = grasp_candidate->grasp_data_->arm_jmg_;
 
   // Show visuals
-  if (verbose_cartesian_filtering)
+  if (show_cartesian_waypoints)
   {
     ROS_INFO_STREAM_NAMED("grasp_planner.waypoints", "Visualize end effector position of cartesian path for "
-                                                         << segmented_cartesian_traj.size() << " segments");
-    visual_tools_->publishTrajectoryPoints(segmented_cartesian_traj[APPROACH],
+                                                         << grasp_candidate->segmented_cartesian_traj_.size()
+                                                         << " segments");
+    visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[APPROACH],
                                            grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::YELLOW);
-    visual_tools_->publishTrajectoryPoints(segmented_cartesian_traj[LIFT], grasp_candidate->grasp_data_->parent_link_,
-                                           rviz_visual_tools::ORANGE);
-    visual_tools_->publishTrajectoryPoints(segmented_cartesian_traj[RETREAT],
+    visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[LIFT],
+                                           grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::ORANGE);
+    visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[RETREAT],
                                            grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::RED);
+    visual_tools_->trigger();
   }
-
-  // Save this result
-  grasp_candidate->segmented_cartesian_traj_ = segmented_cartesian_traj;
 
   if (verbose_cartesian_filtering)
     waitForNextStep("try next candidate grasp");
@@ -225,15 +226,14 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr grasp_candidate,
   return true;
 }
 
-bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGroup* arm_jmg,
-                                                const GraspDataPtr grasp_data,
+bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                                 planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                                                 const moveit::core::RobotStatePtr start_state,
                                                 const EigenSTL::vector_Affine3d& waypoints,
-                                                GraspTrajectories& segmented_cartesian_traj)
+                                                const std::string& grasp_object_id)
 {
   // End effector parent link (arm tip for ik solving)
-  const moveit::core::LinkModel* ik_tip_link = grasp_data->parent_link_;
+  const moveit::core::LinkModel* ik_tip_link = grasp_candidate->grasp_data_->parent_link_;
 
   // Resolution of trajectory
   // The maximum distance in Cartesian space between consecutive points on the resulting path
@@ -250,7 +250,7 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
   const bool global_reference_frame = true;
 
   // Check for kinematic solver
-  if (!arm_jmg->canSetStateFromIK(ik_tip_link->getName()))
+  if (!grasp_candidate->grasp_data_->arm_jmg_->canSetStateFromIK(ik_tip_link->getName()))
   {
     ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "No IK Solver loaded - make sure moveit_config/kinamatics.yaml "
                                                       "is loaded in this namespace");
@@ -275,23 +275,36 @@ bool GraspPlanner::computeCartesianWaypointPath(const moveit::core::JointModelGr
         boost::bind(&isGraspStateValid, static_cast<const planning_scene::PlanningSceneConstPtr&>(*ls).get(),
                     collision_checking_verbose, only_check_self_collision, visual_tools_, _1, _2, _3);
 
-    // Test
-    moveit::core::RobotState start_state_copy(*start_state);
+    moveit::core::RobotStatePtr start_state_copy(new moveit::core::RobotState(*start_state));
+    if (!grasp_candidate->getPreGraspState(start_state_copy))
+    {
+      ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "Unable to set pregrasp");
+      return false;
+    }
 
     // Compute Cartesian Path
-    segmented_cartesian_traj.clear();
-    segmented_cartesian_traj.resize(3);
-    double valid_approach_percentage = start_state_copy.computeCartesianPath(
-        arm_jmg, segmented_cartesian_traj[APPROACH], ik_tip_link, waypoints[APPROACH], global_reference_frame, max_step,
-        jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
+    grasp_candidate->segmented_cartesian_traj_.clear();
+    grasp_candidate->segmented_cartesian_traj_.resize(3);
+    double valid_approach_percentage = start_state_copy->computeCartesianPath(
+        grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->segmented_cartesian_traj_[APPROACH], ik_tip_link,
+        waypoints[APPROACH], global_reference_frame, max_step, jump_threshold, constraint_fn,
+        kinematics::KinematicsQueryOptions());
 
-    double valid_lift_retreat_percentage = start_state_copy.computeCartesianPath(
-        arm_jmg, segmented_cartesian_traj[LIFT], ik_tip_link, waypoints[LIFT], global_reference_frame, max_step,
-        jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
+    if (!grasp_candidate->getGraspStateClosedEEOnly(start_state_copy))
+    {
+      ROS_ERROR_STREAM_NAMED("grasp_planner", "Unable to set pregrasp");
+      return false;
+    }
 
-    valid_lift_retreat_percentage *= start_state_copy.computeCartesianPath(
-        arm_jmg, segmented_cartesian_traj[RETREAT], ik_tip_link, waypoints[RETREAT], global_reference_frame, max_step,
-        jump_threshold, constraint_fn, kinematics::KinematicsQueryOptions());
+    double valid_lift_retreat_percentage = start_state_copy->computeCartesianPath(
+        grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->segmented_cartesian_traj_[LIFT], ik_tip_link,
+        waypoints[LIFT], global_reference_frame, max_step, jump_threshold, constraint_fn,
+        kinematics::KinematicsQueryOptions());
+
+    valid_lift_retreat_percentage *= start_state_copy->computeCartesianPath(
+        grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->segmented_cartesian_traj_[RETREAT], ik_tip_link,
+        waypoints[RETREAT], global_reference_frame, max_step, jump_threshold, constraint_fn,
+        kinematics::KinematicsQueryOptions());
 
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "valid_approach_percentage: " << valid_approach_percentage
                                                                                     << " \tvalid_lift_retreat_"
