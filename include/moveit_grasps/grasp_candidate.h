@@ -145,16 +145,18 @@ public:
   */
 
   const GraspDataPtr grasp_data_;
-  std::vector<double> grasp_ik_solution_;
-  std::vector<double> pregrasp_ik_solution_;
+  // TODO(davetcoleman): possibly remove
+  Eigen::Affine3d cuboid_pose_;  // pose of original object to grasp
+
   bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_ik_closed_;      // ik solution was fine with fingers opened, but failed with fingers closed
   bool grasp_filtered_by_cutting_plane_;  // grasp pose is in an unreachable part of the environment (ex: inside or
                                           // behind a wall)
   bool grasp_filtered_by_orientation_;    // grasp pose is not desireable
+  bool grasp_filtered_by_ik_closed_;      // ik solution was fine with fingers opened, but failed with fingers closed
   bool pregrasp_filtered_by_ik_;
-  // TODO(davetcoleman): possibly remove
-  Eigen::Affine3d cuboid_pose_;  // pose of original object to grasp
+
+  std::vector<double> grasp_ik_solution_;
+  std::vector<double> pregrasp_ik_solution_;
 
   // Store pregrasp, grasp, lifted, and retreat trajectories
   GraspTrajectories segmented_cartesian_traj_;

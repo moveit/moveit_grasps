@@ -79,11 +79,11 @@ static const double TABLE_Z = -0.9 / 2 + 0.01;
 
 static const double BLOCK_SIZE = 0.04;
 
-class GraspGeneratorTest
+class GraspFilterDemo
 {
 public:
   // Constructor
-  GraspGeneratorTest() : nh_("~")
+  GraspFilterDemo() : nh_("~")
   {
     // Get arm info from param server
     const std::string parent_name = "grasp_filter_test";  // for namespacing logging messages
@@ -181,7 +181,7 @@ public:
       // Filter the grasp for only the ones that are reachable
       ROS_INFO_STREAM_NAMED("test", "Filtering grasps kinematically");
       bool filter_pregrasps = true;
-      bool verbose = false;  // note: setting this to true will disable threading
+      // bool verbose = false;  // note: setting this to true will disable threading
       // int direction = 1;
 
       // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
@@ -237,7 +237,7 @@ public:
     // Filter the grasp for only the ones that are reachable
     ROS_INFO_STREAM_NAMED("test", "Filtering grasps kinematically");
     bool filter_pregrasps = true;
-    bool verbose = false;  // note: setting this to true will disable threading
+    // bool verbose = false;  // note: setting this to true will disable threading
     int direction = 1;
 
     // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
 {
   int num_tests = 1;
 
-  ros::init(argc, argv, "grasp_generator_test");
+  ros::init(argc, argv, "grasp_generator_demo");
 
   // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(2);
@@ -330,7 +330,7 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  moveit_grasps::GraspGeneratorTest tester;
+  moveit_grasps::GraspFilterDemo tester;
   tester.testRandomGrasps(num_tests);
   // tester.unitTest();
 

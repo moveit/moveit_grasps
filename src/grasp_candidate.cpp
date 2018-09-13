@@ -47,6 +47,7 @@ GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr gras
   , grasp_filtered_by_ik_(false)
   , grasp_filtered_by_cutting_plane_(false)
   , grasp_filtered_by_orientation_(false)
+  , grasp_filtered_by_ik_closed_(false)
   , pregrasp_filtered_by_ik_(false)
 {
 }

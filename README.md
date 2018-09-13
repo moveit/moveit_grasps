@@ -93,15 +93,15 @@ The ``ideal_grasp_orientation_rpy`` parameter in ``moveit_grasps_config.yaml`` c
 
 You can visualize the ``ideal_grasp_orientation_rpy`` by setting ``show_ideal_grasp_orientation: true``.
 
-## Testing
+## Demo Scripts
 
-There are two tests scripts in this package. To view the tests, first start Rviz with:
+There are two demo scripts in this package. To view the tests, first start Rviz with:
 
     roslaunch moveit_grasps rviz.launch
 
 To test just grasp generation for randomly placed blocks:
 
-    roslaunch moveit_grasps test_grasp_generator.launch
+    roslaunch moveit_grasps test_grasp_generator.launch panda:=true
 
 To also test the grasp filtering:
 
@@ -142,16 +142,16 @@ There are currently example implementations:
  - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/kinetic-devel/baxter_pick_place)
  - [reem_tabletop_grasping](https://github.com/pal-robotics/reem_tabletop_grasping)
 
-## TODO
+## Testing and Linting
 
-Features we'd like to see added to this project:
+To run [roslint](http://wiki.ros.org/roslint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
 
- - Make grasp quality metric better informed
- - Integrate into Setup Assistant GUI
+    catkin build --no-status --no-deps --this --make-args roslint
 
-## Contributors
+To run [catkin lint](https://pypi.python.org/pypi/catkin_lint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
 
- - Dave Coleman, PickNik @davetcoleman
- - Andy McEvoy, PickNik @mcevoyandy
- - Bence Magyar, PAL Robotics @bmagyar
- - Mike Lautman, PickNik @mlautman
+    catkin lint -W2 --rosdistro kinetic
+
+Use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/) to run tests.
+
+    catkin run_tests --no-deps --this -i

@@ -49,7 +49,7 @@ constexpr char ENABLED_PARENT_NAME[] = "grasp_planner";  // for namespacing logg
 constexpr char ENABLED_SETTINGS_NAMESPACE[] = "moveit_grasps/planner";
 
 GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
-  : visual_tools_(visual_tools), nh_("~")
+  : nh_("~"), visual_tools_(visual_tools)
 {
   loadEnabledSettings();
 }
@@ -201,9 +201,6 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
   // Feedback
   ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Found valid and complete waypoint manipulation path for grasp "
                                                     "candidate");
-
-  // Get arm planning group
-  const moveit::core::JointModelGroup* arm_jmg = grasp_candidate->grasp_data_->arm_jmg_;
 
   // Show visuals
   if (show_cartesian_waypoints)

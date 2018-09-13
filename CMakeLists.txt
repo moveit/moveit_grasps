@@ -17,22 +17,23 @@ find_package(OpenMP)
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
+  actionlib
+  actionlib_msgs
   eigen_conversions
+  geometry_msgs
+  message_generation
+  moveit_core
+  moveit_msgs
   moveit_ros_planning
   moveit_ros_planning_interface
-  moveit_core
   moveit_visual_tools
+  roscpp
+  roslint
   rosparam_shortcuts
+  std_msgs
   tf
   tf_conversions
   trajectory_msgs
-  message_generation
-  geometry_msgs
-  actionlib
-  actionlib_msgs
-  moveit_msgs
 )
 
 add_message_files(DIRECTORY msg FILES
@@ -44,10 +45,10 @@ add_action_files(DIRECTORY action FILES
 )
 
 generate_messages(DEPENDENCIES
-  geometry_msgs
   actionlib_msgs
-  std_msgs
+  geometry_msgs
   moveit_msgs
+  std_msgs
 )
 
 # Catkin
@@ -58,12 +59,12 @@ catkin_package(
   CATKIN_DEPENDS
     actionlib_msgs
     geometry_msgs
-    moveit_msgs
-    trajectory_msgs
-    std_msgs
     message_runtime
+    moveit_msgs
     moveit_visual_tools
     rosparam_shortcuts
+    std_msgs
+    trajectory_msgs
   INCLUDE_DIRS
     include
   DEPENDS
@@ -82,9 +83,9 @@ include_directories(
 
 # Grasp Library
 add_library(${PROJECT_NAME}
-  src/grasp_generator.cpp
-  src/grasp_data.cpp
   src/grasp_candidate.cpp
+  src/grasp_data.cpp
+  src/grasp_generator.cpp
   src/grasp_scorer.cpp
 )
 target_link_libraries(${PROJECT_NAME}
@@ -104,31 +105,31 @@ target_link_libraries(${PROJECT_NAME}_filter
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}") # for threading
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
-# Test filter executable
+# Demo filter executable
 add_executable(${PROJECT_NAME}_filter_test src/test/grasp_filter_test.cpp)
 target_link_libraries(${PROJECT_NAME}_filter_test
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
-# Test grasp executable
-add_executable(${PROJECT_NAME}_test src/test/grasp_generator_test.cpp)
+# Demo grasp executable
+add_executable(${PROJECT_NAME}_test src/test/grasp_generator_demo.cpp)
 target_link_libraries(${PROJECT_NAME}_test
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
-# Test mesh bounding box
-add_executable(bounding_box_test src/test/mesh_bounding_box_test.cpp)
-target_link_libraries(bounding_box_test
+# Demo mesh bounding box
+add_executable(${PROJECT_NAME}_bounding_box_test src/test/mesh_bounding_box_test.cpp)
+target_link_libraries(${PROJECT_NAME}_bounding_box_test
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
-# Test grasp data settings
-add_executable(grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
-target_link_libraries(grasp_poses_visualizer
+# Demo grasp data settings
+add_executable(${PROJECT_NAME}_grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
@@ -151,8 +152,10 @@ install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # Install executables
 install(TARGETS
-  ${PROJECT_NAME}_test
+  ${PROJECT_NAME}_bounding_box_test
   ${PROJECT_NAME}_filter_test
+  ${PROJECT_NAME}_grasp_poses_visualizer
+  ${PROJECT_NAME}_test
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
@@ -160,4 +163,5 @@ install(TARGETS
 ## Testing ##
 #############
 
-# TODO(mlautman) :-)
+## Test for correct C++ source code
+roslint_cpp()

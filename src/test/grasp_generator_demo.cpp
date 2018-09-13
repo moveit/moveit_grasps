@@ -49,7 +49,7 @@ namespace moveit_grasps
 {
 static const double BLOCK_SIZE = 0.04;
 
-class GraspGeneratorTest
+class GraspGeneratorDemo
 {
 private:
   // A shared node handle
@@ -71,7 +71,7 @@ private:
 
 public:
   // Constructor
-  GraspGeneratorTest(int num_tests) : nh_("~")
+  GraspGeneratorDemo(int num_tests) : nh_("~")
   {
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
 
@@ -229,7 +229,7 @@ public:
 int main(int argc, char* argv[])
 {
   int num_tests = 1;
-  ros::init(argc, argv, "grasp_generator_test");
+  ros::init(argc, argv, "grasp_generator_demo");
 
   ROS_INFO_STREAM_NAMED("main", "GraspGenerator Test");
 
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  moveit_grasps::GraspGeneratorTest tester(num_tests);
+  moveit_grasps::GraspGeneratorDemo tester(num_tests);
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
