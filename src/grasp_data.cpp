@@ -59,7 +59,7 @@ namespace moveit_grasps
 {
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), grasp_depth_(0.12), angle_resolution_(16), robot_model_(robot_model)
+  : base_link_("/base_link"), robot_model_(robot_model), grasp_depth_(0.12), angle_resolution_(16)
 {
   if (!loadGraspData(nh, end_effector))
   {
@@ -80,10 +80,10 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // Helper to let user know what is wrong
   if (!nh.hasParam("base_link"))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data_loader", "Grasp configuration parameter `base_link` missing from rosparam "
-                                                "server. Did you load your end effector's configuration yaml file? "
-                                                "Searching in namespace: "
-                                                    << nh.getNamespace());
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Grasp configuration parameter `base_link` missing from rosparam "
+                                         "server. Did you load your end effector's configuration yaml file? "
+                                         "Searching in namespace: "
+                                             << nh.getNamespace());
     return false;
   }
 
@@ -145,7 +145,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
 
   // generate grasps at PI/angle_resolution increments
-  // angle_resolution_ = 32; //TODO parametrize this, or move to action interface
+  // angle_resolution_ = 32; //TODO(mlautman): parametrize this, or move to action interface
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
@@ -210,7 +210,7 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
 bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
                                           trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  // TODO (mlautman): Change this function to take in a method for translating joint values to grasp width
+  // TODO(mlautman): Change this function to take in a method for translating joint values to grasp width
   //       Currently this function simply interpolates between max open and max closed
   ROS_DEBUG_STREAM_NAMED("grasp_data", "Setting grasp posture to have distance_between_fingers of "
                                            << distance_btw_fingers);
@@ -227,7 +227,7 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
   // NOTE: We assume a linear relationship between the actuated joint values and the distance between fingers.
   //       This is probably incorrect but until we expose an interface for passing in a function to translate from
   //       joint values to grasp width, it's the best we got...
-  // TODO (mlautman): Make it so that a user can pass in a function here.
+  // TODO(mlautman): Make it so that a user can pass in a function here.
   std::vector<std::string> joint_names = pre_grasp_posture_.joint_names;
   std::vector<double> grasp_pose = grasp_posture_.points[0].positions;
   std::vector<double> pre_grasp_pose = pre_grasp_posture_.points[0].positions;
@@ -249,9 +249,9 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
     intercept[joint_index] = max_finger_width_ - slope[joint_index] * pre_grasp_pose[joint_index];
 
     // Sanity check
-    double intercept2 = min_finger_width_ - slope[joint_index] * grasp_pose[joint_index];
-    ROS_ASSERT_MSG(intercept[joint_index] == intercept2, "we got different y intercept!! %.3f and %.3f",
-                   intercept[joint_index], intercept2);
+    ROS_ASSERT_MSG(intercept[joint_index] == min_finger_width_ - slope[joint_index] * grasp_pose[joint_index],
+                   "we got different y intercept!! %.3f and %.3f", intercept[joint_index],
+                   min_finger_width_ - slope[joint_index] * grasp_pose[joint_index]);
 
     joint_positions[joint_index] = (distance_btw_fingers - intercept[joint_index]) / slope[joint_index];
 

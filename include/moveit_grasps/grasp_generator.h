@@ -147,6 +147,10 @@ struct GraspCandidateConfig
   bool enable_face_grasps_;
   bool enable_variable_angle_grasps_;
   bool enable_edge_grasps_;
+
+  // TODO(mlautman): these should not be adjusted by user, right?
+  // then they should not be in this datastructure since the other
+  // stuff is user input - Dave
   bool generate_x_axis_grasps_;
   bool generate_y_axis_grasps_;
   bool generate_z_axis_grasps_;
@@ -156,14 +160,16 @@ struct GraspCandidateConfig
 class GraspGenerator
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles).
-                                   // With GCC, this is done with a attribute ((aligned(16))).
+  // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles).
+  // With GCC, this is done with a attribute ((aligned(16))).
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-      /**
-       * \brief Constructor
-       */
-      GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
+  /**
+   * \brief Constructor
+   */
+  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
+  // TODO(davetcoleman): reinstate ability to generate bounding boxes
   /**
    * \brief Create possible grasp positions around a cuboid
    * \param mesh_msg - model of object to grasp from perception

@@ -36,7 +36,11 @@
    Desc:   Creates a vizualization of all the poses used in the graping pipeline
 */
 
+#include <rviz_visual_tools/rviz_visual_tools.h>
+
 #include <moveit_grasps/grasp_generator.h>
+#include <string>
+#include <vector>
 
 namespace moveit_grasps
 {
@@ -54,7 +58,7 @@ class GraspPosesVisualizer
 {
 public:
   // Constructor
-  GraspPosesVisualizer(bool verbose) : nh_("~")
+  explicit GraspPosesVisualizer(bool verbose) : nh_("~")
   {
     // get arm parameters
     nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
@@ -190,9 +194,9 @@ public:
   void generateRandomCuboid(geometry_msgs::Pose& cuboid_pose, double& l, double& w, double& h)
   {
     // Size
-    l = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
-    w = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
-    h = fRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
+    l = rviz_visual_tools::RvizVisualTools::dRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
+    w = rviz_visual_tools::RvizVisualTools::dRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
+    h = rviz_visual_tools::RvizVisualTools::dRand(CUBOID_MIN_SIZE, CUBOID_MAX_SIZE);
     ROS_INFO_STREAM_NAMED("random_cuboid", "Size = " << l << ", " << w << ", " << h);
 
     // Position
@@ -207,11 +211,6 @@ public:
     ROS_INFO_STREAM_NAMED("random_cuboid", "Quaternion = " << cuboid_pose.orientation.x << ", "
                                                            << cuboid_pose.orientation.y << ", "
                                                            << cuboid_pose.orientation.z);
-  }
-
-  double fRand(double fMin, double fMax)
-  {
-    return fMin + ((double)rand() / RAND_MAX) * (fMax - fMin);
   }
 
 private:
@@ -232,10 +231,9 @@ private:
   // arm description
   std::string ee_group_name_;
   std::string planning_group_name_;
-
 };  // class
 
-}  // namespace
+}  // namespace moveit_grasps
 
 int main(int argc, char** argv)
 {

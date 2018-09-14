@@ -41,7 +41,6 @@ public:
     fs::directory_iterator it(target_dir), eod;
     ROS_DEBUG_STREAM_NAMED("bbox", "Directory: " << target_dir.string());
 
-    double depth, width, height;
     Eigen::Affine3d pose_oobb;
     Eigen::Affine3d mesh_pose = Eigen::Affine3d::Identity();
 
@@ -52,9 +51,6 @@ public:
         break;
 
       pose_oobb = Eigen::Affine3d::Identity();
-      depth = 0;
-      width = 0;
-      height = 0;
 
       fs::path file_name("recommended.stl");
       fs::path mesh_path = p / file_name;
@@ -74,8 +70,7 @@ public:
       ROS_DEBUG_STREAM_NAMED("bbox", "getting bounding box...");
 
       ROS_WARN_STREAM_NAMED("temp", "TODO bounding box");
-      // grasp_generator_->getBoundingBoxFromMesh(mesh_msg, pose_oobb, depth, width, height); // this introduces a huge
-      // delay
+
       visual_tools_->publishMesh(mesh_pose, "file://" + mesh_path.string());
 
       std::cin.get();
