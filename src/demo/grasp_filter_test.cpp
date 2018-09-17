@@ -181,7 +181,6 @@ public:
       // Filter the grasp for only the ones that are reachable
       ROS_INFO_STREAM_NAMED("test", "Filtering grasps kinematically");
       bool filter_pregrasps = true;
-      // bool verbose = false;  // note: setting this to true will disable threading
       // int direction = 1;
 
       // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
@@ -237,7 +236,6 @@ public:
     // Filter the grasp for only the ones that are reachable
     ROS_INFO_STREAM_NAMED("test", "Filtering grasps kinematically");
     bool filter_pregrasps = true;
-    // bool verbose = false;  // note: setting this to true will disable threading
     int direction = 1;
 
     // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object

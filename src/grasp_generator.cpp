@@ -40,6 +40,20 @@
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
+namespace
+{
+void debugFailedOpenGripper(double percent_open, double min_finger_open_on_approach, double object_width,
+                            double grasp_padding_on_approach)
+{
+  ROS_ERROR_STREAM_NAMED("grasp_generator", "Unable to set grasp width to "
+                                                << percent_open << " % open. Stats:"
+                                                << "\n min_finger_open_on_approach: \t " << min_finger_open_on_approach
+                                                << "\n object_width: \t " << object_width
+                                                << "\n grasp_padding_on_approach_: \t " << grasp_padding_on_approach);
+}
+
+}  // namespace
+
 namespace moveit_grasps
 
 {
@@ -722,9 +736,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 1.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator",
-                           "Unable to set grasp width with %"
-                               << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
+    debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
+                           grasp_data->grasp_padding_on_approach_);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -737,9 +750,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.5;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator",
-                           "Unable to set grasp width with %"
-                               << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
+    debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
+                           grasp_data->grasp_padding_on_approach_);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
@@ -749,9 +761,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   percent_open = 0.0;
   if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator",
-                           "Unable to set grasp width with %"
-                               << percent_open << " and min_finger_open_on_approach=" << min_finger_open_on_approach);
+    debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
+                           grasp_data->grasp_padding_on_approach_);
     return false;
   }
   new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);

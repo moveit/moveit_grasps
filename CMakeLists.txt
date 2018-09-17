@@ -106,13 +106,13 @@ set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_C
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
 # Demo filter executable
-add_executable(${PROJECT_NAME}_filter_test src/test/grasp_filter_test.cpp)
+add_executable(${PROJECT_NAME}_filter_test src/demo/grasp_filter_test.cpp)
 target_link_libraries(${PROJECT_NAME}_filter_test
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 # Demo grasp executable
-add_executable(${PROJECT_NAME}_test src/test/grasp_generator_demo.cpp)
+add_executable(${PROJECT_NAME}_test src/demo/grasp_generator_demo.cpp)
 target_link_libraries(${PROJECT_NAME}_test
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -120,7 +120,7 @@ target_link_libraries(${PROJECT_NAME}_test
 )
 
 # Demo mesh bounding box
-add_executable(${PROJECT_NAME}_bounding_box_test src/test/mesh_bounding_box_test.cpp)
+add_executable(${PROJECT_NAME}_bounding_box_test src/demo/mesh_bounding_box_test.cpp)
 target_link_libraries(${PROJECT_NAME}_bounding_box_test
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -162,6 +162,22 @@ install(TARGETS
 #############
 ## Testing ##
 #############
+
+find_package(rostest REQUIRED)
+
+add_rostest_gtest(grasp_data_test test/grasp_data_test.test test/grasp_data_test.cpp)
+target_link_libraries(grasp_data_test
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
+
+add_rostest_gtest(grasp_generator_test test/grasp_generator_test.test test/grasp_generator_test.cpp)
+target_link_libraries(grasp_generator_test
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
 
 ## Test for correct C++ source code
 roslint_cpp()
