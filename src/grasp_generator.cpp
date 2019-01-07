@@ -104,7 +104,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
                                               const GraspCandidateConfig& grasp_candidate_config,
                                               std::vector<GraspCandidatePtr>& grasp_candidates)
 {
-  double finger_depth = grasp_data->finger_to_palm_depth_ - grasp_data->grasp_min_depth_;
+  double finger_depth = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
   double length_along_a, length_along_b, length_along_c;
   double delta_a, delta_b, delta_f;
   double alpha_x, alpha_y, alpha_z;
@@ -546,7 +546,7 @@ bool GraspGenerator::graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double
   // get line segment from grasp point to fingertip
   Eigen::Vector3d point_a = grasp_pose.translation();
   Eigen::Vector3d point_b =
-      point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->finger_to_palm_depth_;
+      point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->grasp_max_depth_;
 
   // translate points into cuboid coordinate system
   point_a = cuboid_pose.inverse() * point_a;  // T_cuboid-world * p_world = p_cuboid
@@ -685,7 +685,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   moveit_msgs::GripperTranslation pre_grasp_approach;
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
   new_grasp.pre_grasp_approach.desired_distance =
-      grasp_data->finger_to_palm_depth_ + grasp_data->approach_distance_desired_;
+      grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
 
@@ -700,7 +700,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   moveit_msgs::GripperTranslation post_grasp_retreat;
   new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
   new_grasp.post_grasp_retreat.desired_distance =
-      grasp_data->finger_to_palm_depth_ + grasp_data->retreat_distance_desired_;
+      grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
   new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
