@@ -107,6 +107,16 @@ public:
   static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
                                                const Eigen::Vector3d& min_translations,
                                                const Eigen::Vector3d& max_translations);
+
+  /**
+   * \brief Score the grasp based on the translation values of the grasp pose
+   * \param grasp_pose - the pose of the end effector
+   * \param ideal_pose - the ideal pose location
+   * \return the unweighted scores:
+   *         0.0 -> pose is at the ideal translation in that axis
+   */
+  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
+                                               const Eigen::Affine3d& ideal_pose);
 };
 
 }  // end namespace moveit_grasps

@@ -59,11 +59,11 @@ MOVEIT_CLASS_FORWARD(GraspData);
 // Map various arms to end effector grasp datas
 typedef std::map<const robot_model::JointModelGroup*, moveit_grasps::GraspDataPtr> GraspDatas;
 
-// This mapping is used to interpret the moveit_grasps end_effector_type parameter.
-// TODO (mlautman): Re-evaluate if this is the best way to do this
-static const std::size_t FINGER_GRIPPER_TYPE = 0;
-static const std::size_t SUCTION_GRIPPER_TYPE = 1;
-const static std::map<std::string, std::size_t> END_EFFECTOR_TYPE_LOOKUP = {{"finger", 0}, {"suction", 1}};
+enum EndEffectorType
+{
+  FINGER = 1,
+  SUCTION = 2
+};
 
 
 class GraspData
@@ -130,7 +130,7 @@ public:
   void print();
 
 public:
-  // A representation of the gripper type as an integer. See END_EFFECTOR_TYPE_LOOKUP for values
+  // A representation of the gripper type as an integer. See EndEffectorType for values
   std::size_t end_effector_type_;
 
   Eigen::Affine3d grasp_pose_to_eef_pose_;  // Convert generic grasp pose to this end effector's frame of reference
@@ -147,13 +147,12 @@ public:
   const robot_model::LinkModel* parent_link_;
 
   double grasp_depth_;    // distance from center point of object to end effector
-  int angle_resolution_;  // generate grasps at PI/angle_resolution increments
+  int angle_resolution_;  // generate grasps at 180/angle_resolution increments
 
   double grasp_resolution_;
   double grasp_depth_resolution_;  // generate grasps at this depth resolution along grasp_max_depth_
   double grasp_min_depth_;         // minimum amount fingers must overlap object
   double grasp_max_depth_;         // Maximum distance from tip of end effector inwords that an object can be for a grasp
-  double gripper_finger_width_;    // parameter used to ensure generated grasps will overlap object
 
   // grasp approach and retreat parameters
   double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
@@ -168,13 +167,13 @@ public:
   double max_grasp_width_;
   double max_finger_width_;
   double min_finger_width_;
+  double gripper_finger_width_;    // parameter used to ensure generated grasps will overlap object
 
   //////////////////////////////////////
   // Suction gripper specific parameters
   //////////////////////////////////////
   double active_suction_range_x_;
   double active_suction_range_y_;
-  double active_suction_range_z_;
 
 };
 

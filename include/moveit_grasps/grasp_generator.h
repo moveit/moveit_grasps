@@ -143,14 +143,13 @@ struct GraspCandidateConfig
     disableAllGraspAxes();
   }
 
+  ///////////////////////////////
+  // Finger Gripper config values
+  ///////////////////////////////
   bool enable_corner_grasps_;
   bool enable_face_grasps_;
   bool enable_variable_angle_grasps_;
   bool enable_edge_grasps_;
-
-  // TODO(mlautman): these should not be adjusted by user, right?
-  // then they should not be in this datastructure since the other
-  // stuff is user input - Dave
   bool generate_x_axis_grasps_;
   bool generate_y_axis_grasps_;
   bool generate_z_axis_grasps_;
@@ -302,8 +301,8 @@ public:
    * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return
    */
-  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data, const Eigen::Affine3d object_pose,
-                    double percent_open);
+  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data, const Eigen::Affine3d& object_pose,
+                    double percent_open=0);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
@@ -376,11 +375,30 @@ public:
   Eigen::Affine3d ideal_grasp_pose_;
 
 private:
+  bool generateFingerGrasps(
+    const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
+    const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+    const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+
+  bool generateSuctionGrasps(
+    const Eigen::Affine3d& cuboid_top_pose, double depth, double width, double height,
+    const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+    const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+
+  double scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data);
+
+  double scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                          const Eigen::Affine3d& object_pose, double percent_open);
+
+
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // Display more output both in console
   bool verbose_;
+
+  // Visual debug top grasp transforms
+  bool debug_top_grasps_;
 
   // Shared node handle
   ros::NodeHandle nh_;

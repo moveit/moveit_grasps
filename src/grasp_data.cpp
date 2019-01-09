@@ -94,15 +94,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // Search within the sub-namespace of this end effector name
   ros::NodeHandle child_nh(nh, end_effector);
 
-  // Find out if the end effector uses suction or fingers (NOTE: must be one of 'finger' or 'suction')
-  std::string end_effector_type_str;
-  child_nh.param<std::string>("end_effector_type", end_effector_type_str, "finger");
-
-  auto end_effector_type = END_EFFECTOR_TYPE_LOOKUP.find(end_effector_type_str);
-  ROS_ASSERT_MSG(
-    end_effector_type != END_EFFECTOR_TYPE_LOOKUP.end(),
-    "Unrecognized end effector type: %s", end_effector_type_str.c_str());
-  end_effector_type_ = end_effector_type->second;
 
   rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
@@ -120,7 +111,19 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_pose_);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
 
-  if (end_effector_type_ == FINGER_GRIPPER_TYPE)
+  // Find out if the end effector uses suction or fingers (NOTE: must be one of 'finger' or 'suction')
+  std::string end_effector_type_str;
+  child_nh.param<std::string>("end_effector_type", end_effector_type_str, "finger");
+
+  if (end_effector_type_str == "finger")
+    end_effector_type_ = FINGER;
+  else if (end_effector_type_str == "suction")
+    end_effector_type_ = SUCTION;
+  else
+    ROS_ASSERT_MSG(false, "Unrecognized end effector type: %s", end_effector_type_str.c_str());
+
+
+  if (end_effector_type_ == FINGER)
   {
     rosparam_shortcuts::get(parent_name, child_nh, "finger_to_palm_depth", grasp_max_depth_);
     rosparam_shortcuts::get(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
@@ -128,11 +131,10 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
     rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
     rosparam_shortcuts::get(parent_name, child_nh, "min_finger_width", min_finger_width_);
   }
-  else if (end_effector_type_ == SUCTION_GRIPPER_TYPE)
+  else if (end_effector_type_ == SUCTION)
   {
     rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
     rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
-    rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_z", active_suction_range_z_);
     rosparam_shortcuts::get(parent_name, child_nh, "suction_cup_stroke", grasp_max_depth_);
   }
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
@@ -335,7 +337,7 @@ void GraspData::print()
   std::cout << "grasp_max_depth_: " << grasp_max_depth_ << std::endl;
   std::cout << "grasp_padding_on_approach_: " << grasp_padding_on_approach_ << std::endl;
 
-  if (end_effector_type_ == FINGER_GRIPPER_TYPE)
+  if (end_effector_type_ == FINGER)
   {
     std::cout << "Finger Gripper Parameters: " << std::endl;
     std::cout << "\tgripper_finger_width_: " << gripper_finger_width_ << std::endl;
@@ -343,12 +345,11 @@ void GraspData::print()
     std::cout << "\tmax_finger_width_: " << max_finger_width_ << std::endl;
     std::cout << "\tmin_finger_width_: " << min_finger_width_ << std::endl;
   }
-  else if (end_effector_type_ == SUCTION_GRIPPER_TYPE)
+  else if (end_effector_type_ == SUCTION)
   {
     std::cout << "Suction Gripper Parameters: " << std::endl;
     std::cout << "\tactive_suction_range_x_: " << active_suction_range_x_ << std::endl;
     std::cout << "\tactive_suction_range_y_: " << active_suction_range_y_ << std::endl;
-    std::cout << "\tactive_suction_range_z_: " << active_suction_range_z_ << std::endl;
   }
   else
   {
