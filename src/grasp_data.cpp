@@ -194,18 +194,21 @@ bool GraspData::setRobotStateGrasp(robot_state::RobotStatePtr& robot_state)
 bool GraspData::setRobotState(robot_state::RobotStatePtr& robot_state, const trajectory_msgs::JointTrajectory& posture)
 {
   // Assume joint trajectory has only 1 waypoint
-  if (posture.points.size() < 1)
+  if (end_effector_type_ == FINGER)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data", "Posture trajectory must have at least 1 waypoint");
-    return false;
-  }
+    if (posture.points.size() < 1)
+    {
+      ROS_ERROR_STREAM_NAMED("grasp_data", "Posture trajectory for finger'd grasper must have at least 1 waypoint");
+      return false;
+    }
 
-  // TODO(davetcoleman): make this more efficient
-  // Do for every joint in end effector
-  for (std::size_t i = 0; i < posture.joint_names.size(); ++i)
-  {
-    // Set joint position
-    robot_state->setJointPositions(posture.joint_names[i], posture.points[0].positions);
+    // TODO(davetcoleman): make this more efficient
+    // Do for every joint in end effector
+    for (std::size_t i = 0; i < posture.joint_names.size(); ++i)
+    {
+      // Set joint position
+      robot_state->setJointPositions(posture.joint_names[i], posture.points[0].positions);
+    }
   }
   return true;
 }

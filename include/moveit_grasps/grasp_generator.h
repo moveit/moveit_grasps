@@ -319,7 +319,8 @@ public:
    * \param name of parent link
    * \return pregrasp pose
    */
-  static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp& grasp, const std::string& ee_parent_link);
+  static geometry_msgs::PoseStamped getPreGraspPose(const GraspCandidatePtr& grasp_candidate, const std::string& ee_parent_link);
+  // static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp& grasp, const std::string& ee_parent_link);
   // static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string
   // &ee_parent_link);
 
