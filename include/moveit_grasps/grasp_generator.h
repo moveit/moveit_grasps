@@ -301,8 +301,8 @@ public:
    * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return
    */
-  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data, const Eigen::Affine3d& object_pose,
-                    double percent_open=0);
+  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                    const Eigen::Affine3d& object_pose, double percent_open = 0);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
@@ -319,8 +319,10 @@ public:
    * \param name of parent link
    * \return pregrasp pose
    */
-  static geometry_msgs::PoseStamped getPreGraspPose(const GraspCandidatePtr& grasp_candidate, const std::string& ee_parent_link);
-  // static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp& grasp, const std::string& ee_parent_link);
+  static geometry_msgs::PoseStamped getPreGraspPose(const GraspCandidatePtr& grasp_candidate,
+                                                    const std::string& ee_parent_link);
+  // static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp& grasp, const std::string&
+  // ee_parent_link);
   // static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string
   // &ee_parent_link);
 
@@ -376,21 +378,18 @@ public:
   Eigen::Affine3d ideal_grasp_pose_;
 
 private:
-  bool generateFingerGrasps(
-    const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
-    const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-    const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+  bool generateFingerGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width, double height,
+                            const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+                            const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
 
-  bool generateSuctionGrasps(
-    const Eigen::Affine3d& cuboid_top_pose, double depth, double width, double height,
-    const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-    const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+  bool generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pose, double depth, double width, double height,
+                             const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+                             const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
 
   double scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data);
 
   double scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
                           const Eigen::Affine3d& object_pose, double percent_open);
-
 
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;

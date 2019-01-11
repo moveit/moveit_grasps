@@ -94,7 +94,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   // Search within the sub-namespace of this end effector name
   ros::NodeHandle child_nh(nh, end_effector);
 
-
   rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
   rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
@@ -121,7 +120,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
     end_effector_type_ = SUCTION;
   else
     ROS_ASSERT_MSG(false, "Unrecognized end effector type: %s", end_effector_type_str.c_str());
-
 
   if (end_effector_type_ == FINGER)
   {
@@ -356,7 +354,7 @@ void GraspData::print()
   }
   else
   {
-    std::cout << "end_effector_type_ is invalid!! " << end_effector_type_<< std::endl;
+    std::cout << "end_effector_type_ is invalid!! " << end_effector_type_ << std::endl;
   }
 }
 

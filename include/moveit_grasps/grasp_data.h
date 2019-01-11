@@ -65,7 +65,6 @@ enum EndEffectorType
   SUCTION = 2
 };
 
-
 class GraspData
 {
 public:
@@ -152,7 +151,7 @@ public:
   double grasp_resolution_;
   double grasp_depth_resolution_;  // generate grasps at this depth resolution along grasp_max_depth_
   double grasp_min_depth_;         // minimum amount fingers must overlap object
-  double grasp_max_depth_;         // Maximum distance from tip of end effector inwords that an object can be for a grasp
+  double grasp_max_depth_;  // Maximum distance from tip of end effector inwords that an object can be for a grasp
 
   // grasp approach and retreat parameters
   double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
@@ -167,14 +166,13 @@ public:
   double max_grasp_width_;
   double max_finger_width_;
   double min_finger_width_;
-  double gripper_finger_width_;    // parameter used to ensure generated grasps will overlap object
+  double gripper_finger_width_;  // parameter used to ensure generated grasps will overlap object
 
   //////////////////////////////////////
   // Suction gripper specific parameters
   //////////////////////////////////////
   double active_suction_range_x_;
   double active_suction_range_y_;
-
 };
 
 }  // namespace

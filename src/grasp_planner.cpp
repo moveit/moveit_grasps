@@ -215,20 +215,16 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
                                                          << " segments");
 
     std::vector<moveit::core::RobotStatePtr> full_path;
-    full_path.insert(full_path.end(),
-                     grasp_candidate->segmented_cartesian_traj_[APPROACH].begin(),
+    full_path.insert(full_path.end(), grasp_candidate->segmented_cartesian_traj_[APPROACH].begin(),
                      grasp_candidate->segmented_cartesian_traj_[APPROACH].end());
 
-    full_path.insert(full_path.end(),
-                     grasp_candidate->segmented_cartesian_traj_[LIFT].begin(),
+    full_path.insert(full_path.end(), grasp_candidate->segmented_cartesian_traj_[LIFT].begin(),
                      grasp_candidate->segmented_cartesian_traj_[LIFT].end());
 
-    full_path.insert(full_path.end(),
-                     grasp_candidate->segmented_cartesian_traj_[RETREAT].begin(),
+    full_path.insert(full_path.end(), grasp_candidate->segmented_cartesian_traj_[RETREAT].begin(),
                      grasp_candidate->segmented_cartesian_traj_[RETREAT].end());
 
     visual_tools_->trigger();
-
   }
 
   if (verbose_cartesian_filtering)
