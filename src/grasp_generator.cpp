@@ -1037,9 +1037,6 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   // grasp_pose *= Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ());
   grasp_pose.translation() = Eigen::Vector3d(0, 0, grasp_data->grasp_max_depth_);
 
-  if (debug_top_grasps_)
-    visual_tools_->publishAxis(grasp_pose, rviz_visual_tools::MEDIUM, "center_grasp_pose_before");
-
   grasp_pose = cuboid_center_top_grasp.rotation() * grasp_pose;
   grasp_pose.translation() += cuboid_center_top_grasp.translation();
 

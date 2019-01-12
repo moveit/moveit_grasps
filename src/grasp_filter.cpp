@@ -502,6 +502,13 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     const std::string& ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
     ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate, ee_parent_link_name);
 
+    if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
+    {
+      Eigen::Affine3d pre_grasp_pose = visual_tools_->convertPose(ik_thread_struct->ik_pose_.pose) *
+                                       grasp_candidate->grasp_data_->grasp_pose_to_eef_pose_;
+      tf::poseEigenToMsg(pre_grasp_pose, ik_thread_struct->ik_pose_.pose);
+    }
+
     // Set gripper position (how open the fingers are) to CLOSED
     // grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
 
