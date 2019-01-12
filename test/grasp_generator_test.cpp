@@ -99,7 +99,7 @@ TEST_F(GraspGeneratorTest, GraspData)
   EXPECT_EQ(grasp_data_->base_link_, "world");
   EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
   EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm_hand");
-  EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_hand");
+  EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
 
   // Geometry doubles
