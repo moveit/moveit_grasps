@@ -67,23 +67,15 @@ double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const
 
 Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_pose, const Eigen::Affine3d& ideal_pose)
 {
-  Eigen::Vector3d scores;
-
-  for (std::size_t i = 0; i < 3; i++)
-  {
     // We assume that the ideal is in the middle
-    double score = grasp_pose.translation()[i] - ideal_pose.translation()[i];
-    scores[i] = pow(score, 2);
-  }
+  Eigen::Vector3d scores = Eigen::Vector3d(grasp_pose.translation() - ideal_pose.translation()).array().pow(2);
 
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspTranslation",
-                         "value, ideal, score:\n"
-                             << grasp_pose.translation()[0] << ", " << ideal_pose.translation()[0] << ", " << scores[0]
-                             << "\n"
-                             << grasp_pose.translation()[1] << ", " << ideal_pose.translation()[1] << ", " << scores[1]
-                             << "\n"
-                             << grasp_pose.translation()[2] << ", " << ideal_pose.translation()[2] << ", " << scores[2]
-                             << "\n");
+  ROS_DEBUG_STREAM_NAMED(
+      "grasp_scorer.scoreGraspTranslation",
+      "value, ideal, score:\n"
+          << "x: " << grasp_pose.translation()[0] << "\t" << ideal_pose.translation()[0] << "\t" << scores[0] << "\n"
+          << "y: " << grasp_pose.translation()[1] << "\t" << ideal_pose.translation()[1] << "\t" << scores[1] << "\n"
+          << "x: " << grasp_pose.translation()[2] << "\t" << ideal_pose.translation()[2] << "\t" << scores[2] << "\n");
 
   return scores;
 }

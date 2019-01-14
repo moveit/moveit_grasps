@@ -721,8 +721,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // Transform the grasp pose
 
   // NOTE: This is the grasp pose NOT the end effector pose!
-  Eigen::Affine3d eef_pose = grasp_pose;
-  tf::poseEigenToMsg(eef_pose, grasp_pose_msg.pose);
+  tf::poseEigenToMsg(grasp_pose, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
 
   // set grasp postures e.g. hand closed
@@ -743,7 +742,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
       return false;
     }
 
-    new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
+    new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose, percent_open);
 
     // Show visualization for widest grasp
 
@@ -757,7 +756,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
                              grasp_data->grasp_padding_on_approach_);
       return false;
     }
-    new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
+    new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose, percent_open);
     grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
     // Create grasp with fingers at minimum width ---------------------------------------------
@@ -768,7 +767,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
                              grasp_data->grasp_padding_on_approach_);
       return false;
     }
-    new_grasp.grasp_quality = scoreGrasp(eef_pose, grasp_data, object_pose, percent_open);
+    new_grasp.grasp_quality = scoreGrasp(grasp_pose, grasp_data, object_pose, percent_open);
     grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
 
     return true;
@@ -776,7 +775,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 
   if (grasp_data->end_effector_type_ == SUCTION)
   {
-    new_grasp.grasp_quality = scoreSuctionGrasp(eef_pose, grasp_data);
+    new_grasp.grasp_quality = scoreSuctionGrasp(grasp_pose, grasp_data);
     grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
     return true;
   }
@@ -1034,7 +1033,6 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   // First add the center point to ensure that it is a candidate
 
   Eigen::Affine3d grasp_pose = Eigen::Affine3d::Identity();
-  // grasp_pose *= Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ());
   grasp_pose.translation() = Eigen::Vector3d(0, 0, grasp_data->grasp_max_depth_);
 
   grasp_pose = cuboid_center_top_grasp.rotation() * grasp_pose;
@@ -1065,8 +1063,8 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   double z_inc = grasp_data->grasp_depth_resolution_;
 
   double yaw_min = 0.0;
-  double yaw_max = 2.0 * 3.14;  // We use a rounded down value for PI to avoid duplicate values at upper end of range
-  double yaw_inc = grasp_data->angle_resolution_ * M_PI / 180.0;
+  double yaw_max = 2.0 * M_PI;
+  double yaw_inc = M_PI * (grasp_data->angle_resolution_ / 180.0);
 
   for (double z = z_min; z <= z_max; z += z_inc)
   {

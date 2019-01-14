@@ -283,13 +283,13 @@ public:
 
   /**
    * \brief creates grasp messages from the generated grasp poses
-   * \param pose - the grasp pose
+   * \param pose - the grasp pose. (Note: this is the pose of the grasp itself not the position of the eef)
    * \param grasp_data data describing the end effector
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
    * \return true on success
    */
-  bool addGrasp(const Eigen::Affine3d& pose, const GraspDataPtr grasp_data,
+  bool addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
                 std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose,
                 double object_width);
 
@@ -321,10 +321,6 @@ public:
    */
   static geometry_msgs::PoseStamped getPreGraspPose(const GraspCandidatePtr& grasp_candidate,
                                                     const std::string& ee_parent_link);
-  // static geometry_msgs::PoseStamped getPreGraspPose(const moveit_msgs::Grasp& grasp, const std::string&
-  // ee_parent_link);
-  // static geometry_msgs::PoseStamped getPostGraspPose(const moveit_msgs::Grasp &grasp, const std::string
-  // &ee_parent_link);
 
   /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction

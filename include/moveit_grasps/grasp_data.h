@@ -130,7 +130,7 @@ public:
 
 public:
   // A representation of the gripper type as an integer. See EndEffectorType for values
-  std::size_t end_effector_type_;
+  EndEffectorType end_effector_type_;
 
   Eigen::Affine3d grasp_pose_to_eef_pose_;  // Convert generic grasp pose to this end effector's frame of reference
   trajectory_msgs::JointTrajectory pre_grasp_posture_;  // when the end effector is in "open" position
