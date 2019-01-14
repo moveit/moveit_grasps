@@ -121,11 +121,11 @@ public:
     Eigen::Vector3d palm_vector = obj_point - grasp_point;
     palm_vector.normalize();
 
-    Eigen::Vector3d palm_point = grasp_point + palm_vector * grasp_data_->finger_to_palm_depth_;
+    Eigen::Vector3d palm_point = grasp_point + palm_vector * grasp_data_->grasp_max_depth_;
     visual_tools_->publishLine(grasp_point, palm_point, rviz_visual_tools::GREY);
 
     Eigen::Affine3d text_pose;
-    Eigen::Vector3d text_point = grasp_point + palm_vector * grasp_data_->finger_to_palm_depth_ * 0.5;
+    Eigen::Vector3d text_point = grasp_point + palm_vector * grasp_data_->grasp_max_depth_ * 0.5;
     text_pose = grasp_pose;
     text_pose.translation() += text_point - grasp_pose.translation();
     visual_tools_->publishText(text_pose, "finger_to_palm_depth", rviz_visual_tools::GREY, rviz_visual_tools::XSMALL,

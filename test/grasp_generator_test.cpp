@@ -105,7 +105,7 @@ TEST_F(GraspGeneratorTest, GraspData)
   // Geometry doubles
   EXPECT_GT(grasp_data_->grasp_depth_, 0);
   EXPECT_GT(grasp_data_->angle_resolution_, 0);
-  EXPECT_GT(grasp_data_->finger_to_palm_depth_, 0);
+  EXPECT_GT(grasp_data_->grasp_max_depth_, 0);
   EXPECT_GT(grasp_data_->grasp_resolution_, 0);
   EXPECT_GT(grasp_data_->grasp_depth_resolution_, 0);
   EXPECT_GT(grasp_data_->grasp_min_depth_, 0);

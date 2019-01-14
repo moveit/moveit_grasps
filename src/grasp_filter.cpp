@@ -470,7 +470,8 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
       collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Set gripper position (how open the fingers are) to the custom open position
-  grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
+  if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
+    grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
 
   // Solve IK Problem for grasp posture
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
@@ -484,11 +485,14 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   ik_thread_struct->ik_seed_state_ = grasp_candidate->grasp_ik_solution_;
 
   // Check if IK solution for grasp pose is valid for fingers closed as well
-  if (!checkFingersClosedIK(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
+  if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution with CLOSED fingers");
-    grasp_candidate->grasp_filtered_by_ik_closed_ = true;
-    return false;
+    if (!checkFingersClosedIK(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
+    {
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution with CLOSED fingers");
+      grasp_candidate->grasp_filtered_by_ik_closed_ = true;
+      return false;
+    }
   }
 
   // Start pre-grasp section
@@ -496,7 +500,14 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   {
     // Convert to a pre-grasp
     const std::string& ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
-    ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate->grasp_, ee_parent_link_name);
+    ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate, ee_parent_link_name);
+
+    if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
+    {
+      Eigen::Affine3d pre_grasp_pose = visual_tools_->convertPose(ik_thread_struct->ik_pose_.pose) *
+                                       grasp_candidate->grasp_data_->grasp_pose_to_eef_pose_;
+      tf::poseEigenToMsg(pre_grasp_pose, ik_thread_struct->ik_pose_.pose);
+    }
 
     // Set gripper position (how open the fingers are) to CLOSED
     // grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
