@@ -81,17 +81,21 @@ GraspFilter::GraspFilter(robot_state::RobotStatePtr robot_state,
 
   // Load visulization settings
   const std::string parent_name = "grasp_filter";  // for namespacing logging messages
-  rosparam_shortcuts::get(parent_name, nh_, "collision_verbose", collision_verbose_);
-  rosparam_shortcuts::get(parent_name, nh_, "statistics_verbose", statistics_verbose_);
-  rosparam_shortcuts::get(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_filtered_arm_solutions_speed", show_filtered_arm_solutions_speed_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed",
-                          show_filtered_arm_solutions_pregrasp_speed_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_grasp_filter_collision_if_failed",
-                          show_grasp_filter_collision_if_failed_);
+  std::size_t error = 0;
+  error += !rosparam_shortcuts::get(parent_name, nh_, "collision_verbose", collision_verbose_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "statistics_verbose", statistics_verbose_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "collision_verbose_speed", collision_verbose_speed_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_filtered_grasps", show_filtered_grasps_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_filtered_arm_solutions", show_filtered_arm_solutions_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_cutting_planes", show_cutting_planes_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_filtered_arm_solutions_speed",
+                                    show_filtered_arm_solutions_speed_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_filtered_arm_solutions_pregrasp_speed",
+                                    show_filtered_arm_solutions_pregrasp_speed_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_grasp_filter_collision_if_failed",
+                                    show_grasp_filter_collision_if_failed_);
+
+  rosparam_shortcuts::shutdownIfError(parent_name, error);
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,

@@ -89,26 +89,27 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   // Load all other parameters
   const std::string parent_name = "grasp_data";  // for namespacing logging messages
-  rosparam_shortcuts::get(parent_name, nh, "base_link", base_link_);
+  std::size_t error = 0;
+  error += !rosparam_shortcuts::get(parent_name, nh, "base_link", base_link_);
 
   // Search within the sub-namespace of this end effector name
   ros::NodeHandle child_nh(nh, end_effector);
 
-  rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
-  rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
-  rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
-  rosparam_shortcuts::get(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
-  rosparam_shortcuts::get(parent_name, child_nh, "angle_resolution", angle_resolution_);
-  rosparam_shortcuts::get(parent_name, child_nh, "end_effector_name", end_effector_name);
-  rosparam_shortcuts::get(parent_name, child_nh, "joints", joint_names);
-  rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_pose_);
-  rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_time_from_start", pregrasp_time_from_start);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "lift_distance_desired", lift_distance_desired_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "angle_resolution", angle_resolution_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "end_effector_name", end_effector_name);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "joints", joint_names);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_pose_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
 
   // Find out if the end effector uses suction or fingers (NOTE: must be one of 'finger' or 'suction')
   std::string end_effector_type_str;
@@ -123,18 +124,20 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   if (end_effector_type_ == FINGER)
   {
-    rosparam_shortcuts::get(parent_name, child_nh, "finger_to_palm_depth", grasp_max_depth_);
-    rosparam_shortcuts::get(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
-    rosparam_shortcuts::get(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
-    rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
-    rosparam_shortcuts::get(parent_name, child_nh, "min_finger_width", min_finger_width_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "finger_to_palm_depth", grasp_max_depth_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "min_finger_width", min_finger_width_);
   }
   else if (end_effector_type_ == SUCTION)
   {
-    rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
-    rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
-    rosparam_shortcuts::get(parent_name, child_nh, "suction_cup_stroke", grasp_max_depth_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "suction_cup_stroke", grasp_max_depth_);
   }
+  rosparam_shortcuts::shutdownIfError(parent_name, error);
+
   // Convert generic grasp pose to this end effector's frame of reference, approach direction for short
 
   // Create pre-grasp posture if specified

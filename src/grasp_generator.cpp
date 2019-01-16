@@ -63,25 +63,27 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 {
   // Load visulization settings
   const std::string parent_name = "grasps";  // for namespacing logging messages
-  rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
+  std::size_t error = 0;
 
-  rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
 
   // Load scoring weights
-  rosparam_shortcuts::get(parent_name, nh_, "depth_score_weight", depth_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "width_score_weight", width_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "depth_score_weight", depth_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "width_score_weight", width_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+
   nh_.param("debug_top_grasps", debug_top_grasps_, false);
 
   std::vector<double> ideal_grasp_orientation_rpy;
-  rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
   ROS_ASSERT(ideal_grasp_orientation_rpy.size() == 3);
 
   // Set ideal grasp pose (currently only uses orientation of pose)
@@ -92,7 +94,9 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
   bool show_ideal_grasp_orientation = false;
-  rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
+  rosparam_shortcuts::shutdownIfError(parent_name, error);
+
   if (show_ideal_grasp_orientation)
   {
     visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "ideal_grasp_orientation");
@@ -799,15 +803,12 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
                          "Scoring grasp at: \n\tpose:  ("
-                             << grasp_pose.translation().x() << ",\t"
-                             << grasp_pose.translation().y() << ",\t"
-                             << grasp_pose.translation().z() << ")\t("
-                             << grasp_pose.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
-                             << grasp_pose.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
+                             << grasp_pose.translation().x() << ",\t" << grasp_pose.translation().y() << ",\t"
+                             << grasp_pose.translation().z() << ")\t(" << grasp_pose.rotation().eulerAngles(0, 1, 2)(0)
+                             << ",\t" << grasp_pose.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
                              << grasp_pose.rotation().eulerAngles(0, 1, 2)(2) << ")\n\tideal: ("
-                             << ideal_grasp_pose_.translation().x() << ",\t"
-                             << ideal_grasp_pose_.translation().y() << ",\t"
-                             << ideal_grasp_pose_.translation().z() << ")\t("
+                             << ideal_grasp_pose_.translation().x() << ",\t" << ideal_grasp_pose_.translation().y()
+                             << ",\t" << ideal_grasp_pose_.translation().z() << ")\t("
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
