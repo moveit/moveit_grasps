@@ -63,25 +63,27 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 {
   // Load visulization settings
   const std::string parent_name = "grasps";  // for namespacing logging messages
-  rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
+  std::size_t error = 0;
 
-  rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
-  rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
 
   // Load scoring weights
-  rosparam_shortcuts::get(parent_name, nh_, "depth_score_weight", depth_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "width_score_weight", width_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
-  rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "depth_score_weight", depth_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "width_score_weight", width_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+
   nh_.param("debug_top_grasps", debug_top_grasps_, false);
 
   std::vector<double> ideal_grasp_orientation_rpy;
-  rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
   ROS_ASSERT(ideal_grasp_orientation_rpy.size() == 3);
 
   // Set ideal grasp pose (currently only uses orientation of pose)
@@ -92,7 +94,9 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
   bool show_ideal_grasp_orientation = false;
-  rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
+  rosparam_shortcuts::shutdownIfError(parent_name, error);
+
   if (show_ideal_grasp_orientation)
   {
     visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "ideal_grasp_orientation");
@@ -798,15 +802,15 @@ double GraspGenerator::scoreGrasp(const Eigen::Affine3d& grasp_pose, const Grasp
 double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                         "Scoring grasp at: ("
-                             << grasp_pose.translation().x() << ", " << grasp_pose.translation().y() << ", "
-                             << grasp_pose.translation().z() << ") (" << grasp_pose.rotation().eulerAngles(0, 1, 2)(0)
-                             << "," << grasp_pose.rotation().eulerAngles(0, 1, 2)(1) << ","
-                             << grasp_pose.rotation().eulerAngles(0, 1, 2)(2) << ") vs ("
-                             << ideal_grasp_pose_.translation().x() << ", " << ideal_grasp_pose_.translation().y()
-                             << ", " << ideal_grasp_pose_.translation().z() << ") ("
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(0) << ","
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(1) << ","
+                         "Scoring grasp at: \n\tpose:  ("
+                             << grasp_pose.translation().x() << ",\t" << grasp_pose.translation().y() << ",\t"
+                             << grasp_pose.translation().z() << ")\t(" << grasp_pose.rotation().eulerAngles(0, 1, 2)(0)
+                             << ",\t" << grasp_pose.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
+                             << grasp_pose.rotation().eulerAngles(0, 1, 2)(2) << ")\n\tideal: ("
+                             << ideal_grasp_pose_.translation().x() << ",\t" << ideal_grasp_pose_.translation().y()
+                             << ",\t" << ideal_grasp_pose_.translation().z() << ")\t("
+                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
+                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
 
   // get portion of score based on the orientation
@@ -844,7 +848,6 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
                              << "\tweights             = " << weights[0] << ", " << weights[1] << ", " << weights[2]
                              << ", " << weights[3] << ", " << weights[4] << ", " << weights[5] << "\n"
                              << "\ttotal_score = " << total_score);
-
   return total_score;
 }
 
@@ -966,7 +969,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
                                            const GraspCandidateConfig grasp_candidate_config)
 {
   grasp_candidates.clear();
-
+  std::vector<Eigen::Affine3d> grasp_poses;
   ////////////////
   // Re-orient the cuboid center top grasp so to be as close as possible to the ideal grasp
   ////////////////
@@ -978,16 +981,10 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   ideal_grasp.translation() = cuboid_center_top_grasp.translation();
   setIdealGraspPose(ideal_grasp);
 
-  bool debug_first_transform = false;
-
-  if (debug_top_grasps_ && debug_first_transform)
+  if (debug_top_grasps_)
   {
-    visual_tools_->prompt("publish cuboid pose");
-    visual_tools_->publishAxis(cuboid_center_top_grasp, rviz_visual_tools::MEDIUM, "cuboid_center_top_grasp");
-    visual_tools_->trigger();
-
-    visual_tools_->prompt("publish ideal pose");
-    visual_tools_->publishAxis(ideal_grasp, rviz_visual_tools::MEDIUM, "ideal_grasp");
+    visual_tools_->publishAxis(cuboid_top_pose, rviz_visual_tools::SMALL, "cuboid_top_pose");
+    visual_tools_->publishAxis(ideal_grasp, rviz_visual_tools::SMALL, "ideal_grasp");
     visual_tools_->trigger();
   }
 
@@ -1002,12 +999,6 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   {
     ROS_DEBUG_NAMED("grasp_generator", "flipping Z");
     cuboid_center_top_grasp = cuboid_center_top_grasp * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
-    if (debug_top_grasps_ && debug_first_transform)
-    {
-      visual_tools_->publishAxis(cuboid_center_top_grasp, rviz_visual_tools::MEDIUM, "cuboid_center_top_grasp1");
-      visual_tools_->prompt("publish cuboid pose");
-      visual_tools_->trigger();
-    }
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "New cuboid_direction:\n" << cuboid_center_top_grasp.rotation() << "\n");
   }
 
@@ -1018,12 +1009,6 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   {
     ROS_DEBUG_NAMED("generateSuctionGrasps", "flipping X");
     cuboid_center_top_grasp = cuboid_center_top_grasp * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ());
-    if (debug_top_grasps_ && debug_first_transform)
-    {
-      visual_tools_->publishAxis(cuboid_center_top_grasp, rviz_visual_tools::MEDIUM, "cuboid_center_top_grasp2");
-      visual_tools_->prompt("publish cuboid pose");
-      visual_tools_->trigger();
-    }
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "New cuboid_direction:\n" << cuboid_center_top_grasp.rotation() << "\n");
   }
 
@@ -1032,62 +1017,113 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   ////////////////
   // First add the center point to ensure that it is a candidate
 
-  Eigen::Affine3d grasp_pose = Eigen::Affine3d::Identity();
-  grasp_pose.translation() = Eigen::Vector3d(0, 0, grasp_data->grasp_max_depth_);
-
-  grasp_pose = cuboid_center_top_grasp.rotation() * grasp_pose;
-  grasp_pose.translation() += cuboid_center_top_grasp.translation();
+  Eigen::Affine3d center_grasp_pose =
+      cuboid_center_top_grasp * Eigen::Translation3d(0, 0, grasp_data->grasp_min_depth_);
 
   if (debug_top_grasps_)
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t"
                                                              << height);
-    visual_tools_->publishAxis(grasp_pose, rviz_visual_tools::MEDIUM, "center_grasp_pose");
+    visual_tools_->publishAxis(center_grasp_pose, rviz_visual_tools::SMALL, "center_grasp_pose");
     visual_tools_->trigger();
-    visual_tools_->prompt("Added center grasp, continue?");
   }
-
-  addGrasp(grasp_pose, grasp_data, grasp_candidates, cuboid_top_pose, 0);
+  grasp_poses.push_back(center_grasp_pose);
 
   // We define min, max and inc for each for loop here for readability
-  double x_min = -depth / 2.0 + grasp_data->active_suction_range_x_ / 2.0;
-  double x_max = depth / 2.0 - grasp_data->active_suction_range_x_ / 2.0;
-  double x_inc = grasp_data->grasp_resolution_;
 
-  double y_min = -width / 2.0 + grasp_data->active_suction_range_y_ / 2.0;
-  double y_max = width / 2.0 - grasp_data->active_suction_range_y_ / 2.0;
-  double y_inc = grasp_data->grasp_resolution_;
-
-  double z_min = grasp_data->grasp_min_depth_;
-  double z_max = grasp_data->grasp_max_depth_;
-  double z_inc = grasp_data->grasp_depth_resolution_;
-
-  double yaw_min = 0.0;
-  double yaw_max = 2.0 * M_PI;
-  double yaw_inc = M_PI * (grasp_data->angle_resolution_ / 180.0);
-
-  for (double z = z_min; z <= z_max; z += z_inc)
+  // if X range is less than y range then we use x range for the xy range
+  double xy_increment = grasp_data->grasp_resolution_;
+  double xy_min = xy_increment;
+  double xy_max;
+  if (depth - grasp_data->active_suction_range_x_ < width - grasp_data->active_suction_range_y_)
   {
-    for (double y = y_min; y <= y_max; y += y_inc)
+    xy_max = depth / 2.0 - grasp_data->active_suction_range_x_ / 2.0;
+  }
+  else
+  {
+    xy_max = width / 2.0 - grasp_data->active_suction_range_y_ / 2.0;
+  }
+
+  double z_increment = grasp_data->grasp_depth_resolution_;
+  double z_min = z_increment;
+  double z_max = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
+
+  double yaw_increment = M_PI * (grasp_data->angle_resolution_ / 180.0);
+  double yaw_min = yaw_increment;
+  double yaw_max = 2.0 * M_PI;
+
+  // For each range (X, Y, Z, Yaw) create copies of the grasp poses for each value in the range
+  std::size_t num_grasps;
+
+  // Add rotated suction grasps (Yaw)
+  num_grasps = grasp_poses.size();
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
     {
-      for (double x = x_min; x <= x_max; x += x_inc)
-      {
-        for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_inc)
-        {
-          Eigen::Affine3d grasp_pose = Eigen::Affine3d::Identity();
-          grasp_pose *= Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-          grasp_pose.translation() = Eigen::Vector3d(x, y, z);
-
-          grasp_pose = cuboid_center_top_grasp.rotation() * grasp_pose;
-          grasp_pose.translation() += cuboid_center_top_grasp.translation();
-
-          if (debug_top_grasps_)
-            visual_tools_->publishAxis(grasp_pose, rviz_visual_tools::MEDIUM, "after_transform");
-
-          addGrasp(grasp_pose, grasp_data, grasp_candidates, cuboid_top_pose, 0);
-        }
-      }
+      Eigen::Affine3d grasp_pose = grasp_poses[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+      grasp_poses.push_back(grasp_pose);
     }
+  }
+
+  // Add Depth grasps (Z-axis)
+  num_grasps = grasp_poses.size();
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    for (double z = z_min; z <= z_max; z += z_increment)
+    {
+      Eigen::Affine3d grasp_pose = grasp_poses[i] * Eigen::Translation3d(0, 0, z);
+      grasp_poses.push_back(grasp_pose);
+    }
+  }
+
+  // Add Y translation grasps
+  num_grasps = grasp_poses.size();
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    for (double y = xy_min; y <= xy_max; y += xy_increment)
+    {
+      Eigen::Affine3d grasp_pose;
+
+      grasp_pose = grasp_poses[i] * Eigen::Translation3d(0, y, 0);
+      grasp_poses.push_back(grasp_pose);
+
+      grasp_pose = grasp_poses[i] * Eigen::Translation3d(0, -y, 0);
+      grasp_poses.push_back(grasp_pose);
+    }
+  }
+
+  // Add X translation grasps
+  num_grasps = grasp_poses.size();
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    for (double x = xy_min; x <= xy_max; x += xy_increment)
+    {
+      Eigen::Affine3d grasp_pose;
+
+      grasp_pose = grasp_poses[i] * Eigen::Translation3d(x, 0, 0);
+      grasp_poses.push_back(grasp_pose);
+
+      grasp_pose = grasp_poses[i] * Eigen::Translation3d(-x, 0, 0);
+      grasp_poses.push_back(grasp_pose);
+    }
+  }
+
+  num_grasps = grasp_poses.size();
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_top_pose, 0);
+    if (debug_top_grasps_)
+    {
+      visual_tools_->publishAxis(grasp_poses[i], rviz_visual_tools::MEDIUM, "pose");
+    }
+  }
+  if (debug_top_grasps_)
+  {
+    Eigen::Affine3d ideal_copy = ideal_grasp_pose_;
+    ideal_copy.translation() += Eigen::Vector3d(0.0, 0.0, 1.0);
+    visual_tools_->publishAxisLabeled(ideal_copy, "ideal grasp orientation", rviz_visual_tools::MEDIUM);
+    visual_tools_->trigger();
   }
 
   if (!grasp_candidates.size())
@@ -1100,12 +1136,6 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "Animating all generated (candidate) grasps before filtering");
     visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
-  }
-
-  if (debug_top_grasps_)
-  {
-    visual_tools_->trigger();
-    visual_tools_->prompt("continue?");
   }
 
   return true;

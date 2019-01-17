@@ -146,7 +146,7 @@ public:
   const robot_model::LinkModel* parent_link_;
 
   double grasp_depth_;    // distance from center point of object to end effector
-  int angle_resolution_;  // generate grasps at 180/angle_resolution increments
+  int angle_resolution_;  // generate grasps at increments of: angle_resolution * pi / 180
 
   double grasp_resolution_;
   double grasp_depth_resolution_;  // generate grasps at this depth resolution along grasp_max_depth_
