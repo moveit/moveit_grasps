@@ -116,6 +116,9 @@ public:
    *         0.0 -> pose is at the ideal translation in that axis
    */
   static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose, const Eigen::Affine3d& ideal_pose);
+
+  static Eigen::Vector3d scoreGraspOverhang(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data, const Eigen::Affine3d& object_pose, const Eigen::Vector3d& object_size);
+
 };
 
 }  // end namespace moveit_grasps

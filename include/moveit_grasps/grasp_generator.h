@@ -287,22 +287,34 @@ public:
    * \param grasp_data data describing the end effector
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
+   * \param object_size - size of object to grasp
    * \return true on success
    */
   bool addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
                 std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose,
+                const Eigen::Vector3d& object_size,
                 double object_width);
 
   /**
-   * \brief Score the generated grasp poses
+   * \brief Score the generated suction grasp poses
+   * \param grasp_pose - the pose of the grasp
+   * \param grasp_data - data describing the end effector
+   * \param cuboid_pose - the pose of the object being grasped
+   * \param object size - the extents of the object being grasped
+   * \return a score with positive being better
+   */
+  double scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data, const Eigen::Affine3d& cuboid_pose, const Eigen::Vector3d& object_size);
+
+  /**
+   * \brief Score the generated finger grasp poses
    * \param grasp_pose - the pose of the grasp
    * \param grasp_data - data describing the end effector
    * \param object_pose - the pose of the object being grasped
    * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
-   * \return
+   * \return a score with positive being better
    */
-  double scoreGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
-                    const Eigen::Affine3d& object_pose, double percent_open = 0);
+  double scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                          const Eigen::Affine3d& object_pose, double percent_open);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
@@ -382,11 +394,6 @@ private:
                              const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
                              const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
 
-  double scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data);
-
-  double scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
-                          const Eigen::Affine3d& object_pose, double percent_open);
-
   // class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
@@ -417,6 +424,8 @@ private:
   double translation_x_score_weight_;
   double translation_y_score_weight_;
   double translation_z_score_weight_;
+  double overhang_x_score_weight_;
+  double overhang_y_score_weight_;
 
   // bounding_box::BoundingBox bounding_box_;
 
