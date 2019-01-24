@@ -81,7 +81,6 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   error += !rosparam_shortcuts::get(parent_name, nh_, "overhang_x_score_weight", overhang_x_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "overhang_y_score_weight", overhang_y_score_weight_);
 
-
   nh_.param("debug_top_grasps", debug_top_grasps_, false);
 
   std::vector<double> ideal_grasp_orientation_rpy;
@@ -791,7 +790,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   return false;
 }
 
-double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data, const Eigen::Affine3d& cuboid_pose, const Eigen::Vector3d& object_size)
+double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                                         const Eigen::Affine3d& cuboid_pose, const Eigen::Vector3d& object_size)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
                          "Scoring grasp at: \n\tpose:  ("
@@ -817,15 +817,13 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
   Eigen::Vector3d overhang_score = GraspScorer::scoreGraspOverhang(grasp_pose, grasp_data, cuboid_pose, object_size);
 
   std::size_t num_scores = 8;
-  double weights[num_scores] = {
-    orientation_x_score_weight_, orientation_y_score_weight_, orientation_z_score_weight_,
-    translation_x_score_weight_, translation_y_score_weight_, translation_z_score_weight_,
-    overhang_x_score_weight_, overhang_y_score_weight_
-  };
+  double weights[num_scores] = { orientation_x_score_weight_, orientation_y_score_weight_, orientation_z_score_weight_,
+                                 translation_x_score_weight_, translation_y_score_weight_, translation_z_score_weight_,
+                                 overhang_x_score_weight_,    overhang_y_score_weight_ };
 
   double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
                                 translation_scores[0], translation_scores[1], translation_scores[2],
-                                overhang_score[0], overhang_score[1]};
+                                overhang_score[0],     overhang_score[1] };
 
   double total_score = 0;
   double weight_total = 0;

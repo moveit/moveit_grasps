@@ -110,13 +110,10 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_
   return scores;
 }
 
-Eigen::Vector3d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pose,
-                                                const GraspDataPtr& grasp_data,
-                                                const Eigen::Affine3d& object_pose,
-                                                const Eigen::Vector3d& object_size)
+Eigen::Vector3d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                                                const Eigen::Affine3d& object_pose, const Eigen::Vector3d& object_size)
 {
   Eigen::Vector3d scores(0, 0, 0);
-
 
   Eigen::Affine3d gripper_corner_tr = Eigen::Affine3d::Identity();
   Eigen::Affine3d gripper_corner_tl = Eigen::Affine3d::Identity();
@@ -128,14 +125,18 @@ Eigen::Vector3d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pos
   Eigen::Affine3d box_corner_br = Eigen::Affine3d::Identity();
   Eigen::Affine3d box_corner_bl = Eigen::Affine3d::Identity();
 
-  gripper_corner_tr.translation() = Eigen::Vector3d( grasp_data->active_suction_range_x_ / 2.0,  grasp_data->active_suction_range_y_ / 2.0, 0.0);
-  gripper_corner_tl.translation() = Eigen::Vector3d( grasp_data->active_suction_range_x_ / 2.0, -grasp_data->active_suction_range_y_ / 2.0, 0.0);
-  gripper_corner_br.translation() = Eigen::Vector3d(-grasp_data->active_suction_range_x_ / 2.0,  grasp_data->active_suction_range_y_ / 2.0, 0.0);
-  gripper_corner_bl.translation() = Eigen::Vector3d(-grasp_data->active_suction_range_x_ / 2.0, -grasp_data->active_suction_range_y_ / 2.0, 0.0);
+  gripper_corner_tr.translation() =
+      Eigen::Vector3d(grasp_data->active_suction_range_x_ / 2.0, grasp_data->active_suction_range_y_ / 2.0, 0.0);
+  gripper_corner_tl.translation() =
+      Eigen::Vector3d(grasp_data->active_suction_range_x_ / 2.0, -grasp_data->active_suction_range_y_ / 2.0, 0.0);
+  gripper_corner_br.translation() =
+      Eigen::Vector3d(-grasp_data->active_suction_range_x_ / 2.0, grasp_data->active_suction_range_y_ / 2.0, 0.0);
+  gripper_corner_bl.translation() =
+      Eigen::Vector3d(-grasp_data->active_suction_range_x_ / 2.0, -grasp_data->active_suction_range_y_ / 2.0, 0.0);
 
-  box_corner_tr.translation() = Eigen::Vector3d( object_size[0] / 2.0,  object_size[1] / 2.0, 0.0);
-  box_corner_tl.translation() = Eigen::Vector3d( object_size[0] / 2.0, -object_size[1] / 2.0, 0.0);
-  box_corner_br.translation() = Eigen::Vector3d(-object_size[0] / 2.0,  object_size[1] / 2.0, 0.0);
+  box_corner_tr.translation() = Eigen::Vector3d(object_size[0] / 2.0, object_size[1] / 2.0, 0.0);
+  box_corner_tl.translation() = Eigen::Vector3d(object_size[0] / 2.0, -object_size[1] / 2.0, 0.0);
+  box_corner_br.translation() = Eigen::Vector3d(-object_size[0] / 2.0, object_size[1] / 2.0, 0.0);
   box_corner_bl.translation() = Eigen::Vector3d(-object_size[0] / 2.0, -object_size[1] / 2.0, 0.0);
 
   gripper_corner_tr = object_pose.inverse() * grasp_pose * gripper_corner_tr;
@@ -145,48 +146,46 @@ Eigen::Vector3d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pos
 
   double box_max_tx = std::max(box_corner_tr.translation().x(), box_corner_tl.translation().x());
   double box_max_bx = std::max(box_corner_br.translation().x(), box_corner_bl.translation().x());
-  double box_max_x  = std::max(box_max_tx, box_max_bx);
+  double box_max_x = std::max(box_max_tx, box_max_bx);
 
   double box_min_tx = std::min(box_corner_tr.translation().x(), box_corner_tl.translation().x());
   double box_min_bx = std::min(box_corner_br.translation().x(), box_corner_bl.translation().x());
-  double box_min_x  = std::min(box_min_tx, box_min_bx);
+  double box_min_x = std::min(box_min_tx, box_min_bx);
 
   double box_max_ty = std::max(box_corner_tr.translation().y(), box_corner_tl.translation().y());
   double box_max_by = std::max(box_corner_br.translation().y(), box_corner_bl.translation().y());
-  double box_max_y  = std::max(box_max_ty, box_max_by);
+  double box_max_y = std::max(box_max_ty, box_max_by);
 
   double box_min_ty = std::min(box_corner_tr.translation().y(), box_corner_tl.translation().y());
   double box_min_by = std::min(box_corner_br.translation().y(), box_corner_bl.translation().y());
-  double box_min_y  = std::min(box_min_ty, box_min_by);
-
+  double box_min_y = std::min(box_min_ty, box_min_by);
 
   double gripper_max_tx = std::max(gripper_corner_tr.translation().x(), gripper_corner_tl.translation().x());
   double gripper_max_bx = std::max(gripper_corner_br.translation().x(), gripper_corner_bl.translation().x());
-  double gripper_max_x  = std::max(gripper_max_tx, gripper_max_bx);
+  double gripper_max_x = std::max(gripper_max_tx, gripper_max_bx);
 
   double gripper_min_tx = std::min(gripper_corner_tr.translation().x(), gripper_corner_tl.translation().x());
   double gripper_min_bx = std::min(gripper_corner_br.translation().x(), gripper_corner_bl.translation().x());
-  double gripper_min_x  = std::min(gripper_min_tx, gripper_min_bx);
+  double gripper_min_x = std::min(gripper_min_tx, gripper_min_bx);
 
   double gripper_max_ty = std::max(gripper_corner_tr.translation().y(), gripper_corner_tl.translation().y());
   double gripper_max_by = std::max(gripper_corner_br.translation().y(), gripper_corner_bl.translation().y());
-  double gripper_max_y  = std::max(gripper_max_ty, gripper_max_by);
+  double gripper_max_y = std::max(gripper_max_ty, gripper_max_by);
 
   double gripper_min_ty = std::min(gripper_corner_tr.translation().y(), gripper_corner_tl.translation().y());
   double gripper_min_by = std::min(gripper_corner_br.translation().y(), gripper_corner_bl.translation().y());
-  double gripper_min_y  = std::min(gripper_min_ty, gripper_min_by);
+  double gripper_min_y = std::min(gripper_min_ty, gripper_min_by);
 
-
-  if(gripper_max_x > box_max_x)
+  if (gripper_max_x > box_max_x)
     scores[0] -= gripper_max_x - box_max_x;
 
-  if(gripper_min_x < box_min_x)
+  if (gripper_min_x < box_min_x)
     scores[0] -= box_min_x - gripper_min_x;
 
-  if(gripper_max_y > box_max_y)
+  if (gripper_max_y > box_max_y)
     scores[1] -= gripper_max_y - box_max_y;
 
-  if(gripper_min_y < box_min_y)
+  if (gripper_min_y < box_min_y)
     scores[1] -= box_min_y - gripper_min_y;
 
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.overhang", "" << scores[0] << "\t" << scores[1]);

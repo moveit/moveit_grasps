@@ -292,8 +292,7 @@ public:
    */
   bool addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
                 std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Affine3d& object_pose,
-                const Eigen::Vector3d& object_size,
-                double object_width);
+                const Eigen::Vector3d& object_size, double object_width);
 
   /**
    * \brief Score the generated suction grasp poses
@@ -303,7 +302,8 @@ public:
    * \param object size - the extents of the object being grasped
    * \return a score with positive being better
    */
-  double scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data, const Eigen::Affine3d& cuboid_pose, const Eigen::Vector3d& object_size);
+  double scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                           const Eigen::Affine3d& cuboid_pose, const Eigen::Vector3d& object_size);
 
   /**
    * \brief Score the generated finger grasp poses
