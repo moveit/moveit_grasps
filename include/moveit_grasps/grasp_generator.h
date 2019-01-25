@@ -424,8 +424,11 @@ private:
   double translation_x_score_weight_;
   double translation_y_score_weight_;
   double translation_z_score_weight_;
+
+  // Suction gripper overhang
   double overhang_x_score_weight_;
   double overhang_y_score_weight_;
+  bool show_grasp_overhang_;
 
   // bounding_box::BoundingBox bounding_box_;
 
