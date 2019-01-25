@@ -18,6 +18,8 @@ moveit_grasps:
     translation_x_score_weight: 0.0
     translation_y_score_weight: 0.0
     translation_z_score_weight: 4.0
+    overhang_x_score_weight: 0.0
+    overhang_y_score_weight: 0.0
 
     # Ideal grasp orientation (RPY)
     ideal_grasp_orientation_rpy: [0, 3.14159, 3.14159]

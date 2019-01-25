@@ -44,6 +44,7 @@
 #include <ros/ros.h>
 
 #include <moveit_grasps/grasp_data.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -116,6 +117,10 @@ public:
    *         0.0 -> pose is at the ideal translation in that axis
    */
   static Eigen::Vector3d scoreGraspTranslation(const Eigen::Affine3d& grasp_pose, const Eigen::Affine3d& ideal_pose);
+
+  static Eigen::Vector2d scoreGraspOverhang(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
+                                            const Eigen::Affine3d& object_pose, const Eigen::Vector3d& object_size,
+                                            moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
 };
 
 }  // end namespace moveit_grasps
