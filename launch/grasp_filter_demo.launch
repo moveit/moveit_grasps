@@ -12,43 +12,21 @@
   <arg unless="$(arg verbose)" name="command_args" value="" />
   <arg     if="$(arg verbose)" name="command_args" value="--verbose" />
 
-  <!-- Choose robot and hand -->
-  <arg name="jacob" default="false" />
-  <arg name="baxter" default="false" />
-  <!-- JACOB -->
-  <group if="$(arg jacob)">
-    <include file="$(find jacob_moveit_config)/launch/planning_context.launch">
-      <arg name="load_robot_description" value="true"/>
-    </include>
+  <include file="$(find panda_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
 
-    <group ns="moveit_grasps_filter_test">
-      <!-- Which arm to use -->
-      <param name="ee_group_name" value="gripper"/>
-      <param name="planning_group_name" value="manipulator"/>
-      <rosparam command="load" file="$(find moveit_grasps)/config_robot/jacob_grasp_data.yaml"/>
-    </group>
-  </group>
-
-  <!-- BAXTER-->
-  <group if="$(arg baxter)">
-    <include file="$(find baxter_moveit_config)/launch/planning_context.launch">
-      <arg name="load_robot_description" value="true"/>
-    </include>
-
-    <group ns="moveit_grasps_filter_test">
-      <!-- Which arm to use -->
-      <param name="ee_group_name" value="left_hand" />
-      <param name="planning_group_name" value="left_arm"/>
-
-      <rosparam command="load" file="$(find moveit_grasps)/config_robot/baxter_grasp_data.yaml"/>
-    </group>
+  <group ns="grasp_filter_demo">
+    <!-- Which arm to use -->
+    <param name="ee_group_name" value="hand"/>
+    <param name="planning_group_name" value="panda_arm"/>
+    <rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>
   </group>
 
   <!-- Start the test -->
-  <node name="moveit_grasps_filter_test" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
-	type="moveit_grasps_filter_test" output="screen" args="$(arg command_args)">
+  <node name="grasp_filter_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+	type="grasp_filter_demo" output="screen" args="$(arg command_args)">
     <rosparam command="load" file="$(find moveit_grasps)/config/moveit_grasps_config.yaml"/>
-    <rosparam command="load" file="$(find moveit_grasps)/config/grasp_default_parameters.yaml"/>
   </node>
 
 </launch>
