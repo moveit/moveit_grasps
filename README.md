@@ -101,11 +101,11 @@ There are two demo scripts in this package. To view the tests, first start Rviz 
 
 To test just grasp generation for randomly placed blocks:
 
-    roslaunch moveit_grasps test_grasp_generator.launch panda:=true
+    roslaunch moveit_grasps demo_grasp_generator.launch
 
 To also test the grasp filtering:
 
-    roslaunch moveit_grasps test_filter.launch baxter:=true
+    roslaunch moveit_grasps demo_filter.launch
 
 ### Grasp Filter
 
@@ -122,7 +122,7 @@ When filtered, the colors represent the following:
 ### Bounding Box From Mesh
 
     roslaunch moveit_grasps rviz.launch
-    roslaunch moveit_grasps test_bounding_box.launch
+    roslaunch moveit_grasps demo_bounding_box.launch
 
 Each mesh in the products folder will be displayed with the calculated bounding box. Hit `enter` to move to the next mesh.
 

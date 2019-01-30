@@ -106,31 +106,31 @@ set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_C
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
 # Demo filter executable
-add_executable(${PROJECT_NAME}_filter_test src/demo/grasp_filter_test.cpp)
-target_link_libraries(${PROJECT_NAME}_filter_test
+add_executable(${PROJECT_NAME}_grasp_filter_demo src/demo/grasp_filter_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_filter_demo
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 # Demo grasp executable
-add_executable(${PROJECT_NAME}_test src/demo/grasp_generator_demo.cpp)
-target_link_libraries(${PROJECT_NAME}_test
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
-
-# Demo mesh bounding box
-add_executable(${PROJECT_NAME}_bounding_box_test src/demo/mesh_bounding_box_test.cpp)
-target_link_libraries(${PROJECT_NAME}_bounding_box_test
+add_executable(${PROJECT_NAME}_grasp_generator_demo src/demo/grasp_generator_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_generator_demo
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
 # Demo grasp data settings
-add_executable(${PROJECT_NAME}_grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
-target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer
+add_executable(${PROJECT_NAME}_grasp_poses_visualizer_demo src/demo/grasp_poses_visualizer_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer_demo
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
+# Demo mesh bounding box
+add_executable(${PROJECT_NAME}_mesh_bounding_box_demo src/demo/mesh_bounding_box_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_mesh_bounding_box_demo
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 #############
@@ -152,10 +152,10 @@ install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # Install executables
 install(TARGETS
-  ${PROJECT_NAME}_bounding_box_test
-  ${PROJECT_NAME}_filter_test
-  ${PROJECT_NAME}_grasp_poses_visualizer
-  ${PROJECT_NAME}_test
+  ${PROJECT_NAME}_grasp_filter_demo
+  ${PROJECT_NAME}_grasp_generator_demo
+  ${PROJECT_NAME}_grasp_poses_visualizer_demo
+  ${PROJECT_NAME}_mesh_bounding_box_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
