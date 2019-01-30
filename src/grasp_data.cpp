@@ -99,6 +99,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_max_depth", grasp_max_depth_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
@@ -124,7 +125,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   if (end_effector_type_ == FINGER)
   {
-    error += !rosparam_shortcuts::get(parent_name, child_nh, "finger_to_palm_depth", grasp_max_depth_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
@@ -134,7 +134,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   {
     error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
-    error += !rosparam_shortcuts::get(parent_name, child_nh, "suction_cup_stroke", grasp_max_depth_);
   }
   rosparam_shortcuts::shutdownIfError(parent_name, error);
 

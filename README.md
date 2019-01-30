@@ -71,7 +71,7 @@ Within that file you can specify the following (example taken from jaco):
     grasp_pose_to_eef_rotation : [1.5707, 0, 0]
 
     # max depth of fingers - distance from finger tip to inner palm
-    finger_to_palm_depth : 0.11
+    grasp_max_depth : 0.11
 
 These values can be visualized by launching `grasp_test_rviz.launch` and `grasp_pose_visualizer.launch`.
 The result should look like the following:
@@ -79,7 +79,7 @@ The result should look like the following:
 ![Grasp Poses Visualization](https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/kinetic-devel/resources/moveit_grasps_poses.jpeg)
 
 Poses Visualized: Object, Grasp, EE
-Distances: `finger_to_palm_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
+Distances: `grasp_max_depth`, `pre(post)grasp_distance`, `pre(post)grasp_min_distance`
 
 ### grasp_pose_to_eef
 

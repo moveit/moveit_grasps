@@ -154,8 +154,8 @@ public:
   double grasp_max_depth_;  // Maximum distance from tip of end effector inwords that an object can be for a grasp
 
   // grasp approach and retreat parameters
-  double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
-  double retreat_distance_desired_;   // this is in addition to the finger_to_palm_depth
+  double approach_distance_desired_;  // this is in addition to the grasp_max_depth
+  double retreat_distance_desired_;   // this is in addition to the grasp_max_depth
   double lift_distance_desired_;
   double grasp_padding_on_approach_;
 

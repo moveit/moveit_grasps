@@ -115,7 +115,7 @@ public:
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.02);
     visual_tools_->publishText(grasp_pose, "Grasp Pose", rviz_visual_tools::WHITE, rviz_visual_tools::XSMALL, text);
 
-    // SHOW finger_to_palm_depth
+    // SHOW grasp_max_depth
     Eigen::Vector3d grasp_point = grasp_pose.translation();
     Eigen::Vector3d obj_point = visual_tools_->convertPose(cuboid_pose_).translation();
     Eigen::Vector3d palm_vector = obj_point - grasp_point;
@@ -128,7 +128,7 @@ public:
     Eigen::Vector3d text_point = grasp_point + palm_vector * grasp_data_->grasp_max_depth_ * 0.5;
     text_pose = grasp_pose;
     text_pose.translation() += text_point - grasp_pose.translation();
-    visual_tools_->publishText(text_pose, "finger_to_palm_depth", rviz_visual_tools::GREY, rviz_visual_tools::XSMALL,
+    visual_tools_->publishText(text_pose, "grasp_max_depth", rviz_visual_tools::GREY, rviz_visual_tools::XSMALL,
                                text);
 
     // SHOW PRE_GRASP_APPROACH

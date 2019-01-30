@@ -1,17 +1,18 @@
-base_link: 'panda_link0'
+base_link: 'world'
 # =====================================================
 # Note: these parameters are copied from Robotiq gripper without tweaking
 hand:
     end_effector_name: 'hand'  #ee group name
+    end_effector_type: 'finger'
 
     #actuated joints in end effector
-    joints : ['panda_finger_joint1', 'panda_finger_joint2']
+    joints : ['panda_finger_joint1']
 
     pregrasp_time_from_start : 0.0
     grasp_time_from_start : 0.0
 
-    # max depth of fingers (distance from finger tip to inner palm)
-    finger_to_palm_depth : 0.05
+    # max depth of fingers (distance from finger tip to inner palm) or the suction cup stroke
+    grasp_max_depth : 0.05
 
     # width of gripper fingers
     gripper_finger_width : 0.0375
@@ -26,19 +27,19 @@ hand:
     angle_resolution : 40
 
     # Length of approach path
-    approach_distance_desired: 0.05 # this is in addition to the finger_to_palm_depth
+    approach_distance_desired: 0.05 # this is in addition to the grasp_max_depth
 
     # Length of retreat path
-    retreat_distance_desired: 0.001 # 0.2 # this is in addition to the finger_to_palm_depth
+    retreat_distance_desired: 0.001 # 0.2 # this is in addition to the grasp_max_depth
 
     # Minimum distance to lift object after grasping
     lift_distance_desired: 0.1 # this is really just MIN LIFT DISTANCE
 
     # open position
-    pregrasp_posture : [0.0,0.0]
+    pregrasp_posture : [0.0]
 
     # close position
-    grasp_posture : [0.04,0.04]
+    grasp_posture : [0.04]
 
     # desired pose from end effector to grasp - [x,y,z, r, p, y]
     grasp_pose_to_eef_transform :  [0, 0, -0.13, 0, 0, 0] # NOTE: Imaginary point in the middle

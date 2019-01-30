@@ -28,10 +28,8 @@ gripper:
     # y-axis parallel to movement of grippers
     # desired pose from end effector to grasp - [r, p, y]
     grasp_pose_to_eef_transform :  [0, 0, -0.115, -1.5708, 3.14159, 0]
-
-    # length of grippers (distance from finger tip to inner palm)
-    # max depth of fingers (distance from finger tip to inner palm)
-    finger_to_palm_depth : 0.085
+    # max depth of fingers (distance from finger tip to inner palm) or the suction cup stroke
+    grasp_max_depth : 0.085
 
     # width of gripper fingers
     gripper_finger_width: 0.012 # testing a smaller value (~half finger width)
@@ -46,9 +44,9 @@ gripper:
     angle_resolution : 20
 
     # grasp approach and retreat parameters
-    # Length of approach path (this is in addition to the finger_to_palm_depth)
+    # Length of approach path (this is in addition to the grasp_max_depth)
     approach_distance_desired: 0.125
-    # Length of retreat path (this is in addition to the finger_to_palm_depth)
+    # Length of retreat path (this is in addition to the grasp_max_depth)
     retreat_distance_desired: 0.3
     # Minimum distance to lift object after grasping (this is really just MIN LIFT DISTANCE)
     lift_distance_desired: 0.015
