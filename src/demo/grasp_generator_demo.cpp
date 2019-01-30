@@ -73,22 +73,32 @@ public:
   // Constructor
   GraspGeneratorDemo(int num_tests) : nh_("~")
   {
-    nh_.param("ee_group_name", ee_group_name_, std::string("left_hand"));
+    nh_.param("ee_group_name", ee_group_name_, std::string("hand"));
+    nh_.param("planning_group_name", planning_group_name_, std::string("panda_arm"));
 
     ROS_INFO_STREAM_NAMED("test", "End Effector: " << ee_group_name_);
     ROS_INFO_STREAM_NAMED("test", "Planning Group: " << planning_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("base"));
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world"));
+    visual_tools_->loadMarkerPub();
+    visual_tools_->enableBatchPublishing();
     visual_tools_->deleteAllMarkers();
+    visual_tools_->loadRobotStatePub("/display_robot_state");
+    visual_tools_->trigger();
 
-    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("base", "grasp_visuals"));
+    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("world", "grasp_visuals"));
+    grasp_visuals_->loadMarkerPub();
+    grasp_visuals_->enableBatchPublishing();
     grasp_visuals_->deleteAllMarkers();
+    grasp_visuals_->trigger();
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
     grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    robot_state::RobotStatePtr robot_state;
+    robot_state.reset(new moveit::core::RobotState(visual_tools_->getRobotModel()));
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
@@ -97,40 +107,42 @@ public:
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, true));
     grasp_generator_->setVerbose(true);
 
-    grasp_generator_->ideal_grasp_pose_ = Eigen::Affine3d::Identity();
-    grasp_generator_->ideal_grasp_pose_ = grasp_generator_->ideal_grasp_pose_ *
-                                          Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()) *
-                                          Eigen::AngleAxisd(-M_PI / 2.0, Eigen::Vector3d::UnitX());
-    grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 0.5);
+    grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0.3, 0, 0.5);
 
     // Visualize poses
-    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_EE_GRASP_POSE");
+    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+    visual_tools_->trigger();
 
-    Eigen::Affine3d grasp_to_eef = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
-    grasp_visuals_->publishAxisLabeled(grasp_to_eef, "GRASP_POSE_TO_EEF_POSE_");
+    Eigen::Affine3d ideal_eef_pose = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
+    robot_state->setFromIK(visual_tools_->getRobotModel()->getJointModelGroup(planning_group_name_), ideal_eef_pose);
+    visual_tools_->publishRobotState(robot_state);
+    // visual_tools_->publishEEMarkers(ideal_eef_pose , ee_jmg, grasp_data_->grasp_posture_.points[0].positions, rviz_visual_tools::GREEN, "test_eef");
+    grasp_visuals_->publishAxisLabeled(ideal_eef_pose, "IDEAL EEF MOUNT POSE");
+    visual_tools_->trigger();
 
     // publish world coordinate system
     grasp_visuals_->publishAxis(Eigen::Affine3d::Identity());
 
-    geometry_msgs::Pose pose;
-    visual_tools_->generateEmptyPose(pose);
 
     // ---------------------------------------------------------------------------------------------
     // Animate open and closing end effector
-    if (false)
+    if (true)
     {
-      for (std::size_t i = 0; i < 4; ++i)
-      {
-        // Test visualization of end effector in OPEN position
-        grasp_data_->setRobotStatePreGrasp(visual_tools_->getSharedRobotState());
-        visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::ORANGE, "test_eef");
-        ros::Duration(1.0).sleep();
+      geometry_msgs::Pose pose;
+      visual_tools_->generateEmptyPose(pose);
+      pose.position.x = .3;
 
-        // Test visualization of end effector in CLOSED position
-        grasp_data_->setRobotStateGrasp(visual_tools_->getSharedRobotState());
-        visual_tools_->publishEEMarkers(pose, ee_jmg, rviz_visual_tools::GREEN, "test_eef");
-        ros::Duration(1.0).sleep();
-      }
+      // Test visualization of end effector in OPEN position
+      ROS_INFO_STREAM_NAMED("test", "Pre-grasp posture: (Orange)");
+      visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions, rviz_visual_tools::ORANGE, "test_eef");
+      visual_tools_->trigger();
+      ros::Duration(1.0).sleep();
+
+      // Test visualization of end effector in CLOSED position
+      ROS_INFO_STREAM_NAMED("test", "Grasp posture (Green");
+      visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->grasp_posture_.points[0].positions, rviz_visual_tools::GREEN, "test_eef");
+      visual_tools_->trigger();
+      ros::Duration(1.0).sleep();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -156,16 +168,16 @@ public:
       possible_grasps.clear();
 
       // Generate set of grasps for one object
-      double depth = 0.15;
-      double width = 0.05;
-      double height = 0.15;
+      double depth = 0.025;
+      double width = 0.025;
+      double height = 0.025;
 
       grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+      grasp_visuals_->trigger();
 
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
                                        possible_grasps);
-
       // Visualize them
       // visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
       // double animate_speed = 0.1;
@@ -228,7 +240,7 @@ public:
 
 int main(int argc, char* argv[])
 {
-  int num_tests = 1;
+  int num_tests = 10;
   ros::init(argc, argv, "grasp_generator_demo");
 
   ROS_INFO_STREAM_NAMED("main", "GraspGenerator Test");

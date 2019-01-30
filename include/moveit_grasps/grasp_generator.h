@@ -97,13 +97,13 @@ enum grasp_axis_t
 struct GraspCandidateConfig
 {
   GraspCandidateConfig()
-    : enable_corner_grasps_(false)
-    , enable_face_grasps_(false)
-    , enable_variable_angle_grasps_(false)
-    , enable_edge_grasps_(false)
-    , generate_x_axis_grasps_(false)
-    , generate_y_axis_grasps_(false)
-    , generate_z_axis_grasps_(false)
+    : enable_corner_grasps_(true)
+    , enable_face_grasps_(true)
+    , enable_variable_angle_grasps_(true)
+    , enable_edge_grasps_(true)
+    , generate_x_axis_grasps_(true)
+    , generate_y_axis_grasps_(true)
+    , generate_z_axis_grasps_(true)
   {
   }
   void enableAllGraspTypes()
