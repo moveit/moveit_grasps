@@ -9,9 +9,9 @@
   <arg name="verbose" default="false" />
   <arg name="trials" default="1" />
 
-  <!-- Start the test -->
-  <node name="bounding_box_test" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
-	type="bounding_box_test" output="screen" args="--verbose $(arg verbose) --trials $(arg trials)">
+  <!-- Start the demo -->
+  <node name="mesh_bounding_box_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+	type="mesh_bounding_box_demo" output="screen" args="--verbose $(arg verbose) --trials $(arg trials)">
   </node>
 
 </launch>

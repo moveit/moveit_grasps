@@ -68,21 +68,23 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   error += !rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "debug_top_grasps", debug_top_grasps_);
+  error += !rosparam_shortcuts::get(parent_name, nh_, "show_grasp_overhang", show_grasp_overhang_);
 
   // Load scoring weights
-  error += !rosparam_shortcuts::get(parent_name, nh_, "depth_score_weight", depth_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "width_score_weight", width_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
   error += !rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "overhang_x_score_weight", overhang_x_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "overhang_y_score_weight", overhang_y_score_weight_);
 
-  nh_.param("debug_top_grasps", debug_top_grasps_, false);
-  nh_.param("show_grasp_overhang", show_grasp_overhang_, false);
+  // For gripper type specific scoring functions we provide default weights of 0.0
+  // Finger gripper specific weights
+  nh_.param("depth_score_weight", depth_score_weight_, 0);
+  nh_.param("width_score_weight", width_score_weight_, 0);
+  // Suction gripper specific weights
+  nh_.param("overhang_score_weight", overhang_score_weight_, 0);
 
   std::vector<double> ideal_grasp_orientation_rpy;
   error += !rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
@@ -825,7 +827,7 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
   std::size_t num_scores = 8;
   double weights[num_scores] = { orientation_x_score_weight_, orientation_y_score_weight_, orientation_z_score_weight_,
                                  translation_x_score_weight_, translation_y_score_weight_, translation_z_score_weight_,
-                                 overhang_x_score_weight_,    overhang_y_score_weight_ };
+                                 overhang_score_weight_, overhang_score_weight_ };
 
   double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
                                 translation_scores[0], translation_scores[1], translation_scores[2],

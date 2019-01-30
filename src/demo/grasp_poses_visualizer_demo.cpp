@@ -33,7 +33,7 @@
  *********************************************************************/
 
 /* Author: Andy McEvoy
-   Desc:   Creates a vizualization of all the poses used in the graping pipeline
+   Desc:   Creates a vizualization of all the poses used in the grasping pipeline
 */
 
 #include <rviz_visual_tools/rviz_visual_tools.h>

@@ -415,9 +415,6 @@ private:
   double min_grasp_distance_, max_grasp_distance_;
   Eigen::Vector3d min_translations_, max_translations_;
 
-  double depth_score_weight_;
-  double width_score_weight_;
-  double height_score_weight_;
   double orientation_x_score_weight_;
   double orientation_y_score_weight_;
   double orientation_z_score_weight_;
@@ -425,9 +422,12 @@ private:
   double translation_y_score_weight_;
   double translation_z_score_weight_;
 
-  // Suction gripper overhang
-  double overhang_x_score_weight_;
-  double overhang_y_score_weight_;
+  // Finger gripper specific weights
+  double depth_score_weight_;
+  double width_score_weight_;
+
+  // Suction gripper specific weights
+  double overhang_score_weight_;
   bool show_grasp_overhang_;
 
   // bounding_box::BoundingBox bounding_box_;

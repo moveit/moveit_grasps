@@ -2,32 +2,48 @@ moveit_grasps:
   generator:
     # Other verbose stuff
     verbose: false
-    # Show the generated grasp arrows
-    # show_grasp_arrows: true
-    # show_grasp_arrows_speed: 0.1
+
     # Show hand of generated grasps
     show_prefiltered_grasps: false
     show_prefiltered_grasps_speed: 0.01
 
-    # Don't know if this should go here... seems like config_robot/*.yaml is a better place
-    depth_score_weight: 3.0
-    width_score_weight: 1.0
+    # Ideal grasp orientation (RPY)
+    # This is used to compare against grasp candidates for orientation scoring
+    ideal_grasp_orientation_rpy: [0, 3.14159, 3.14159]
+    show_ideal_grasp_orientation: true
+
+    # Grasp scoring weights: Finger and suction grippers both use these
+    # TODO(mlautman): move weights to config_robot/*.yaml
     orientation_x_score_weight: 0.0
     orientation_y_score_weight: 5.0
     orientation_z_score_weight: 2.0
     translation_x_score_weight: 0.0
     translation_y_score_weight: 0.0
     translation_z_score_weight: 4.0
-    overhang_x_score_weight: 0.0
-    overhang_y_score_weight: 0.0
 
-    # Ideal grasp orientation (RPY)
-    ideal_grasp_orientation_rpy: [0, 3.14159, 3.14159]
-    show_ideal_grasp_orientation: true
+    ###########################
+    ## finger gripper settings
+    ###########################
+    # Grasp scoring weights: finger grippers only
+    depth_score_weight: 3.0
+    width_score_weight: 1.0
+
+    ###########################
+    ## suction gripper settings
+    ###########################
+    # Visual debug options
+    debug_top_grasps: false
+    # Show suction gripper overhang
+    show_grasp_overhang: false
+
+    # Grasp scoring weights: Suction grippers only
+    # Sometimes the suction gripper is larger than the object being grasped.
+    # this weight penalizes suction gripper overhanging
+    overhang_score_weight: 100.0
 
   filter:
     # Show summary statistics
-    statistics_verbose: true
+    statistics_verbose: false
     # Visualize the planes used by the filter
     show_cutting_planes: false
     # Collision checking in verbose
@@ -44,6 +60,7 @@ moveit_grasps:
 
   planner:
     # Cartesian planning
+    statistics_verbose: false
     verbose_cartesian_filtering: false
     show_cartesian_waypoints: true
     collision_checking_verbose: false
