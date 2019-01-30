@@ -10,8 +10,8 @@
   <arg name="trials" default="1" />
 
   <!-- Start the demo -->
-  <node name="mesh_bounding_box_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
-	type="mesh_bounding_box_demo" output="screen" args="--verbose $(arg verbose) --trials $(arg trials)">
+  <node name="moveit_grasps_mesh_bounding_box_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+	type="moveit_grasps_mesh_bounding_box_demo" output="screen" args="--verbose $(arg verbose) --trials $(arg trials)">
   </node>
 
 </launch>

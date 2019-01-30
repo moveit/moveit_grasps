@@ -81,10 +81,10 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
   // For gripper type specific scoring functions we provide default weights of 0.0
   // Finger gripper specific weights
-  nh_.param("depth_score_weight", depth_score_weight_, 0);
-  nh_.param("width_score_weight", width_score_weight_, 0);
+  nh_.param("depth_score_weight", depth_score_weight_, 0.0);
+  nh_.param("width_score_weight", width_score_weight_, 0.0);
   // Suction gripper specific weights
-  nh_.param("overhang_score_weight", overhang_score_weight_, 0);
+  nh_.param("overhang_score_weight", overhang_score_weight_, 0.0);
 
   std::vector<double> ideal_grasp_orientation_rpy;
   error += !rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);

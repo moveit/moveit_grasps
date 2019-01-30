@@ -86,7 +86,7 @@ public:
   GraspFilterDemo() : nh_("~")
   {
     // Get arm info from param server
-    const std::string parent_name = "grasp_filter_test";  // for namespacing logging messages
+    const std::string parent_name = "grasp_filter_demo";  // for namespacing logging messages
     rosparam_shortcuts::get(parent_name, nh_, "planning_group_name", planning_group_name_);
     rosparam_shortcuts::get(parent_name, nh_, "ee_group_name", ee_group_name_);
 

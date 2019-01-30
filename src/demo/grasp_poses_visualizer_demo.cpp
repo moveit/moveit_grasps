@@ -237,7 +237,7 @@ private:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "grasp_poses_visualizer");
+  ros::init(argc, argv, "grasp_poses_visualizer_demo");
 
   ROS_INFO_STREAM_NAMED("main", "Grasp Poses Visualizer");
 

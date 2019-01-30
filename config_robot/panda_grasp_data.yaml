@@ -1,4 +1,4 @@
-base_link: 'world'
+base_link: 'panda_link0'
 # =====================================================
 # Note: these parameters are copied from Robotiq gripper without tweaking
 hand:

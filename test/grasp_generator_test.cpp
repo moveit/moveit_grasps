@@ -56,7 +56,7 @@ public:
     : nh_("~")
     , verbose_(true)
     , ee_group_name_("hand")
-    , visual_tools_(new moveit_visual_tools::MoveItVisualTools("base"))
+    , visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
     , grasp_data_(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
   {
   }
@@ -84,19 +84,19 @@ TEST_F(GraspGeneratorTest, GraspData)
   EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().z(), -0.13);
 
   // Pre Grasp Posture
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "panda_link0");
   EXPECT_GT(grasp_data_->pre_grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), 0);
 
   // Grasp Posture
-  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "world");
+  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "panda_link0");
   EXPECT_GT(grasp_data_->grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
 
   // Semantics
-  EXPECT_EQ(grasp_data_->base_link_, "world");
+  EXPECT_EQ(grasp_data_->base_link_, "panda_link0");
   EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
   EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm_hand");
   EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");

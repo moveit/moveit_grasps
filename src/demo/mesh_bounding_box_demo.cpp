@@ -88,7 +88,7 @@ private:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "mesh_bounding_box_test");
+  ros::init(argc, argv, "mesh_bounding_box_demo");
 
   int number_of_trials = 1;
   bool verbose = true;

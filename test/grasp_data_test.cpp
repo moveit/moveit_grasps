@@ -55,7 +55,7 @@ namespace moveit_grasps
 class GraspDataTest : public ::testing::Test
 {
 public:
-  GraspDataTest() : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("base"))
+  GraspDataTest() : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
   {
   }
 
@@ -80,22 +80,22 @@ TEST_F(GraspDataTest, CheckConfigValues)
   EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().z(), -0.13);
 
   // Pre Grasp Posture
-  EXPECT_EQ(grasp_data.pre_grasp_posture_.header.frame_id, "world");
+  EXPECT_EQ(grasp_data.pre_grasp_posture_.header.frame_id, "panda_link0");
   EXPECT_GT(grasp_data.pre_grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data.pre_grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data.pre_grasp_posture_.points[0].positions.size(), 0);
 
   // Grasp Posture
-  EXPECT_EQ(grasp_data.grasp_posture_.header.frame_id, "world");
+  EXPECT_EQ(grasp_data.grasp_posture_.header.frame_id, "panda_link0");
   EXPECT_GT(grasp_data.grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data.grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data.grasp_posture_.points[0].positions.size(), 0);
 
   // Semantics
-  EXPECT_EQ(grasp_data.base_link_, "world");
+  EXPECT_EQ(grasp_data.base_link_, "panda_link0");
   EXPECT_EQ(grasp_data.ee_jmg_->getName(), "hand");
   EXPECT_EQ(grasp_data.arm_jmg_->getName(), "panda_arm_hand");
-  EXPECT_EQ(grasp_data.parent_link_->getName(), "panda_hand");
+  EXPECT_EQ(grasp_data.parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data.robot_model_->getName(), "panda");
 
   // Geometry doubles
