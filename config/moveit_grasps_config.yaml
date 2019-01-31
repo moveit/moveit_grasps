@@ -14,18 +14,18 @@ moveit_grasps:
 
     # Grasp scoring weights: Finger and suction grippers both use these
     # TODO(mlautman): move weights to config_robot/*.yaml
-    orientation_x_score_weight: 0.0
-    orientation_y_score_weight: 5.0
+    orientation_x_score_weight: 2.0
+    orientation_y_score_weight: 2.0
     orientation_z_score_weight: 2.0
-    translation_x_score_weight: 0.0
-    translation_y_score_weight: 0.0
-    translation_z_score_weight: 4.0
+    translation_x_score_weight: 1.0
+    translation_y_score_weight: 1.0
+    translation_z_score_weight: 1.0
 
     ###########################
     ## finger gripper settings
     ###########################
     # Grasp scoring weights: finger grippers only
-    depth_score_weight: 3.0
+    depth_score_weight: 1.0
     width_score_weight: 1.0
 
     ###########################

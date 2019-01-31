@@ -877,7 +877,7 @@ double GraspGenerator::scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
   // arbitrary number given our target object set
   double distance_score =
-      GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, min_grasp_distance_, max_grasp_distance_);
+      GraspScorer::scoreDistanceToPalm(grasp_pose * grasp_data->grasp_pose_to_eef_pose_, grasp_data, object_pose, min_grasp_distance_, max_grasp_distance_);
 
   // should really change this to be like orienation_scores so we can score any translation
   Eigen::Vector3d translation_scores =

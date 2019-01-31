@@ -22,9 +22,9 @@ hand:
 
     # grasp resolution parameters (angle is in degrees)
     grasp_resolution : 0.05
-    grasp_min_depth : 0.05
-    grasp_depth_resolution : 0.05
-    angle_resolution : 40
+    grasp_min_depth : 0.025
+    grasp_depth_resolution : 0.025
+    angle_resolution : 90
 
     # Length of approach path
     approach_distance_desired: 0.05 # this is in addition to the grasp_max_depth

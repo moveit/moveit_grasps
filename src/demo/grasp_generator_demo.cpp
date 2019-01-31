@@ -162,9 +162,6 @@ public:
       else
         generateRandomObject(object_pose);
 
-      // Show the block
-      // visual_tools_->publishBlock(object_pose, rviz_visual_tools::BLUE, BLOCK_SIZE);
-
       possible_grasps.clear();
 
       // Generate set of grasps for one object
@@ -240,7 +237,7 @@ public:
 
 int main(int argc, char* argv[])
 {
-  int num_tests = 10;
+  int num_tests = 1;
   ros::init(argc, argv, "grasp_generator_demo");
 
   ROS_INFO_STREAM_NAMED("main", "GraspGenerator Test");
