@@ -9,7 +9,7 @@ moveit_grasps:
 
     # Ideal grasp orientation (RPY)
     # This is used to compare against grasp candidates for orientation scoring
-    ideal_grasp_orientation_rpy: [0, 3.14159, 3.14159]
+    ideal_grasp_orientation_rpy: [3.14, 0, 0]
     show_ideal_grasp_orientation: true
 
     # Grasp scoring weights: Finger and suction grippers both use these

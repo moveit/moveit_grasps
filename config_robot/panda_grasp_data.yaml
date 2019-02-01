@@ -12,10 +12,10 @@ hand:
     grasp_time_from_start : 0.0
 
     # max depth of fingers (distance from finger tip to inner palm) or the suction cup stroke
-    grasp_max_depth : 0.05
+    grasp_max_depth : 0.04
 
     # width of gripper fingers
-    gripper_finger_width : 0.0375
+    gripper_finger_width : 0.015
 
     # max object width that can fit between fingers
     max_grasp_width: 0.085
@@ -42,7 +42,7 @@ hand:
     grasp_posture : [0.04]
 
     # desired pose from end effector to grasp - [x,y,z, r, p, y]
-    grasp_pose_to_eef_transform :  [0, 0, -0.13, 0, 0, 0] # NOTE: Imaginary point in the middle
+    grasp_pose_to_eef_transform :  [0, 0, -0.1, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
 
     # minimum padding on each side of the object on approach
     grasp_padding_on_approach: 0.005
