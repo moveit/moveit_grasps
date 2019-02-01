@@ -89,6 +89,24 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Attached Body Color: 150; 50; 150
+      Class: moveit_rviz_plugin/RobotState
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+      Name: RobotState
+      Robot Alpha: 1
+      Robot Description: robot_description
+      Robot State Topic: display_robot_state
+      Show All Links: true
+      Show Highlights: true
+      Value: true
+      Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -114,25 +132,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.6080184
+      Distance: 3.63599539
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.580627382
-        Y: -0.293259025
-        Z: -0.632603884
+        X: 0.0593163371
+        Y: 0.36080718
+        Z: 0.194955871
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.385398
+      Pitch: 0.505398035
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.56039977
+      Yaw: 3.9103961
     Saved: ~
 Window Geometry:
   Displays:
