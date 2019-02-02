@@ -79,7 +79,7 @@ public:
 
   /**
    * \brief Score the grasp based on how far the object is from the palm of the hand
-   * \param grasp_pose - the pose of the end effector
+   * \param grasp_pose - the pose of the end effector (not the eef mount)
    * \param grasp_data - pointer to grasp info
    * \param object_pose - the pose of the object being grasped
    * \param max_grasp_distance - the maximum acceptable distance from palm
@@ -98,7 +98,7 @@ public:
 
   /**
    * \brief Score the grasp based on the translation values of the grasp pose
-   * \param grasp_pose - the pose of the end effector
+   * \param grasp_pose - the pose of the end effector (not the eef mount)
    * \param min_translations - the minimum translation values for all grasp poses
    * \param max_translations - the maximum translation values for all grasp poses
    * \return the unweighted scores:
@@ -111,7 +111,7 @@ public:
 
   /**
    * \brief Score the grasp based on the translation values of the grasp pose
-   * \param grasp_pose - the pose of the end effector
+   * \param grasp_pose - the pose of the end effector (not the eef mount)
    * \param ideal_pose - the ideal pose location
    * \return the unweighted scores:
    *         0.0 -> pose is at the ideal translation in that axis
