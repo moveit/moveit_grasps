@@ -424,8 +424,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
 
   for (std::size_t i = 0; i < num_grasps; i++)
   {
-    // Is this correct? It seems to be comparing the eef pose to the cuboid pose
-    grasp_pose = grasp_poses[i] * grasp_data->grasp_pose_to_eef_pose_;
+    grasp_pose = grasp_poses[i];
     grasp_distance = (grasp_pose.translation() - cuboid_pose.translation()).norm();
     if (grasp_distance > max_grasp_distance_)
       max_grasp_distance_ = grasp_distance;
@@ -730,7 +729,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
   // Transform the grasp pose
 
-  // NOTE: This is the grasp pose NOT the end effector pose!
+  // NOTE: This is the grasp pose NOT the end effector mount pose!
   tf::poseEigenToMsg(grasp_pose, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
 
@@ -877,7 +876,7 @@ double GraspGenerator::scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
   // arbitrary number given our target object set
   double distance_score =
-      GraspScorer::scoreDistanceToPalm(grasp_pose * grasp_data->grasp_pose_to_eef_pose_, grasp_data, object_pose, min_grasp_distance_, max_grasp_distance_);
+      GraspScorer::scoreDistanceToPalm(grasp_pose, grasp_data, object_pose, min_grasp_distance_, max_grasp_distance_);
 
   // should really change this to be like orienation_scores so we can score any translation
   Eigen::Vector3d translation_scores =
