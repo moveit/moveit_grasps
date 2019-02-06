@@ -9,6 +9,7 @@ moveit_grasps:
 
     # Ideal grasp orientation (RPY)
     # This is used to compare against grasp candidates for orientation scoring
+    # TODO (mlautman): move this to gripper specific parameters
     ideal_grasp_orientation_rpy: [3.14, 0, 0]
     show_ideal_grasp_orientation: true
 
@@ -35,7 +36,6 @@ moveit_grasps:
     debug_top_grasps: false
     # Show suction gripper overhang
     show_grasp_overhang: false
-
     # Grasp scoring weights: Suction grippers only
     # Sometimes the suction gripper is larger than the object being grasped.
     # this weight penalizes suction gripper overhanging
