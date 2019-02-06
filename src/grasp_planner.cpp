@@ -146,44 +146,17 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
                                            const planning_scene::PlanningSceneConstPtr& planning_scene,
                                            bool verbose_cartesian_filtering)
 {
-  // Get settings from grasp generator
-  const geometry_msgs::PoseStamped& grasp_pose_msg = grasp_candidate->grasp_.grasp_pose;
-  const geometry_msgs::PoseStamped pregrasp_pose_msg =
-      GraspGenerator::getPreGraspPose(grasp_candidate, grasp_candidate->grasp_data_->parent_link_->getName());
-
-  // Create waypoints
-  Eigen::Affine3d pregrasp_pose = visual_tools_->convertPose(pregrasp_pose_msg.pose);
-  Eigen::Affine3d grasp_pose = visual_tools_->convertPose(grasp_pose_msg.pose);
-
-  Eigen::Affine3d lifted_grasp_pose = grasp_pose;
-  lifted_grasp_pose.translation().z() += grasp_candidate->grasp_data_->lift_distance_desired_;
-
-  // Solve for post grasp retreat
-  Eigen::Affine3d retreat_pose = lifted_grasp_pose;
-  Eigen::Vector3d postgrasp_vector = Eigen::Vector3d(grasp_candidate->grasp_.post_grasp_retreat.direction.vector.x,
-                                                     grasp_candidate->grasp_.post_grasp_retreat.direction.vector.y,
-                                                     grasp_candidate->grasp_.post_grasp_retreat.direction.vector.z);
-  postgrasp_vector.normalize();
-
-  retreat_pose.translation() +=
-      retreat_pose.rotation() * postgrasp_vector * grasp_candidate->grasp_.post_grasp_retreat.desired_distance;
-
-  EigenSTL::vector_Affine3d waypoints(3);
-  waypoints[APPROACH] = grasp_pose;
-  waypoints[LIFT] = lifted_grasp_pose;
-  waypoints[RETREAT] = retreat_pose;
+  EigenSTL::vector_Affine3d waypoints;
+  GraspGenerator::getGraspWaypoints(grasp_candidate, waypoints);
 
   // Visualize waypoints
   bool show_cartesian_waypoints = isEnabled("show_cartesian_waypoints");
   if (show_cartesian_waypoints)
   {
-    visual_tools_->publishAxisLabeled(pregrasp_pose, "pregrasp");
-
-    visual_tools_->publishAxisLabeled(grasp_pose, "grasp");
-
-    visual_tools_->publishAxisLabeled(lifted_grasp_pose, "lifted");
-
-    visual_tools_->publishAxisLabeled(retreat_pose, "retreat");
+    visual_tools_->publishAxisLabeled(waypoints[0], "pregrasp");
+    visual_tools_->publishAxisLabeled(waypoints[1], "grasp");
+    visual_tools_->publishAxisLabeled(waypoints[2], "lifted");
+    visual_tools_->publishAxisLabeled(waypoints[3], "retreat");
     visual_tools_->trigger();
 
     // Show the grasp state
@@ -206,6 +179,9 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
     visual_tools_->trigger();
     waitForNextStep("continue cartesian planning");
   }
+
+  // Remove the pre-grasp point since we plan from that start state
+  waypoints.erase(waypoints.begin());
 
   // Starting state
   moveit::core::RobotStatePtr start_state(new moveit::core::RobotState(*robot_state));

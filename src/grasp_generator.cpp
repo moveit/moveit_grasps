@@ -1265,6 +1265,39 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const GraspCandidateP
   return pre_grasp_pose;
 }
 
+void GraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate, EigenSTL::vector_Affine3d& grasp_waypoints)
+{
+  Eigen::Affine3d grasp_pose;
+  tf::poseMsgToEigen(grasp_candidate->grasp_.grasp_pose.pose, grasp_pose);
+
+  const geometry_msgs::PoseStamped pregrasp_pose_msg =
+      GraspGenerator::getPreGraspPose(grasp_candidate, grasp_candidate->grasp_data_->parent_link_->getName());
+
+  // Create waypoints
+  Eigen::Affine3d pregrasp_pose;
+  tf::poseMsgToEigen(pregrasp_pose_msg.pose, pregrasp_pose);
+
+  Eigen::Affine3d lifted_grasp_pose = grasp_pose;
+  lifted_grasp_pose.translation().z() += grasp_candidate->grasp_data_->lift_distance_desired_;
+
+  // Solve for post grasp retreat
+  Eigen::Affine3d retreat_pose = lifted_grasp_pose;
+  Eigen::Vector3d postgrasp_vector = Eigen::Vector3d(grasp_candidate->grasp_.post_grasp_retreat.direction.vector.x,
+                                                     grasp_candidate->grasp_.post_grasp_retreat.direction.vector.y,
+                                                     grasp_candidate->grasp_.post_grasp_retreat.direction.vector.z);
+  postgrasp_vector.normalize();
+
+  retreat_pose.translation() +=
+      retreat_pose.rotation() * postgrasp_vector * grasp_candidate->grasp_.post_grasp_retreat.desired_distance;
+
+  grasp_waypoints.clear();
+  grasp_waypoints.resize(4);
+  grasp_waypoints[0] = pregrasp_pose;
+  grasp_waypoints[1] = grasp_pose;
+  grasp_waypoints[2] = lifted_grasp_pose;
+  grasp_waypoints[3] = retreat_pose;
+}
+
 void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
                                        const rviz_visual_tools::colors& color, double approach_length)
 {

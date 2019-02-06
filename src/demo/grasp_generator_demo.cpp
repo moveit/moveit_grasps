@@ -90,6 +90,8 @@ public:
     visual_tools_->getSharedRobotState()->setToDefaultValues();
     visual_tools_->enableBatchPublishing();
     visual_tools_->deleteAllMarkers();
+    visual_tools_->removeAllCollisionObjects();
+    visual_tools_->hideRobot();
     visual_tools_->trigger();
 
     grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("world"));

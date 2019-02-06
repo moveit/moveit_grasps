@@ -122,9 +122,7 @@ public:
     visual_tools_->enableBatchPublishing();
     visual_tools_->deleteAllMarkers();
     visual_tools_->removeAllCollisionObjects();
-
-    visual_tools_->getSharedRobotState()->setToDefaultValues();
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState());
+    visual_tools_->hideRobot();
     visual_tools_->trigger();
 
     robot_state::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
