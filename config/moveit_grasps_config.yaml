@@ -43,14 +43,14 @@ moveit_grasps:
 
   filter:
     # Show summary statistics
-    statistics_verbose: false
+    statistics_verbose: true
     # Visualize the planes used by the filter
     show_cutting_planes: false
     # Collision checking in verbose
-    collision_verbose: false
+    collision_verbose: true
     collision_verbose_speed: 0.01
     # Collision checking in verbose on second pass (after all failed)
-    show_grasp_filter_collision_if_failed: true
+    show_grasp_filter_collision_if_failed: false
     # Show post-filter arrows
     show_filtered_grasps: false
     # Show pose-filter arm ik solutions

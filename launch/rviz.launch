@@ -11,6 +11,11 @@
   </node>
 
   <!-- Publish world frame -->
-  <node pkg="tf" type="static_transform_publisher" name="tf_publisher_world" args="0 0 0 0 0 0 /world /panda_link0 25" />
+  <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 /world /virtual_joint 10" />
+
+  <!-- PANDA -->
+  <include file="$(find panda_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
 
 </launch>

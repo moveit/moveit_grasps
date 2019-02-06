@@ -82,13 +82,18 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world"));
+    visual_tools_->setMarkerTopic("/rviz_visual_tools");
     visual_tools_->loadMarkerPub();
+    visual_tools_->loadRobotStatePub("/display_robot_state");
+    visual_tools_->loadTrajectoryPub("/display_planned_path");
+    visual_tools_->loadSharedRobotState();
+    visual_tools_->getSharedRobotState()->setToDefaultValues();
     visual_tools_->enableBatchPublishing();
     visual_tools_->deleteAllMarkers();
-    visual_tools_->loadRobotStatePub("/display_robot_state");
     visual_tools_->trigger();
 
-    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("world", "grasp_visuals"));
+    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("world"));
+    grasp_visuals_->setMarkerTopic("/grasp_visuals");
     grasp_visuals_->loadMarkerPub();
     grasp_visuals_->enableBatchPublishing();
     grasp_visuals_->deleteAllMarkers();
@@ -173,8 +178,14 @@ public:
       grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
       grasp_visuals_->trigger();
 
+      // Configure the desired types of grasps
+      moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+      grasp_generator_config.disableAll();
+      grasp_generator_config.enable_face_grasps_ = true;
+      grasp_generator_config.generate_y_axis_grasps_ = true;
+
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                       possible_grasps);
+                                       possible_grasps, grasp_generator_config);
       // Visualize them
       // visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
       // double animate_speed = 0.1;

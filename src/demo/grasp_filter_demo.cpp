@@ -115,11 +115,18 @@ public:
     // Load the Robot Viz Tools for publishing to Rviz
     visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/rviz_visual_tools",
                                                                    planning_scene_monitor_));
-    visual_tools_->loadTrajectoryPub();
-    visual_tools_->loadRobotStatePub();
+    visual_tools_->loadMarkerPub();
+    visual_tools_->loadRobotStatePub("/display_robot_state");
+    visual_tools_->loadTrajectoryPub("/display_planned_path");
     visual_tools_->loadSharedRobotState();
+    visual_tools_->enableBatchPublishing();
+    visual_tools_->deleteAllMarkers();
+    visual_tools_->removeAllCollisionObjects();
+
     visual_tools_->getSharedRobotState()->setToDefaultValues();
     visual_tools_->publishRobotState(visual_tools_->getSharedRobotState());
+    visual_tools_->trigger();
+
     robot_state::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
     // ---------------------------------------------------------------------------------------------
@@ -162,17 +169,28 @@ public:
       double depth;
       double width;
       double height;
-      rviz_visual_tools::RandomPoseBounds pose_bounds(0.4, 0.6, -0.25, 0.25, 0,
-                                                      0.5);  // xmin, xmax, ymin, ymax, zmin, zmax
-      visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds);
+      rviz_visual_tools::RandomPoseBounds pose_bounds(0.5, 0.7, -0.25, 0.25, 0.2,
+                                                      0.7);  // xmin, xmax, ymin, ymax, zmin, zmax
+      rviz_visual_tools::RandomCuboidBounds cuboid_bounds(0.01, 0.0125);
+      visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds, cuboid_bounds);
       visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+      visual_tools_->trigger();
 
       // Generate set of grasps for one object
       ROS_INFO_STREAM_NAMED("test", "Generating cuboid grasps");
       std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
+
+      // Configure the desired types of grasps
+      moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+      grasp_generator_config.disableAll();
+      grasp_generator_config.enable_face_grasps_ = true;
+      grasp_generator_config.generate_y_axis_grasps_ = true;
+      grasp_generator_config.generate_x_axis_grasps_ = true;
+      grasp_generator_config.generate_z_axis_grasps_ = true;
+
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                       grasp_candidates);
+                                       grasp_candidates, grasp_generator_config);
 
       // add grasps at variable depth
       // grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_,
@@ -314,7 +332,7 @@ int main(int argc, char* argv[])
 {
   int num_tests = 1;
 
-  ros::init(argc, argv, "grasp_generator_demo");
+  ros::init(argc, argv, "grasp_filter_demo");
 
   // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(2);
@@ -333,9 +351,9 @@ int main(int argc, char* argv[])
   // tester.unitTest();
 
   // Benchmark time
-  double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
-  ROS_INFO_STREAM_NAMED("", "Total time: " << duration);
-  std::cout << duration << "\t" << num_tests << std::endl;
+  double duration = (ros::Time::now() - start_time).toSec();
+  ROS_INFO_STREAM_NAMED("grasp_filter_demo", "Total time: " << duration << "\t" << num_tests);
+  std::cout << "Total time: " << duration << "\t" << num_tests << std::endl;
 
   ros::Duration(1.0).sleep();  // let rviz markers finish publishing
 

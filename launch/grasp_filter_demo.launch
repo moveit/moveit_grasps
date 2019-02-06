@@ -12,16 +12,12 @@
   <arg unless="$(arg verbose)" name="command_args" value="" />
   <arg     if="$(arg verbose)" name="command_args" value="--verbose" />
 
-  <include file="$(find panda_moveit_config)/launch/planning_context.launch">
-    <arg name="load_robot_description" value="true"/>
+  <!-- PANDA -->
+  <include file="$(find moveit_grasps)/launch/load_panda.launch">
   </include>
 
-  <group ns="moveit_grasps_grasp_filter_demo">
-    <!-- Which arm to use -->
-  </group>
-
   <!-- Start the test -->
-  <node name="moveit_grasps_grasp_filter_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
+  <node name="moveit_grasps_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
   type="moveit_grasps_grasp_filter_demo" output="screen" args="$(arg command_args)">
     <param name="ee_group_name" value="hand"/>
     <param name="planning_group_name" value="panda_arm"/>
