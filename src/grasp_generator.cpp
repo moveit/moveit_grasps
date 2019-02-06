@@ -557,8 +557,7 @@ bool GraspGenerator::graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double
 
   // get line segment from grasp point to fingertip
   Eigen::Vector3d point_a = grasp_pose.translation();
-  Eigen::Vector3d point_b =
-      point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->grasp_max_depth_;
+  Eigen::Vector3d point_b = point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->grasp_max_depth_;
 
   // translate points into cuboid coordinate system
   point_a = cuboid_pose.inverse() * point_a;  // T_cuboid-world * p_world = p_cuboid
@@ -695,8 +694,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // set pregrasp
   moveit_msgs::GripperTranslation pre_grasp_approach;
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
-  new_grasp.pre_grasp_approach.desired_distance =
-      grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
+  new_grasp.pre_grasp_approach.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
 
@@ -710,8 +708,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
   new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
-  new_grasp.post_grasp_retreat.desired_distance =
-      grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
+  new_grasp.post_grasp_retreat.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
   new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
@@ -830,7 +827,7 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
   std::size_t num_scores = 8;
   double weights[num_scores] = { orientation_x_score_weight_, orientation_y_score_weight_, orientation_z_score_weight_,
                                  translation_x_score_weight_, translation_y_score_weight_, translation_z_score_weight_,
-                                 overhang_score_weight_, overhang_score_weight_ };
+                                 overhang_score_weight_,      overhang_score_weight_ };
 
   double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
                                 translation_scores[0], translation_scores[1], translation_scores[2],
@@ -1265,7 +1262,8 @@ geometry_msgs::PoseStamped GraspGenerator::getPreGraspPose(const GraspCandidateP
   return pre_grasp_pose;
 }
 
-void GraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate, EigenSTL::vector_Affine3d& grasp_waypoints)
+void GraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate,
+                                       EigenSTL::vector_Affine3d& grasp_waypoints)
 {
   Eigen::Affine3d grasp_pose;
   tf::poseMsgToEigen(grasp_candidate->grasp_.grasp_pose.pose, grasp_pose);

@@ -55,7 +55,8 @@ namespace moveit_grasps
 class GraspDataTest : public ::testing::Test
 {
 public:
-  GraspDataTest() : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
+  GraspDataTest()
+    : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
   {
   }
 

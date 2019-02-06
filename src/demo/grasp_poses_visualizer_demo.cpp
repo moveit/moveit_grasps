@@ -47,12 +47,12 @@ namespace moveit_grasps
 // Size and location for randomly generated cuboids
 static const double CUBOID_MIN_SIZE = 0.01;
 static const double CUBOID_MAX_SIZE = 0.02;
-static const double CUBOID_WORKSPACE_MIN_X =  0.3;
-static const double CUBOID_WORKSPACE_MAX_X =  0.5;
+static const double CUBOID_WORKSPACE_MIN_X = 0.3;
+static const double CUBOID_WORKSPACE_MAX_X = 0.5;
 static const double CUBOID_WORKSPACE_MIN_Y = -0.125;
-static const double CUBOID_WORKSPACE_MAX_Y =  0.125;
-static const double CUBOID_WORKSPACE_MIN_Z =  0.3;
-static const double CUBOID_WORKSPACE_MAX_Z =  0.6;
+static const double CUBOID_WORKSPACE_MAX_Y = 0.125;
+static const double CUBOID_WORKSPACE_MIN_Z = 0.3;
+static const double CUBOID_WORKSPACE_MAX_Z = 0.6;
 
 class GraspPosesVisualizer
 {
@@ -97,7 +97,7 @@ public:
     srand(ros::Time::now().toSec());
 
     ROS_INFO_STREAM_NAMED(name_, "\n************* \nStarting Vizualization"
-                                          << "\n*************");
+                                     << "\n*************");
 
     ROS_INFO_STREAM_NAMED(name_, "generating random cuboid");
     generateRandomCuboid(cuboid_pose_, depth_, width_, height_);
@@ -122,8 +122,7 @@ public:
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;
-    grasp_generator_->generateGrasps(visual_tools_->convertPose(cuboid_pose_),
-                                     depth_, width_, height_, grasp_data_,
+    grasp_generator_->generateGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, grasp_data_,
                                      grasp_candidates_, grasp_generator_config);
 
     // SHOW GRASP POSE
@@ -151,13 +150,15 @@ public:
 
     // SHOW grasp_max_depth
     ROS_INFO_STREAM_NAMED(name_, "Showing grasp_max_depth");
-    Eigen::Vector3d palm_vector = - ee_pose.translation() + grasp_pose.translation();
+    Eigen::Vector3d palm_vector = -ee_pose.translation() + grasp_pose.translation();
     palm_vector.normalize();
-    Eigen::Vector3d max_grasp_depth_point = ee_pose.translation() + palm_vector * (grasp_data_->grasp_max_depth_ - grasp_data_->grasp_min_depth_);
+    Eigen::Vector3d max_grasp_depth_point =
+        ee_pose.translation() + palm_vector * (grasp_data_->grasp_max_depth_ - grasp_data_->grasp_min_depth_);
     Eigen::Vector3d min_grasp_depth_point = ee_pose.translation();
     visual_tools_->publishLine(min_grasp_depth_point, max_grasp_depth_point, rviz_visual_tools::GREY);
     Eigen::Affine3d min_depth_eef_pose = grasp_pose;
-    visual_tools_->publishEEMarkers(min_depth_eef_pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions, rviz_visual_tools::TRANSLUCENT_DARK, "test_eef");
+    visual_tools_->publishEEMarkers(min_depth_eef_pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
+                                    rviz_visual_tools::TRANSLUCENT_DARK, "test_eef");
     visual_tools_->trigger();
 
     visual_tools_->prompt("Press 'next' to visualize the pre-grasp, grasp, lift, and retreat poses");

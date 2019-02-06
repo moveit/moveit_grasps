@@ -123,13 +123,13 @@ public:
     Eigen::Affine3d ideal_eef_pose = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
     robot_state->setFromIK(visual_tools_->getRobotModel()->getJointModelGroup(planning_group_name_), ideal_eef_pose);
     visual_tools_->publishRobotState(robot_state);
-    // visual_tools_->publishEEMarkers(ideal_eef_pose , ee_jmg, grasp_data_->grasp_posture_.points[0].positions, rviz_visual_tools::GREEN, "test_eef");
+    // visual_tools_->publishEEMarkers(ideal_eef_pose , ee_jmg, grasp_data_->grasp_posture_.points[0].positions,
+    // rviz_visual_tools::GREEN, "test_eef");
     grasp_visuals_->publishAxisLabeled(ideal_eef_pose, "IDEAL EEF MOUNT POSE");
     visual_tools_->trigger();
 
     // publish world coordinate system
     grasp_visuals_->publishAxis(Eigen::Affine3d::Identity());
-
 
     // ---------------------------------------------------------------------------------------------
     // Animate open and closing end effector
@@ -141,13 +141,15 @@ public:
 
       // Test visualization of end effector in OPEN position
       ROS_INFO_STREAM_NAMED("test", "Pre-grasp posture: (Orange)");
-      visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions, rviz_visual_tools::ORANGE, "test_eef");
+      visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
+                                      rviz_visual_tools::ORANGE, "test_eef");
       visual_tools_->trigger();
       ros::Duration(1.0).sleep();
 
       // Test visualization of end effector in CLOSED position
       ROS_INFO_STREAM_NAMED("test", "Grasp posture (Green");
-      visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->grasp_posture_.points[0].positions, rviz_visual_tools::GREEN, "test_eef");
+      visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->grasp_posture_.points[0].positions,
+                                      rviz_visual_tools::GREEN, "test_eef");
       visual_tools_->trigger();
       ros::Duration(1.0).sleep();
     }

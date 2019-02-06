@@ -337,7 +337,8 @@ public:
   /**
    * \brief Compute the pre-grasp, grasp, lift and retreat poses for a grasp candidate
    * \param grasp_candidate - the grasp candidate
-   * \param grasp_waypoints - a reference to a vector that will be populated with the pre-grasp, grasp, lift and retreat poses in that order.
+   * \param grasp_waypoints - a reference to a vector that will be populated with the pre-grasp, grasp, lift and retreat
+   * poses in that order.
    */
   static void getGraspWaypoints(const GraspCandidatePtr& grasp_candidate, EigenSTL::vector_Affine3d& grasp_waypoints);
 
