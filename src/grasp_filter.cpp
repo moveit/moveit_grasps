@@ -215,6 +215,7 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::A
 bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Affine3d desired_pose,
                                            double max_angular_offset)
 {
+  Eigen::Affine3d std_grasp_pose;
   Eigen::Affine3d grasp_pose;
   Eigen::Vector3d desired_z_axis;
   Eigen::Vector3d grasp_z_axis;
@@ -222,9 +223,10 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Ei
 
   // convert grasp pose back to standard grasping orientation
   grasp_pose = visual_tools_->convertPose(grasp_candidate->grasp_.grasp_pose.pose);
+  std_grasp_pose = grasp_pose * grasp_candidate->grasp_data_->grasp_pose_to_eef_pose_.inverse();
 
   // compute the angle between the z-axes of the desired and grasp poses
-  grasp_z_axis = grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
+  grasp_z_axis = std_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   desired_z_axis = desired_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   angle = acos(grasp_z_axis.normalized().dot(desired_z_axis.normalized()));
 
@@ -503,13 +505,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     // Convert to a pre-grasp
     const std::string& ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
     ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate, ee_parent_link_name);
-
-    if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
-    {
-      Eigen::Affine3d pre_grasp_pose = visual_tools_->convertPose(ik_thread_struct->ik_pose_.pose) *
-                                       grasp_candidate->grasp_data_->grasp_pose_to_eef_pose_;
-      tf::poseEigenToMsg(pre_grasp_pose, ik_thread_struct->ik_pose_.pose);
-    }
 
     // Set gripper position (how open the fingers are) to CLOSED
     // grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);

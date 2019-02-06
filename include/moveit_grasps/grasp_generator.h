@@ -288,6 +288,7 @@ public:
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
    * \param object_size - size of object to grasp
+   * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
    * \return true on success
    */
   bool addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,

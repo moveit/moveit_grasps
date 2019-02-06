@@ -557,7 +557,8 @@ bool GraspGenerator::graspIntersectionHelper(Eigen::Affine3d cuboid_pose, double
 
   // get line segment from grasp point to fingertip
   Eigen::Vector3d point_a = grasp_pose.translation();
-  Eigen::Vector3d point_b = point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->grasp_max_depth_;
+  Eigen::Vector3d point_b =
+      point_a + grasp_pose.rotation() * Eigen::Vector3d::UnitZ() * grasp_data->grasp_max_depth_;
 
   // translate points into cuboid coordinate system
   point_a = cuboid_pose.inverse() * point_a;  // T_cuboid-world * p_world = p_cuboid
@@ -682,7 +683,7 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
 {
   if (verbose_)
   {
-    visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::GREEN, rviz_visual_tools::MEDIUM, 0.05);
+    visual_tools_->publishZArrow(grasp_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXSMALL, 0.05);
     visual_tools_->trigger();
     ros::Duration(0.01).sleep();
   }
@@ -694,7 +695,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // set pregrasp
   moveit_msgs::GripperTranslation pre_grasp_approach;
   new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
-  new_grasp.pre_grasp_approach.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
+  new_grasp.pre_grasp_approach.desired_distance =
+      grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
 
@@ -708,7 +710,8 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // set postgrasp
   moveit_msgs::GripperTranslation post_grasp_retreat;
   new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
-  new_grasp.post_grasp_retreat.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
+  new_grasp.post_grasp_retreat.desired_distance =
+      grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
   new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
   new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
@@ -729,8 +732,9 @@ bool GraspGenerator::addGrasp(const Eigen::Affine3d& grasp_pose, const GraspData
   // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
   // Transform the grasp pose
 
-  // NOTE: This is the grasp pose NOT the end effector mount pose!
-  tf::poseEigenToMsg(grasp_pose, grasp_pose_msg.pose);
+  Eigen::Affine3d eef_pose = grasp_pose * grasp_data->grasp_pose_to_eef_pose_;
+
+  tf::poseEigenToMsg(eef_pose, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;
 
   // set grasp postures e.g. hand closed
@@ -1118,6 +1122,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Affine3d& cuboid_top_pos
   }
 
   num_grasps = grasp_poses.size();
+
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_top_pose, object_size, 0);
