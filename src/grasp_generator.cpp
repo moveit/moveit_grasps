@@ -59,7 +59,11 @@ namespace moveit_grasps
 {
 // Constructor
 GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
-  : visual_tools_(visual_tools), verbose_(verbose), nh_("~/moveit_grasps/generator")
+  : ideal_grasp_pose_(Eigen::Affine3d::Identity())
+  , visual_tools_(visual_tools)
+  , verbose_(verbose)
+  , nh_("~/moveit_grasps/generator")
+  , grasp_score_weights_(GraspScoreWeights())
 {
   // Load visulization settings
   const std::string parent_name = "grasps";  // for namespacing logging messages
@@ -72,40 +76,24 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   error += !rosparam_shortcuts::get(parent_name, nh_, "show_grasp_overhang", show_grasp_overhang_);
 
   // Load scoring weights
-  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_x_score_weight", orientation_x_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_y_score_weight", orientation_y_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "orientation_z_score_weight", orientation_z_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_x_score_weight", translation_x_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_y_score_weight", translation_y_score_weight_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "translation_z_score_weight", translation_z_score_weight_);
+  rosparam_shortcuts::shutdownIfError(parent_name, error);
+}
 
-  // For gripper type specific scoring functions we provide default weights of 0.0
-  // Finger gripper specific weights
-  nh_.param("depth_score_weight", depth_score_weight_, 0.0);
-  nh_.param("width_score_weight", width_score_weight_, 0.0);
-  // Suction gripper specific weights
-  nh_.param("overhang_score_weight", overhang_score_weight_, 0.0);
+void GraspGenerator::setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
+{
+  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3,
+                 "setIdealGraspPoseRPY must be set with a vector of length 3");
 
-  std::vector<double> ideal_grasp_orientation_rpy;
-  error += !rosparam_shortcuts::get(parent_name, nh_, "ideal_grasp_orientation_rpy", ideal_grasp_orientation_rpy);
-  ROS_ASSERT(ideal_grasp_orientation_rpy.size() == 3);
+  // copy the ideal_grasp_pose.translation() so that we only change the orientation.
+  Eigen::Vector3d ideal_grasp_pose_translation(ideal_grasp_pose_.translation());
 
   // Set ideal grasp pose (currently only uses orientation of pose)
   ideal_grasp_pose_ = Eigen::Affine3d::Identity();
   ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[0], Eigen::Vector3d::UnitX());
   ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[1], Eigen::Vector3d::UnitY());
   ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[2], Eigen::Vector3d::UnitZ());
-  ideal_grasp_pose_.translation() = Eigen::Vector3d(0, 0, 2.0);
 
-  bool show_ideal_grasp_orientation = false;
-  error += !rosparam_shortcuts::get(parent_name, nh_, "show_ideal_grasp_orientation", show_ideal_grasp_orientation);
-  rosparam_shortcuts::shutdownIfError(parent_name, error);
-
-  if (show_ideal_grasp_orientation)
-  {
-    visual_tools_->publishAxisLabeled(ideal_grasp_pose_, "ideal_grasp_orientation");
-    visual_tools_->trigger();
-  }
+  ideal_grasp_pose_.translation() = ideal_grasp_pose_translation;
 }
 
 bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose, double depth, double width,
@@ -825,9 +813,14 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
     overhang_score = GraspScorer::scoreGraspOverhang(grasp_pose, grasp_data, cuboid_pose, object_size);
 
   std::size_t num_scores = 8;
-  double weights[num_scores] = { orientation_x_score_weight_, orientation_y_score_weight_, orientation_z_score_weight_,
-                                 translation_x_score_weight_, translation_y_score_weight_, translation_z_score_weight_,
-                                 overhang_score_weight_,      overhang_score_weight_ };
+  double weights[num_scores] = { grasp_score_weights_.orientation_x_score_weight_,
+                                 grasp_score_weights_.orientation_y_score_weight_,
+                                 grasp_score_weights_.orientation_z_score_weight_,
+                                 grasp_score_weights_.translation_x_score_weight_,
+                                 grasp_score_weights_.translation_y_score_weight_,
+                                 grasp_score_weights_.translation_z_score_weight_,
+                                 grasp_score_weights_.overhang_score_weight_,
+                                 grasp_score_weights_.overhang_score_weight_ };
 
   double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
                                 translation_scores[0], translation_scores[1], translation_scores[2],
@@ -890,14 +883,14 @@ double GraspGenerator::scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const
   // Get total score
   std::size_t num_scores = 8;
   double weights[num_scores], scores[num_scores];
-  weights[0] = width_score_weight_;
-  weights[1] = orientation_x_score_weight_;
-  weights[2] = orientation_y_score_weight_;
-  weights[3] = orientation_z_score_weight_;
-  weights[4] = depth_score_weight_;
-  weights[5] = translation_x_score_weight_;
-  weights[6] = translation_y_score_weight_;
-  weights[7] = translation_z_score_weight_;
+  weights[0] = grasp_score_weights_.width_score_weight_;
+  weights[1] = grasp_score_weights_.orientation_x_score_weight_;
+  weights[2] = grasp_score_weights_.orientation_y_score_weight_;
+  weights[3] = grasp_score_weights_.orientation_z_score_weight_;
+  weights[4] = grasp_score_weights_.depth_score_weight_;
+  weights[5] = grasp_score_weights_.translation_x_score_weight_;
+  weights[6] = grasp_score_weights_.translation_y_score_weight_;
+  weights[7] = grasp_score_weights_.translation_z_score_weight_;
 
   // Every score is normalized to be in the same range, so new scoring features should also be normalized
   scores[0] = width_score;
@@ -1280,9 +1273,9 @@ void GraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate,
 
   // Solve for post grasp retreat
   Eigen::Affine3d retreat_pose = lifted_grasp_pose;
-  Eigen::Vector3d postgrasp_vector = Eigen::Vector3d(grasp_candidate->grasp_.post_grasp_retreat.direction.vector.x,
-                                                     grasp_candidate->grasp_.post_grasp_retreat.direction.vector.y,
-                                                     grasp_candidate->grasp_.post_grasp_retreat.direction.vector.z);
+  Eigen::Vector3d postgrasp_vector(grasp_candidate->grasp_.post_grasp_retreat.direction.vector.x,
+                                   grasp_candidate->grasp_.post_grasp_retreat.direction.vector.y,
+                                   grasp_candidate->grasp_.post_grasp_retreat.direction.vector.z);
   postgrasp_vector.normalize();
 
   retreat_pose.translation() +=

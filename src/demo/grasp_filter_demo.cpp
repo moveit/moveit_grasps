@@ -139,6 +139,23 @@ public:
     // Load grasp generator
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
 
+    // Set the ideal grasp orientation for scoring
+    std::vector<double> ideal_grasp_rpy = {3.14, 0.0, 0.0};
+    grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
+
+    // We set custom grasp score weights
+    moveit_grasps::GraspScoreWeights grasp_score_weights;
+    grasp_score_weights.orientation_x_score_weight_ = 2.0;
+    grasp_score_weights.orientation_y_score_weight_ = 2.0;
+    grasp_score_weights.orientation_z_score_weight_ = 2.0;
+    grasp_score_weights.translation_x_score_weight_ = 1.0;
+    grasp_score_weights.translation_y_score_weight_ = 1.0;
+    grasp_score_weights.translation_z_score_weight_ = 1.0;
+    // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our finger gripper)
+    grasp_score_weights.depth_score_weight_ = 2.0;
+    grasp_score_weights.width_score_weight_ = 2.0;
+    grasp_generator_->setGraspScoreWeights(grasp_score_weights);
+
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
     grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_));
@@ -164,12 +181,21 @@ public:
 
       // Generate random cuboid
       geometry_msgs::Pose object_pose;
+      double xmin = 0.5;
+      double xmax = 0.7;
+      double ymin = -0.25;
+      double ymax = 0.25;
+      double zmin = 0.2;
+      double zmax = 0.7;
+      rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax);
+
+      double cuboid_size_min = 0.01;
+      double cuboid_size_max = 0.0125;
+      rviz_visual_tools::RandomCuboidBounds cuboid_bounds(cuboid_size_min, cuboid_size_max);
+
       double depth;
       double width;
       double height;
-      rviz_visual_tools::RandomPoseBounds pose_bounds(0.5, 0.7, -0.25, 0.25, 0.2,
-                                                      0.7);  // xmin, xmax, ymin, ymax, zmin, zmax
-      rviz_visual_tools::RandomCuboidBounds cuboid_bounds(0.01, 0.0125);
       visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds, cuboid_bounds);
       visual_tools_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);

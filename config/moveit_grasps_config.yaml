@@ -1,4 +1,5 @@
 moveit_grasps:
+  # These settings are used by the grasp generator which generates GraspCandidates
   generator:
     # Other verbose stuff
     verbose: false
@@ -7,27 +8,10 @@ moveit_grasps:
     show_prefiltered_grasps: false
     show_prefiltered_grasps_speed: 0.01
 
-    # Ideal grasp orientation (RPY)
-    # This is used to compare against grasp candidates for orientation scoring
-    # TODO (mlautman): move this to gripper specific parameters
-    ideal_grasp_orientation_rpy: [3.14, 0, 0]
-    show_ideal_grasp_orientation: true
-
-    # Grasp scoring weights: Finger and suction grippers both use these
-    # TODO(mlautman): move weights to config_robot/*.yaml
-    orientation_x_score_weight: 2.0
-    orientation_y_score_weight: 2.0
-    orientation_z_score_weight: 2.0
-    translation_x_score_weight: 1.0
-    translation_y_score_weight: 1.0
-    translation_z_score_weight: 1.0
-
     ###########################
     ## finger gripper settings
     ###########################
-    # Grasp scoring weights: finger grippers only
-    depth_score_weight: 1.0
-    width_score_weight: 1.0
+    # None yet
 
     ###########################
     ## suction gripper settings
@@ -36,11 +20,8 @@ moveit_grasps:
     debug_top_grasps: false
     # Show suction gripper overhang
     show_grasp_overhang: false
-    # Grasp scoring weights: Suction grippers only
-    # Sometimes the suction gripper is larger than the object being grasped.
-    # this weight penalizes suction gripper overhanging
-    overhang_score_weight: 100.0
 
+  # The grasp filter filters out unreachable GraspCandidates and populates valid GraspCandidates' pregrasp_ik_solution_ and grasp_ik_solution_'s
   filter:
     # Show summary statistics
     statistics_verbose: true
@@ -58,6 +39,8 @@ moveit_grasps:
     show_filtered_arm_solutions_pregrasp_speed: 0.25
     show_filtered_arm_solutions_speed: 0.5
 
+  # The GraspPlanner generates approach, lift and retreat paths for a GraspCandidate.
+  # If the GraspPlanner is unable to plan 100% of the approach path and at least ~90% of the lift and retreat paths, then it considers the GraspCandidate to be infeasible
   planner:
     # Cartesian planning
     statistics_verbose: false

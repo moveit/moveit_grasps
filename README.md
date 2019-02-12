@@ -9,7 +9,7 @@ This package includes:
  - Pose-based grasp generator for a block
  - Separate grasp generators for custom objects such as rectanguar or cylindrical objects
  - Grasp filter
- - Test code and visualizations
+ - Demo code and visualizations
 
 <img src="https://picknik.ai/images/logo.jpg" width="100">
 
@@ -87,11 +87,9 @@ The ``grasp_pose_to_eef`` translation is to allow different URDF end effectors t
 
 Additionally, the x-axis should be pointing up along the grasped object, i.e. the circular axis of a (beer) bottle if you were holding it. The y-axis should be point towards one of the fingers.
 
-### Switch from Bin to Shelf Picking with ``ideal_grasp_orientation_rpy``
+### Switch from Bin to Shelf Picking with ``setIdealGraspPoseRPY`` and ``setIdealGraspPose``
 
-The ``ideal_grasp_orientation_rpy`` parameter in ``moveit_grasps_config.yaml`` can be used to select an ideal grasp orientation for picking. This parameter is used to score grasp candidates favoring grasps that are closer to the desired orientation. This is useful in applications such as bin and shelf picking where you would want to pick the objects from a bin with a grasp that is vertically alligned and you would want to pick obejects from a shelf with a grasp that is horozontally alligned.
-
-You can visualize the ``ideal_grasp_orientation_rpy`` by setting ``show_ideal_grasp_orientation: true``.
+The ``setIdealGraspPoseRPY`` and ``setIdealGraspPose`` methods in GraspGenerator can be used to select an ideal grasp orientation for picking. These methods is used to score grasp candidates favoring grasps that are closer to the desired orientation. This is useful in applications such as bin and shelf picking where you would want to pick the objects from a bin with a grasp that is vertically alligned and you would want to pick obejects from a shelf with a grasp that is horozontally alligned.
 
 ## Demo Scripts
 

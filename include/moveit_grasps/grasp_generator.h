@@ -155,6 +155,37 @@ struct GraspCandidateConfig
   bool generate_z_axis_grasps_;
 };
 
+
+struct GraspScoreWeights
+{
+  GraspScoreWeights()
+  : orientation_x_score_weight_(1.0)
+  , orientation_y_score_weight_(1.0)
+  , orientation_z_score_weight_(1.0)
+  , translation_x_score_weight_(1.0)
+  , translation_y_score_weight_(1.0)
+  , translation_z_score_weight_(1.0)
+  , depth_score_weight_(1.0)
+  , width_score_weight_(1.0)
+  , overhang_score_weight_(1.0)
+  {}
+
+  double orientation_x_score_weight_;
+  double orientation_y_score_weight_;
+  double orientation_z_score_weight_;
+  double translation_x_score_weight_;
+  double translation_y_score_weight_;
+  double translation_z_score_weight_;
+
+  // Finger gripper specific weights
+  double depth_score_weight_;
+  double width_score_weight_;
+
+  // Suction gripper specific weights
+  double overhang_score_weight_;
+};
+
+
 // Class
 class GraspGenerator
 {
@@ -375,6 +406,24 @@ public:
     ideal_grasp_pose_ = ideal_pose;
   }
 
+  void setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy);
+
+  /**
+   * \brief Setter for grasp score weights
+   */
+  void setGraspScoreWeights(GraspScoreWeights grasp_score_weights)
+  {
+    grasp_score_weights_ = grasp_score_weights;
+  }
+
+  /**
+   * \brief Setter for grasp score weights
+   */
+  GraspScoreWeights getGraspScoreWeights()
+  {
+    return grasp_score_weights_;
+  }
+
   /**
    * \brief Setter for Verbose
    */
@@ -408,8 +457,11 @@ private:
   // Display more output both in console
   bool verbose_;
 
-  // Visual debug top grasp transforms
+  // Visual debug settings
   bool debug_top_grasps_;
+  bool show_prefiltered_grasps_;
+  double show_prefiltered_grasps_speed_;
+  bool show_grasp_overhang_;
 
   // Shared node handle
   ros::NodeHandle nh_;
@@ -417,28 +469,23 @@ private:
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
 
-  bool show_prefiltered_grasps_;
-  double show_prefiltered_grasps_speed_;
-
   double min_grasp_distance_, max_grasp_distance_;
   Eigen::Vector3d min_translations_, max_translations_;
 
-  double orientation_x_score_weight_;
-  double orientation_y_score_weight_;
-  double orientation_z_score_weight_;
-  double translation_x_score_weight_;
-  double translation_y_score_weight_;
-  double translation_z_score_weight_;
+  GraspScoreWeights grasp_score_weights_;
+  // double orientation_x_score_weight_;
+  // double orientation_y_score_weight_;
+  // double orientation_z_score_weight_;
+  // double translation_x_score_weight_;
+  // double translation_y_score_weight_;
+  // double translation_z_score_weight_;
 
-  // Finger gripper specific weights
-  double depth_score_weight_;
-  double width_score_weight_;
+  // // Finger gripper specific weights
+  // double depth_score_weight_;
+  // double width_score_weight_;
 
-  // Suction gripper specific weights
-  double overhang_score_weight_;
-  bool show_grasp_overhang_;
-
-  // bounding_box::BoundingBox bounding_box_;
+  // // Suction gripper specific weights
+  // double overhang_score_weight_;
 
 };  // end of class
 

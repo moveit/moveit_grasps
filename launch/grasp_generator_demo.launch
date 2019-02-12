@@ -1,6 +1,6 @@
 <launch>
 
-  <!-- Launch rviz.launch to visualize this demo -->
+  <!-- Launch rviz.launch before running this demo to see visalizations -->
 
   <!-- Debug -->
   <arg name="debug" default="false" />
@@ -16,7 +16,7 @@
   <include file="$(find moveit_grasps)/launch/load_panda.launch">
   </include>
 
-  <!-- Start the test -->
+  <!-- Start the demo -->
   <node name="moveit_grasps_demo" launch-prefix="$(arg launch_prefix)" pkg="moveit_grasps"
   type="moveit_grasps_grasp_generator_demo" output="screen" args="$(arg command_args)">
     <param name="ee_group_name" value="hand"/>

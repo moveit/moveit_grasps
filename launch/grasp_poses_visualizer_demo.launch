@@ -1,5 +1,6 @@
 <launch>
-  <!-- Launch rviz.launch to visualize this demo -->
+
+  <!-- Launch rviz.launch before running this demo to see visalizations -->
 
   <!-- Debug -->
   <arg name="debug" default="false" />

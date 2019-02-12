@@ -114,23 +114,38 @@ public:
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, true));
     grasp_generator_->setVerbose(true);
 
-    grasp_generator_->ideal_grasp_pose_.translation() = Eigen::Vector3d(0.3, 0, 0.5);
+    // We set the ideal grasp pose to be centered and 0.5m in the air (for visualization) with an orientation of roll = 3.14
+    // Set the translation
+    Eigen::Affine3d ideal_grasp_pose = Eigen::Affine3d::Identity();
+    ideal_grasp_pose.translation() = Eigen::Vector3d(0.0, 0, 0.5);
+    grasp_generator_->setIdealGraspPose(ideal_grasp_pose);
+    // Set the ideal grasp orientation
+    std::vector<double> ideal_grasp_rpy = {3.14, 0.0, 0.0};
+    grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
 
-    // Visualize poses
+    // Visualize the ideal grasp pose
     grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_GRASP_POSE");
+    visual_tools_->publishEEMarkers(grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_ , ee_jmg, grasp_data_->grasp_posture_.points[0].positions,
+                                    rviz_visual_tools::BLUE);
+    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_, "IDEAL EEF MOUNT POSE");
     visual_tools_->trigger();
 
-    Eigen::Affine3d ideal_eef_pose = grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_;
-    robot_state->setFromIK(visual_tools_->getRobotModel()->getJointModelGroup(planning_group_name_), ideal_eef_pose);
-    visual_tools_->publishRobotState(robot_state);
-    // visual_tools_->publishEEMarkers(ideal_eef_pose , ee_jmg, grasp_data_->grasp_posture_.points[0].positions,
-    // rviz_visual_tools::GREEN, "test_eef");
-    grasp_visuals_->publishAxisLabeled(ideal_eef_pose, "IDEAL EEF MOUNT POSE");
-    visual_tools_->trigger();
+    // We also set custom grasp score weights
+    moveit_grasps::GraspScoreWeights grasp_score_weights;
+    grasp_score_weights.orientation_x_score_weight_ = 2.0;
+    grasp_score_weights.orientation_y_score_weight_ = 2.0;
+    grasp_score_weights.orientation_z_score_weight_ = 2.0;
+    grasp_score_weights.translation_x_score_weight_ = 1.0;
+    grasp_score_weights.translation_y_score_weight_ = 1.0;
+    grasp_score_weights.translation_z_score_weight_ = 1.0;
+    // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our finger gripper)
+    grasp_score_weights.depth_score_weight_ = 2.0;
+    grasp_score_weights.width_score_weight_ = 2.0;
+    grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
     // publish world coordinate system
-    grasp_visuals_->publishAxis(Eigen::Affine3d::Identity());
-
+    grasp_visuals_->publishAxisLabeled(Eigen::Affine3d::Identity(), "world frame");
+    visual_tools_->trigger();
     // ---------------------------------------------------------------------------------------------
     // Animate open and closing end effector
     if (true)
