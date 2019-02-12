@@ -125,14 +125,6 @@ target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer_demo
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
-# Demo mesh bounding box
-add_executable(${PROJECT_NAME}_mesh_bounding_box_demo src/demo/mesh_bounding_box_demo.cpp)
-target_link_libraries(${PROJECT_NAME}_mesh_bounding_box_demo
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
-
 #############
 ## INSTALL ##
 #############
@@ -155,7 +147,6 @@ install(TARGETS
   ${PROJECT_NAME}_grasp_filter_demo
   ${PROJECT_NAME}_grasp_generator_demo
   ${PROJECT_NAME}_grasp_poses_visualizer_demo
-  ${PROJECT_NAME}_mesh_bounding_box_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
