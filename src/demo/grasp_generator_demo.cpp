@@ -159,20 +159,33 @@ public:
       visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
                                       rviz_visual_tools::ORANGE, "test_eef");
       visual_tools_->trigger();
-      ros::Duration(1.0).sleep();
+      ros::Duration(0.1).sleep();
 
       // Test visualization of end effector in CLOSED position
       ROS_INFO_STREAM_NAMED("test", "Grasp posture (Green");
+      pose.position.z += 0.15;
       visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->grasp_posture_.points[0].positions,
                                       rviz_visual_tools::GREEN, "test_eef");
       visual_tools_->trigger();
-      ros::Duration(1.0).sleep();
+      ros::Duration(0.1).sleep();
     }
 
     // ---------------------------------------------------------------------------------------------
     // Generate grasps for a bunch of random objects
     geometry_msgs::Pose object_pose;
     std::vector<moveit_grasps::GraspCandidatePtr> possible_grasps;
+
+    // Configure the desired types of grasps
+    moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+    grasp_generator_config.disableAll();
+    // grasp_generator_config.enable_face_grasps_ = true;
+    // grasp_generator_config.enable_corner_grasps_ = true;
+    grasp_generator_config.enable_face_grasps_ = true;
+    // grasp_generator_config.enable_variable_angle_grasps_ = true;
+    // grasp_generator_config.enable_edge_grasps_ = true;
+    // grasp_generator_config.generate_x_axis_grasps_ = true;
+    // grasp_generator_config.generate_y_axis_grasps_ = true;
+    grasp_generator_config.generate_z_axis_grasps_ = true;
 
     // Loop
     int i = 0;
@@ -189,28 +202,26 @@ public:
       possible_grasps.clear();
 
       // Generate set of grasps for one object
-      double depth = 0.025;
-      double width = 0.025;
-      double height = 0.025;
+      double depth = 0.05;
+      double width = 0.10;
+      double height = 0.05;
 
       grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
       grasp_visuals_->trigger();
 
-      // Configure the desired types of grasps
-      moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
-      grasp_generator_config.disableAll();
-      grasp_generator_config.enable_face_grasps_ = true;
-      grasp_generator_config.generate_y_axis_grasps_ = true;
 
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
                                        possible_grasps, grasp_generator_config);
-      // Visualize them
-      // visual_tools_->publishAnimatedGrasps(possible_grasps, ee_jmg);
-      // double animate_speed = 0.1;
-      // visual_tools_->publishGrasps(possible_grasps, ee_jmg, animate_speed);
 
-      // Test if done
+      if (possible_grasps.size() > 0)
+      {
+
+        visual_tools_->publishEEMarkers(possible_grasps.front()->grasp_.grasp_pose.pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
+                                        rviz_visual_tools::CYAN, "test_eef");
+        visual_tools_->trigger();
+
+      }
       ++i;
       if (i >= num_tests)
         break;
