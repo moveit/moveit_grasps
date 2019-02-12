@@ -238,6 +238,8 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "num_grasps_along_a : num_grasps_along_b  = "
                                                    << num_grasps_along_a << " : " << num_grasps_along_b);
 
+  // TODO(mlautman): There is a bug with face grasps allowing the grasp generator to generate grasps where the gripper fingers
+  //                 are in collision with the object being grasped
   if (grasp_candidate_config.enable_face_grasps_)
   {
     ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "adding face grasps...");
@@ -384,7 +386,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
     depth_pose = grasp_poses[i];
     for (std::size_t j = 0; j < num_depth_grasps; j++)
     {
-      depth_pose.translation() -= delta_f * grasp_dir;
+      depth_pose.translation() += delta_f * grasp_dir;
       grasp_poses.push_back(depth_pose);
     }
   }
@@ -932,7 +934,6 @@ double GraspGenerator::scoreFingerGrasp(const Eigen::Affine3d& grasp_pose, const
                                << weights[0] << ", " << weights[1] << ", " << weights[2] << ", " << weights[3] << ", "
                                << weights[4] << ", " << weights[5] << ", " << weights[6] << ", " << weights[7] << "\n"
                                << "\ttotal_score         = " << total_score);
-    visual_tools_->publishZArrow(grasp_pose);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
 
     if (false)

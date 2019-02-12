@@ -94,12 +94,16 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_
     double ideal = (max_translations[i] + min_translations[i]) / 2;
     double translation = grasp_pose.translation()[i] - ideal;
     double range = max_translations[i] - min_translations[i];
-    double score = translation / range;
+    double score;
+    if (range == 0)
+      score = 0;
+    else
+      score = translation / range;
 
     scores[i] = pow(score, 2);
   }
 
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.translation", "value, min, max, score:\n"
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.translation", "\nvalue, min, max, score:\n"
                                                          << grasp_pose.translation()[0] << ", " << min_translations[0]
                                                          << ", " << max_translations[0] << ", " << scores[0] << "\n"
                                                          << grasp_pose.translation()[1] << ", " << min_translations[1]
