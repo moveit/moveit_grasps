@@ -81,8 +81,7 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
 void GraspGenerator::setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
 {
-  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3,
-                 "setIdealGraspPoseRPY must be set with a vector of length 3");
+  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3, "setIdealGraspPoseRPY must be set with a vector of length 3");
 
   // copy the ideal_grasp_pose.translation() so that we only change the orientation.
   Eigen::Vector3d ideal_grasp_pose_translation(ideal_grasp_pose_.translation());
@@ -238,7 +237,8 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Affine3d& cuboid_pose
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "num_grasps_along_a : num_grasps_along_b  = "
                                                    << num_grasps_along_a << " : " << num_grasps_along_b);
 
-  // TODO(mlautman): There is a bug with face grasps allowing the grasp generator to generate grasps where the gripper fingers
+  // TODO(mlautman): There is a bug with face grasps allowing the grasp generator to generate grasps where the gripper
+  // fingers
   //                 are in collision with the object being grasped
   if (grasp_candidate_config.enable_face_grasps_)
   {
@@ -815,14 +815,12 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Affine3d& grasp_pose, cons
     overhang_score = GraspScorer::scoreGraspOverhang(grasp_pose, grasp_data, cuboid_pose, object_size);
 
   std::size_t num_scores = 8;
-  double weights[num_scores] = { grasp_score_weights_.orientation_x_score_weight_,
-                                 grasp_score_weights_.orientation_y_score_weight_,
-                                 grasp_score_weights_.orientation_z_score_weight_,
-                                 grasp_score_weights_.translation_x_score_weight_,
-                                 grasp_score_weights_.translation_y_score_weight_,
-                                 grasp_score_weights_.translation_z_score_weight_,
-                                 grasp_score_weights_.overhang_score_weight_,
-                                 grasp_score_weights_.overhang_score_weight_ };
+  double weights[num_scores] = {
+    grasp_score_weights_.orientation_x_score_weight_, grasp_score_weights_.orientation_y_score_weight_,
+    grasp_score_weights_.orientation_z_score_weight_, grasp_score_weights_.translation_x_score_weight_,
+    grasp_score_weights_.translation_y_score_weight_, grasp_score_weights_.translation_z_score_weight_,
+    grasp_score_weights_.overhang_score_weight_,      grasp_score_weights_.overhang_score_weight_
+  };
 
   double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
                                 translation_scores[0], translation_scores[1], translation_scores[2],

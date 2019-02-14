@@ -140,7 +140,7 @@ public:
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
 
     // Set the ideal grasp orientation for scoring
-    std::vector<double> ideal_grasp_rpy = {3.14, 0.0, 0.0};
+    std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
     grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
 
     // We set custom grasp score weights
@@ -151,7 +151,8 @@ public:
     grasp_score_weights.translation_x_score_weight_ = 1.0;
     grasp_score_weights.translation_y_score_weight_ = 1.0;
     grasp_score_weights.translation_z_score_weight_ = 1.0;
-    // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our finger gripper)
+    // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our
+    // finger gripper)
     grasp_score_weights.depth_score_weight_ = 2.0;
     grasp_score_weights.width_score_weight_ = 2.0;
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
