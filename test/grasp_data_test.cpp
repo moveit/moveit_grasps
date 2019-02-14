@@ -88,9 +88,10 @@ TEST_F(GraspDataTest, CheckConfigValues)
   EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
 
   // Semantics
-  EXPECT_EQ(grasp_data_->base_link_, "pworld");
+  EXPECT_EQ(grasp_data_->base_link_, "world");
   EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
-  // TODO (mlautman-2/13/19): restore this test once https://github.com/ros-planning/panda_moveit_config/pull/20 is released
+  // TODO (mlautman-2/13/19): restore this test once https://github.com/ros-planning/panda_moveit_config/pull/20 is
+  // released
   // EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm");
   EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
@@ -125,8 +126,10 @@ TEST_F(GraspDataTest, SetRobotState)
 
   // Grasp
   grasp_data_->setRobotStateGrasp(robot_state);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0], robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1], robot_state->getJointPositions("panda_finger_joint2")[0]);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0],
+            robot_state->getJointPositions("panda_finger_joint1")[0]);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1],
+            robot_state->getJointPositions("panda_finger_joint2")[0]);
 }
 
 TEST_F(GraspDataTest, fingerWidthToGraspPosture)
@@ -142,10 +145,11 @@ TEST_F(GraspDataTest, fingerWidthToGraspPosture)
 
   // Grasp
   grasp_data_->setRobotStateGrasp(robot_state);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0], robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1], robot_state->getJointPositions("panda_finger_joint2")[0]);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0],
+            robot_state->getJointPositions("panda_finger_joint1")[0]);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1],
+            robot_state->getJointPositions("panda_finger_joint2")[0]);
 }
-
 
 // TODO(davetcoleman): write test for remainder of this class
 

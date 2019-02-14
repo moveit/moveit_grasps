@@ -160,21 +160,21 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
     visual_tools_->trigger();
 
     // Show the grasp state
-    waitForNextStep("see open grasp state");
-    grasp_candidate->getGraspStateOpen(visual_tools_->getSharedRobotState());
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
+    // waitForNextStep("see open grasp state");
+    // grasp_candidate->getGraspStateOpen(visual_tools_->getSharedRobotState());
+    // visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::ORANGE);
 
-    waitForNextStep("see closed grasp state");
-    grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
+    // waitForNextStep("see closed grasp state");
+    // grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
+    // visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::GREEN);
 
     waitForNextStep("see pre grasp state");
     grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState());
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
+    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::RED);
 
     waitForNextStep("see grasp state");
     grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::TRANSLUCENT);
+    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::BLUE);
 
     visual_tools_->trigger();
     waitForNextStep("continue cartesian planning");
@@ -195,8 +195,6 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
   {
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Unable to plan approach lift retreat path");
 
-    waitForNextStep("try next candidate grasp");
-
     return false;
   }
 
@@ -210,15 +208,21 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
     ROS_INFO_STREAM_NAMED("grasp_planner.waypoints", "Visualize end effector position of cartesian path for "
                                                          << grasp_candidate->segmented_cartesian_traj_.size()
                                                          << " segments");
-
     visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[APPROACH],
                                            grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::YELLOW);
     visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[LIFT],
                                            grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::ORANGE);
     visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[RETREAT],
                                            grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::RED);
-
     visual_tools_->trigger();
+
+    bool wait_for_animation = true;
+    visual_tools_->publishTrajectoryPath(grasp_candidate->segmented_cartesian_traj_[APPROACH],
+                                         grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    visual_tools_->publishTrajectoryPath(grasp_candidate->segmented_cartesian_traj_[LIFT],
+                                         grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    visual_tools_->publishTrajectoryPath(grasp_candidate->segmented_cartesian_traj_[RETREAT],
+                                         grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
   }
 
   if (verbose_cartesian_filtering)

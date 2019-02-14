@@ -28,7 +28,7 @@ moveit_grasps:
     # Visualize the planes used by the filter
     show_cutting_planes: false
     # Collision checking in verbose
-    collision_verbose: true
+    collision_verbose: false
     collision_verbose_speed: 0.01
     # Collision checking in verbose on second pass (after all failed)
     show_grasp_filter_collision_if_failed: false
@@ -45,5 +45,5 @@ moveit_grasps:
     # Cartesian planning
     statistics_verbose: false
     verbose_cartesian_filtering: false
-    show_cartesian_waypoints: true
+    show_cartesian_waypoints: false
     collision_checking_verbose: false

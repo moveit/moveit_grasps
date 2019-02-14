@@ -107,6 +107,12 @@ target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer_demo
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
+# Demo grasp pipeline
+add_executable(${PROJECT_NAME}_grasp_pipeline_demo src/demo/grasp_pipeline_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_pipeline_demo
+  ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
 #############
 ## INSTALL ##
 #############
@@ -129,6 +135,7 @@ install(TARGETS
   ${PROJECT_NAME}_grasp_filter_demo
   ${PROJECT_NAME}_grasp_generator_demo
   ${PROJECT_NAME}_grasp_poses_visualizer_demo
+  ${PROJECT_NAME}_grasp_pipeline_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
