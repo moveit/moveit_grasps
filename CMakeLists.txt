@@ -17,8 +17,6 @@ find_package(OpenMP)
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
-  actionlib
-  actionlib_msgs
   eigen_conversions
   geometry_msgs
   message_generation
@@ -36,28 +34,12 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
 )
 
-add_message_files(DIRECTORY msg FILES
-  GraspGeneratorOptions.msg
-)
-
-add_action_files(DIRECTORY action FILES
-  GenerateGrasps.action
-)
-
-generate_messages(DEPENDENCIES
-  actionlib_msgs
-  geometry_msgs
-  moveit_msgs
-  std_msgs
-)
-
 # Catkin
 catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
     ${PROJECT_NAME}_filter
   CATKIN_DEPENDS
-    actionlib_msgs
     geometry_msgs
     message_runtime
     moveit_msgs
