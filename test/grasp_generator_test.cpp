@@ -74,51 +74,6 @@ TEST_F(GraspGeneratorTest, ConstructDestruct)
   GraspGenerator grasp_generator(visual_tools_, verbose_);
 }
 
-TEST_F(GraspGeneratorTest, GraspData)
-{
-  // TODO(davetcoleman): move this test into a new grasp_data_test.cpp file
-
-  // Grasp Pose To EEF Pose
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().x(), 0);
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().y(), 0);
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().z(), -0.105);
-
-  // Pre Grasp Posture
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
-  EXPECT_GT(grasp_data_->pre_grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), 0);
-
-  // Grasp Posture
-  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "world");
-  EXPECT_GT(grasp_data_->grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
-
-  // Semantics
-  EXPECT_EQ(grasp_data_->base_link_, "world");
-  EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
-  // TODO (mlautman-2/13/19): restore this test once https://github.com/ros-planning/panda_moveit_config/pull/20 is released
-  // EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm");
-  EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
-  EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
-
-  // Geometry doubles
-  EXPECT_GT(grasp_data_->angle_resolution_, 0);
-  EXPECT_GT(grasp_data_->grasp_max_depth_, 0);
-  EXPECT_GT(grasp_data_->grasp_resolution_, 0);
-  EXPECT_GT(grasp_data_->grasp_depth_resolution_, 0);
-  EXPECT_GT(grasp_data_->grasp_min_depth_, 0);
-  EXPECT_GT(grasp_data_->gripper_finger_width_, 0);
-  EXPECT_GT(grasp_data_->max_grasp_width_, 0);
-  EXPECT_GT(grasp_data_->approach_distance_desired_, 0);
-  EXPECT_GT(grasp_data_->retreat_distance_desired_, 0);
-  EXPECT_GT(grasp_data_->lift_distance_desired_, 0);
-  EXPECT_GT(grasp_data_->grasp_padding_on_approach_, 0);
-  EXPECT_GT(grasp_data_->max_finger_width_, 0);
-  EXPECT_GT(grasp_data_->min_finger_width_, 0);
-}
-
 TEST_F(GraspGeneratorTest, GraspCandidateConfig)
 {
   // Default constructor
