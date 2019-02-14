@@ -81,24 +81,25 @@ TEST_F(GraspGeneratorTest, GraspData)
   // Grasp Pose To EEF Pose
   EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().x(), 0);
   EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().y(), 0);
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().z(), -0.13);
+  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().z(), -0.105);
 
   // Pre Grasp Posture
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "panda_link0");
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
   EXPECT_GT(grasp_data_->pre_grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), 0);
 
   // Grasp Posture
-  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "panda_link0");
+  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "world");
   EXPECT_GT(grasp_data_->grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
 
   // Semantics
-  EXPECT_EQ(grasp_data_->base_link_, "panda_link0");
+  EXPECT_EQ(grasp_data_->base_link_, "world");
   EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
-  EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm_hand");
+  // TODO (mlautman-2/13/19): restore this test once https://github.com/ros-planning/panda_moveit_config/pull/20 is released
+  // EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm");
   EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
 
@@ -123,7 +124,7 @@ TEST_F(GraspGeneratorTest, GraspCandidateConfig)
 {
   // Default constructor
   GraspCandidateConfig grasp_candidate_config;
-  EXPECT_FALSE(grasp_candidate_config.enable_corner_grasps_);
+  EXPECT_TRUE(grasp_candidate_config.enable_corner_grasps_);
 
   // Grasp Types
   grasp_candidate_config.enableAllGraspTypes();
@@ -178,7 +179,7 @@ TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 144;
+  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
@@ -204,7 +205,7 @@ TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
   GraspCandidatePtr grasp = grasp_candidates.front();
 
   // Grasp Msg
-  EXPECT_EQ(grasp->grasp_.id, "Grasp96");
+  EXPECT_EQ(grasp->grasp_.id, "Grasp224");
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.x, 0);
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.y, 0);
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.z, 0);
@@ -249,7 +250,7 @@ TEST_F(GraspGeneratorTest, GenerateEdgeGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 144;
+  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
@@ -289,7 +290,7 @@ TEST_F(GraspGeneratorTest, GenerateCornerGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 144;
+  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,

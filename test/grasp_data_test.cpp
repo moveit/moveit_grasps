@@ -78,24 +78,25 @@ TEST_F(GraspDataTest, CheckConfigValues)
   // Grasp Pose To EEF Pose
   EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().x(), 0);
   EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().y(), 0);
-  EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().z(), -0.13);
+  EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().z(), -0.105);
 
   // Pre Grasp Posture
-  EXPECT_EQ(grasp_data.pre_grasp_posture_.header.frame_id, "panda_link0");
+  EXPECT_EQ(grasp_data.pre_grasp_posture_.header.frame_id, "world");
   EXPECT_GT(grasp_data.pre_grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data.pre_grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data.pre_grasp_posture_.points[0].positions.size(), 0);
 
   // Grasp Posture
-  EXPECT_EQ(grasp_data.grasp_posture_.header.frame_id, "panda_link0");
+  EXPECT_EQ(grasp_data.grasp_posture_.header.frame_id, "world");
   EXPECT_GT(grasp_data.grasp_posture_.header.stamp.toSec(), 0);
   EXPECT_EQ(grasp_data.grasp_posture_.points.size(), 1);
   EXPECT_GT(grasp_data.grasp_posture_.points[0].positions.size(), 0);
 
   // Semantics
-  EXPECT_EQ(grasp_data.base_link_, "panda_link0");
+  EXPECT_EQ(grasp_data.base_link_, "pworld");
   EXPECT_EQ(grasp_data.ee_jmg_->getName(), "hand");
-  EXPECT_EQ(grasp_data.arm_jmg_->getName(), "panda_arm_hand");
+  // TODO (mlautman-2/13/19): restore this test once https://github.com/ros-planning/panda_moveit_config/pull/20 is released
+  // EXPECT_EQ(grasp_data.arm_jmg_->getName(), "panda_arm");
   EXPECT_EQ(grasp_data.parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data.robot_model_->getName(), "panda");
 
