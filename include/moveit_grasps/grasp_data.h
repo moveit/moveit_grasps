@@ -145,7 +145,6 @@ public:
   // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link" class
   const robot_model::LinkModel* parent_link_;
 
-  double grasp_depth_;    // distance from center point of object to end effector
   int angle_resolution_;  // generate grasps at increments of: angle_resolution * pi / 180
 
   double grasp_resolution_;

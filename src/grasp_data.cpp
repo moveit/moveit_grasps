@@ -59,7 +59,7 @@ namespace moveit_grasps
 {
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), robot_model_(robot_model), grasp_depth_(0.12), angle_resolution_(16)
+  : base_link_("/base_link"), robot_model_(robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
@@ -117,11 +117,17 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   child_nh.param<std::string>("end_effector_type", end_effector_type_str, "finger");
 
   if (end_effector_type_str == "finger")
+  {
     end_effector_type_ = FINGER;
+  }
   else if (end_effector_type_str == "suction")
+  {
     end_effector_type_ = SUCTION;
+  }
   else
+  {
     ROS_ASSERT_MSG(false, "Unrecognized end effector type: %s", end_effector_type_str.c_str());
+  }
 
   if (end_effector_type_ == FINGER)
   {
@@ -161,13 +167,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_posture_.points.resize(1);
   grasp_posture_.points[0].positions = grasp_posture;
   grasp_posture_.points[0].time_from_start = ros::Duration(grasp_time_from_start);
-
-  // Nums
-  // distance from center point of object to end effector
-  grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
-
-  // generate grasps at PI/angle_resolution increments
-  // angle_resolution_ = 32; //TODO(mlautman): parametrize this, or move to action interface
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
@@ -335,7 +334,6 @@ void GraspData::print()
   std::cout << "grasp_posture_: \n" << grasp_posture_ << std::endl;
   std::cout << "base_link_: " << base_link_ << std::endl;
   std::cout << "ee_group_: " << ee_jmg_->getName() << std::endl;
-  std::cout << "grasp_depth_: " << grasp_depth_ << std::endl;
   std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
   std::cout << "grasp_max_depth_: " << grasp_max_depth_ << std::endl;
   std::cout << "grasp_padding_on_approach_: " << grasp_padding_on_approach_ << std::endl;

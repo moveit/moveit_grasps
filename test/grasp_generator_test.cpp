@@ -104,7 +104,6 @@ TEST_F(GraspGeneratorTest, GraspData)
   EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
 
   // Geometry doubles
-  EXPECT_GT(grasp_data_->grasp_depth_, 0);
   EXPECT_GT(grasp_data_->angle_resolution_, 0);
   EXPECT_GT(grasp_data_->grasp_max_depth_, 0);
   EXPECT_GT(grasp_data_->grasp_resolution_, 0);

@@ -101,7 +101,6 @@ TEST_F(GraspDataTest, CheckConfigValues)
   EXPECT_EQ(grasp_data.robot_model_->getName(), "panda");
 
   // Geometry doubles
-  EXPECT_GT(grasp_data.grasp_depth_, 0);
   EXPECT_GT(grasp_data.angle_resolution_, 0);
   EXPECT_GT(grasp_data.grasp_max_depth_, 0);
   EXPECT_GT(grasp_data.grasp_resolution_, 0);
