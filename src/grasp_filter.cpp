@@ -506,9 +506,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     const std::string& ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
     ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate, ee_parent_link_name);
 
-    // Set gripper position (how open the fingers are) to CLOSED
-    // grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
-
     // Solve IK Problem for pregrasp
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
     {

@@ -181,13 +181,10 @@ public:
     // Configure the desired types of grasps
     moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
     grasp_generator_config.disableAll();
-    // grasp_generator_config.enable_face_grasps_ = true;
-    // grasp_generator_config.enable_corner_grasps_ = true;
     grasp_generator_config.enable_face_grasps_ = true;
-    // grasp_generator_config.enable_variable_angle_grasps_ = true;
-    // grasp_generator_config.enable_edge_grasps_ = true;
-    // grasp_generator_config.generate_x_axis_grasps_ = true;
-    // grasp_generator_config.generate_y_axis_grasps_ = true;
+    grasp_generator_config.enable_edge_grasps_ = true;
+    grasp_generator_config.generate_x_axis_grasps_ = true;
+    grasp_generator_config.generate_y_axis_grasps_ = true;
     grasp_generator_config.generate_z_axis_grasps_ = true;
 
     // Loop
