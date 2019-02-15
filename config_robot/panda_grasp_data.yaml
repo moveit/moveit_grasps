@@ -11,7 +11,6 @@ hand:
     pregrasp_time_from_start : 0.0
     grasp_time_from_start : 0.0
 
-
     # width of gripper fingers
     gripper_finger_width : 0.015
 

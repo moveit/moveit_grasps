@@ -47,7 +47,7 @@
 
 namespace moveit_grasps
 {
-static const double BLOCK_SIZE = 0.04;
+static const double BLOCK_SIZE = 0.02;
 
 class GraspGeneratorDemo
 {
@@ -205,9 +205,9 @@ public:
       possible_grasps.clear();
 
       // Generate set of grasps for one object
-      double depth = 0.05;
-      double width = 0.10;
-      double height = 0.05;
+      double depth = 0.03;
+      double width = 0.03;
+      double height = 0.03;
 
       grasp_visuals_->publishCuboid(object_pose, depth, width, height, rviz_visual_tools::TRANSLUCENT_DARK);
       grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
