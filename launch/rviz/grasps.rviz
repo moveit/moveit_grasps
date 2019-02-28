@@ -6,9 +6,12 @@ Panels:
       Expanded:
         - /Global Options1
         - /MarkerArray1
+        - /MarkerArray1/Namespaces1
         - /MarkerArray2
-      Splitter Ratio: 0.570423
-    Tree Height: 814
+        - /PlanningScene1
+        - /PlanningScene1/Scene Robot1
+      Splitter Ratio: 0.570423007
+    Tree Height: 703
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -17,7 +20,7 @@ Panels:
       - /2D Nav Goal1
       - /Publish Point1
     Name: Tool Properties
-    Splitter Ratio: 0.588679
+    Splitter Ratio: 0.588679016
   - Class: rviz/Views
     Expanded:
       - /Current View1
@@ -28,6 +31,8 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: ""
+  - Class: rviz_visual_tools/RvizVisualToolsGui
+    Name: RvizVisualToolsGui
 Visualization Manager:
   Class: ""
   Displays:
@@ -37,7 +42,7 @@ Visualization Manager:
       Color: 160; 160; 164
       Enabled: true
       Line Style:
-        Line Width: 0.03
+        Line Width: 0.0299999993
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
@@ -50,6 +55,105 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: moveit_rviz_plugin/Trajectory
+      Color Enabled: false
+      Enabled: true
+      Interrupt Display: false
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        panda_hand:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_leftfinger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        panda_rightfinger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Loop Animation: false
+      Name: Trajectory
+      Robot Alpha: 0.5
+      Robot Color: 150; 50; 150
+      Robot Description: robot_description
+      Show Robot Collision: false
+      Show Robot Visual: true
+      Show Trail: false
+      State Display Time: 0.05 s
+      Trail Step Size: 1
+      Trajectory Topic: /display_planned_path
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /rviz_visual_tools
+      Name: MarkerArray
+      Namespaces:
+        Axis: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /grasp_visuals
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Attached Body Color: 150; 50; 150
+      Class: moveit_rviz_plugin/RobotState
+      Collision Enabled: false
       Enabled: true
       Links:
         All Links Enabled: true
@@ -57,40 +161,162 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-      Loop Animation: false
-      Name: Trajectory
-      Robot Alpha: 0.5
+        panda_hand:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_leftfinger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        panda_rightfinger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Name: RobotState
+      Robot Alpha: 1
       Robot Description: robot_description
-      Show Robot Collision: false
-      Show Robot Visual: true
-      Show Trail: false
-      State Display Time: 0.05 s
-      Trajectory Topic: /move_group/display_planned_path
+      Robot State Topic: /display_robot_state
+      Show All Links: true
+      Show Highlights: true
       Value: true
-    - Class: rviz/MarkerArray
+      Visual Enabled: true
+    - Class: moveit_rviz_plugin/PlanningScene
       Enabled: true
-      Marker Topic: /rviz_visual_tools
-      Name: MarkerArray
-      Namespaces:
-        Arrow: true
-        Axis: true
-        IDEAL_GRASP_POSE: true
-        Sphere: true
-        Text: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /moveit_grasps_test/grasp_visuals
-      Name: MarkerArray
-      Namespaces:
-        {}
-      Queue Size: 100
+      Move Group Namespace: ""
+      Name: PlanningScene
+      Planning Scene Topic: /moveit_grasps_demo/grasping_planning_scene
+      Robot Description: robot_description
+      Scene Geometry:
+        Scene Alpha: 0.899999976
+        Scene Color: 50; 230; 50
+        Scene Display Time: 0.200000003
+        Show Scene Geometry: true
+        Voxel Coloring: Z-Axis
+        Voxel Rendering: Occupied Voxels
+      Scene Robot:
+        Attached Body Color: 150; 50; 150
+        Links:
+          All Links Enabled: true
+          Expand Joint Details: false
+          Expand Link Details: false
+          Expand Tree: false
+          Link Tree Style: Links in Alphabetic Order
+          panda_hand:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_leftfinger:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link4:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link5:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link6:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link7:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          panda_link8:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          panda_rightfinger:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+        Robot Alpha: 1
+        Show Robot Collision: false
+        Show Robot Visual: false
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base
+    Default Light: true
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -111,38 +337,45 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.487592
+      Distance: 1.52736425
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.06
+        Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.449824
-        Y: 0.37574
-        Z: 0.585002
+        X: 0.652114987
+        Y: 0.318052232
+        Z: 0.366032124
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.0500000007
+      Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.01
-      Pitch: 0.385398
+      Near Clip Distance: 0.00999999978
+      Pitch: 0.115397707
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.5654
+      Yaw: 4.90539265
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1052
+  Height: 1065
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001ac000003bdfc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f0070006500720074006900650073020000042c000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000041000003bd000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000220000001c00000000000000000000000010000010f000003f1fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000041000003f1000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006380000003efc0100000002fb0000000800540069006d0065000000000000000638000002f600fffffffb0000000800540069006d00650100000000000004500000000000000000000005ce000003bd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001ac000003c6fc020000000bfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006300fffffffb0000001e0054006f006f006c002000500072006f0070006500720074006900650073020000042c000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000004200000353000000dc00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000220000001c00000000000000000fb0000003c005400720061006a006500630074006f007200790020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004800fffffffb00000024005200760069007a00560069007300750061006c0054006f006f006c0073004700750069010000039b0000006d0000004800ffffff000000010000010f000003f1fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000041000003f1000000b500fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006380000003efc0100000002fb0000000800540069006d00650000000000000006380000027000fffffffb0000000800540069006d006501000000000000045000000000000000000000064e000003c600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  RvizVisualToolsGui:
+    collapsed: false
   Selection:
     collapsed: false
   Time:
     collapsed: false
   Tool Properties:
     collapsed: false
+  Trajectory - Trajectory Slider:
+    collapsed: false
   Views:
     collapsed: false
-  Width: 1920
-  X: 1920
-  Y: 0
+  Width: 2048
+  X: 0
+  Y: 27

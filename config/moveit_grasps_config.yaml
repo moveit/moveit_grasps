@@ -1,30 +1,27 @@
 moveit_grasps:
+  # These settings are used by the grasp generator which generates GraspCandidates
   generator:
     # Other verbose stuff
     verbose: false
-    # Show the generated grasp arrows
-    # show_grasp_arrows: true
-    # show_grasp_arrows_speed: 0.1
+
     # Show hand of generated grasps
     show_prefiltered_grasps: false
     show_prefiltered_grasps_speed: 0.01
 
-    # Don't know if this should go here... seems like config_robot/*.yaml is a better place
-    depth_score_weight: 3.0
-    width_score_weight: 1.0
-    orientation_x_score_weight: 0.0
-    orientation_y_score_weight: 5.0
-    orientation_z_score_weight: 2.0
-    translation_x_score_weight: 0.0
-    translation_y_score_weight: 0.0
-    translation_z_score_weight: 4.0
-    overhang_x_score_weight: 0.0
-    overhang_y_score_weight: 0.0
+    ###########################
+    ## finger gripper settings
+    ###########################
+    # None yet
 
-    # Ideal grasp orientation (RPY)
-    ideal_grasp_orientation_rpy: [0, 3.14159, 3.14159]
-    show_ideal_grasp_orientation: true
+    ###########################
+    ## suction gripper settings
+    ###########################
+    # Visual debug options
+    debug_top_grasps: false
+    # Show suction gripper overhang
+    show_grasp_overhang: false
 
+  # The grasp filter filters out unreachable GraspCandidates and populates valid GraspCandidates' pregrasp_ik_solution_ and grasp_ik_solution_'s
   filter:
     # Show summary statistics
     statistics_verbose: true
@@ -34,7 +31,7 @@ moveit_grasps:
     collision_verbose: false
     collision_verbose_speed: 0.01
     # Collision checking in verbose on second pass (after all failed)
-    show_grasp_filter_collision_if_failed: true
+    show_grasp_filter_collision_if_failed: false
     # Show post-filter arrows
     show_filtered_grasps: false
     # Show pose-filter arm ik solutions
@@ -42,8 +39,11 @@ moveit_grasps:
     show_filtered_arm_solutions_pregrasp_speed: 0.25
     show_filtered_arm_solutions_speed: 0.5
 
+  # The GraspPlanner generates approach, lift and retreat paths for a GraspCandidate.
+  # If the GraspPlanner is unable to plan 100% of the approach path and at least ~90% of the lift and retreat paths, then it considers the GraspCandidate to be infeasible
   planner:
     # Cartesian planning
+    statistics_verbose: false
     verbose_cartesian_filtering: false
-    show_cartesian_waypoints: true
+    show_cartesian_waypoints: false
     collision_checking_verbose: false

@@ -56,7 +56,7 @@ public:
     : nh_("~")
     , verbose_(true)
     , ee_group_name_("hand")
-    , visual_tools_(new moveit_visual_tools::MoveItVisualTools("base"))
+    , visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
     , grasp_data_(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
   {
   }
@@ -74,56 +74,11 @@ TEST_F(GraspGeneratorTest, ConstructDestruct)
   GraspGenerator grasp_generator(visual_tools_, verbose_);
 }
 
-TEST_F(GraspGeneratorTest, GraspData)
-{
-  // TODO(davetcoleman): move this test into a new grasp_data_test.cpp file
-
-  // Grasp Pose To EEF Pose
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().x(), 0);
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().y(), 0);
-  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().z(), -0.13);
-
-  // Pre Grasp Posture
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
-  EXPECT_GT(grasp_data_->pre_grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), 0);
-
-  // Grasp Posture
-  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "world");
-  EXPECT_GT(grasp_data_->grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
-
-  // Semantics
-  EXPECT_EQ(grasp_data_->base_link_, "world");
-  EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
-  EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm_hand");
-  EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
-  EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
-
-  // Geometry doubles
-  EXPECT_GT(grasp_data_->grasp_depth_, 0);
-  EXPECT_GT(grasp_data_->angle_resolution_, 0);
-  EXPECT_GT(grasp_data_->grasp_max_depth_, 0);
-  EXPECT_GT(grasp_data_->grasp_resolution_, 0);
-  EXPECT_GT(grasp_data_->grasp_depth_resolution_, 0);
-  EXPECT_GT(grasp_data_->grasp_min_depth_, 0);
-  EXPECT_GT(grasp_data_->gripper_finger_width_, 0);
-  EXPECT_GT(grasp_data_->max_grasp_width_, 0);
-  EXPECT_GT(grasp_data_->approach_distance_desired_, 0);
-  EXPECT_GT(grasp_data_->retreat_distance_desired_, 0);
-  EXPECT_GT(grasp_data_->lift_distance_desired_, 0);
-  EXPECT_GT(grasp_data_->grasp_padding_on_approach_, 0);
-  EXPECT_GT(grasp_data_->max_finger_width_, 0);
-  EXPECT_GT(grasp_data_->min_finger_width_, 0);
-}
-
 TEST_F(GraspGeneratorTest, GraspCandidateConfig)
 {
   // Default constructor
   GraspCandidateConfig grasp_candidate_config;
-  EXPECT_FALSE(grasp_candidate_config.enable_corner_grasps_);
+  EXPECT_TRUE(grasp_candidate_config.enable_corner_grasps_);
 
   // Grasp Types
   grasp_candidate_config.enableAllGraspTypes();
@@ -178,7 +133,7 @@ TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 144;
+  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
@@ -204,7 +159,7 @@ TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
   GraspCandidatePtr grasp = grasp_candidates.front();
 
   // Grasp Msg
-  EXPECT_EQ(grasp->grasp_.id, "Grasp96");
+  EXPECT_EQ(grasp->grasp_.id, "Grasp224");
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.x, 0);
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.y, 0);
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.z, 0);
@@ -249,7 +204,7 @@ TEST_F(GraspGeneratorTest, GenerateEdgeGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 144;
+  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
@@ -289,7 +244,7 @@ TEST_F(GraspGeneratorTest, GenerateCornerGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 144;
+  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,

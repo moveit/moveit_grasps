@@ -59,7 +59,7 @@ namespace moveit_grasps
 {
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), robot_model_(robot_model), grasp_depth_(0.12), angle_resolution_(16)
+  : base_link_("/base_link"), robot_model_(robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
@@ -99,6 +99,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_time_from_start", grasp_time_from_start);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_resolution", grasp_resolution_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_min_depth", grasp_min_depth_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_max_depth", grasp_max_depth_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_depth_resolution", grasp_depth_resolution_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "approach_distance_desired", approach_distance_desired_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "retreat_distance_desired", retreat_distance_desired_);
@@ -116,15 +117,20 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   child_nh.param<std::string>("end_effector_type", end_effector_type_str, "finger");
 
   if (end_effector_type_str == "finger")
+  {
     end_effector_type_ = FINGER;
+  }
   else if (end_effector_type_str == "suction")
+  {
     end_effector_type_ = SUCTION;
+  }
   else
+  {
     ROS_ASSERT_MSG(false, "Unrecognized end effector type: %s", end_effector_type_str.c_str());
+  }
 
   if (end_effector_type_ == FINGER)
   {
-    error += !rosparam_shortcuts::get(parent_name, child_nh, "finger_to_palm_depth", grasp_max_depth_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "gripper_finger_width", gripper_finger_width_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "max_grasp_width", max_grasp_width_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "max_finger_width", max_finger_width_);
@@ -134,7 +140,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   {
     error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
-    error += !rosparam_shortcuts::get(parent_name, child_nh, "suction_cup_stroke", grasp_max_depth_);
   }
   rosparam_shortcuts::shutdownIfError(parent_name, error);
 
@@ -162,13 +167,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   grasp_posture_.points.resize(1);
   grasp_posture_.points[0].positions = grasp_posture;
   grasp_posture_.points[0].time_from_start = ros::Duration(grasp_time_from_start);
-
-  // Nums
-  // distance from center point of object to end effector
-  grasp_depth_ = 0.06;  // in negative or 0 this makes the grasps on the other side of the object! (like from below)
-
-  // generate grasps at PI/angle_resolution increments
-  // angle_resolution_ = 32; //TODO(mlautman): parametrize this, or move to action interface
 
   // Copy values from RobotModel
   ee_jmg_ = robot_model_->getJointModelGroup(end_effector_name);
@@ -336,7 +334,6 @@ void GraspData::print()
   std::cout << "grasp_posture_: \n" << grasp_posture_ << std::endl;
   std::cout << "base_link_: " << base_link_ << std::endl;
   std::cout << "ee_group_: " << ee_jmg_->getName() << std::endl;
-  std::cout << "grasp_depth_: " << grasp_depth_ << std::endl;
   std::cout << "angle_resolution_: " << angle_resolution_ << std::endl;
   std::cout << "grasp_max_depth_: " << grasp_max_depth_ << std::endl;
   std::cout << "grasp_padding_on_approach_: " << grasp_padding_on_approach_ << std::endl;

@@ -97,13 +97,13 @@ enum grasp_axis_t
 struct GraspCandidateConfig
 {
   GraspCandidateConfig()
-    : enable_corner_grasps_(false)
-    , enable_face_grasps_(false)
-    , enable_variable_angle_grasps_(false)
-    , enable_edge_grasps_(false)
-    , generate_x_axis_grasps_(false)
-    , generate_y_axis_grasps_(false)
-    , generate_z_axis_grasps_(false)
+    : enable_corner_grasps_(true)
+    , enable_face_grasps_(true)
+    , enable_variable_angle_grasps_(true)
+    , enable_edge_grasps_(true)
+    , generate_x_axis_grasps_(true)
+    , generate_y_axis_grasps_(true)
+    , generate_z_axis_grasps_(true)
   {
   }
   void enableAllGraspTypes()
@@ -153,6 +153,36 @@ struct GraspCandidateConfig
   bool generate_x_axis_grasps_;
   bool generate_y_axis_grasps_;
   bool generate_z_axis_grasps_;
+};
+
+struct GraspScoreWeights
+{
+  GraspScoreWeights()
+    : orientation_x_score_weight_(1.0)
+    , orientation_y_score_weight_(1.0)
+    , orientation_z_score_weight_(1.0)
+    , translation_x_score_weight_(1.0)
+    , translation_y_score_weight_(1.0)
+    , translation_z_score_weight_(1.0)
+    , depth_score_weight_(1.0)
+    , width_score_weight_(1.0)
+    , overhang_score_weight_(1.0)
+  {
+  }
+
+  double orientation_x_score_weight_;
+  double orientation_y_score_weight_;
+  double orientation_z_score_weight_;
+  double translation_x_score_weight_;
+  double translation_y_score_weight_;
+  double translation_z_score_weight_;
+
+  // Finger gripper specific weights
+  double depth_score_weight_;
+  double width_score_weight_;
+
+  // Suction gripper specific weights
+  double overhang_score_weight_;
 };
 
 // Class
@@ -288,6 +318,7 @@ public:
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
    * \param object_size - size of object to grasp
+   * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
    * \return true on success
    */
   bool addGrasp(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
@@ -333,6 +364,13 @@ public:
    */
   static geometry_msgs::PoseStamped getPreGraspPose(const GraspCandidatePtr& grasp_candidate,
                                                     const std::string& ee_parent_link);
+  /**
+   * \brief Compute the pre-grasp, grasp, lift and retreat poses for a grasp candidate
+   * \param grasp_candidate - the grasp candidate
+   * \param grasp_waypoints - a reference to a vector that will be populated with the pre-grasp, grasp, lift and retreat
+   * poses in that order.
+   */
+  static void getGraspWaypoints(const GraspCandidatePtr& grasp_candidate, EigenSTL::vector_Affine3d& grasp_waypoints);
 
   /**
    * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
@@ -365,6 +403,24 @@ public:
   void setIdealGraspPose(Eigen::Affine3d ideal_pose)
   {
     ideal_grasp_pose_ = ideal_pose;
+  }
+
+  void setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy);
+
+  /**
+   * \brief Setter for grasp score weights
+   */
+  void setGraspScoreWeights(GraspScoreWeights grasp_score_weights)
+  {
+    grasp_score_weights_ = grasp_score_weights;
+  }
+
+  /**
+   * \brief Setter for grasp score weights
+   */
+  GraspScoreWeights getGraspScoreWeights()
+  {
+    return grasp_score_weights_;
   }
 
   /**
@@ -400,8 +456,11 @@ private:
   // Display more output both in console
   bool verbose_;
 
-  // Visual debug top grasp transforms
+  // Visual debug settings
   bool debug_top_grasps_;
+  bool show_prefiltered_grasps_;
+  double show_prefiltered_grasps_speed_;
+  bool show_grasp_overhang_;
 
   // Shared node handle
   ros::NodeHandle nh_;
@@ -409,28 +468,10 @@ private:
   // Transform from frame of box to global frame
   Eigen::Affine3d object_global_transform_;
 
-  bool show_prefiltered_grasps_;
-  double show_prefiltered_grasps_speed_;
-
   double min_grasp_distance_, max_grasp_distance_;
   Eigen::Vector3d min_translations_, max_translations_;
 
-  double depth_score_weight_;
-  double width_score_weight_;
-  double height_score_weight_;
-  double orientation_x_score_weight_;
-  double orientation_y_score_weight_;
-  double orientation_z_score_weight_;
-  double translation_x_score_weight_;
-  double translation_y_score_weight_;
-  double translation_z_score_weight_;
-
-  // Suction gripper overhang
-  double overhang_x_score_weight_;
-  double overhang_y_score_weight_;
-  bool show_grasp_overhang_;
-
-  // bounding_box::BoundingBox bounding_box_;
+  GraspScoreWeights grasp_score_weights_;
 
 };  // end of class
 

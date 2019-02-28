@@ -145,7 +145,6 @@ public:
   // the last link in the kinematic chain before the end effector, e.g. "/gripper_roll_link" class
   const robot_model::LinkModel* parent_link_;
 
-  double grasp_depth_;    // distance from center point of object to end effector
   int angle_resolution_;  // generate grasps at increments of: angle_resolution * pi / 180
 
   double grasp_resolution_;
@@ -154,8 +153,8 @@ public:
   double grasp_max_depth_;  // Maximum distance from tip of end effector inwords that an object can be for a grasp
 
   // grasp approach and retreat parameters
-  double approach_distance_desired_;  // this is in addition to the finger_to_palm_depth
-  double retreat_distance_desired_;   // this is in addition to the finger_to_palm_depth
+  double approach_distance_desired_;  // this is in addition to the grasp_max_depth
+  double retreat_distance_desired_;   // this is in addition to the grasp_max_depth
   double lift_distance_desired_;
   double grasp_padding_on_approach_;
 

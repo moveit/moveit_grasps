@@ -55,82 +55,100 @@ namespace moveit_grasps
 class GraspDataTest : public ::testing::Test
 {
 public:
-  GraspDataTest() : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("base"))
+  GraspDataTest()
+    : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
   {
+    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
   }
 
 protected:
   ros::NodeHandle nh_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+  GraspDataPtr grasp_data_;
 };  // class GraspGenerator
-
-TEST_F(GraspDataTest, ConstructDestruct)
-{
-  GraspData grasp_data(nh_, ee_group_name_, visual_tools_->getRobotModel());
-}
 
 TEST_F(GraspDataTest, CheckConfigValues)
 {
-  GraspData grasp_data(nh_, ee_group_name_, visual_tools_->getRobotModel());
-
   // Grasp Pose To EEF Pose
-  EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().x(), 0);
-  EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().y(), 0);
-  EXPECT_EQ(grasp_data.grasp_pose_to_eef_pose_.translation().z(), -0.13);
+  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().x(), 0);
+  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().y(), 0);
+  EXPECT_EQ(grasp_data_->grasp_pose_to_eef_pose_.translation().z(), -0.105);
 
   // Pre Grasp Posture
-  EXPECT_EQ(grasp_data.pre_grasp_posture_.header.frame_id, "world");
-  EXPECT_GT(grasp_data.pre_grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data.pre_grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data.pre_grasp_posture_.points[0].positions.size(), 0);
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
+  EXPECT_GT(grasp_data_->pre_grasp_posture_.header.stamp.toSec(), 0);
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), 1);
+  EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), 0);
 
   // Grasp Posture
-  EXPECT_EQ(grasp_data.grasp_posture_.header.frame_id, "world");
-  EXPECT_GT(grasp_data.grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data.grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data.grasp_posture_.points[0].positions.size(), 0);
+  EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "world");
+  EXPECT_GT(grasp_data_->grasp_posture_.header.stamp.toSec(), 0);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), 1);
+  EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
 
   // Semantics
-  EXPECT_EQ(grasp_data.base_link_, "world");
-  EXPECT_EQ(grasp_data.ee_jmg_->getName(), "hand");
-  EXPECT_EQ(grasp_data.arm_jmg_->getName(), "panda_arm_hand");
-  EXPECT_EQ(grasp_data.parent_link_->getName(), "panda_hand");
-  EXPECT_EQ(grasp_data.robot_model_->getName(), "panda");
+  EXPECT_EQ(grasp_data_->base_link_, "world");
+  EXPECT_EQ(grasp_data_->ee_jmg_->getName(), "hand");
+  // TODO (mlautman-2/13/19): restore this test once https://github.com/ros-planning/panda_moveit_config/pull/20 is
+  // released
+  // EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm");
+  EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
+  EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
+  EXPECT_EQ(grasp_data_->end_effector_type_, FINGER);
 
   // Geometry doubles
-  EXPECT_GT(grasp_data.grasp_depth_, 0);
-  EXPECT_GT(grasp_data.angle_resolution_, 0);
-  EXPECT_GT(grasp_data.grasp_max_depth_, 0);
-  EXPECT_GT(grasp_data.grasp_resolution_, 0);
-  EXPECT_GT(grasp_data.grasp_depth_resolution_, 0);
-  EXPECT_GT(grasp_data.grasp_min_depth_, 0);
-  EXPECT_GT(grasp_data.gripper_finger_width_, 0);
-  EXPECT_GT(grasp_data.max_grasp_width_, 0);
-  EXPECT_GT(grasp_data.approach_distance_desired_, 0);
-  EXPECT_GT(grasp_data.retreat_distance_desired_, 0);
-  EXPECT_GT(grasp_data.lift_distance_desired_, 0);
-  EXPECT_GT(grasp_data.grasp_padding_on_approach_, 0);
-  EXPECT_GT(grasp_data.max_finger_width_, 0);
-  EXPECT_GT(grasp_data.min_finger_width_, 0);
+  EXPECT_GT(grasp_data_->angle_resolution_, 0);
+  EXPECT_GT(grasp_data_->grasp_max_depth_, 0);
+  EXPECT_GT(grasp_data_->grasp_resolution_, 0);
+  EXPECT_GT(grasp_data_->grasp_depth_resolution_, 0);
+  EXPECT_GT(grasp_data_->grasp_min_depth_, 0);
+  EXPECT_GT(grasp_data_->gripper_finger_width_, 0);
+  EXPECT_GT(grasp_data_->max_grasp_width_, 0);
+  EXPECT_GT(grasp_data_->approach_distance_desired_, 0);
+  EXPECT_GT(grasp_data_->retreat_distance_desired_, 0);
+  EXPECT_GT(grasp_data_->lift_distance_desired_, 0);
+  EXPECT_GT(grasp_data_->grasp_padding_on_approach_, 0);
+  EXPECT_GT(grasp_data_->max_finger_width_, 0);
+  EXPECT_GT(grasp_data_->min_finger_width_, 0);
 }
 
 TEST_F(GraspDataTest, SetRobotState)
 {
-  GraspData grasp_data(nh_, ee_group_name_, visual_tools_->getRobotModel());
   moveit::core::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
   // Pre Grasp
-  grasp_data.setRobotStatePreGrasp(robot_state);
-  EXPECT_EQ(grasp_data.pre_grasp_posture_.points[0].positions[0],
+  grasp_data_->setRobotStatePreGrasp(robot_state);
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[0],
             robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data.pre_grasp_posture_.points[0].positions[1],
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[1],
             robot_state->getJointPositions("panda_finger_joint2")[0]);
 
   // Grasp
-  grasp_data.setRobotStateGrasp(robot_state);
-  EXPECT_EQ(grasp_data.grasp_posture_.points[0].positions[0], robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data.grasp_posture_.points[0].positions[1], robot_state->getJointPositions("panda_finger_joint2")[0]);
+  grasp_data_->setRobotStateGrasp(robot_state);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0],
+            robot_state->getJointPositions("panda_finger_joint1")[0]);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1],
+            robot_state->getJointPositions("panda_finger_joint2")[0]);
+}
+
+TEST_F(GraspDataTest, fingerWidthToGraspPosture)
+{
+  moveit::core::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
+
+  // Pre Grasp
+  grasp_data_->setRobotStatePreGrasp(robot_state);
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[0],
+            robot_state->getJointPositions("panda_finger_joint1")[0]);
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[1],
+            robot_state->getJointPositions("panda_finger_joint2")[0]);
+
+  // Grasp
+  grasp_data_->setRobotStateGrasp(robot_state);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0],
+            robot_state->getJointPositions("panda_finger_joint1")[0]);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1],
+            robot_state->getJointPositions("panda_finger_joint2")[0]);
 }
 
 // TODO(davetcoleman): write test for remainder of this class

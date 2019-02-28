@@ -17,8 +17,6 @@ find_package(OpenMP)
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
-  actionlib
-  actionlib_msgs
   eigen_conversions
   geometry_msgs
   message_generation
@@ -36,28 +34,12 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
 )
 
-add_message_files(DIRECTORY msg FILES
-  GraspGeneratorOptions.msg
-)
-
-add_action_files(DIRECTORY action FILES
-  GenerateGrasps.action
-)
-
-generate_messages(DEPENDENCIES
-  actionlib_msgs
-  geometry_msgs
-  moveit_msgs
-  std_msgs
-)
-
 # Catkin
 catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
     ${PROJECT_NAME}_filter
   CATKIN_DEPENDS
-    actionlib_msgs
     geometry_msgs
     message_runtime
     moveit_msgs
@@ -106,31 +88,29 @@ set_target_properties(${PROJECT_NAME}_filter PROPERTIES COMPILE_FLAGS "${CMAKE_C
 set_target_properties(${PROJECT_NAME}_filter PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
 # Demo filter executable
-add_executable(${PROJECT_NAME}_filter_test src/demo/grasp_filter_test.cpp)
-target_link_libraries(${PROJECT_NAME}_filter_test
+add_executable(${PROJECT_NAME}_grasp_filter_demo src/demo/grasp_filter_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_filter_demo
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 # Demo grasp executable
-add_executable(${PROJECT_NAME}_test src/demo/grasp_generator_demo.cpp)
-target_link_libraries(${PROJECT_NAME}_test
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
-
-# Demo mesh bounding box
-add_executable(${PROJECT_NAME}_bounding_box_test src/demo/mesh_bounding_box_test.cpp)
-target_link_libraries(${PROJECT_NAME}_bounding_box_test
+add_executable(${PROJECT_NAME}_grasp_generator_demo src/demo/grasp_generator_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_generator_demo
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
 # Demo grasp data settings
-add_executable(${PROJECT_NAME}_grasp_poses_visualizer src/grasp_poses_visualizer.cpp)
-target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer
+add_executable(${PROJECT_NAME}_grasp_poses_visualizer_demo src/demo/grasp_poses_visualizer_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_poses_visualizer_demo
   ${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
+# Demo grasp pipeline
+add_executable(${PROJECT_NAME}_grasp_pipeline_demo src/demo/grasp_pipeline_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_grasp_pipeline_demo
+  ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 #############
@@ -152,10 +132,10 @@ install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # Install executables
 install(TARGETS
-  ${PROJECT_NAME}_bounding_box_test
-  ${PROJECT_NAME}_filter_test
-  ${PROJECT_NAME}_grasp_poses_visualizer
-  ${PROJECT_NAME}_test
+  ${PROJECT_NAME}_grasp_filter_demo
+  ${PROJECT_NAME}_grasp_generator_demo
+  ${PROJECT_NAME}_grasp_poses_visualizer_demo
+  ${PROJECT_NAME}_grasp_pipeline_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 

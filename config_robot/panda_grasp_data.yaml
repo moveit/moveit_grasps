@@ -3,48 +3,60 @@ base_link: 'world'
 # Note: these parameters are copied from Robotiq gripper without tweaking
 hand:
     end_effector_name: 'hand'  #ee group name
+    end_effector_type: 'finger'
 
     #actuated joints in end effector
-    joints : ['panda_finger_joint1', 'panda_finger_joint2']
+    joints : ['panda_finger_joint1']
 
     pregrasp_time_from_start : 0.0
     grasp_time_from_start : 0.0
 
-    # max depth of fingers (distance from finger tip to inner palm)
-    finger_to_palm_depth : 0.05
-
     # width of gripper fingers
-    gripper_finger_width : 0.0375
+    gripper_finger_width : 0.015
 
     # max object width that can fit between fingers
-    max_grasp_width: 0.085
+    max_grasp_width: 0.08
 
-    # grasp resolution parameters (angle is in degrees)
+    # x/y and angle grasp resolution parameters (angle is in degrees)
     grasp_resolution : 0.05
-    grasp_min_depth : 0.05
-    grasp_depth_resolution : 0.05
-    angle_resolution : 40
+    angle_resolution : 90
 
-    # Length of approach path
-    approach_distance_desired: 0.05 # this is in addition to the finger_to_palm_depth
+    # max/min depth of fingers (distance from finger tip to inner palm) or the suction cup stroke
+    grasp_max_depth : 0.035
+    grasp_min_depth : 0.01
+    grasp_depth_resolution : 1.05
 
-    # Length of retreat path
-    retreat_distance_desired: 0.001 # 0.2 # this is in addition to the finger_to_palm_depth
+    # Length of approach path (this is in addition to the grasp_max_depth)
+    approach_distance_desired: 0.05
 
-    # Minimum distance to lift object after grasping
-    lift_distance_desired: 0.1 # this is really just MIN LIFT DISTANCE
+    # Length of retreat path (this is in addition to the grasp_max_depth)
+    retreat_distance_desired: 0.05
+
+    # Minimum distance to lift object after grasping (this is really just MIN LIFT DISTANCE)
+    lift_distance_desired: 0.01
 
     # open position
-    pregrasp_posture : [0.0,0.0]
+    pregrasp_posture : [0.04]
 
     # close position
-    grasp_posture : [0.04,0.04]
+    grasp_posture : [0.0]
 
-    # desired pose from end effector to grasp - [x,y,z, r, p, y]
-    grasp_pose_to_eef_transform :  [0, 0, -0.13, 0, 0, 0] # NOTE: Imaginary point in the middle
+    # Distance from the eef mount to the palm of end effector [x, y, z, r, p, y]
+    # z-axis pointing toward object to grasp
+    # x-axis perp. to movement of grippers
+    # y-axis parallel to movement of grippers
+    grasp_pose_to_eef_transform :  [0, 0, -0.105, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
 
     # minimum padding on each side of the object on approach
     grasp_padding_on_approach: 0.005
 
+    # Distance between fingers, in meters
     max_finger_width: 0.085
     min_finger_width: 0.06
+
+    ################################################
+    ## If the panda had a suction gripper these would be the required parameters.
+    ################################################
+    # The width of the suction griper along the specified axes. (Assumes that Z points in the direction of the suction cups)
+    # active_suction_range_x : 0.25
+    # active_suction_range_y : 0.10
