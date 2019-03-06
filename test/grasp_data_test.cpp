@@ -121,15 +121,11 @@ TEST_F(GraspDataTest, SetRobotState)
   grasp_data_->setRobotStatePreGrasp(robot_state);
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[0],
             robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[1],
-            robot_state->getJointPositions("panda_finger_joint2")[0]);
 
   // Grasp
   grasp_data_->setRobotStateGrasp(robot_state);
   EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0],
             robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1],
-            robot_state->getJointPositions("panda_finger_joint2")[0]);
 }
 
 TEST_F(GraspDataTest, fingerWidthToGraspPosture)
@@ -140,15 +136,11 @@ TEST_F(GraspDataTest, fingerWidthToGraspPosture)
   grasp_data_->setRobotStatePreGrasp(robot_state);
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[0],
             robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points[0].positions[1],
-            robot_state->getJointPositions("panda_finger_joint2")[0]);
 
   // Grasp
   grasp_data_->setRobotStateGrasp(robot_state);
   EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[0],
             robot_state->getJointPositions("panda_finger_joint1")[0]);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points[0].positions[1],
-            robot_state->getJointPositions("panda_finger_joint2")[0]);
 }
 
 // TODO(davetcoleman): write test for remainder of this class
