@@ -56,10 +56,7 @@ namespace moveit_grasps
 class GraspFilterTest : public ::testing::Test
 {
 public:
-  GraspFilterTest()
-    : nh_("~")
-    , verbose_(true)
-    , ee_group_name_("hand")
+  GraspFilterTest() : nh_("~"), verbose_(true), ee_group_name_("hand")
   {
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     if (planning_scene_monitor_->getPlanningScene())
@@ -127,12 +124,12 @@ TEST_F(GraspFilterTest, TestGraspFilter)
 
     // generate grasps
     grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-        grasp_candidates, grasp_generator_config);
+                                     grasp_candidates, grasp_generator_config);
 
     // Filter the grasp for only the ones that are reachable
     bool filter_pregrasps = true;
     std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
-        visual_tools_->getSharedRobotState(), filter_pregrasps);
+                                                           visual_tools_->getSharedRobotState(), filter_pregrasps);
 
     EXPECT_FALSE(valid_grasps == 0) << "No valid grasps found after IK filtering";
   }
