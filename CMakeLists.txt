@@ -159,5 +159,13 @@ target_link_libraries(grasp_generator_test
   ${Boost_LIBRARIES}
 )
 
+add_rostest_gtest(grasp_filter_test test/grasp_filter_test.test test/grasp_filter_test.cpp)
+target_link_libraries(grasp_filter_test
+  ${PROJECT_NAME}
+  ${PROJECT_NAME}_filter
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
+
 ## Test for correct C++ source code
 roslint_cpp()
