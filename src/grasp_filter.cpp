@@ -178,10 +178,10 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   return true;
 }
 
-bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose,
+bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d filter_pose,
                                      grasp_parallel_plane plane, int direction)
 {
-  Eigen::Affine3d grasp_pose;
+  Eigen::Isometry3d grasp_pose;
   Eigen::Vector3d grasp_position;
 
   // get grasp translation in filter pose CS
@@ -212,11 +212,11 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::A
   return grasp_candidate->grasp_filtered_by_cutting_plane_;
 }
 
-bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Affine3d desired_pose,
+bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
                                            double max_angular_offset)
 {
-  Eigen::Affine3d std_grasp_pose;
-  Eigen::Affine3d grasp_pose;
+  Eigen::Isometry3d std_grasp_pose;
+  Eigen::Isometry3d grasp_pose;
   Eigen::Vector3d desired_z_axis;
   Eigen::Vector3d grasp_z_axis;
   double angle;
@@ -314,7 +314,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   // Transform poses
   // bring the pose to the frame of the IK solver
   const std::string& ik_frame = kin_solvers_[arm_jmg->getName()][0]->getBaseFrame();
-  Eigen::Affine3d link_transform;
+  Eigen::Isometry3d link_transform;
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug",
                          "Frame transform from ik_frame: " << ik_frame << " and robot model frame: "
                                                            << robot_state_->getRobotModel()->getModelFrame());
@@ -531,7 +531,7 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
                                  const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
 {
   // Transform current pose to frame of planning group
-  Eigen::Affine3d eigen_pose;
+  Eigen::Isometry3d eigen_pose;
   tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_pose);
   eigen_pose = ik_thread_struct->link_transform_ * eigen_pose;
   tf::poseEigenToMsg(eigen_pose, ik_thread_struct->ik_pose_.pose);
@@ -586,12 +586,12 @@ bool GraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution, IkThrea
   return true;
 }
 
-void GraspFilter::addCuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
+void GraspFilter::addCuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction)
 {
   cutting_planes_.push_back(CuttingPlanePtr(new CuttingPlane(pose, plane, direction)));
 }
 
-void GraspFilter::addDesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
+void GraspFilter::addDesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset)
 {
   desired_grasp_orientations_.push_back(
       DesiredGraspOrientationPtr(new DesiredGraspOrientation(pose, max_angle_offset)));
@@ -774,7 +774,7 @@ void GraspFilter::clearDesiredGraspOrientations()
   desired_grasp_orientations_.clear();
 }
 
-bool GraspFilter::addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, const Eigen::Affine3d& bin_to_product,
+bool GraspFilter::addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
                                          const double& bin_width, const double& bin_height)
 {
   // Add grasp filters
@@ -788,7 +788,7 @@ bool GraspFilter::addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, co
   addCuttingPlane(world_to_bin, XZ, -1);
 
   // Top of bin
-  Eigen::Affine3d world_to_bin_top = world_to_bin;
+  Eigen::Isometry3d world_to_bin_top = world_to_bin;
   world_to_bin_top.translation() += Eigen::Vector3d(0, bin_width, bin_height);
   addCuttingPlane(world_to_bin_top, XY, 1);
 
@@ -796,7 +796,7 @@ bool GraspFilter::addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, co
   addCuttingPlane(world_to_bin_top, XZ, 1);
 
   // // Back half of product
-  Eigen::Affine3d world_to_bin_back = world_to_bin;
+  Eigen::Isometry3d world_to_bin_back = world_to_bin;
   world_to_bin_back.translation() +=
       Eigen::Vector3d(bin_to_product.translation().x(), bin_width / 2.0, bin_height / 2.0);
   addCuttingPlane(world_to_bin_back, YZ, 1);

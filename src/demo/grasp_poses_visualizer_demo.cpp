@@ -102,7 +102,7 @@ public:
     ROS_INFO_STREAM_NAMED(name_, "generating random cuboid");
     generateRandomCuboid(cuboid_pose_, depth_, width_, height_);
 
-    Eigen::Affine3d display_pose;
+    Eigen::Isometry3d display_pose;
     bool text = false;
     rviz_visual_tools::scales text_size = rviz_visual_tools::MEDIUM;
 
@@ -128,9 +128,9 @@ public:
     // SHOW GRASP POSE
     visual_tools_->prompt("Press 'next' to show an example eef and grasp pose");
     ROS_INFO_STREAM_NAMED(name_, "Showing the grasp pose");
-    Eigen::Affine3d grasp_pose = visual_tools_->convertPose(grasp_candidates_.front()->grasp_.grasp_pose.pose);
+    Eigen::Isometry3d grasp_pose = visual_tools_->convertPose(grasp_candidates_.front()->grasp_.grasp_pose.pose);
     visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
-    Eigen::Affine3d grasp_text_pose(grasp_pose);
+    Eigen::Isometry3d grasp_text_pose(grasp_pose);
     grasp_text_pose.translation().z() += 0.03;
     visual_tools_->publishText(grasp_text_pose, "Grasp Pose", rviz_visual_tools::WHITE, text_size, text);
     visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.01);
@@ -138,9 +138,9 @@ public:
 
     // SHOW EE GRASP POSE
     ROS_INFO_STREAM_NAMED(name_, "Showing ee grasp pose");
-    Eigen::Affine3d ee_pose = grasp_pose * grasp_data_->grasp_pose_to_eef_pose_.inverse();
+    Eigen::Isometry3d ee_pose = grasp_pose * grasp_data_->grasp_pose_to_eef_pose_.inverse();
     visual_tools_->publishAxis(ee_pose, 0.05, 0.005);
-    Eigen::Affine3d ee_text_pose(ee_pose);
+    Eigen::Isometry3d ee_text_pose(ee_pose);
     ee_text_pose.translation().z() += 0.03;
     visual_tools_->publishText(ee_text_pose, "EE Pose", rviz_visual_tools::WHITE, text_size, text);
     visual_tools_->publishSphere(ee_pose.translation(), rviz_visual_tools::GREEN, 0.01);
@@ -156,14 +156,14 @@ public:
         ee_pose.translation() + palm_vector * (grasp_data_->grasp_max_depth_ - grasp_data_->grasp_min_depth_);
     Eigen::Vector3d min_grasp_depth_point = ee_pose.translation();
     visual_tools_->publishLine(min_grasp_depth_point, max_grasp_depth_point, rviz_visual_tools::GREY);
-    Eigen::Affine3d min_depth_eef_pose = grasp_pose;
+    Eigen::Isometry3d min_depth_eef_pose = grasp_pose;
     visual_tools_->publishEEMarkers(min_depth_eef_pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
                                     rviz_visual_tools::TRANSLUCENT_DARK, "test_eef");
     visual_tools_->trigger();
 
     visual_tools_->prompt("Press 'next' to visualize the pre-grasp, grasp, lift, and retreat poses");
 
-    EigenSTL::vector_Affine3d grasp_waypoints;
+    EigenSTL::vector_Isometry3d grasp_waypoints;
     GraspGenerator::getGraspWaypoints(grasp_candidates_.front(), grasp_waypoints);
     visual_tools_->publishAxisLabeled(grasp_waypoints[0], "pregrasp", rviz_visual_tools::SMALL);
     visual_tools_->publishAxisLabeled(grasp_waypoints[1], "grasp", rviz_visual_tools::SMALL);

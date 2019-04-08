@@ -47,8 +47,8 @@ double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percen
   return pow(percent_open, 2);
 }
 
-double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const GraspDataPtr grasp_data,
-                                        const Eigen::Affine3d& object_pose, const double& min_grasp_distance,
+double GraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr grasp_data,
+                                        const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
                                         const double& max_grasp_distance)
 {
   // TODO(mcevoyandy): grasp_data is not used but should be. See *.h for explaination.
@@ -65,7 +65,8 @@ double GraspScorer::scoreDistanceToPalm(const Eigen::Affine3d& grasp_pose, const
   return pow(score, 4);
 }
 
-Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_pose, const Eigen::Affine3d& ideal_pose)
+Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose,
+                                                   const Eigen::Isometry3d& ideal_pose)
 {
   // We assume that the ideal is in the middle
   Eigen::Vector3d scores = -Eigen::Vector3d(grasp_pose.translation() - ideal_pose.translation()).array().abs();
@@ -82,7 +83,7 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_
   return scores;
 }
 
-Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_pose,
+Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose,
                                                    const Eigen::Vector3d& min_translations,
                                                    const Eigen::Vector3d& max_translations)
 {
@@ -114,8 +115,9 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Affine3d& grasp_
   return scores;
 }
 
-Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pose, const GraspDataPtr& grasp_data,
-                                                const Eigen::Affine3d& object_pose, const Eigen::Vector3d& object_size,
+Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr& grasp_data,
+                                                const Eigen::Isometry3d& object_pose,
+                                                const Eigen::Vector3d& object_size,
                                                 moveit_visual_tools::MoveItVisualToolsPtr visual_tools)
 {
   Eigen::Vector2d scores(0, 0);
@@ -130,7 +132,7 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pos
   Eigen::Vector2d gripper_corner_bl(-grasp_data->active_suction_range_x_ / 2.0,
                                     -grasp_data->active_suction_range_y_ / 2.0);
 
-  Eigen::Affine3d object_to_gripper_transform = object_pose.inverse() * grasp_pose;
+  Eigen::Isometry3d object_to_gripper_transform = object_pose.inverse() * grasp_pose;
   Eigen::Affine2d object_to_gripper_transform_2d =
       Eigen::Translation2d(object_to_gripper_transform.translation().topRows<2>()) *
       object_to_gripper_transform.linear().topLeftCorner<2, 2>();
@@ -181,19 +183,19 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pos
   {
     visual_tools->deleteAllMarkers();
     visual_tools->trigger();
-    Eigen::Affine3d gripper_corner_tr_3d = Eigen::Affine3d::Identity();
-    Eigen::Affine3d gripper_corner_tl_3d = Eigen::Affine3d::Identity();
-    Eigen::Affine3d gripper_corner_br_3d = Eigen::Affine3d::Identity();
-    Eigen::Affine3d gripper_corner_bl_3d = Eigen::Affine3d::Identity();
+    Eigen::Isometry3d gripper_corner_tr_3d = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d gripper_corner_tl_3d = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d gripper_corner_br_3d = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d gripper_corner_bl_3d = Eigen::Isometry3d::Identity();
     gripper_corner_tr_3d.translation() = Eigen::Vector3d(gripper_corner_tr.x(), gripper_corner_tr.y(), 2.0);
     gripper_corner_tl_3d.translation() = Eigen::Vector3d(gripper_corner_tl.x(), gripper_corner_tl.y(), 2.0);
     gripper_corner_br_3d.translation() = Eigen::Vector3d(gripper_corner_br.x(), gripper_corner_br.y(), 2.0);
     gripper_corner_bl_3d.translation() = Eigen::Vector3d(gripper_corner_bl.x(), gripper_corner_bl.y(), 2.0);
 
-    Eigen::Affine3d box_corner_tr = Eigen::Affine3d::Identity();
-    Eigen::Affine3d box_corner_tl = Eigen::Affine3d::Identity();
-    Eigen::Affine3d box_corner_br = Eigen::Affine3d::Identity();
-    Eigen::Affine3d box_corner_bl = Eigen::Affine3d::Identity();
+    Eigen::Isometry3d box_corner_tr = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d box_corner_tl = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d box_corner_br = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d box_corner_bl = Eigen::Isometry3d::Identity();
     box_corner_tr.translation() = Eigen::Vector3d(object_size[0] / 2.0, object_size[1] / 2.0, 2.0);
     box_corner_tl.translation() = Eigen::Vector3d(object_size[0] / 2.0, -object_size[1] / 2.0, 2.0);
     box_corner_br.translation() = Eigen::Vector3d(-object_size[0] / 2.0, object_size[1] / 2.0, 2.0);
@@ -214,8 +216,8 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Affine3d& grasp_pos
   return scores;
 }
 
-Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Affine3d& grasp_pose,
-                                                       const Eigen::Affine3d& ideal_pose)
+Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose,
+                                                       const Eigen::Isometry3d& ideal_pose)
 {
   Eigen::Vector3d grasp_pose_axis;
   Eigen::Vector3d ideal_pose_axis;

@@ -154,7 +154,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Clear Markers
     visual_tools_->deleteAllMarkers();
-    Eigen::Affine3d world_cs = Eigen::Affine3d::Identity();
+    Eigen::Isometry3d world_cs = Eigen::Isometry3d::Identity();
     visual_tools_->publishAxis(world_cs);
   }
 
@@ -217,14 +217,14 @@ public:
       // int direction = 1;
 
       // world X goes into shelf, so filter all grasps behind the YZ oriented plane of the object
-      // Eigen::Affine3d filter_pose = Eigen::Affine3d::Identity();
+      // Eigen::Isometry3d filter_pose = Eigen::Isometry3d::Identity();
       // filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
       // //visual_tools_->publishAxis(filter_pose);
       // grasp_filter_->clearCuttingPlanes();
       // grasp_filter_->addCuttingPlane(filter_pose, moveit_grasps::YZ, direction);
 
       // // can only reach the object from the front
-      // filter_pose = Eigen::Affine3d::Identity();
+      // filter_pose = Eigen::Isometry3d::Identity();
       // filter_pose = filter_pose * Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY());
       // filter_pose.translation() = visual_tools_->convertPose(object_pose).translation();
       // //visual_tools_->publishAxis(filter_pose);

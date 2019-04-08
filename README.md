@@ -15,9 +15,9 @@ This package includes:
 
 Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
-[![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=kinetic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
+[![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=melodic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
 
-<img src="https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/kinetic-devel/resources/demo.png" />
+<img src="https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/melodic-devel/resources/demo.png" />
 
 ## Install
 
@@ -26,30 +26,30 @@ Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting]
 > Note: this package has not been released yet
 
 ```
-sudo apt-get install ros-kinetic-moveit-grasps
+sudo apt-get install ros-melodic-moveit-grasps
 ```
 
 ### Install From Source
 
 Clone this repository into a catkin workspace, then use the rosdep install tool to automatically download its dependencies. Depending on your current version of ROS, use:
 
-Kinetic:
+Melodic:
 ```
-rosdep install --from-paths src --ignore-src --rosdistro kinetic
+rosdep install --from-paths src --ignore-src --rosdistro melodic
 ```
 
 ## Robot-Agnostic Configuration
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/PickNikRobotics/moveit_grasps/blob/kinetic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
+You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/PickNikRobotics/moveit_grasps/blob/melodic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
 
-To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/PickNikRobotics/moveit_grasps/blob/kinetic-devel/launch/load_panda.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>``.
+To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/PickNikRobotics/moveit_grasps/blob/melodic-devel/launch/load_panda.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>``.
 
 Within that file you will find all of the gripper specific parameters necessary for customizing MoveIt! Grasps with any suction or finger gripper
 
 These values can be visualized by launching `grasp_generator_demo.launch`, `grasp_poses_visualizer_demo.launch`, and `grasp_pipeline_demo.launch`.
 The result should look like the following:
 
-![Grasp Poses Visualization](https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/kinetic-devel/resources/moveit_grasps_poses.jpeg)
+![Grasp Poses Visualization](https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/melodic-devel/resources/moveit_grasps_poses.jpeg)
 
 ### Some Important Parameters:
 
@@ -107,11 +107,11 @@ When filtered, the colors represent the following:
 
 ## Example Code
 
-The most current example for using MoveIt! Grasps is the `grasp_pipeline_demo` which can be found [here](https://github.com/PickNikRobotics//moveit_grasps/kinetic-devel/src/grasp_pipeline_demo.cpp).
+The most current example for using MoveIt! Grasps is the `grasp_pipeline_demo` which can be found [here](https://github.com/PickNikRobotics//moveit_grasps/melodic-devel/src/grasp_pipeline_demo.cpp).
 
 There are other example implementations:
 
- - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/kinetic-devel/baxter_pick_place)
+ - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/melodic-devel/baxter_pick_place)
  - [reem_tabletop_grasping](https://github.com/pal-robotics/reem_tabletop_grasping)
 
 ## Testing and Linting
@@ -122,7 +122,7 @@ To run [roslint](http://wiki.ros.org/roslint), use the following command with [c
 
 To run [catkin lint](https://pypi.python.org/pypi/catkin_lint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
 
-    catkin lint -W2 --rosdistro kinetic
+    catkin lint -W2 --rosdistro melodic
 
 Use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/) to run tests.
 

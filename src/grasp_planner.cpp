@@ -146,7 +146,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
                                            const planning_scene::PlanningSceneConstPtr& planning_scene,
                                            bool verbose_cartesian_filtering)
 {
-  EigenSTL::vector_Affine3d waypoints;
+  EigenSTL::vector_Isometry3d waypoints;
   GraspGenerator::getGraspWaypoints(grasp_candidate, waypoints);
 
   // Visualize waypoints
@@ -234,7 +234,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
 bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                                 planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                                 const moveit::core::RobotStatePtr start_state,
-                                                const EigenSTL::vector_Affine3d& waypoints,
+                                                const EigenSTL::vector_Isometry3d& waypoints,
                                                 const std::string& grasp_object_id)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
@@ -247,7 +247,7 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
 bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                                 const planning_scene::PlanningSceneConstPtr& planning_scene,
                                                 const moveit::core::RobotStatePtr start_state,
-                                                const EigenSTL::vector_Affine3d& waypoints,
+                                                const EigenSTL::vector_Isometry3d& waypoints,
                                                 const std::string& grasp_object_id)
 {
   // End effector parent link (arm tip for ik solving)

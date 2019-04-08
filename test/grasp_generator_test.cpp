@@ -125,7 +125,7 @@ TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
   GraspGenerator grasp_generator(visual_tools_, verbose_);
 
   // Input
-  Eigen::Affine3d cuboid_pose = Eigen::Affine3d::Identity();
+  Eigen::Isometry3d cuboid_pose = Eigen::Isometry3d::Identity();
   cuboid_pose.translation().x() = 1;
   cuboid_pose.translation().y() = 2;
   cuboid_pose.translation().z() = 3;
@@ -196,7 +196,7 @@ TEST_F(GraspGeneratorTest, GenerateEdgeGrasps)
   GraspGenerator grasp_generator(visual_tools_, verbose_);
 
   // Input
-  Eigen::Affine3d cuboid_pose = Eigen::Affine3d::Identity();
+  Eigen::Isometry3d cuboid_pose = Eigen::Isometry3d::Identity();
   cuboid_pose.translation().x() = 1;
   cuboid_pose.translation().y() = 2;
   cuboid_pose.translation().z() = 3;
@@ -236,7 +236,7 @@ TEST_F(GraspGeneratorTest, GenerateCornerGrasps)
   GraspGenerator grasp_generator(visual_tools_, verbose_);
 
   // Input
-  Eigen::Affine3d cuboid_pose = Eigen::Affine3d::Identity();
+  Eigen::Isometry3d cuboid_pose = Eigen::Isometry3d::Identity();
   cuboid_pose.translation().x() = 1;
   cuboid_pose.translation().y() = 2;
   cuboid_pose.translation().z() = 3;

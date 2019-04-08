@@ -67,7 +67,7 @@ enum GraspTrajectorySegments
 class GraspCandidate
 {
 public:
-  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose);
+  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Isometry3d cuboid_pose);
 
   bool getPreGraspState(moveit::core::RobotStatePtr& robot_state);
 
@@ -146,7 +146,7 @@ public:
 
   const GraspDataPtr grasp_data_;
   // TODO(davetcoleman): possibly remove
-  Eigen::Affine3d cuboid_pose_;  // pose of original object to grasp
+  Eigen::Isometry3d cuboid_pose_;  // pose of original object to grasp
 
   bool grasp_filtered_by_ik_;
   bool grasp_filtered_by_cutting_plane_;  // grasp pose is in an unreachable part of the environment (ex: inside or
