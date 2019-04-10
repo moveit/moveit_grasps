@@ -15,9 +15,9 @@ This package includes:
 
 Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
-[![Build Status](https://travis-ci.org/PickNikRobotics/moveit_grasps.svg?branch=melodic-devel)](https://travis-ci.org/PickNikRobotics/moveit_grasps)
+[![Build Status](https://travis-ci.org/ros-planning/moveit_grasps.svg?branch=melodic-devel)](https://travis-ci.org/ros-planning/moveit_grasps)
 
-<img src="https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/melodic-devel/resources/demo.png" />
+<img src="https://raw.githubusercontent.com/ros-planning/moveit_grasps/melodic-devel/resources/demo.png" />
 
 ## Install
 
@@ -40,16 +40,16 @@ rosdep install --from-paths src --ignore-src --rosdistro melodic
 
 ## Robot-Agnostic Configuration
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/PickNikRobotics/moveit_grasps/blob/melodic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
+You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
 
-To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/PickNikRobotics/moveit_grasps/blob/melodic-devel/launch/load_panda.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>``.
+To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/launch/load_panda.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>``.
 
 Within that file you will find all of the gripper specific parameters necessary for customizing MoveIt! Grasps with any suction or finger gripper
 
 These values can be visualized by launching `grasp_generator_demo.launch`, `grasp_poses_visualizer_demo.launch`, and `grasp_pipeline_demo.launch`.
 The result should look like the following:
 
-![Grasp Poses Visualization](https://raw.githubusercontent.com/PickNikRobotics/moveit_grasps/melodic-devel/resources/moveit_grasps_poses.jpeg)
+![Grasp Poses Visualization](https://raw.githubusercontent.com/ros-planning/moveit_grasps/melodic-devel/resources/moveit_grasps_poses.jpeg)
 
 ### Some Important Parameters:
 
@@ -107,7 +107,7 @@ When filtered, the colors represent the following:
 
 ## Example Code
 
-The most current example for using MoveIt! Grasps is the `grasp_pipeline_demo` which can be found [here](https://github.com/PickNikRobotics//moveit_grasps/melodic-devel/src/grasp_pipeline_demo.cpp).
+The most current example for using MoveIt! Grasps is the `grasp_pipeline_demo` which can be found [here](https://github.com/ros-planning/moveit_grasps/melodic-devel/src/grasp_pipeline_demo.cpp).
 
 There are other example implementations:
 
