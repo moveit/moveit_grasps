@@ -78,14 +78,14 @@ TEST_F(GraspDataTest, CheckConfigValues)
   // Pre Grasp Posture
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
   EXPECT_GT(grasp_data_->pre_grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), 0);
+  EXPECT_EQ(grasp_data_->pre_grasp_posture_.points.size(), (size_t)1);
+  EXPECT_GT(grasp_data_->pre_grasp_posture_.points[0].positions.size(), (size_t)0);
 
   // Grasp Posture
   EXPECT_EQ(grasp_data_->grasp_posture_.header.frame_id, "world");
   EXPECT_GT(grasp_data_->grasp_posture_.header.stamp.toSec(), 0);
-  EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), 1);
-  EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), 0);
+  EXPECT_EQ(grasp_data_->grasp_posture_.points.size(), (size_t)1);
+  EXPECT_GT(grasp_data_->grasp_posture_.points[0].positions.size(), (size_t)0);
 
   // Semantics
   EXPECT_EQ(grasp_data_->base_link_, "world");
