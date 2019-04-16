@@ -40,7 +40,7 @@ rosdep install --from-paths src --ignore-src --rosdistro melodic
 
 ## Robot-Agnostic Configuration
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/baxter_grasp_data.yaml](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/config_robot/baxter_grasp_data.yaml). See the comments within that file for explanations.
+You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/panda_grasp_data.yaml](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/config_robot/panda_grasp_data.yaml). See the comments within that file for explanations.
 
 To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/launch/load_panda.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>``.
 
@@ -104,15 +104,6 @@ When filtered, the colors represent the following:
  - [Baxter](https://github.com/davetcoleman/baxter_cpp)
  - [REEM](http://wiki.ros.org/Robots/REEM)
  - Panda
-
-## Example Code
-
-The most current example for using MoveIt! Grasps is the `grasp_pipeline_demo` which can be found [here](https://github.com/ros-planning/moveit_grasps/melodic-devel/src/grasp_pipeline_demo.cpp).
-
-There are other example implementations:
-
- - [baxter_pick_place](https://github.com/davetcoleman/baxter_cpp/tree/melodic-devel/baxter_pick_place)
- - [reem_tabletop_grasping](https://github.com/pal-robotics/reem_tabletop_grasping)
 
 ## Testing and Linting
 
