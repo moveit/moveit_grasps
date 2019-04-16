@@ -1,0 +1,9 @@
+- git:
+    local-name: moveit
+    uri: https://github.com/ros-planning/moveit.git
+    version: melodic-devel
+# TODO: remove when rosparam_shortcuts release 0.3.1 is synced to main
+- git:
+    local-name: rosparam_shortcuts
+    uri: https://github.com/PickNikRobotics/rosparam_shortcuts.git
+    version: melodic-devel

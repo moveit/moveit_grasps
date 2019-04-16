@@ -77,11 +77,11 @@ enum grasp_parallel_plane
  */
 struct CuttingPlane
 {
-  Eigen::Affine3d pose_;
+  Eigen::Isometry3d pose_;
   grasp_parallel_plane plane_;
   int direction_;
 
-  CuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction)
+  CuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction)
     : pose_(pose), plane_(plane), direction_(direction)
   {
   }
@@ -93,10 +93,10 @@ typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
  */
 struct DesiredGraspOrientation
 {
-  Eigen::Affine3d pose_;
+  Eigen::Isometry3d pose_;
   double max_angle_offset_;
 
-  DesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset)
+  DesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset)
     : pose_(pose), max_angle_offset_(max_angle_offset)
   {
   }
@@ -109,9 +109,10 @@ typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
 struct IkThreadStruct
 {
   IkThreadStruct(std::vector<GraspCandidatePtr>& grasp_candidates,  // the input
-                 planning_scene::PlanningScenePtr planning_scene, Eigen::Affine3d& link_transform, std::size_t grasp_id,
-                 kinematics::KinematicsBaseConstPtr kin_solver, robot_state::RobotStatePtr robot_state, double timeout,
-                 bool filter_pregrasp, bool verbose, std::size_t thread_id)
+                 planning_scene::PlanningScenePtr planning_scene, Eigen::Isometry3d& link_transform,
+                 std::size_t grasp_id, kinematics::KinematicsBaseConstPtr kin_solver,
+                 robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool verbose,
+                 std::size_t thread_id)
     : grasp_candidates_(grasp_candidates)
     , planning_scene_(planning_scene)
     , link_transform_(link_transform)
@@ -126,7 +127,7 @@ struct IkThreadStruct
   }
   std::vector<GraspCandidatePtr>& grasp_candidates_;
   planning_scene::PlanningScenePtr planning_scene_;
-  Eigen::Affine3d link_transform_;
+  Eigen::Isometry3d link_transform_;
   std::size_t grasp_id;
   kinematics::KinematicsBaseConstPtr kin_solver_;
   robot_state::RobotStatePtr robot_state_;
@@ -170,7 +171,7 @@ public:
    * \param direction - which side of this plane to cut (+/- 1)
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Affine3d filter_pose, grasp_parallel_plane plane,
+  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d filter_pose, grasp_parallel_plane plane,
                           int direction);
 
   /**
@@ -186,7 +187,7 @@ public:
    * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Affine3d desired_pose,
+  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
                                 double max_angular_offset);
 
   /**
@@ -225,7 +226,7 @@ public:
    * \param plane - which plane to use as the cutting plane
    * \param direction - on which side of the plane the grasps will be removed
    */
-  void addCuttingPlane(Eigen::Affine3d pose, grasp_parallel_plane plane, int direction);
+  void addCuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction);
 
   /**
    * \brief Show all cutting planes that are currently enables
@@ -243,7 +244,7 @@ public:
    * \param pose - the desired grasping pose
    * \param max_angle_offset - maximum amount a generated grasp can deviate from the desired pose
    */
-  void addDesiredGraspOrientation(Eigen::Affine3d pose, double max_angle_offset);
+  void addDesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset);
 
   /**
    * \brief clear all desired orientations
@@ -280,7 +281,7 @@ public:
    * \brief Add a cutting plane filter for a shelf bin
    * \return true on success
    */
-  bool addCuttingPlanesForBin(const Eigen::Affine3d& world_to_bin, const Eigen::Affine3d& bin_to_product,
+  bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
                               const double& bin_width, const double& bin_height);
 
   /**

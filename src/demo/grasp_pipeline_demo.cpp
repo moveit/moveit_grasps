@@ -135,7 +135,7 @@ public:
     visual_tools_->trigger();
 
     // Publish the global frame
-    visual_tools_->publishAxis(Eigen::Affine3d::Identity());
+    visual_tools_->publishAxis(Eigen::Isometry3d::Identity());
     visual_tools_->trigger();
   }
 
@@ -222,7 +222,7 @@ public:
     // --------------------------------------------
     // Generating a seed state for filtering grasps
     robot_state::RobotStatePtr seed_state(new robot_state::RobotState(*visual_tools_->getSharedRobotState()));
-    Eigen::Affine3d grasp_pose =
+    Eigen::Isometry3d grasp_pose =
         visual_tools_->convertPose(object_pose) * grasp_data_->grasp_pose_to_eef_pose_.inverse();
     if (!getIKSolution(arm_jmg_, grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
     {
@@ -264,7 +264,7 @@ public:
   void visualizePick(const GraspCandidatePtr& valid_grasp_candidate,
                      const moveit_msgs::MotionPlanResponse& pre_approach_plan)
   {
-    EigenSTL::vector_Affine3d waypoints;
+    EigenSTL::vector_Isometry3d waypoints;
     GraspGenerator::getGraspWaypoints(valid_grasp_candidate, waypoints);
 
     // Visualize waypoints
@@ -402,7 +402,7 @@ public:
     return true;
   }
 
-  bool getIKSolution(const moveit::core::JointModelGroup* arm_jmg, const Eigen::Affine3d& target_pose,
+  bool getIKSolution(const moveit::core::JointModelGroup* arm_jmg, const Eigen::Isometry3d& target_pose,
                      robot_state::RobotState& solution, const std::string& link_name)
   {
     boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRW> ls(
@@ -416,9 +416,8 @@ public:
 
     // Solve IK problem for arm
     // disable explicit restarts to guarantee close solution if one exists
-    const std::size_t attempts = 1;
     const double timeout = 0.1;
-    return solution.setFromIK(arm_jmg, target_pose, link_name, attempts, timeout, constraint_fn);
+    return solution.setFromIK(arm_jmg, target_pose, link_name, timeout, constraint_fn);
   }
 
   bool generateRandomCuboid(std::string& object_name, geometry_msgs::Pose& object_pose, double& x_depth,

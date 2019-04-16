@@ -40,7 +40,7 @@
 
 namespace moveit_grasps
 {
-GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Affine3d cuboid_pose)
+GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Isometry3d cuboid_pose)
   : grasp_(grasp)
   , grasp_data_(grasp_data)
   , cuboid_pose_(cuboid_pose)

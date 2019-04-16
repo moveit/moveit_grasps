@@ -94,13 +94,13 @@ public:
   bool computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                     planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                     const moveit::core::RobotStatePtr start_state,
-                                    const EigenSTL::vector_Affine3d& waypoints,
+                                    const EigenSTL::vector_Isometry3d& waypoints,
                                     const std::string& grasp_object_id = "");
 
   bool computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                     const planning_scene::PlanningSceneConstPtr& planning_scene,
                                     const moveit::core::RobotStatePtr start_state,
-                                    const EigenSTL::vector_Affine3d& waypoints,
+                                    const EigenSTL::vector_Isometry3d& waypoints,
                                     const std::string& grasp_object_id = "");
 
   /**

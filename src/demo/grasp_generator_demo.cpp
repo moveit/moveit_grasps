@@ -117,7 +117,7 @@ public:
     // We set the ideal grasp pose to be centered and 0.5m in the air (for visualization) with an orientation of roll =
     // 3.14
     // Set the translation
-    Eigen::Affine3d ideal_grasp_pose = Eigen::Affine3d::Identity();
+    Eigen::Isometry3d ideal_grasp_pose = Eigen::Isometry3d::Identity();
     ideal_grasp_pose.translation() = Eigen::Vector3d(0.0, 0, 0.5);
     grasp_generator_->setIdealGraspPose(ideal_grasp_pose);
     // Set the ideal grasp orientation
@@ -147,7 +147,7 @@ public:
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
     // publish world coordinate system
-    grasp_visuals_->publishAxisLabeled(Eigen::Affine3d::Identity(), "world frame");
+    grasp_visuals_->publishAxisLabeled(Eigen::Isometry3d::Identity(), "world frame");
     visual_tools_->trigger();
     // ---------------------------------------------------------------------------------------------
     // Animate open and closing end effector
