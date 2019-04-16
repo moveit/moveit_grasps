@@ -416,9 +416,8 @@ public:
 
     // Solve IK problem for arm
     // disable explicit restarts to guarantee close solution if one exists
-    const std::size_t attempts = 1;
     const double timeout = 0.1;
-    return solution.setFromIK(arm_jmg, target_pose, link_name, attempts, timeout, constraint_fn);
+    return solution.setFromIK(arm_jmg, target_pose, link_name, timeout, constraint_fn);
   }
 
   bool generateRandomCuboid(std::string& object_name, geometry_msgs::Pose& object_pose, double& x_depth,
