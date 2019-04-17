@@ -31,39 +31,39 @@ sudo apt-get install ros-melodic-moveit-grasps
 
 ### Install From Source
 
-Clone this repository into a catkin workspace, then use the rosdep install tool to automatically download its dependencies. Depending on your current version of ROS, use:
+Clone this repository into a catkin workspace, then use the rosdep install tool to automatically download its dependencies.
 
-Melodic:
-```
-rosdep install --from-paths src --ignore-src --rosdistro melodic
-```
+Melodic (Ubuntu 18.04):
 
-## Robot-Agnostic Configuration
+1. Re-use or create a catkin workspace:
 
-You will first need a configuration file that described your robot's end effector geometry. Currently an example format can be seen in this repository at [config_robot/panda_grasp_data.yaml](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/config_robot/panda_grasp_data.yaml). See the comments within that file for explanations.
+        export CATKIN_WS=~/ws_catkin/
+        mkdir -p $CATKIN_WS/src
+        cd $CATKIN_WS/src
 
-To load that file at launch, you copy the example in the file [launch/grasp_test.launch](https://github.com/ros-planning/moveit_grasps/blob/melodic-devel/launch/load_panda.launch) where you should see the line ``<rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>``.
+1. Download the required repositories and install any dependencies:
 
-Within that file you will find all of the gripper specific parameters necessary for customizing MoveIt! Grasps with any suction or finger gripper
+        git clone git@github.com:ros-planning/moveit_grasps.git
+        wstool init .
+        wstool merge moveit_grasps/moveit_grasps.rosinstall
+        wstool update
+        rosdep install --from-paths . --ignore-src --rosdistro melodic
 
-These values can be visualized by launching `grasp_generator_demo.launch`, `grasp_poses_visualizer_demo.launch`, and `grasp_pipeline_demo.launch`.
-The result should look like the following:
+1. Configure and build the workspace:
 
-![Grasp Poses Visualization](https://raw.githubusercontent.com/ros-planning/moveit_grasps/melodic-devel/resources/moveit_grasps_poses.jpeg)
+        cd $CATKIN_WS
+        catkin config --extend /opt/ros/melodic --cmake-args -DCMAKE_BUILD_TYPE=Release
+        catkin build
 
-### Some Important Parameters:
+1. Source the workspace.
 
-#### grasp_pose_to_eef_transform
+        source devel/setup.bash
 
-The `grasp_pose_to_eef_transform` represents the transform from the wrist to the end-effector. This parameter is provided to allow different URDF end effectors to all work together without recompiling code. In MoveIt! the EE always has a parent link, typically the wrist link or palm link. That parent link should have its Z-axis pointing towards the object you want to grasp i.e. where your pointer finger is pointing. This is the convention laid out in "Robotics" by John Craig in 1955. However, a lot of URDFs do not follow this convention, so this transform allows you to fix it.
+## Usage Instructions
 
-Additionally, the x-axis should be pointing up along the grasped object, i.e. the circular axis of a (beer) bottle if you were holding it. The y-axis should be point towards one of the fingers.
+For a detailed usage instructions visit the MoveIt Grasps [tutorial](http://docs.ros.org/melodic/api/moveit_tutorials/html/doc/moveit_grasps/moveit_grasps_tutorial.html).
 
-#### Switch from Bin to Shelf Picking with ``setIdealGraspPoseRPY`` and ``setIdealGraspPose``
-
-The ``setIdealGraspPoseRPY`` and ``setIdealGraspPose`` methods in GraspGenerator can be used to select an ideal grasp orientation for picking. These methods is used to score grasp candidates favoring grasps that are closer to the desired orientation. This is useful in applications such as bin and shelf picking where you would want to pick the objects from a bin with a grasp that is vertically alligned and you would want to pick obejects from a shelf with a grasp that is horozontally alligned.
-
-## Demo Scripts
+### Demo Scripts
 
 There are four demo scripts in this package. To view the tests, first start Rviz with:
 
@@ -84,26 +84,6 @@ To test just grasp generation for randomly placed blocks:
 To test the grasp filtering:
 
     roslaunch moveit_grasps demo_filter.launch
-
-### Grasp Filter
-
-When filtered, the colors represent the following:
-
-    RED - grasp filtered by ik
-    PINK - grasp filtered by collision
-    MAGENTA - grasp filtered by cutting plane
-    YELLOW - grasp filtered by orientation
-    BLUE - pregrasp filtered by ik
-    CYAN - pregrasp filtered by collision
-    GREEN - valid
-
-## Tested Robots
-
- - UR5
- - Jaco2
- - [Baxter](https://github.com/davetcoleman/baxter_cpp)
- - [REEM](http://wiki.ros.org/Robots/REEM)
- - Panda
 
 ## Testing and Linting
 
