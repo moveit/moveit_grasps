@@ -21,6 +21,11 @@
   type="moveit_grasps_grasp_filter_demo" output="screen" args="$(arg command_args)">
     <param name="ee_group_name" value="hand"/>
     <param name="planning_group_name" value="panda_arm"/>
+    <param name="moveit_grasps/filter/statistics_verbose" value="true"/>
+    <param name="moveit_grasps/filter/show_filtered_grasps" value="true"/>
+    <param name="moveit_grasps/filter/show_cutting_planes" value="true"/>
+    <param name="moveit_grasps/filter/show_grasp_filter_collision_if_failed" value="true"/>
+    <param name="moveit_grasps/filter/show_filtered_arm_solutions" value="true"/>
     <rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>
     <rosparam command="load" file="$(find moveit_grasps)/config/moveit_grasps_config.yaml"/>
   </node>

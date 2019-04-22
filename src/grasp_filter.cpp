@@ -652,38 +652,47 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     CYAN - pregrasp filtered by collision
     GREEN - valid
   */
+  ROS_INFO_STREAM_NAMED("grasp_filter", "Showing " << grasp_candidates.size() << " solutions at a speed of " << show_filtered_arm_solutions_speed_ << "sec per solution");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "---------------------------------------------");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   MAGENTA - grasp filtered by cutting plane");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   YELLOW - grasp filtered by orientation");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   RED - grasp filtered by ik");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   PINK - grasp filtered by collision");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   BLUE - pregrasp filtered by ik");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   CYAN - pregrasp filtered by collision");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "   GREEN - valid");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "---------------------------------------------");
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    double size = 0.1;  // 0.01 * grasp_candidates[i]->grasp_.grasp_quality;
+    double size = 0.03;  // 0.01 * grasp_candidates[i]->grasp_.grasp_quality;
 
     if (grasp_candidates[i]->grasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::RED,
-                                   rviz_visual_tools::MEDIUM, size);
+                                   rviz_visual_tools::SMALL, size);
     }
     else if (grasp_candidates[i]->pregrasp_filtered_by_ik_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::BLUE,
-                                   rviz_visual_tools::MEDIUM, size);
+                                   rviz_visual_tools::SMALL, size);
     }
     else if (grasp_candidates[i]->grasp_filtered_by_cutting_plane_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::MAGENTA,
-                                   rviz_visual_tools::MEDIUM, size);
+                                   rviz_visual_tools::SMALL, size);
     }
     else if (grasp_candidates[i]->grasp_filtered_by_orientation_)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::YELLOW,
-                                   rviz_visual_tools::MEDIUM, size);
+                                   rviz_visual_tools::SMALL, size);
     }
     else
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::GREEN,
-                                   rviz_visual_tools::MEDIUM, size);
+                                   rviz_visual_tools::SMALL, size);
+    // Publish in batch
+    visual_tools_->trigger();
+    ros::Duration(.1).sleep();
   }
-
-  // Publish in batch
-  visual_tools_->trigger();
-  ros::Duration(4).sleep();
 
   return true;
 }
@@ -726,6 +735,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
 
     // Show in Rviz
     visual_tools_->publishRobotState(robot_state_);
+    visual_tools_->trigger();
     ros::Duration(show_filtered_arm_solutions_pregrasp_speed_).sleep();
 
     // Apply the grasp state
@@ -733,6 +743,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
 
     // Show in Rviz
     visual_tools_->publishRobotState(robot_state_);
+    visual_tools_->trigger();
     ros::Duration(show_filtered_arm_solutions_speed_).sleep();
   }
 
@@ -760,6 +771,7 @@ bool GraspFilter::visualizeCuttingPlanes()
           ROS_ERROR_STREAM_NAMED("grasp_filter", "Unknown cutting plane type");
       }
     }
+    visual_tools_->trigger();
   }
   return true;
 }
