@@ -652,7 +652,8 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
     CYAN - pregrasp filtered by collision
     GREEN - valid
   */
-  ROS_INFO_STREAM_NAMED("grasp_filter", "Showing " << grasp_candidates.size() << " solutions at a speed of " << show_filtered_arm_solutions_speed_ << "sec per solution");
+  ROS_INFO_STREAM_NAMED("grasp_filter", "Showing " << grasp_candidates.size() << " solutions at a speed of "
+                                                   << show_filtered_arm_solutions_speed_ << "sec per solution");
   ROS_INFO_STREAM_NAMED("grasp_filter", "---------------------------------------------");
   ROS_INFO_STREAM_NAMED("grasp_filter", "   MAGENTA - grasp filtered by cutting plane");
   ROS_INFO_STREAM_NAMED("grasp_filter", "   YELLOW - grasp filtered by orientation");
