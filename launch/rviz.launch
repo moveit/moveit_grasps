@@ -11,7 +11,7 @@
   </node>
 
   <!-- Publish world frame -->
-  <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 /world /virtual_joint 10" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_1" args="0 0 0 0 0 0 world panda_link0" />
 
   <!-- PANDA -->
   <include file="$(find panda_moveit_config)/launch/planning_context.launch">
