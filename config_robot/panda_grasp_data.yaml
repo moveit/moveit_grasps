@@ -66,3 +66,14 @@ hand:
     # The width of the suction griper along the specified axes. (Assumes that Z points in the direction of the suction cups)
     # active_suction_range_x : 0.25
     # active_suction_range_y : 0.10
+
+    # Some suction grippers can selectively enable and disable regions of suction. If you have more than one
+    # region that can be selectively activated or de-activated, set those values here and moveit_grasps
+    # will prioritize grasp candidates which use full suction regions rather than partial regions.
+    # it will also set the suction_regions_in_contact_ variable in the grasp candidates so that you are able
+    # to only enable suction on regions that are in contact with the grasp target.
+    # Note that this metric assumes that suction regions are equally sized
+    # ie. width = active_suction_range_x / suction_regions_x
+    #
+    # suction_regions_x: 1
+    # suction_regions_y: 1

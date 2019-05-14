@@ -138,8 +138,14 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   }
   else if (end_effector_type_ == SUCTION)
   {
+    int suction_rows_count, suction_cols_count;
     error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
     error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
+    child_nh.param<int>("suction_rows_count", suction_rows_count, 1);
+    child_nh.param<int>("suction_cols_count", suction_cols_count, 1);
+    child_nh.param<double>("suction_voxel_cutoff", suction_voxel_cutoff_, 0.0);
+    suction_voxel_matrix_.reset(new SuctionVoxelMatrix(suction_rows_count, suction_cols_count, active_suction_range_y_,
+                                                       active_suction_range_x_));
   }
   rosparam_shortcuts::shutdownIfError(parent_name, error);
 
