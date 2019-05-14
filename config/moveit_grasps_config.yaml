@@ -36,8 +36,8 @@ moveit_grasps:
     show_filtered_grasps: false
     # Show pose-filter arm ik solutions
     show_filtered_arm_solutions: false
-    show_filtered_arm_solutions_pregrasp_speed: 0.05
-    show_filtered_arm_solutions_speed: 0.05
+    show_filtered_arm_solutions_pregrasp_speed: 0.01
+    show_filtered_arm_solutions_speed: 0.01
 
   # The GraspPlanner generates approach, lift and retreat paths for a GraspCandidate.
   # If the GraspPlanner is unable to plan 100% of the approach path and at least ~90% of the lift and retreat paths, then it considers the GraspCandidate to be infeasible
