@@ -223,7 +223,7 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Ei
 
   // convert grasp pose back to standard grasping orientation
   grasp_pose = visual_tools_->convertPose(grasp_candidate->grasp_.grasp_pose.pose);
-  std_grasp_pose = grasp_pose * grasp_candidate->grasp_data_->grasp_pose_to_eef_pose_.inverse();
+  std_grasp_pose = grasp_pose;  // * grasp_candidate->grasp_data_->eef_mount_to_tcp_.inverse();
 
   // compute the angle between the z-axes of the desired and grasp poses
   grasp_z_axis = std_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
@@ -735,7 +735,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
     grasp_candidates[i]->getPreGraspState(robot_state_);
 
     // Show in Rviz
-    visual_tools_->publishRobotState(robot_state_);
+    visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::ORANGE);
     visual_tools_->trigger();
     ros::Duration(show_filtered_arm_solutions_pregrasp_speed_).sleep();
 
@@ -743,7 +743,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
     grasp_candidates[i]->getGraspStateClosed(robot_state_);
 
     // Show in Rviz
-    visual_tools_->publishRobotState(robot_state_);
+    visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::WHITE);
     visual_tools_->trigger();
     ros::Duration(show_filtered_arm_solutions_speed_).sleep();
   }

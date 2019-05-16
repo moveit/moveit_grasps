@@ -32,7 +32,7 @@ hand:
     # z-axis pointing toward object to grasp
     # x-axis perp. to movement of grippers
     # y-axis parallel to movement of grippers
-    grasp_pose_to_eef_transform :  [0, 0, -0.105, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
+    eef_mount_to_tcp_transform :  [0, 0, -0.105, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
 
     # Joint names and state values for the end effector.
     # The names should match the values of pregrasp_posture and grasp_posture.
