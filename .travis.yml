@@ -13,6 +13,7 @@ notifications:
 env:
   global:
     - TEST_BLACKLIST=moveit,moveit_ros,moveit_runtime,moveit_ros_perception  # mesh_filter_test fails due to broken Mesa OpenGL
+    - DOCKER_IMAGE=moveit/moveit:master-source
   matrix:
     - ROS_DISTRO=melodic ROS_REPO=ros              TEST=clang-format
     - ROS_DISTRO=melodic ROS_REPO=ros              UPSTREAM_WORKSPACE=moveit_grasps.rosinstall
