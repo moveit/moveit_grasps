@@ -79,11 +79,11 @@ To visualize gripper specific parameters:
 
 To test just grasp generation for randomly placed blocks:
 
-    roslaunch moveit_grasps demo_grasp_generator.launch
+    roslaunch moveit_grasps grasp_generator_demo.launch
 
 To test the grasp filtering:
 
-    roslaunch moveit_grasps demo_filter.launch
+    roslaunch moveit_grasps grasp_filter_demo.launch
 
 ## Testing and Linting
 
