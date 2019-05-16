@@ -313,7 +313,7 @@ public:
 
   /**
    * \brief creates grasp messages from the generated grasp poses
-   * \param pose - the grasp pose. (Note: this is the pose of the grasp itself not the position of the eef)
+   * \param pose - the grasp pose. (Note: this is the pose of the eef mount not the position of the tcp)
    * \param grasp_data data describing the end effector
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp

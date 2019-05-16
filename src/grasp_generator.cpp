@@ -799,7 +799,7 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose, co
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
 
   // get portion of score based on the orientation
-  Eigen::Isometry3d ideal_grasp = getIdealGraspPose();
+  Eigen::Isometry3d ideal_grasp = getIdealGraspPose() * grasp_data->eef_mount_to_tcp_.inverse();
   // Move the ideal top grasp to the box location
   ideal_grasp.translation() = cuboid_pose.translation();
   Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose, ideal_grasp);
@@ -969,33 +969,33 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
                                            const GraspCandidateConfig grasp_candidate_config)
 {
   grasp_candidates.clear();
-  std::vector<Eigen::Isometry3d> grasp_poses;
+  std::vector<Eigen::Isometry3d> grasp_poses_tcp;
   ////////////////
   // Re-orient the cuboid center top grasp so to be as close as possible to the ideal grasp
   ////////////////
 
   // Move the ideal grasp pose to the center of the top of the box
-  Eigen::Isometry3d ideal_grasp = getIdealGraspPose();
+  Eigen::Isometry3d ideal_grasp_tcp = getIdealGraspPose();
   Eigen::Isometry3d cuboid_center_top_grasp(cuboid_top_pose);
   // Move the ideal top grasp to the correct location
-  ideal_grasp.translation() = cuboid_center_top_grasp.translation();
-  setIdealGraspPose(ideal_grasp);
+  ideal_grasp_tcp.translation() = cuboid_center_top_grasp.translation();
+  setIdealGraspPose(ideal_grasp_tcp);
   Eigen::Vector3d object_size(depth, width, height);
 
   if (debug_top_grasps_)
   {
     visual_tools_->publishAxis(cuboid_top_pose, rviz_visual_tools::SMALL, "cuboid_top_pose");
-    visual_tools_->publishAxis(ideal_grasp, rviz_visual_tools::SMALL, "ideal_grasp");
+    visual_tools_->publishAxis(ideal_grasp_tcp, rviz_visual_tools::SMALL, "ideal_grasp_tcp");
     visual_tools_->trigger();
   }
 
   ROS_DEBUG_STREAM_NAMED("grasp_generator", "cuboid_direction:\n" << cuboid_center_top_grasp.rotation() << "\n");
-  ROS_DEBUG_STREAM_NAMED("grasp_generator", "ideal_grasp:\n" << ideal_grasp.rotation() << "\n");
+  ROS_DEBUG_STREAM_NAMED("grasp_generator", "ideal_grasp_tcp:\n" << ideal_grasp_tcp.rotation() << "\n");
 
   // If the ideal top grasp Z axis is in the opposite direction of the top pose then we rotate around X to flip the
   // orientation vector
   double dot_prodZ = (cuboid_center_top_grasp.rotation() * Eigen::Vector3d::UnitZ())
-                         .dot(ideal_grasp.rotation() * Eigen::Vector3d::UnitZ());
+                         .dot(ideal_grasp_tcp.rotation() * Eigen::Vector3d::UnitZ());
   if (dot_prodZ < 0)
   {
     ROS_DEBUG_NAMED("grasp_generator", "flipping Z");
@@ -1005,7 +1005,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
 
   // If the ideal top grasp X axis is opposite the top pose then we rotate around Z
   double dot_prodX = (cuboid_center_top_grasp.rotation() * Eigen::Vector3d::UnitX())
-                         .dot(ideal_grasp.rotation() * Eigen::Vector3d::UnitX());
+                         .dot(ideal_grasp_tcp.rotation() * Eigen::Vector3d::UnitX());
   if (dot_prodX < 0)
   {
     ROS_DEBUG_NAMED("generateSuctionGrasps", "flipping X");
@@ -1018,17 +1018,17 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   ////////////////
   // First add the center point to ensure that it is a candidate
 
-  Eigen::Isometry3d center_grasp_pose =
+  Eigen::Isometry3d center_grasp_pose_tcp =
       cuboid_center_top_grasp * Eigen::Translation3d(0, 0, grasp_data->grasp_min_depth_);
 
   if (debug_top_grasps_)
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t"
                                                              << height);
-    visual_tools_->publishAxis(center_grasp_pose, rviz_visual_tools::SMALL, "center_grasp_pose");
+    visual_tools_->publishAxis(center_grasp_pose_tcp, rviz_visual_tools::SMALL, "center_grasp_pose_tcp");
     visual_tools_->trigger();
   }
-  grasp_poses.push_back(center_grasp_pose);
+  grasp_poses_tcp.push_back(center_grasp_pose_tcp);
 
   // We define min, max and inc for each for loop here for readability
 
@@ -1057,67 +1057,69 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   std::size_t num_grasps;
 
   // Add rotated suction grasps (Yaw)
-  num_grasps = grasp_poses.size();
+  num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
     {
-      Eigen::Isometry3d grasp_pose = grasp_poses[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-      grasp_poses.push_back(grasp_pose);
+      Eigen::Isometry3d grasp_pose = grasp_poses_tcp[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+      grasp_poses_tcp.push_back(grasp_pose);
     }
   }
 
   // Add Depth grasps (Z-axis)
-  num_grasps = grasp_poses.size();
+  num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     for (double z = z_min; z <= z_max; z += z_increment)
     {
-      Eigen::Isometry3d grasp_pose = grasp_poses[i] * Eigen::Translation3d(0, 0, z);
-      grasp_poses.push_back(grasp_pose);
+      Eigen::Isometry3d grasp_pose = grasp_poses_tcp[i] * Eigen::Translation3d(0, 0, z);
+      grasp_poses_tcp.push_back(grasp_pose);
     }
   }
 
   // Add Y translation grasps
-  num_grasps = grasp_poses.size();
+  num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     for (double y = xy_min; y <= xy_max; y += xy_increment)
     {
       Eigen::Isometry3d grasp_pose;
 
-      grasp_pose = grasp_poses[i] * Eigen::Translation3d(0, y, 0);
-      grasp_poses.push_back(grasp_pose);
+      grasp_pose = grasp_poses_tcp[i] * Eigen::Translation3d(0, y, 0);
+      grasp_poses_tcp.push_back(grasp_pose);
 
-      grasp_pose = grasp_poses[i] * Eigen::Translation3d(0, -y, 0);
-      grasp_poses.push_back(grasp_pose);
+      grasp_pose = grasp_poses_tcp[i] * Eigen::Translation3d(0, -y, 0);
+      grasp_poses_tcp.push_back(grasp_pose);
     }
   }
 
   // Add X translation grasps
-  num_grasps = grasp_poses.size();
+  num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     for (double x = xy_min; x <= xy_max; x += xy_increment)
     {
       Eigen::Isometry3d grasp_pose;
 
-      grasp_pose = grasp_poses[i] * Eigen::Translation3d(x, 0, 0);
-      grasp_poses.push_back(grasp_pose);
+      grasp_pose = grasp_poses_tcp[i] * Eigen::Translation3d(x, 0, 0);
+      grasp_poses_tcp.push_back(grasp_pose);
 
-      grasp_pose = grasp_poses[i] * Eigen::Translation3d(-x, 0, 0);
-      grasp_poses.push_back(grasp_pose);
+      grasp_pose = grasp_poses_tcp[i] * Eigen::Translation3d(-x, 0, 0);
+      grasp_poses_tcp.push_back(grasp_pose);
     }
   }
 
-  num_grasps = grasp_poses.size();
+  num_grasps = grasp_poses_tcp.size();
 
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
-    addGrasp(grasp_poses[i], grasp_data, grasp_candidates, cuboid_top_pose, object_size, 0);
+    Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->eef_mount_to_tcp_.inverse();
+    addGrasp(grasp_pose_eef_mount, grasp_data, grasp_candidates, cuboid_top_pose, object_size, 0);
     if (debug_top_grasps_)
     {
-      visual_tools_->publishAxis(grasp_poses[i], rviz_visual_tools::MEDIUM, "pose");
+      visual_tools_->publishAxis(grasp_poses_tcp[i], rviz_visual_tools::MEDIUM, "tcp pose");
+      visual_tools_->publishAxis(grasp_pose_eef_mount, rviz_visual_tools::SMALL, "eef_mount pose");
     }
   }
   if (debug_top_grasps_)
