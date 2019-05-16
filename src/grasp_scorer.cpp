@@ -181,6 +181,7 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_p
 
   if (visual_tools)
   {
+    visual_tools->prompt("continue?");
     visual_tools->deleteAllMarkers();
     visual_tools->trigger();
     Eigen::Isometry3d gripper_corner_tr_3d = Eigen::Isometry3d::Identity();

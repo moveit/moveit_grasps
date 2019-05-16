@@ -688,7 +688,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose, const GraspDa
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
 
-  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->grasp_pose_to_eef_pose_.translation();
+  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->eef_mount_to_tcp_.translation();
   grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
 
   new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector.x();
@@ -719,7 +719,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose, const GraspDa
   // origin on palm, z pointing outward, x perp to gripper close, y parallel to gripper close direction
   // Transform the grasp pose
 
-  Eigen::Isometry3d eef_pose = grasp_pose * grasp_data->grasp_pose_to_eef_pose_;
+  Eigen::Isometry3d eef_pose = grasp_pose * grasp_data->eef_mount_to_tcp_;
 
   tf::poseEigenToMsg(eef_pose, grasp_pose_msg.pose);
   new_grasp.grasp_pose = grasp_pose_msg;

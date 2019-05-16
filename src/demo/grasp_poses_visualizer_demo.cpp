@@ -138,7 +138,7 @@ public:
 
     // SHOW EE GRASP POSE
     ROS_INFO_STREAM_NAMED(name_, "Showing ee grasp pose");
-    Eigen::Isometry3d ee_pose = grasp_pose * grasp_data_->grasp_pose_to_eef_pose_.inverse();
+    Eigen::Isometry3d ee_pose = grasp_pose * grasp_data_->eef_mount_to_tcp_.inverse();
     visual_tools_->publishAxis(ee_pose, 0.05, 0.005);
     Eigen::Isometry3d ee_text_pose(ee_pose);
     ee_text_pose.translation().z() += 0.03;
