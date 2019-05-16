@@ -11,7 +11,7 @@ This package includes:
  - Grasp filter
  - Demo code and visualizations
 
-<img src="https://picknik.ai/images/logo.jpg" width="100">
+<img src="https://picknik.ai/assets/images/logo.jpg" width="100">
 
 Developed by Dave Coleman, Andy McEvoy, and Mike Lautman at [PickNik Consulting](http://picknik.ai/) with many contributors.
 
