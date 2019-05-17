@@ -143,29 +143,31 @@ install(TARGETS
 ## Testing ##
 #############
 
-find_package(rostest REQUIRED)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
 
-add_rostest_gtest(grasp_data_test test/grasp_data_test.test test/grasp_data_test.cpp)
-target_link_libraries(grasp_data_test
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+  add_rostest_gtest(grasp_data_test test/grasp_data_test.test test/grasp_data_test.cpp)
+  target_link_libraries(grasp_data_test
+    ${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+    )
 
-add_rostest_gtest(grasp_generator_test test/grasp_generator_test.test test/grasp_generator_test.cpp)
-target_link_libraries(grasp_generator_test
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+  add_rostest_gtest(grasp_generator_test test/grasp_generator_test.test test/grasp_generator_test.cpp)
+  target_link_libraries(grasp_generator_test
+    ${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+    )
 
-add_rostest_gtest(grasp_filter_test test/grasp_filter_test.test test/grasp_filter_test.cpp)
-target_link_libraries(grasp_filter_test
-  ${PROJECT_NAME}
-  ${PROJECT_NAME}_filter
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+  add_rostest_gtest(grasp_filter_test test/grasp_filter_test.test test/grasp_filter_test.cpp)
+  target_link_libraries(grasp_filter_test
+    ${PROJECT_NAME}
+    ${PROJECT_NAME}_filter
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+    )
 
-## Test for correct C++ source code
-roslint_cpp()
+  ## Test for correct C++ source code
+  roslint_cpp()
+endif()
