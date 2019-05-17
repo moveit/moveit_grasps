@@ -68,18 +68,18 @@ public:
 
   /**
    * \brief Scores each axis of the grasp based on its angle to the desired pose axis.
-   * \param grasp_pose - the pose of the end effector
+   * \param grasp_pose_tcp - the pose of the end effector
    * \param ideal_pose - the ideal grasp pose (ex: straight into the bin)
    * \return the unweighted scores:
    *         1.0 -> 0 degrees between grasp axis and desired axis,
    *         0.0 -> 180 degrees
    */
-  static Eigen::Vector3d scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose,
+  static Eigen::Vector3d scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose_tcp,
                                                    const Eigen::Isometry3d& ideal_pose);
 
   /**
    * \brief Score the grasp based on how far the object is from the palm of the hand
-   * \param grasp_pose - the pose of the end effector (not the eef mount)
+   * \param grasp_pose_tcpgrasp_pose_tcp - the pose of the end effector (not the eef mount)
    * \param grasp_data - pointer to grasp info
    * \param object_pose - the pose of the object being grasped
    * \param max_grasp_distance - the maximum acceptable distance from palm
@@ -92,34 +92,34 @@ public:
   // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
   // arbitrary number given our target object set (i.e. I based it off of the cheese it box)
-  static double scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr grasp_data,
+  static double scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr grasp_data,
                                     const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
                                     const double& max_grasp_distance);
 
   /**
    * \brief Score the grasp based on the translation values of the grasp pose
-   * \param grasp_pose - the pose of the end effector (not the eef mount)
+   * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
    * \param min_translations - the minimum translation values for all grasp poses
    * \param max_translations - the maximum translation values for all grasp poses
    * \return the unweighted scores:
    *         0.0 -> pose is at the minimum translation in that axis
    *         1.0 -> pose is at the maximum translation in that axis
    */
-  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose,
+  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
                                                const Eigen::Vector3d& min_translations,
                                                const Eigen::Vector3d& max_translations);
 
   /**
    * \brief Score the grasp based on the translation values of the grasp pose
-   * \param grasp_pose - the pose of the end effector (not the eef mount)
+   * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
    * \param ideal_pose - the ideal pose location
    * \return the unweighted scores:
    *         0.0 -> pose is at the ideal translation in that axis
    */
-  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose,
+  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
                                                const Eigen::Isometry3d& ideal_pose);
 
-  static Eigen::Vector2d scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr& grasp_data,
+  static Eigen::Vector2d scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                             const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
                                             moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
 };
