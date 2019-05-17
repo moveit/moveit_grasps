@@ -531,10 +531,10 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
                                  const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
 {
   // Transform current pose to frame of planning group
-  Eigen::Isometry3d eigen_pose;
-  tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_pose);
-  eigen_pose = ik_thread_struct->link_transform_ * eigen_pose;
-  tf::poseEigenToMsg(eigen_pose, ik_thread_struct->ik_pose_.pose);
+  Eigen::Isometry3d eigen_eef_mount_pose;
+  tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_eef_mount_pose);
+  eigen_eef_mount_pose = ik_thread_struct->link_transform_ * eigen_eef_mount_pose;
+  tf::poseEigenToMsg(eigen_eef_mount_pose, ik_thread_struct->ik_pose_.pose);
 
   // Set callback function
   kinematics::KinematicsBase::IKCallbackFn ik_callback_fn;
