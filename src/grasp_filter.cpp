@@ -439,14 +439,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   // Get pose
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
-  // Debug
-  if (ik_thread_struct->verbose_ && false)
-  {
-    ik_thread_struct->ik_pose_.header.frame_id = ik_thread_struct->kin_solver_->getBaseFrame();
-    visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, rviz_visual_tools::MEDIUM,
-                                 0.1);
-  }
-
   // Filter by cutting planes
   for (std::size_t i = 0; i < cutting_planes_.size(); i++)
   {
