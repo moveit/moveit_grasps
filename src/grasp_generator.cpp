@@ -682,7 +682,8 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
 
   if (verbose_)
   {
-    visual_tools_->publishZArrow(grasp_pose_eef_mount, rviz_visual_tools::GREEN, rviz_visual_tools::XXSMALL, 0.05);
+    visual_tools_->publishZArrow(grasp_pose_tcp, rviz_visual_tools::GREEN, rviz_visual_tools::XXXSMALL, 0.025);
+    visual_tools_->publishZArrow(grasp_pose_eef_mount, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL, 0.05);
     visual_tools_->trigger();
     ros::Duration(0.01).sleep();
   }
