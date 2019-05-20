@@ -560,16 +560,6 @@ bool GraspGenerator::graspIntersectionHelper(Eigen::Isometry3d cuboid_pose, doub
   point_a = cuboid_pose.inverse() * point_a;  // T_cuboid-world * p_world = p_cuboid
   point_b = cuboid_pose.inverse() * point_b;
 
-  // if (verbose_)
-  // {
-  //   visual_tools_->publishCuboid(visual_tools_->convertPose(Eigen::Isometry3d::Identity()), depth, width, height,
-  //   rviz_visual_tools::TRANSLUCENT);
-  //   visual_tools_->publishAxis(Eigen::Isometry3d::Identity());
-  //   visual_tools_->publishSphere(point_a, rviz_visual_tools::WHITE, 0.005);
-  //   visual_tools_->publishSphere(point_b, rviz_visual_tools::GREY, 0.005);
-  //   visual_tools_->publishLine(point_a, point_b, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL);
-  // }
-
   double t, u, v;
   Eigen::Vector3d intersection;
   // check if line segment intersects XY faces of cuboid (z = +/- height/2)
@@ -680,13 +670,13 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
   // Transform the grasp pose eef mount to the tcp grasp pose
   Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
 
-  if (verbose_)
-  {
-    visual_tools_->publishZArrow(grasp_pose_tcp, rviz_visual_tools::GREEN, rviz_visual_tools::XXXSMALL, 0.025);
-    visual_tools_->publishZArrow(grasp_pose_eef_mount, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL, 0.05);
-    visual_tools_->trigger();
-    ros::Duration(0.01).sleep();
-  }
+  // if (verbose_)
+  // {
+  //   visual_tools_->publishZArrow(grasp_pose_tcp, rviz_visual_tools::GREEN, rviz_visual_tools::XXXSMALL, 0.025);
+  //   visual_tools_->publishZArrow(grasp_pose_eef_mount, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL, 0.05);
+  //   visual_tools_->trigger();
+  //   ros::Duration(0.01).sleep();
+  // }
 
   // The new grasp
   moveit_msgs::Grasp new_grasp;

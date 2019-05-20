@@ -11,7 +11,7 @@ hand:
 
     # min/max values of the grasp depth range in meter.
     # This should fit to the distance from finger tip to inner palm or the suction cup stroke
-    grasp_max_depth : 0.025
+    grasp_max_depth : 0.035
     grasp_min_depth : 0.01
     # grasp_depth_resolution is the discretization distance in meter used for sampling the grasp depth value.
     # Idealy this should be a small fraction of the depth range (i.e. 0.005).

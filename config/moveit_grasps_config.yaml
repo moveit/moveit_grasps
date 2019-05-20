@@ -33,7 +33,7 @@ moveit_grasps:
     # Collision checking in verbose on second pass (after all failed)
     show_grasp_filter_collision_if_failed: false
     # Show post-filter arrows
-    show_filtered_grasps: true
+    show_filtered_grasps: false
     # Show pose-filter arm ik solutions
     show_filtered_arm_solutions: false
     show_filtered_arm_solutions_pregrasp_speed: 0.01
