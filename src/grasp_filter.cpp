@@ -215,18 +215,18 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::I
 bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
                                            double max_angular_offset)
 {
-  Eigen::Isometry3d std_grasp_pose;
-  Eigen::Isometry3d grasp_pose;
+  Eigen::Isometry3d tcp_grasp_pose;
+  Eigen::Isometry3d eef_mount_grasp_pose;
   Eigen::Vector3d desired_z_axis;
   Eigen::Vector3d grasp_z_axis;
   double angle;
 
   // convert grasp pose back to standard grasping orientation
-  grasp_pose = visual_tools_->convertPose(grasp_candidate->grasp_.grasp_pose.pose);
-  std_grasp_pose = grasp_pose;  // * grasp_candidate->grasp_data_->eef_mount_to_tcp_.inverse();
+  eef_mount_grasp_pose = visual_tools_->convertPose(grasp_candidate->grasp_.grasp_pose.pose);
+  tcp_grasp_pose = eef_mount_grasp_pose * grasp_candidate->grasp_data_->tcp_to_eef_mount_.inverse();
 
   // compute the angle between the z-axes of the desired and grasp poses
-  grasp_z_axis = std_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
+  grasp_z_axis = tcp_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   desired_z_axis = desired_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   angle = acos(grasp_z_axis.normalized().dot(desired_z_axis.normalized()));
 

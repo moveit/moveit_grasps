@@ -222,8 +222,9 @@ public:
     // --------------------------------------------
     // Generating a seed state for filtering grasps
     robot_state::RobotStatePtr seed_state(new robot_state::RobotState(*visual_tools_->getSharedRobotState()));
-    Eigen::Isometry3d grasp_pose = visual_tools_->convertPose(object_pose) * grasp_data_->eef_mount_to_tcp_.inverse();
-    if (!getIKSolution(arm_jmg_, grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
+    Eigen::Isometry3d eef_mount_grasp_pose =
+        visual_tools_->convertPose(object_pose) * grasp_data_->tcp_to_eef_mount_.inverse();
+    if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
     {
       ROS_WARN_STREAM_NAMED(LOGNAME, "The ideal seed state is not reachable. Using start state as seed.");
     }

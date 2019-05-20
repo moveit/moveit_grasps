@@ -444,7 +444,7 @@ bool GraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& cuboid_po
 
   for (std::size_t i = 0; i < grasp_poses_tcp.size(); i++)
   {
-    Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->eef_mount_to_tcp_.inverse();
+    Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;
     if (!addGrasp(grasp_pose_eef_mount, grasp_data, grasp_candidates, cuboid_pose, object_size, object_width))
     {
       ROS_DEBUG_STREAM_NAMED("grasp_generator.add", "Unable to add grasp - function returned false");
@@ -678,7 +678,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
                               const Eigen::Vector3d& object_size, double object_width)
 {
   // Transform the grasp pose eef mount to the tcp grasp pose
-  Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->eef_mount_to_tcp_;
+  Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
 
   if (verbose_)
   {
@@ -699,7 +699,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
   new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
   new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
 
-  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->eef_mount_to_tcp_.translation();
+  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->tcp_to_eef_mount_.translation();
   grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
 
   new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector.x();
@@ -805,13 +805,13 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
 
   // get portion of score based on the orientation
-  Eigen::Isometry3d ideal_grasp = getIdealGraspPose() * grasp_data->eef_mount_to_tcp_.inverse();
+  Eigen::Isometry3d ideal_grasp_tcp = getIdealGraspPose();
   // Move the ideal top grasp to the box location
-  ideal_grasp.translation() = cuboid_pose.translation();
-  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp);
+  ideal_grasp_tcp.translation() = cuboid_pose.translation();
+  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_tcp);
 
   // get portion of score based on the translation
-  Eigen::Vector3d translation_scores = GraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp);
+  Eigen::Vector3d translation_scores = GraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
 
   // Score suction grasp overhang
   Eigen::Vector2d overhang_score;
@@ -1121,7 +1121,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
 
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
-    Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->eef_mount_to_tcp_.inverse();
+    Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;
     addGrasp(grasp_pose_eef_mount, grasp_data, grasp_candidates, cuboid_top_pose, object_size, 0);
     if (debug_top_grasps_)
     {

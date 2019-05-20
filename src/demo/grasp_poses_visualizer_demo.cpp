@@ -128,35 +128,36 @@ public:
     // SHOW GRASP POSE
     visual_tools_->prompt("Press 'next' to show an example eef and grasp pose");
     ROS_INFO_STREAM_NAMED(name_, "Showing the grasp pose");
-    Eigen::Isometry3d grasp_pose = visual_tools_->convertPose(grasp_candidates_.front()->grasp_.grasp_pose.pose);
-    visual_tools_->publishAxis(grasp_pose, 0.05, 0.005);
-    Eigen::Isometry3d grasp_text_pose(grasp_pose);
+    Eigen::Isometry3d eef_mount_grasp_pose =
+        visual_tools_->convertPose(grasp_candidates_.front()->grasp_.grasp_pose.pose);
+    visual_tools_->publishAxis(eef_mount_grasp_pose, 0.05, 0.005);
+    Eigen::Isometry3d grasp_text_pose(eef_mount_grasp_pose);
     grasp_text_pose.translation().z() += 0.03;
     visual_tools_->publishText(grasp_text_pose, "Grasp Pose", rviz_visual_tools::WHITE, text_size, text);
-    visual_tools_->publishSphere(grasp_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.01);
+    visual_tools_->publishSphere(eef_mount_grasp_pose.translation(), rviz_visual_tools::LIME_GREEN, 0.01);
     visual_tools_->trigger();
 
     // SHOW EE GRASP POSE
-    ROS_INFO_STREAM_NAMED(name_, "Showing ee grasp pose");
-    Eigen::Isometry3d ee_pose = grasp_pose * grasp_data_->eef_mount_to_tcp_.inverse();
-    visual_tools_->publishAxis(ee_pose, 0.05, 0.005);
-    Eigen::Isometry3d ee_text_pose(ee_pose);
-    ee_text_pose.translation().z() += 0.03;
-    visual_tools_->publishText(ee_text_pose, "EE Pose", rviz_visual_tools::WHITE, text_size, text);
-    visual_tools_->publishSphere(ee_pose.translation(), rviz_visual_tools::GREEN, 0.01);
+    ROS_INFO_STREAM_NAMED(name_, "Showing tcp grasp pose");
+    Eigen::Isometry3d tcp_grasp_pose = eef_mount_grasp_pose * grasp_data_->tcp_to_eef_mount_.inverse();
+    visual_tools_->publishAxis(tcp_grasp_pose, 0.05, 0.005);
+    Eigen::Isometry3d tcp_text_pose(tcp_grasp_pose);
+    tcp_text_pose.translation().z() += 0.03;
+    visual_tools_->publishText(tcp_text_pose, "TCP Pose", rviz_visual_tools::WHITE, text_size, text);
+    visual_tools_->publishSphere(tcp_grasp_pose.translation(), rviz_visual_tools::GREEN, 0.01);
     visual_tools_->trigger();
 
     visual_tools_->prompt("Press 'next' to visualize the grasp max and min depth");
 
     // SHOW grasp_max_depth
     ROS_INFO_STREAM_NAMED(name_, "Showing grasp_max_depth");
-    Eigen::Vector3d palm_vector = -ee_pose.translation() + grasp_pose.translation();
+    Eigen::Vector3d palm_vector = -tcp_grasp_pose.translation() + eef_mount_grasp_pose.translation();
     palm_vector.normalize();
     Eigen::Vector3d max_grasp_depth_point =
-        ee_pose.translation() + palm_vector * (grasp_data_->grasp_max_depth_ - grasp_data_->grasp_min_depth_);
-    Eigen::Vector3d min_grasp_depth_point = ee_pose.translation();
+        tcp_grasp_pose.translation() + palm_vector * (grasp_data_->grasp_max_depth_ - grasp_data_->grasp_min_depth_);
+    Eigen::Vector3d min_grasp_depth_point = tcp_grasp_pose.translation();
     visual_tools_->publishLine(min_grasp_depth_point, max_grasp_depth_point, rviz_visual_tools::GREY);
-    Eigen::Isometry3d min_depth_eef_pose = grasp_pose;
+    Eigen::Isometry3d min_depth_eef_pose = eef_mount_grasp_pose;
     visual_tools_->publishEEMarkers(min_depth_eef_pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
                                     rviz_visual_tools::TRANSLUCENT_DARK, "test_eef");
     visual_tools_->trigger();
