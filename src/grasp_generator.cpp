@@ -670,14 +670,6 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
   // Transform the grasp pose eef mount to the tcp grasp pose
   Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
 
-  // if (verbose_)
-  // {
-  //   visual_tools_->publishZArrow(grasp_pose_tcp, rviz_visual_tools::GREEN, rviz_visual_tools::XXXSMALL, 0.025);
-  //   visual_tools_->publishZArrow(grasp_pose_eef_mount, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL, 0.05);
-  //   visual_tools_->trigger();
-  //   ros::Duration(0.01).sleep();
-  // }
-
   // The new grasp
   moveit_msgs::Grasp new_grasp;
 
