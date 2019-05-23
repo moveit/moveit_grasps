@@ -215,18 +215,18 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::I
 bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
                                            double max_angular_offset)
 {
-  Eigen::Isometry3d std_grasp_pose;
-  Eigen::Isometry3d grasp_pose;
+  Eigen::Isometry3d tcp_grasp_pose;
+  Eigen::Isometry3d eef_mount_grasp_pose;
   Eigen::Vector3d desired_z_axis;
   Eigen::Vector3d grasp_z_axis;
   double angle;
 
   // convert grasp pose back to standard grasping orientation
-  grasp_pose = visual_tools_->convertPose(grasp_candidate->grasp_.grasp_pose.pose);
-  std_grasp_pose = grasp_pose * grasp_candidate->grasp_data_->grasp_pose_to_eef_pose_.inverse();
+  eef_mount_grasp_pose = visual_tools_->convertPose(grasp_candidate->grasp_.grasp_pose.pose);
+  tcp_grasp_pose = eef_mount_grasp_pose * grasp_candidate->grasp_data_->tcp_to_eef_mount_.inverse();
 
   // compute the angle between the z-axes of the desired and grasp poses
-  grasp_z_axis = std_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
+  grasp_z_axis = tcp_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   desired_z_axis = desired_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   angle = acos(grasp_z_axis.normalized().dot(desired_z_axis.normalized()));
 
@@ -439,14 +439,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   // Get pose
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
-  // Debug
-  if (ik_thread_struct->verbose_ && false)
-  {
-    ik_thread_struct->ik_pose_.header.frame_id = ik_thread_struct->kin_solver_->getBaseFrame();
-    visual_tools_->publishZArrow(ik_thread_struct->ik_pose_.pose, rviz_visual_tools::RED, rviz_visual_tools::MEDIUM,
-                                 0.1);
-  }
-
   // Filter by cutting planes
   for (std::size_t i = 0; i < cutting_planes_.size(); i++)
   {
@@ -531,10 +523,10 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
                                  const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
 {
   // Transform current pose to frame of planning group
-  Eigen::Isometry3d eigen_pose;
-  tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_pose);
-  eigen_pose = ik_thread_struct->link_transform_ * eigen_pose;
-  tf::poseEigenToMsg(eigen_pose, ik_thread_struct->ik_pose_.pose);
+  Eigen::Isometry3d eigen_eef_mount_pose;
+  tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_eef_mount_pose);
+  eigen_eef_mount_pose = ik_thread_struct->link_transform_ * eigen_eef_mount_pose;
+  tf::poseEigenToMsg(eigen_eef_mount_pose, ik_thread_struct->ik_pose_.pose);
 
   // Set callback function
   kinematics::KinematicsBase::IKCallbackFn ik_callback_fn;
@@ -735,7 +727,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
     grasp_candidates[i]->getPreGraspState(robot_state_);
 
     // Show in Rviz
-    visual_tools_->publishRobotState(robot_state_);
+    visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::ORANGE);
     visual_tools_->trigger();
     ros::Duration(show_filtered_arm_solutions_pregrasp_speed_).sleep();
 
@@ -743,7 +735,7 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
     grasp_candidates[i]->getGraspStateClosed(robot_state_);
 
     // Show in Rviz
-    visual_tools_->publishRobotState(robot_state_);
+    visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::WHITE);
     visual_tools_->trigger();
     ros::Duration(show_filtered_arm_solutions_speed_).sleep();
   }

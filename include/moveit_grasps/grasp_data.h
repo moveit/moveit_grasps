@@ -132,7 +132,7 @@ public:
   // A representation of the gripper type as an integer. See EndEffectorType for values
   EndEffectorType end_effector_type_;
 
-  Eigen::Isometry3d grasp_pose_to_eef_pose_;  // Convert generic grasp pose to this end effector's frame of reference
+  Eigen::Isometry3d tcp_to_eef_mount_;  // Convert generic grasp pose to the parent arm's eef_mount frame of reference
   trajectory_msgs::JointTrajectory pre_grasp_posture_;  // when the end effector is in "open" position
   trajectory_msgs::JointTrajectory grasp_posture_;      // when the end effector is in "close" position
   std::string base_link_;                               // name of global frame with z pointing up

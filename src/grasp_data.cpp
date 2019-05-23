@@ -109,7 +109,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   error += !rosparam_shortcuts::get(parent_name, child_nh, "joints", joint_names);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
-  error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_pose_to_eef_transform", grasp_pose_to_eef_pose_);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_to_eef_mount_transform", tcp_to_eef_mount_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
 
   // Find out if the end effector uses suction or fingers (NOTE: must be one of 'finger' or 'suction')
@@ -327,9 +327,9 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
 void GraspData::print()
 {
   ROS_WARN_STREAM_NAMED("grasp_data", "Debug Grasp Data variable values:");
-  std::cout << "grasp_pose_to_eef_pose_: \n"
-            << grasp_pose_to_eef_pose_.translation() << "\n"
-            << grasp_pose_to_eef_pose_.rotation() << std::endl;
+  std::cout << "tcp_to_eef_mount_: \n"
+            << tcp_to_eef_mount_.translation() << "\n"
+            << tcp_to_eef_mount_.rotation() << std::endl;
   std::cout << "pre_grasp_posture_: \n" << pre_grasp_posture_ << std::endl;
   std::cout << "grasp_posture_: \n" << grasp_posture_ << std::endl;
   std::cout << "base_link_: " << base_link_ << std::endl;

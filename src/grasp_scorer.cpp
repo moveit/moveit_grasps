@@ -47,13 +47,13 @@ double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percen
   return pow(percent_open, 2);
 }
 
-double GraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr grasp_data,
+double GraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr grasp_data,
                                         const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
                                         const double& max_grasp_distance)
 {
   // TODO(mcevoyandy): grasp_data is not used but should be. See *.h for explaination.
 
-  double distance = (grasp_pose.translation() - object_pose.translation()).norm();
+  double distance = (grasp_pose_tcp.translation() - object_pose.translation()).norm();
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "distance = " << distance << ", " << min_grasp_distance << ":"
                                                                 << max_grasp_distance);
 
@@ -65,25 +65,25 @@ double GraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose, con
   return pow(score, 4);
 }
 
-Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose,
+Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
                                                    const Eigen::Isometry3d& ideal_pose)
 {
   // We assume that the ideal is in the middle
-  Eigen::Vector3d scores = -Eigen::Vector3d(grasp_pose.translation() - ideal_pose.translation()).array().abs();
+  Eigen::Vector3d scores = -Eigen::Vector3d(grasp_pose_tcp.translation() - ideal_pose.translation()).array().abs();
 
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspTranslation",
                          "value, ideal, score:\n"
-                             << "x: " << grasp_pose.translation()[0] << "\t" << ideal_pose.translation()[0] << "\t"
+                             << "x: " << grasp_pose_tcp.translation()[0] << "\t" << ideal_pose.translation()[0] << "\t"
                              << scores[0] << "\n"
-                             << "y: " << grasp_pose.translation()[1] << "\t" << ideal_pose.translation()[1] << "\t"
+                             << "y: " << grasp_pose_tcp.translation()[1] << "\t" << ideal_pose.translation()[1] << "\t"
                              << scores[1] << "\n"
-                             << "x: " << grasp_pose.translation()[2] << "\t" << ideal_pose.translation()[2] << "\t"
+                             << "x: " << grasp_pose_tcp.translation()[2] << "\t" << ideal_pose.translation()[2] << "\t"
                              << scores[2] << "\n");
 
   return scores;
 }
 
-Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose,
+Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
                                                    const Eigen::Vector3d& min_translations,
                                                    const Eigen::Vector3d& max_translations)
 {
@@ -93,7 +93,7 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& gras
   {
     // We assume that the ideal is in the middle
     double ideal = (max_translations[i] + min_translations[i]) / 2;
-    double translation = grasp_pose.translation()[i] - ideal;
+    double translation = grasp_pose_tcp.translation()[i] - ideal;
     double range = max_translations[i] - min_translations[i];
     double score;
     if (range == 0)
@@ -104,18 +104,19 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& gras
     scores[i] = pow(score, 2);
   }
 
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.translation", "\nvalue, min, max, score:\n"
-                                                         << grasp_pose.translation()[0] << ", " << min_translations[0]
-                                                         << ", " << max_translations[0] << ", " << scores[0] << "\n"
-                                                         << grasp_pose.translation()[1] << ", " << min_translations[1]
-                                                         << ", " << max_translations[1] << ", " << scores[1] << "\n"
-                                                         << grasp_pose.translation()[2] << ", " << min_translations[2]
-                                                         << ", " << max_translations[2] << ", " << scores[2] << "\n");
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.translation",
+                         "\nvalue, min, max, score:\n"
+                             << grasp_pose_tcp.translation()[0] << ", " << min_translations[0] << ", "
+                             << max_translations[0] << ", " << scores[0] << "\n"
+                             << grasp_pose_tcp.translation()[1] << ", " << min_translations[1] << ", "
+                             << max_translations[1] << ", " << scores[1] << "\n"
+                             << grasp_pose_tcp.translation()[2] << ", " << min_translations[2] << ", "
+                             << max_translations[2] << ", " << scores[2] << "\n");
 
   return scores;
 }
 
-Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr& grasp_data,
+Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                                 const Eigen::Isometry3d& object_pose,
                                                 const Eigen::Vector3d& object_size,
                                                 moveit_visual_tools::MoveItVisualToolsPtr visual_tools)
@@ -132,7 +133,7 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_p
   Eigen::Vector2d gripper_corner_bl(-grasp_data->active_suction_range_x_ / 2.0,
                                     -grasp_data->active_suction_range_y_ / 2.0);
 
-  Eigen::Isometry3d object_to_gripper_transform = object_pose.inverse() * grasp_pose;
+  Eigen::Isometry3d object_to_gripper_transform = object_pose.inverse() * grasp_pose_tcp;
   Eigen::Affine2d object_to_gripper_transform_2d =
       Eigen::Translation2d(object_to_gripper_transform.translation().topRows<2>()) *
       object_to_gripper_transform.linear().topLeftCorner<2, 2>();
@@ -181,6 +182,7 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_p
 
   if (visual_tools)
   {
+    visual_tools->prompt("continue?");
     visual_tools->deleteAllMarkers();
     visual_tools->trigger();
     Eigen::Isometry3d gripper_corner_tr_3d = Eigen::Isometry3d::Identity();
@@ -216,7 +218,7 @@ Eigen::Vector2d GraspScorer::scoreGraspOverhang(const Eigen::Isometry3d& grasp_p
   return scores;
 }
 
-Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose,
+Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose_tcp,
                                                        const Eigen::Isometry3d& ideal_pose)
 {
   Eigen::Vector3d grasp_pose_axis;
@@ -225,21 +227,21 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& 
   double angle;
 
   // get angle between x-axes
-  grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitX();
+  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitX();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
   angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
   scores[0] = (M_PI - angle) / M_PI;
 
   // get angle between y-axes
-  grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitY();
+  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitY();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
   angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
   scores[1] = (M_PI - angle) / M_PI;
 
   // get angle between z-axes
-  grasp_pose_axis = grasp_pose.rotation() * Eigen::Vector3d::UnitZ();
+  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
   angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);

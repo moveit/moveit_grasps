@@ -125,10 +125,10 @@ public:
     grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
 
     // Visualize the ideal grasp pose
-    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_GRASP_POSE");
-    visual_tools_->publishEEMarkers(grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_, ee_jmg,
+    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_TCP_GRASP_POSE");
+    visual_tools_->publishEEMarkers(grasp_generator_->ideal_grasp_pose_ * grasp_data_->tcp_to_eef_mount_, ee_jmg,
                                     grasp_data_->grasp_posture_.points[0].positions, rviz_visual_tools::BLUE);
-    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_ * grasp_data_->grasp_pose_to_eef_pose_,
+    grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_ * grasp_data_->tcp_to_eef_mount_,
                                        "IDEAL EEF MOUNT POSE");
     visual_tools_->trigger();
 

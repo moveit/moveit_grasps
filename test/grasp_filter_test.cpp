@@ -99,7 +99,7 @@ TEST_F(GraspFilterTest, TestGraspFilter)
   const double zmax = 0.7;
 
   // Generate grasps for a bunch of random objects
-  const std::size_t num_tests = 1;
+  const std::size_t num_tests = 5;
   for (std::size_t i = 0; i < num_tests; ++i)
   {
     // Generate random cuboid

@@ -250,12 +250,12 @@ public:
    * \param translation - translation to go from cuboid centroid to grasping location
    * \param corner_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
    * \param num_radial_grasps - the number of grasps to generate around the corner
-   * \param grasp_poses - list of grasp poses generated
+   * \param grasp_poses_tcp - list of grasp poses generated
    * \return the number of poses generated
    */
   std::size_t addCornerGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                     double corner_rotation, std::size_t num_radial_grasps,
-                                    std::vector<Eigen::Isometry3d>& grasp_poses);
+                                    std::vector<Eigen::Isometry3d>& grasp_poses_tcp);
 
   /**
    * \brief helper function for adding grasps along the face of a cuboid
@@ -265,12 +265,12 @@ public:
    * \param translation - translation to go from cuboid centroid to grasping location
    * \param alignment_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
    * \param num_grasps - the number of grasps to generate around the corner
-   * \param grasp_poses - list of grasp poses generated
+   * \param grasp_poses_tcp - list of grasp poses generated
    * \return the number of poses generated
    */
   std::size_t addFaceGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
-                                  std::vector<Eigen::Isometry3d>& grasp_poses);
+                                  std::vector<Eigen::Isometry3d>& grasp_poses_tcp);
 
   /**
    * \brief helper function for adding grasps along the edges of the cuboid
@@ -280,12 +280,12 @@ public:
    * \param translation - translation to go from cuboid centroid to grasping location
    * \param alignment_rotation - extra rotatation needed to align grasp pose as you move around the cuboid
    * \param num_grasps - the number of grasps to generate around the corner
-   * \param grasp_poses - list of grasp poses generated
+   * \param grasp_poses_tcp - list of grasp poses generated
    * \return the number of poses generated
    */
   std::size_t addEdgeGraspsHelper(Eigen::Isometry3d cuboid_pose, double rotation_angles[3], Eigen::Vector3d translation,
                                   Eigen::Vector3d delta, double alignment_rotation, std::size_t num_grasps,
-                                  std::vector<Eigen::Isometry3d>& grasp_poses, double corner_rotation);
+                                  std::vector<Eigen::Isometry3d>& grasp_poses_tcp, double corner_rotation);
 
   /**
    * \brief helper function for determining if the grasp will intersect the cuboid
@@ -293,12 +293,12 @@ public:
    * \param depth - size of cuboid along x axis
    * \param width - size of cuboid along y axis
    * \param height - size of cuboid along z axis
-   * \param grasp_pose - pose of grasp
+   * \param grasp_pose_tcp - pose of grasp
    * \param grasp_data - data describing end effector
    * \return true if the grasp intersects the cuboid
    */
   bool graspIntersectionHelper(Eigen::Isometry3d cuboid_pose, double depth, double width, double height,
-                               Eigen::Isometry3d grasp_pose, const GraspDataPtr grasp_data);
+                               Eigen::Isometry3d grasp_pose_tcp, const GraspDataPtr grasp_data);
 
   /**
    * \brief helper function to test intersection of a line with a plane
@@ -313,7 +313,7 @@ public:
 
   /**
    * \brief creates grasp messages from the generated grasp poses
-   * \param pose - the grasp pose. (Note: this is the pose of the grasp itself not the position of the eef)
+   * \param grasp_pose_eef_mount - the grasp pose. (Note: this is the pose of the eef mount not the position of the tcp)
    * \param grasp_data data describing the end effector
    * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
@@ -321,30 +321,30 @@ public:
    * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
    * \return true on success
    */
-  bool addGrasp(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr grasp_data,
+  bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const GraspDataPtr grasp_data,
                 std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Isometry3d& object_pose,
                 const Eigen::Vector3d& object_size, double object_width);
 
   /**
    * \brief Score the generated suction grasp poses
-   * \param grasp_pose - the pose of the grasp
+   * \param grasp_pose_tcp - the pose of the grasp
    * \param grasp_data - data describing the end effector
    * \param cuboid_pose - the pose of the object being grasped
    * \param object size - the extents of the object being grasped
    * \return a score with positive being better
    */
-  double scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr& grasp_data,
+  double scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                            const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size);
 
   /**
    * \brief Score the generated finger grasp poses
-   * \param grasp_pose - the pose of the grasp
+   * \param grasp_pose_tcp - the grasp pose of the tcp
    * \param grasp_data - data describing the end effector
    * \param object_pose - the pose of the object being grasped
    * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return a score with positive being better
    */
-  double scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose, const GraspDataPtr& grasp_data,
+  double scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                           const Eigen::Isometry3d& object_pose, double percent_open);
 
   /**
