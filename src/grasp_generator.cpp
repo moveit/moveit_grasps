@@ -37,6 +37,7 @@
 */
 
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_filter.h>
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
@@ -942,16 +943,23 @@ bool GraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double
                                     std::vector<GraspCandidatePtr>& grasp_candidates,
                                     const GraspCandidateConfig grasp_candidate_config)
 {
+  bool result = false;
   if (grasp_data->end_effector_type_ == FINGER)
-    return generateFingerGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates,
-                                grasp_candidate_config);
-  if (grasp_data->end_effector_type_ == SUCTION)
-    return generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates,
-                                 grasp_candidate_config);
-  else
-    return false;
+    result =
+        generateFingerGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config);
+  else if (grasp_data->end_effector_type_ == SUCTION)
+    result =
+        generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config);
+
+  if (result)
+    std::sort(grasp_candidates.begin(), grasp_candidates.end(), GraspFilter::compareGraspScores);
+
+  return result;
 }
 
+// X -> Depth
+// Y -> Width
+// Z -> Height
 bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width,
                                            double height, const moveit_grasps::GraspDataPtr grasp_data,
                                            std::vector<GraspCandidatePtr>& grasp_candidates,
@@ -1023,16 +1031,12 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
 
   // if X range is less than y range then we use x range for the xy range
   double xy_increment = grasp_data->grasp_resolution_;
-  double xy_min = xy_increment;
-  double xy_max;
-  if (depth - grasp_data->active_suction_range_x_ < width - grasp_data->active_suction_range_y_)
-  {
-    xy_max = depth / 2.0 - grasp_data->active_suction_range_x_ / 2.0;
-  }
-  else
-  {
-    xy_max = width / 2.0 - grasp_data->active_suction_range_y_ / 2.0;
-  }
+  double y_min = xy_increment;
+  double y_max = std::max((depth + grasp_data->active_suction_range_x_) / 2.0,
+                          (width + grasp_data->active_suction_range_y_) / 2.0);
+  double x_min = xy_increment;
+  double x_max = y_max;
+      // (depth + grasp_data->active_suction_range_x_) / 2.0;
 
   double z_increment = grasp_data->grasp_depth_resolution_;
   double z_min = z_increment;
@@ -1044,17 +1048,6 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
 
   // For each range (X, Y, Z, Yaw) create copies of the grasp poses for each value in the range
   std::size_t num_grasps;
-
-  // Add rotated suction grasps (Yaw)
-  num_grasps = grasp_poses_tcp.size();
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
-    {
-      Eigen::Isometry3d grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-    }
-  }
 
   // Add Depth grasps (Z-axis)
   num_grasps = grasp_poses_tcp.size();
@@ -1071,7 +1064,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
-    for (double y = xy_min; y <= xy_max; y += xy_increment)
+    for (double y = y_max; y >= y_min; y -= xy_increment)
     {
       Eigen::Isometry3d grasp_pose_tcp;
 
@@ -1087,7 +1080,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
-    for (double x = xy_min; x <= xy_max; x += xy_increment)
+    for (double x = x_max; x >= x_min; x -= xy_increment)
     {
       Eigen::Isometry3d grasp_pose_tcp;
 
@@ -1099,7 +1092,18 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
     }
   }
 
+  // Add rotated suction grasps (Yaw)
   num_grasps = grasp_poses_tcp.size();
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
+    {
+      Eigen::Isometry3d grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+      grasp_poses_tcp.push_back(grasp_pose_tcp);
+    }
+  }
+  num_grasps = grasp_poses_tcp.size();
+  ROS_DEBUG_STREAM_NAMED("grasp_generator", "num grasps after Yaw:\t " << num_grasps);
 
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
@@ -1111,6 +1115,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
       visual_tools_->publishAxis(grasp_pose_eef_mount, rviz_visual_tools::SMALL, "eef_mount pose");
     }
   }
+
   if (debug_top_grasps_)
   {
     Eigen::Isometry3d ideal_copy = ideal_grasp_pose_;
