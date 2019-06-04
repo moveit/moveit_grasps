@@ -81,6 +81,10 @@ public:
 
   bool isValid();
 
+  bool setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap);
+
+  const std::vector<double> getSuctionVoxelOverlap();
+
   moveit_msgs::Grasp grasp_;
 
   /*# Contents of moveit_msgs::Grasp for reference
@@ -157,6 +161,10 @@ public:
 
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
+
+  // A vector of fractions maped to suction gripper voxels. [0,1] representing the faraction of the
+  // suction voxel that overlaps the object
+  std::vector<double> suction_voxel_overlap_;
 
   // Store pregrasp, grasp, lifted, and retreat trajectories
   GraspTrajectories segmented_cartesian_traj_;
