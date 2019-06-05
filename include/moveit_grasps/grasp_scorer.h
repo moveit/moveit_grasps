@@ -122,6 +122,12 @@ public:
   static Eigen::Vector2d scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                             const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
                                             moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
+
+  static std::vector<double> scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp,
+                                                      const GraspDataPtr& grasp_data,
+                                                      const Eigen::Isometry3d& object_pose,
+                                                      const Eigen::Vector3d& object_size,
+                                                      moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
 };
 
 }  // end namespace moveit_grasps
