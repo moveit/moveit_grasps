@@ -820,40 +820,37 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
   for (double voxel_overlap : suction_voxel_overlap)
     overhang_score += voxel_overlap * voxel_overlap;
 
-  std::size_t num_scores = 7;
-  std::vector<double> weights = {
-    grasp_score_weights_.orientation_x_score_weight_, grasp_score_weights_.orientation_y_score_weight_,
-    grasp_score_weights_.orientation_z_score_weight_, grasp_score_weights_.translation_x_score_weight_,
-    grasp_score_weights_.translation_y_score_weight_, grasp_score_weights_.translation_z_score_weight_,
-    grasp_score_weights_.overhang_score_weight_
-  };
-
-  double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
-                                translation_scores[0], translation_scores[1], translation_scores[2],
-                                overhang_score };
-
   double total_score = 0;
   double weight_total = 0;
-  for (std::size_t i = 0; i < num_scores; i++)
-  {
-    total_score += weights[i] * scores[i];
-    weight_total += weights[i];
-  }
+
+  total_score += orientation_scores[0] * grasp_score_weights_.orientation_x_score_weight_;
+  total_score += orientation_scores[1] * grasp_score_weights_.orientation_y_score_weight_;
+  total_score += orientation_scores[2] * grasp_score_weights_.orientation_z_score_weight_;
+  total_score += translation_scores[0] * grasp_score_weights_.translation_x_score_weight_;
+  total_score += translation_scores[1] * grasp_score_weights_.translation_y_score_weight_;
+  total_score += translation_scores[2] * grasp_score_weights_.translation_z_score_weight_;
+  total_score += overhang_score        * grasp_score_weights_.overhang_score_weight_;
+
+  weight_total += grasp_score_weights_.orientation_x_score_weight_;
+  weight_total += grasp_score_weights_.orientation_y_score_weight_;
+  weight_total += grasp_score_weights_.orientation_z_score_weight_;
+  weight_total += grasp_score_weights_.translation_x_score_weight_;
+  weight_total += grasp_score_weights_.translation_y_score_weight_;
+  weight_total += grasp_score_weights_.translation_z_score_weight_;
+  weight_total += grasp_score_weights_.overhang_score_weight_;
+
   total_score /= weight_total;
 
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                         "Grasp score: \n "
-                             << "\torientation_score.x = " << orientation_scores[0] << "\n"
-                             << "\torientation_score.y = " << orientation_scores[1] << "\n"
-                             << "\torientation_score.z = " << orientation_scores[2] << "\n"
-                             << "\ttranslation_score.x = " << translation_scores[0] << "\n"
-                             << "\ttranslation_score.y = " << translation_scores[1] << "\n"
-                             << "\ttranslation_score.z = " << translation_scores[2] << "\n"
-                             << "\toverhang_score = " << overhang_score << "\n"
-                             << "\tweights             = " << weights[0] << ", " << weights[1] << ", " << weights[2]
-                             << ", " << weights[3] << ", " << weights[4] << ", " << weights[5] << ", " << weights[6]
-                             << ", " << weights[7] << "\n"
-                             << "\ttotal_score = " << total_score);
+                         "Grasp score: "
+                             << "\n\torientation_score.x = " << orientation_scores[0] << "\torientation_score.x weight = " << grasp_score_weights_.orientation_x_score_weight_
+                             << "\n\torientation_score.y = " << orientation_scores[1] << "\torientation_score.y weight = " << grasp_score_weights_.orientation_y_score_weight_
+                             << "\n\torientation_score.z = " << orientation_scores[2] << "\torientation_score.z weight = " << grasp_score_weights_.orientation_z_score_weight_
+                             << "\n\ttranslation_score.x = " << translation_scores[0] << "\ttranslation_score.x weight = " << grasp_score_weights_.translation_x_score_weight_
+                             << "\n\ttranslation_score.y = " << translation_scores[1] << "\ttranslation_score.y weight = " << grasp_score_weights_.translation_y_score_weight_
+                             << "\n\ttranslation_score.z = " << translation_scores[2] << "\ttranslation_score.z weight = " << grasp_score_weights_.translation_z_score_weight_
+                             << "\n\toverhang_score      = " << overhang_score        << "\toverhang_score weight      = " << grasp_score_weights_.overhang_score_weight_
+                             << "\n\ttotal_score = " << total_score);
   return total_score;
 }
 
