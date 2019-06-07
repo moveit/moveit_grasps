@@ -113,6 +113,9 @@ public:
    * \brief Score the grasp based on the translation values of the grasp pose
    * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
    * \param ideal_pose - the ideal pose location
+   * \param object_pose - the pose of the object being grasped
+   * \param object_size - the size of the object represented as a vector [x,y,z]
+   * \param visual_tools - set to a moveit_visual_tools pointer to enable visual debugging
    * \return the unweighted scores:
    *         0.0 -> pose is at the ideal translation in that axis
    */
@@ -123,11 +126,20 @@ public:
                                             const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
                                             moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
 
-  static std::vector<double> scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                      const GraspDataPtr& grasp_data,
-                                                      const Eigen::Isometry3d& object_pose,
-                                                      const Eigen::Vector3d& object_size,
-                                                      moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
+  /**
+   * \brief Score a suction grasp based on the overlap between each voxel and the object.
+   * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
+   * \param object_pose - the pose of the object being grasped
+   * \param object_size - the size of the object represented as a vector [x,y,z]
+   * \param visual_tools - set to a moveit_visual_tools pointer to enable visual debugging
+   * \param overlap_vector - Populates with a vector of fractions. Each value represents the i'th voxel's fractional
+   * overlap
+   * \return double - a socre. The sum of the squares of the fractions
+   */
+  static double scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
+                                         const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
+                                         std::vector<double> overlap_vector,
+                                         moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
 };
 
 }  // end namespace moveit_grasps

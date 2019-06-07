@@ -805,12 +805,13 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
   double suction_overlap_score;
   if (show_grasp_overhang_)
   {
-    suction_overlap_score =
-        GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap, visual_tools_);
+    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
+                                                                  suction_voxel_overlap, visual_tools_);
   }
   else
   {
-    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap);
+    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
+                                                                  suction_voxel_overlap);
   }
   double total_score = 0;
   double weight_total = 0;
@@ -832,16 +833,29 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
 
   total_score /= weight_total;
 
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                         "Grasp score: "
-                             << "\n\torientation_score.x   = " << orientation_scores[0] << "\torientation_score.x weight = " << grasp_score_weights_.orientation_x_score_weight_
-                             << "\n\torientation_score.y   = " << orientation_scores[1] << "\torientation_score.y weight = " << grasp_score_weights_.orientation_y_score_weight_
-                             << "\n\torientation_score.z   = " << orientation_scores[2] << "\torientation_score.z weight = " << grasp_score_weights_.orientation_z_score_weight_
-                             << "\n\ttranslation_score.x   = " << translation_scores[0] << "\ttranslation_score.x weight = " << grasp_score_weights_.translation_x_score_weight_
-                             << "\n\ttranslation_score.y   = " << translation_scores[1] << "\ttranslation_score.y weight = " << grasp_score_weights_.translation_y_score_weight_
-                             << "\n\ttranslation_score.z   = " << translation_scores[2] << "\ttranslation_score.z weight = " << grasp_score_weights_.translation_z_score_weight_
-                             << "\n\tsuction overlap score = " << suction_overlap_score << "\toverhang_score weight      = " << grasp_score_weights_.overhang_score_weight_
-                             << "\n\ttotal_score = " << total_score);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp", "Grasp score: "
+                                                           << "\n\torientation_score.x   = " << orientation_scores[0]
+                                                           << "\torientation_score.x weight = "
+                                                           << grasp_score_weights_.orientation_x_score_weight_
+                                                           << "\n\torientation_score.y   = " << orientation_scores[1]
+                                                           << "\torientation_score.y weight = "
+                                                           << grasp_score_weights_.orientation_y_score_weight_
+                                                           << "\n\torientation_score.z   = " << orientation_scores[2]
+                                                           << "\torientation_score.z weight = "
+                                                           << grasp_score_weights_.orientation_z_score_weight_
+                                                           << "\n\ttranslation_score.x   = " << translation_scores[0]
+                                                           << "\ttranslation_score.x weight = "
+                                                           << grasp_score_weights_.translation_x_score_weight_
+                                                           << "\n\ttranslation_score.y   = " << translation_scores[1]
+                                                           << "\ttranslation_score.y weight = "
+                                                           << grasp_score_weights_.translation_y_score_weight_
+                                                           << "\n\ttranslation_score.z   = " << translation_scores[2]
+                                                           << "\ttranslation_score.z weight = "
+                                                           << grasp_score_weights_.translation_z_score_weight_
+                                                           << "\n\tsuction overlap score = " << suction_overlap_score
+                                                           << "\toverhang_score weight      = "
+                                                           << grasp_score_weights_.overhang_score_weight_
+                                                           << "\n\ttotal_score = " << total_score);
   return total_score;
 }
 
@@ -1035,10 +1049,12 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   // if X range is less than y range then we use x range for the xy range
   double xy_increment = grasp_data->grasp_resolution_;
   double y_min = xy_increment;
-  double y_max = (width + grasp_data->active_suction_range_y_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_y_width_;
+  double y_max =
+      (width + grasp_data->active_suction_range_y_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_y_width_;
 
   double x_min = xy_increment;
-  double x_max = (depth + grasp_data->active_suction_range_x_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_x_width_;
+  double x_max =
+      (depth + grasp_data->active_suction_range_x_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_x_width_;
 
   double z_increment = grasp_data->grasp_depth_resolution_;
   double z_min = z_increment;
