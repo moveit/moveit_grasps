@@ -98,19 +98,21 @@ public:
     voxel_x_width_ = active_suction_range_x_ / suction_cols_count;
     voxel_y_width_ = active_suction_range_y_ / suction_rows_count_;
     suction_voxels_.resize(suction_rows_count_);
+    // We store the voxels starting bottom left and moving right then up
     for (std::size_t voxel_y = 0; voxel_y < suction_rows_count_; ++voxel_y)
     {
       suction_voxels_[voxel_y].resize(suction_cols_count_);
       for (std::size_t voxel_x = 0; voxel_x < suction_cols_count_; ++voxel_x)
       {
         suction_voxels_[voxel_y][voxel_x].reset(
-            new SuctionVoxel(Eigen::Vector3d(active_suction_range_x_ / 2.0 - voxel_x_width_ * (voxel_x + 0.5),
-                                             active_suction_range_y_ / 2.0 - voxel_y_width_ * (voxel_y + 0.5), 0),
+            new SuctionVoxel(Eigen::Vector3d(-active_suction_range_x_ / 2.0 + voxel_x_width_ * (voxel_x + 0.5),
+                                             -active_suction_range_y_ / 2.0 + voxel_y_width_ * (voxel_y + 0.5), 0),
                              voxel_x_width_, voxel_y_width_));
       }
     }
   }
 
+  // \brief - get the voxel at the index location [row, col] with [0, 0] being the bottom left
   bool getSuctionVoxel(std::size_t row, std::size_t col, std::shared_ptr<SuctionVoxel>& voxel)
   {
     if (row >= suction_rows_count_)
@@ -131,6 +133,7 @@ public:
 
   /** \brief Get the voxel at the index i where columns are the minor axis and rows are the major axes.
    *  @param index - the index of the suction voxel where index / #cols is the row and index % #cols is the col
+   *                 index 0 is bottom left
    */
   bool getSuctionVoxel(std::size_t index, std::shared_ptr<SuctionVoxel>& voxel)
   {
@@ -285,7 +288,7 @@ public:
   double active_suction_range_x_;
   double active_suction_range_y_;
 
-  // [0, 1) A cutoff parameter for what fraction of a voxel must be in contact with the object for it to be active
+  // [0, 1] A cutoff parameter for what fraction of a voxel must be in contact with the object for it to be active
   double suction_voxel_cutoff_;
 
   std::shared_ptr<SuctionVoxelMatrix> suction_voxel_matrix_;

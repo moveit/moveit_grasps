@@ -250,13 +250,13 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& 
   return scores;
 }
 
-std::vector<double> GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp,
+double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp,
                                                           const GraspDataPtr& grasp_data,
                                                           const Eigen::Isometry3d& object_pose,
                                                           const Eigen::Vector3d& object_size,
+                                                          std::vector<double> overlap_vector,
                                                           moveit_visual_tools::MoveItVisualToolsPtr visual_tools)
 {
-  std::vector<double> overlap_vector;
   overlap_vector.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
 
   // These are in the object pose frame
@@ -285,7 +285,7 @@ std::vector<double> GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3
       ROS_ERROR_STREAM_NAMED("grasp_scorer.voxels", "voxel id: " << voxel_id << " is out of range");
       overlap_vector.clear();
       overlap_vector.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
-      return overlap_vector;
+      return 0;
     }
 
     // These are also in the object pose frame
@@ -352,7 +352,11 @@ std::vector<double> GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3
     ros::Duration(0.01).sleep();
   }
 
-  return overlap_vector;
+  double overhang_score = 0;
+  for (double voxel_overlap : overlap_vector)
+    overhang_score += voxel_overlap * voxel_overlap;
+
+  return overhang_score;
 }
 
 }  // end namespace moveit_grasps

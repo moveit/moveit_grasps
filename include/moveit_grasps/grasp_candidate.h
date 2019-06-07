@@ -81,6 +81,11 @@ public:
 
   bool isValid();
 
+  /** \brief set voxel overlap with pick target. Each index maps to a the corresponding suction voxel
+   *         in the suctionVoxelMatrix. The values are the fraction of the suction voxel in contact
+   *         with the pick target
+   *  @param suction_voxel_overlap - A vector of fractions where each value's maps the voxel with the same index.
+   */
   bool setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap);
 
   const std::vector<double> getSuctionVoxelOverlap();
