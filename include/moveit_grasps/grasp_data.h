@@ -92,10 +92,10 @@ public:
                      double total_suction_range_x)
     : suction_rows_count_(suction_rows_count)
     , suction_cols_count_(suction_cols_count)
-    , active_suction_range_x_(total_suction_range_y)
-    , active_suction_range_y_(total_suction_range_x)
+    , active_suction_range_x_(total_suction_range_x)
+    , active_suction_range_y_(total_suction_range_y)
   {
-    voxel_x_width_ = active_suction_range_x_ / suction_cols_count;
+    voxel_x_width_ = active_suction_range_x_ / suction_cols_count_;
     voxel_y_width_ = active_suction_range_y_ / suction_rows_count_;
     suction_voxels_.resize(suction_rows_count_);
     // We store the voxels starting bottom left and moving right then up
