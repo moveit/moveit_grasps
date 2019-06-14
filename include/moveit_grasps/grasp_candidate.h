@@ -167,7 +167,7 @@ public:
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
 
-  // A vector of fractions maped to suction gripper voxels. [0,1] representing the faraction of the
+  // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object
   std::vector<double> suction_voxel_overlap_;
 

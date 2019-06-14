@@ -67,6 +67,11 @@ enum EndEffectorType
 
 struct SuctionVoxel
 {
+  /* \brief
+    @param center_point - position of voxel center point in tcp frame
+    @param x_width - width of voxel along x dim in tcp frame
+    @param y_width - width of voxel along y dim in tcp frame
+   */
   SuctionVoxel(Eigen::Vector3d center_point, double x_width, double y_width)
     : center_point_(center_point), x_width_(x_width), y_width_(y_width)
   {
@@ -76,9 +81,11 @@ struct SuctionVoxel
     bottom_right_ = center_point + Eigen::Vector3d(x_width / 2.0, -y_width / 2.0, 0);
   }
 
+  // Voxel center point in tcp frame
   Eigen::Vector3d center_point_;
   double x_width_;
   double y_width_;
+  // Voxel corners in tcp frame
   Eigen::Vector3d top_left_;
   Eigen::Vector3d top_right_;
   Eigen::Vector3d bottom_left_;
@@ -287,9 +294,6 @@ public:
   //////////////////////////////////////
   double active_suction_range_x_;
   double active_suction_range_y_;
-
-  // [0, 1] A cutoff parameter for what fraction of a voxel must be in contact with the object for it to be active
-  double suction_voxel_cutoff_;
 
   std::shared_ptr<SuctionVoxelMatrix> suction_voxel_matrix_;
 };

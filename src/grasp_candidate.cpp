@@ -50,7 +50,6 @@ GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr gras
   , grasp_filtered_by_ik_closed_(false)
   , pregrasp_filtered_by_ik_(false)
 {
-  suction_voxel_overlap_.resize(0);
 }
 
 bool GraspCandidate::setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap)

@@ -134,7 +134,7 @@ public:
    * \param visual_tools - set to a moveit_visual_tools pointer to enable visual debugging
    * \param overlap_vector - Populates with a vector of fractions. Each value represents the i'th voxel's fractional
    * overlap
-   * \return double - a socre. The sum of the squares of the fractions
+   * \return double - a score. The sum of the squares of the fractions
    */
   static double scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                          const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,

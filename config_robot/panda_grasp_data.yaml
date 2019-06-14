@@ -75,5 +75,5 @@ hand:
     # Note that this metric assumes that suction regions are equally sized
     # ie. width = active_suction_range_x / suction_regions_x
     #
-    # suction_regions_x: 1
-    # suction_regions_y: 1
+    # suction_rows_count: 1
+    # suction_cols_count: 1

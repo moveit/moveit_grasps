@@ -250,6 +250,12 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& 
   return scores;
 }
 
+// is a within epsilon of b
+bool isApprox(double a, double b, double epsilon = 1.0e-5)
+{
+  return std::abs(a - b) < epsilon;
+}
+
 double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                              const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
                                              std::vector<double> overlap_vector,
@@ -266,88 +272,153 @@ double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose
     visual_tools->deleteAllMarkers();
     visual_tools->trigger();
     visual_tools->publishAxisLabeled(grasp_pose_tcp, "tcp");
-    Eigen::Isometry3d bbb1 =
-        object_pose * Eigen::Isometry3d(Eigen::Translation3d(box_bb_max) * Eigen::Quaterniond(1, 0, 0, 0));
-    Eigen::Isometry3d bbb2 =
-        object_pose * Eigen::Isometry3d(Eigen::Translation3d(box_bb_min) * Eigen::Quaterniond(1, 0, 0, 0));
+    Eigen::Isometry3d bbb1 = object_pose * Eigen::Translation3d(box_bb_max);
+    Eigen::Isometry3d bbb2 = object_pose * Eigen::Translation3d(box_bb_min);
     visual_tools->publishAxisLabeled(bbb1, "bbb1", rviz_visual_tools::SMALL);
     visual_tools->publishAxisLabeled(bbb2, "bbb2", rviz_visual_tools::SMALL);
     visual_tools->trigger();
   }
 
+  double visual_buffer = 0.0001;
+  double slices = 10;
   double voxel_area = grasp_data->suction_voxel_matrix_->getVoxelArea();
-  Eigen::Isometry3d grasp_pose_tcp_in_object_frame = object_pose.inverse() * grasp_pose_tcp;
+  Eigen::Isometry3d grasp_pose_tcp_in_box_frame = object_pose.inverse() * grasp_pose_tcp;
   for (std::size_t voxel_id = 0; voxel_id < grasp_data->suction_voxel_matrix_->getNumVoxels(); ++voxel_id)
   {
     std::shared_ptr<SuctionVoxel> voxel;
     if (!grasp_data->suction_voxel_matrix_->getSuctionVoxel(voxel_id, voxel))
     {
-      ROS_ERROR_STREAM_NAMED("grasp_scorer.voxels", "voxel id: " << voxel_id << " is out of range");
       overlap_vector.clear();
       overlap_vector.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
       return 0;
     }
 
     // These are also in the object pose frame
-    Eigen::Vector3d tmp_voxel_bb_1 = grasp_pose_tcp_in_object_frame * voxel->bottom_left_;
-    Eigen::Vector3d tmp_voxel_bb_2 = grasp_pose_tcp_in_object_frame * voxel->top_right_;
-    Eigen::Vector3d voxel_bb_min = Eigen::Vector3d(std::min(tmp_voxel_bb_1.x(), tmp_voxel_bb_2.x()),
-                                                   std::min(tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y()),
-                                                   std::min(tmp_voxel_bb_1.z(), tmp_voxel_bb_2.z()));
-    Eigen::Vector3d voxel_bb_max = Eigen::Vector3d(std::max(tmp_voxel_bb_1.x(), tmp_voxel_bb_2.x()),
-                                                   std::max(tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y()),
-                                                   std::max(tmp_voxel_bb_1.z(), tmp_voxel_bb_2.z()));
-    if (voxel_bb_max.x() < box_bb_min.x() || voxel_bb_min.x() > box_bb_max.x() || voxel_bb_max.y() < box_bb_min.y() ||
-        voxel_bb_min.y() > box_bb_max.y())
+    Eigen::Vector3d tmp_voxel_bb_1 = grasp_pose_tcp_in_box_frame * voxel->bottom_left_;
+    Eigen::Vector3d tmp_voxel_bb_2 = grasp_pose_tcp_in_box_frame * voxel->top_left_;
+    Eigen::Vector3d tmp_voxel_bb_3 = grasp_pose_tcp_in_box_frame * voxel->top_right_;
+    Eigen::Vector3d tmp_voxel_bb_4 = grasp_pose_tcp_in_box_frame * voxel->bottom_right_;
+
+    std::vector<double> m(4);
+    std::vector<double> b(4);
+    m[0] = (tmp_voxel_bb_1.y() - tmp_voxel_bb_2.y()) / (tmp_voxel_bb_1.x() - tmp_voxel_bb_2.x());
+    m[1] = (tmp_voxel_bb_2.y() - tmp_voxel_bb_3.y()) / (tmp_voxel_bb_2.x() - tmp_voxel_bb_3.x());
+    m[2] = (tmp_voxel_bb_3.y() - tmp_voxel_bb_4.y()) / (tmp_voxel_bb_3.x() - tmp_voxel_bb_4.x());
+    m[3] = (tmp_voxel_bb_4.y() - tmp_voxel_bb_1.y()) / (tmp_voxel_bb_4.x() - tmp_voxel_bb_1.x());
+    b[0] = tmp_voxel_bb_1.y() - m[0] * tmp_voxel_bb_1.x();
+    b[1] = tmp_voxel_bb_2.y() - m[1] * tmp_voxel_bb_2.x();
+    b[2] = tmp_voxel_bb_3.y() - m[2] * tmp_voxel_bb_3.x();
+    b[3] = tmp_voxel_bb_4.y() - m[3] * tmp_voxel_bb_4.x();
+
+    double max_y =
+        std::max(std::max(tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y()), std::max(tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y()));
+    double min_y =
+        std::min(std::min(tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y()), std::min(tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y()));
+    double y_inc = (max_y - min_y) / slices;
+    std::vector<double> slice_overlap(slices);
+    overlap_vector[voxel_id] = 0;
+    for (std::size_t slice_ix = 0; slice_ix < slices - 0; ++slice_ix)
     {
-      overlap_vector[voxel_id] = 0;
-    }
-    else
-    {
-      double x_overlap = std::max(voxel_bb_min.x(), box_bb_min.x()) - std::min(voxel_bb_max.x(), box_bb_max.x());
-      double y_overlap = std::max(voxel_bb_min.y(), box_bb_min.y()) - std::min(voxel_bb_max.y(), box_bb_max.y());
-      double overlap_fraction = (x_overlap * y_overlap) / voxel_area;
-      overlap_vector[voxel_id] = overlap_fraction;
-    }
-    // clang-format off
-    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "box_bb_max   " << box_bb_max.x() << ",\t" << box_bb_max.y() << ",\t" << box_bb_max.z());
-    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "box_bb_min   " << box_bb_min.x() << ",\t" << box_bb_min.y() << ",\t" << box_bb_min.z());
-    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "voxel_bb_min " << voxel_bb_min.x() << ",\t" << voxel_bb_min.y() << ",\t" << voxel_bb_min.z());
-    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "voxel_bb_max " << voxel_bb_max.x() << ",\t" << voxel_bb_max.y() << ",\t" << voxel_bb_max.z());
-    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "overlap_score[" << voxel_id << "] = " << overlap_vector[voxel_id]);
-    // clang-format on
-
-    if (visual_tools)
-    {
-      Eigen::Isometry3d vbb1 =
-          object_pose * Eigen::Isometry3d(Eigen::Translation3d(voxel_bb_min) * Eigen::Quaterniond(1, 0, 0, 0));
-      Eigen::Isometry3d vbb2 =
-          object_pose * Eigen::Isometry3d(Eigen::Translation3d(voxel_bb_max) * Eigen::Quaterniond(1, 0, 0, 0));
-      Eigen::Isometry3d voxel_center_point =
-          grasp_pose_tcp *
-          Eigen::Isometry3d(Eigen::Translation3d(voxel->center_point_) * Eigen::Quaterniond(1, 0, 0, 0));
-
-      visual_tools->publishAxisLabeled(vbb1, "vbb1", rviz_visual_tools::SMALL);
-      visual_tools->publishAxisLabeled(vbb2, "vbb2", rviz_visual_tools::SMALL);
-      visual_tools->publishAxisLabeled(voxel_center_point, "voxel_center_point", rviz_visual_tools::SMALL);
-
-      double mesh_x_wid = voxel->x_width_ - 0.01;
-      double mesh_y_wid = voxel->y_width_ - 0.01;
-
-      if (overlap_vector[voxel_id] > 0.75)
+      double y = min_y + y_inc * slice_ix;
+      std::vector<double> x_intercept(4);
+      // If the voxel is axis aligned with the bounding box, the slope intercept approach won't be valid
+      if (isApprox(tmp_voxel_bb_1.x(), tmp_voxel_bb_2.x()) || isApprox(tmp_voxel_bb_2.x(), tmp_voxel_bb_3.x()))
       {
-        visual_tools->publishWireframeCuboid(voxel_center_point, mesh_x_wid, mesh_y_wid, 0.001,
-                                             rviz_visual_tools::GREEN);
-      }
-      else if (overlap_vector[voxel_id] > 0.25)
-      {
-        visual_tools->publishWireframeCuboid(voxel_center_point, mesh_x_wid, mesh_y_wid, 0.001,
-                                             rviz_visual_tools::YELLOW);
+        x_intercept[1] = std::min(tmp_voxel_bb_1.x(), tmp_voxel_bb_3.x());
+        x_intercept[2] = std::max(tmp_voxel_bb_1.x(), tmp_voxel_bb_3.x());
       }
       else
       {
-        visual_tools->publishWireframeCuboid(voxel_center_point, mesh_x_wid, mesh_y_wid, 0.001, rviz_visual_tools::RED);
+        // We compute the x intercepts for each line of the box and take the middle two.
+        for (std::size_t quadrant_ix = 0; quadrant_ix < 4; ++quadrant_ix)
+          x_intercept[quadrant_ix] = (y - b[quadrant_ix]) / m[quadrant_ix];
+        std::sort(x_intercept.begin(), x_intercept.end());
       }
+
+      Eigen::Vector3d voxel_slice_bb_min = Eigen::Vector3d(x_intercept[1], y, 0);
+      Eigen::Vector3d voxel_slice_bb_max = Eigen::Vector3d(x_intercept[2], y + y_inc, 0);
+
+      double overlap = 0;
+      double y_overlap = 0;
+      double x_overlap = 0;
+      if (voxel_slice_bb_max.x() > box_bb_min.x() && voxel_slice_bb_min.x() < box_bb_max.x() &&
+          voxel_slice_bb_max.y() > box_bb_min.y() && voxel_slice_bb_min.y() < box_bb_max.y() &&
+          !isApprox(voxel_slice_bb_max.x(), voxel_slice_bb_min.x()))
+      {
+        y_overlap = std::min(box_bb_max.y(), y + y_inc) - std::max(box_bb_min.y(), y);
+        x_overlap = std::min(voxel_slice_bb_max.x(), box_bb_max.x()) - std::max(voxel_slice_bb_min.x(), box_bb_min.x());
+        overlap = x_overlap * y_overlap;
+        overlap_vector[voxel_id] += overlap / voxel_area;
+      }
+
+      double voxel_slice_area =
+          (voxel_slice_bb_max.x() - voxel_slice_bb_min.x()) * (voxel_slice_bb_max.y() - voxel_slice_bb_min.y());
+
+      if (visual_tools)
+      {
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "x_intercepts: " << x_intercept[0] << ",\t" << x_intercept[1]
+                                                                       << ",\t" << x_intercept[2] << ",\t"
+                                                                       << x_intercept[3]);
+
+        // clang-format off
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "box_bb_max           " << box_bb_max.x() << ",\t" << box_bb_max.y() << ",\t" << box_bb_max.z());
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "box_bb_min           " << box_bb_min.x() << ",\t" << box_bb_min.y() << ",\t" << box_bb_min.z());
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "voxel_slice_bb_min   " << voxel_slice_bb_min.x() << ",\t" << voxel_slice_bb_min.y() << ",\t" << voxel_slice_bb_min.z());
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "voxel_slice_bb_max   " << voxel_slice_bb_max.x() << ",\t" << voxel_slice_bb_max.y() << ",\t" << voxel_slice_bb_max.z());
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "y inc                " << y_inc);
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "x overlap            " << x_overlap);
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "y overlap            " << y_overlap);
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "overlap              " << overlap);
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "voxel_slice_area     " << voxel_slice_area);
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "overlap / slice_area " << overlap / voxel_slice_area);
+        ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "overlap_vector[" << voxel_id << "]     = " << overlap_vector[voxel_id]);
+        // clang-format on
+        Eigen::Vector3d voxel_slice_center_point_pos =
+            Eigen::Vector3d((x_intercept[1] + x_intercept[2]) / 2, y + y_inc / 2, 0);
+        Eigen::Isometry3d voxel_slice_center_point = object_pose * Eigen::Translation3d(voxel_slice_center_point_pos);
+        Eigen::Isometry3d vsbb1 = object_pose * Eigen::Translation3d(voxel_slice_bb_min);
+        Eigen::Isometry3d vsbb2 = object_pose * Eigen::Translation3d(voxel_slice_bb_max);
+
+        visual_tools->publishAxisLabeled(vsbb1, "vsbb1", rviz_visual_tools::XXXSMALL);
+        visual_tools->publishAxisLabeled(vsbb2, "vsbb2", rviz_visual_tools::XXXSMALL);
+
+        double mesh_x_wid = x_intercept[2] - x_intercept[1] - visual_buffer;
+        double mesh_y_wid = y_inc - visual_buffer;
+
+        if (overlap / voxel_slice_area > 0.75)
+        {
+          visual_tools->publishWireframeCuboid(voxel_slice_center_point, mesh_x_wid, mesh_y_wid, 0.0001,
+                                               rviz_visual_tools::GREEN);
+        }
+        else if (overlap / voxel_slice_area > 0.25)
+        {
+          visual_tools->publishWireframeCuboid(voxel_slice_center_point, mesh_x_wid, mesh_y_wid, 0.0001,
+                                               rviz_visual_tools::YELLOW);
+        }
+        else
+        {
+          visual_tools->publishWireframeCuboid(voxel_slice_center_point, mesh_x_wid, mesh_y_wid, 0.0001,
+                                               rviz_visual_tools::RED);
+        }
+      }
+    }
+    // normalize
+    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels.score", "overlap_vector[" << voxel_id
+                                                                          << "]     = " << overlap_vector[voxel_id]);
+
+    if (visual_tools)
+    {
+      Eigen::Isometry3d voxel_center_point = grasp_pose_tcp * Eigen::Translation3d(voxel->center_point_);
+      if (overlap_vector[voxel_id] > 0.75)
+        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - visual_buffer,
+                                             voxel->y_width_ - visual_buffer, 0.001, rviz_visual_tools::GREEN);
+      else if (overlap_vector[voxel_id] > 0.25)
+        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - visual_buffer,
+                                             voxel->y_width_ - visual_buffer, 0.001, rviz_visual_tools::YELLOW);
+      else
+        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - visual_buffer,
+                                             voxel->y_width_ - visual_buffer, 0.001, rviz_visual_tools::RED);
+      visual_tools->trigger();
     }
   }
 
@@ -355,14 +426,14 @@ double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose
   for (double voxel_overlap : overlap_vector)
     overhang_score += voxel_overlap * voxel_overlap;
 
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels", "overhang_score = " << overhang_score);
-
   if (visual_tools)
   {
+    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels.score", "overhang_score = " << overhang_score);
     visual_tools->trigger();
     ros::Duration(0.01).sleep();
-    // visual_tools->prompt("next");
+    visual_tools->prompt("'next' to continue");
   }
+
   return overhang_score;
 }
 
