@@ -61,7 +61,7 @@ Melodic (Ubuntu 18.04):
 
 ## Usage Instructions
 
-For a detailed usage instructions visit the MoveIt Grasps [tutorial](http://docs.ros.org/melodic/api/moveit_tutorials/html/doc/moveit_grasps/moveit_grasps_tutorial.html).
+For a detailed usage instructions visit the MoveIt Grasps [tutorial](https://ros-planning.github.io/moveit_tutorials/doc/moveit_grasps/moveit_grasps_tutorial.html).
 
 ### Demo Scripts
 
