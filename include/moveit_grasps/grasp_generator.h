@@ -331,10 +331,12 @@ public:
    * \param grasp_data - data describing the end effector
    * \param cuboid_pose - the pose of the object being grasped
    * \param object size - the extents of the object being grasped
+   * \param suction_voxel_overlap - all voxels with a percentage of coverage above some cutoff
    * \return a score with positive being better
    */
   double scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
-                           const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size);
+                           const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
+                           std::vector<double> suction_voxel_overlap);
 
   /**
    * \brief Score the generated finger grasp poses

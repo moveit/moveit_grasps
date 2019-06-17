@@ -52,6 +52,21 @@ GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr gras
 {
 }
 
+bool GraspCandidate::setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap)
+{
+  if (grasp_data_->end_effector_type_ == SUCTION)
+  {
+    suction_voxel_overlap_ = suction_voxel_overlap;
+    return true;
+  }
+  return false;
+}
+
+const std::vector<double> GraspCandidate::getSuctionVoxelOverlap()
+{
+  return suction_voxel_overlap_;
+}
+
 bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr& robot_state)
 {
   // Error check

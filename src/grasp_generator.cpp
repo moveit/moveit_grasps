@@ -37,6 +37,7 @@
 */
 
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_filter.h>
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
@@ -762,8 +763,12 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
 
   if (grasp_data->end_effector_type_ == SUCTION)
   {
-    new_grasp.grasp_quality = scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size);
-    grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+    std::vector<double> suction_voxel_overlap;
+    new_grasp.grasp_quality =
+        scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
+    GraspCandidatePtr candidate(new GraspCandidate(new_grasp, grasp_data, object_pose));
+    candidate->setSuctionVoxelOverlap(suction_voxel_overlap);
+    grasp_candidates.push_back(candidate);
     return true;
   }
 
@@ -771,7 +776,8 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
 }
 
 double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
-                                         const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size)
+                                         const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
+                                         std::vector<double> suction_voxel_overlap)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
                          "Scoring grasp at: \n\tpose:  ("
@@ -796,48 +802,48 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
   Eigen::Vector3d translation_scores = GraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
 
   // Score suction grasp overhang
-  Eigen::Vector2d overhang_score;
+  double suction_overlap_score;
   if (show_grasp_overhang_)
-    overhang_score =
-        GraspScorer::scoreGraspOverhang(grasp_pose_tcp, grasp_data, cuboid_pose, object_size, visual_tools_);
+  {
+    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
+                                                                  suction_voxel_overlap, visual_tools_);
+  }
   else
-    overhang_score = GraspScorer::scoreGraspOverhang(grasp_pose_tcp, grasp_data, cuboid_pose, object_size);
-
-  std::size_t num_scores = 8;
-  double weights[num_scores] = {
-    grasp_score_weights_.orientation_x_score_weight_, grasp_score_weights_.orientation_y_score_weight_,
-    grasp_score_weights_.orientation_z_score_weight_, grasp_score_weights_.translation_x_score_weight_,
-    grasp_score_weights_.translation_y_score_weight_, grasp_score_weights_.translation_z_score_weight_,
-    grasp_score_weights_.overhang_score_weight_,      grasp_score_weights_.overhang_score_weight_
-  };
-
-  double scores[num_scores] = { orientation_scores[0], orientation_scores[1], orientation_scores[2],
-                                translation_scores[0], translation_scores[1], translation_scores[2],
-                                overhang_score[0],     overhang_score[1] };
-
+  {
+    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
+                                                                  suction_voxel_overlap);
+  }
   double total_score = 0;
   double weight_total = 0;
-  for (std::size_t i = 0; i < num_scores; i++)
-  {
-    total_score += weights[i] * scores[i];
-    weight_total += weights[i];
-  }
-  total_score /= weight_total;
+  total_score += orientation_scores[0] * grasp_score_weights_.orientation_x_score_weight_;
+  total_score += orientation_scores[1] * grasp_score_weights_.orientation_y_score_weight_;
+  total_score += orientation_scores[2] * grasp_score_weights_.orientation_z_score_weight_;
+  total_score += translation_scores[0] * grasp_score_weights_.translation_x_score_weight_;
+  total_score += translation_scores[1] * grasp_score_weights_.translation_y_score_weight_;
+  total_score += translation_scores[2] * grasp_score_weights_.translation_z_score_weight_;
+  total_score += suction_overlap_score * grasp_score_weights_.overhang_score_weight_;
 
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                         "Grasp score: \n "
-                             << "\torientation_score.x = " << orientation_scores[0] << "\n"
-                             << "\torientation_score.y = " << orientation_scores[1] << "\n"
-                             << "\torientation_score.z = " << orientation_scores[2] << "\n"
-                             << "\ttranslation_score.x = " << translation_scores[0] << "\n"
-                             << "\ttranslation_score.y = " << translation_scores[1] << "\n"
-                             << "\ttranslation_score.z = " << translation_scores[2] << "\n"
-                             << "\toverhang_score.x = " << overhang_score[0] << "\n"
-                             << "\toverhang_score.y = " << overhang_score[1] << "\n"
-                             << "\tweights             = " << weights[0] << ", " << weights[1] << ", " << weights[2]
-                             << ", " << weights[3] << ", " << weights[4] << ", " << weights[5] << ", " << weights[6]
-                             << ", " << weights[7] << "\n"
-                             << "\ttotal_score = " << total_score);
+  weight_total += grasp_score_weights_.orientation_x_score_weight_;
+  weight_total += grasp_score_weights_.orientation_y_score_weight_;
+  weight_total += grasp_score_weights_.orientation_z_score_weight_;
+  weight_total += grasp_score_weights_.translation_x_score_weight_;
+  weight_total += grasp_score_weights_.translation_y_score_weight_;
+  weight_total += grasp_score_weights_.translation_z_score_weight_;
+  weight_total += grasp_score_weights_.overhang_score_weight_;
+
+  total_score /= weight_total;
+  // clang-format off
+  ROS_DEBUG_STREAM_NAMED(
+      "grasp_generator.scoreGrasp",
+      "Grasp score: " << "\n\torientation_score.x   = " << orientation_scores[0] << "\torientation_score.x weight = "<< grasp_score_weights_.orientation_x_score_weight_
+                      << "\n\torientation_score.y   = " << orientation_scores[1] << "\torientation_score.y weight = "<< grasp_score_weights_.orientation_y_score_weight_
+                      << "\n\torientation_score.z   = " << orientation_scores[2] << "\torientation_score.z weight = "<< grasp_score_weights_.orientation_z_score_weight_
+                      << "\n\ttranslation_score.x   = " << translation_scores[0] << "\ttranslation_score.x weight = "<< grasp_score_weights_.translation_x_score_weight_
+                      << "\n\ttranslation_score.y   = " << translation_scores[1] << "\ttranslation_score.y weight = "<< grasp_score_weights_.translation_y_score_weight_
+                      << "\n\ttranslation_score.z   = " << translation_scores[2] << "\ttranslation_score.z weight = "<< grasp_score_weights_.translation_z_score_weight_
+                      << "\n\tsuction overlap score = " << suction_overlap_score << "\toverhang_score weight      = "<< grasp_score_weights_.overhang_score_weight_
+                      << "\n\ttotal_score = " << total_score);
+  // clang-format on
   return total_score;
 }
 
@@ -942,16 +948,23 @@ bool GraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double
                                     std::vector<GraspCandidatePtr>& grasp_candidates,
                                     const GraspCandidateConfig grasp_candidate_config)
 {
+  bool result = false;
   if (grasp_data->end_effector_type_ == FINGER)
-    return generateFingerGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates,
-                                grasp_candidate_config);
-  if (grasp_data->end_effector_type_ == SUCTION)
-    return generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates,
-                                 grasp_candidate_config);
-  else
-    return false;
+    result =
+        generateFingerGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config);
+  else if (grasp_data->end_effector_type_ == SUCTION)
+    result =
+        generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config);
+
+  if (result)
+    std::sort(grasp_candidates.begin(), grasp_candidates.end(), GraspFilter::compareGraspScores);
+
+  return result;
 }
 
+// X -> Depth
+// Y -> Width
+// Z -> Height
 bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width,
                                            double height, const moveit_grasps::GraspDataPtr grasp_data,
                                            std::vector<GraspCandidatePtr>& grasp_candidates,
@@ -1014,7 +1027,8 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t"
                                                              << height);
-    visual_tools_->publishAxis(center_grasp_pose_tcp, rviz_visual_tools::SMALL, "center_grasp_pose_tcp");
+    visual_tools_->publishAxisLabeled(cuboid_top_pose, "cuboid_top_pose", rviz_visual_tools::SMALL);
+    visual_tools_->publishWireframeCuboid(cuboid_top_pose, depth, width, 0.01, rviz_visual_tools::YELLOW);
     visual_tools_->trigger();
   }
   grasp_poses_tcp.push_back(center_grasp_pose_tcp);
@@ -1023,16 +1037,13 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
 
   // if X range is less than y range then we use x range for the xy range
   double xy_increment = grasp_data->grasp_resolution_;
-  double xy_min = xy_increment;
-  double xy_max;
-  if (depth - grasp_data->active_suction_range_x_ < width - grasp_data->active_suction_range_y_)
-  {
-    xy_max = depth / 2.0 - grasp_data->active_suction_range_x_ / 2.0;
-  }
-  else
-  {
-    xy_max = width / 2.0 - grasp_data->active_suction_range_y_ / 2.0;
-  }
+  double y_min = 0;
+  double y_max =
+      (width + grasp_data->active_suction_range_y_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_y_width_;
+
+  double x_min = 0;
+  double x_max =
+      (depth + grasp_data->active_suction_range_x_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_x_width_;
 
   double z_increment = grasp_data->grasp_depth_resolution_;
   double z_min = z_increment;
@@ -1042,22 +1053,28 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   double yaw_min = yaw_increment;
   double yaw_max = 2.0 * M_PI;
 
+  // clang-format off
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_min:                  " << x_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_max:                  " << x_max);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "depth:                  " << depth);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_x: " << grasp_data->suction_voxel_matrix_->active_suction_range_x_);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_x_width:          " << grasp_data->suction_voxel_matrix_->voxel_x_width_);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_min:                  " << y_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_max:                  " << y_max);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "width:                  " << width);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_y: " << grasp_data->suction_voxel_matrix_->active_suction_range_y_);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_y_width:          " << grasp_data->suction_voxel_matrix_->voxel_y_width_);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_min:                  " << z_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_max:                  " << z_max);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "xy_increment:           " << xy_increment);
+  // clang-format on
+
   // For each range (X, Y, Z, Yaw) create copies of the grasp poses for each value in the range
   std::size_t num_grasps;
 
-  // Add rotated suction grasps (Yaw)
-  num_grasps = grasp_poses_tcp.size();
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
-    {
-      Eigen::Isometry3d grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-    }
-  }
-
   // Add Depth grasps (Z-axis)
   num_grasps = grasp_poses_tcp.size();
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps before Z:\t " << num_grasps);
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     for (double z = z_min; z <= z_max; z += z_increment)
@@ -1066,12 +1083,13 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
       grasp_poses_tcp.push_back(grasp_pose_tcp);
     }
   }
+  num_grasps = grasp_poses_tcp.size();
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Z:\t " << num_grasps);
 
   // Add Y translation grasps
-  num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
-    for (double y = xy_min; y <= xy_max; y += xy_increment)
+    for (double y = y_max; y >= y_min; y -= xy_increment)
     {
       Eigen::Isometry3d grasp_pose_tcp;
 
@@ -1082,12 +1100,13 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
       grasp_poses_tcp.push_back(grasp_pose_tcp);
     }
   }
+  num_grasps = grasp_poses_tcp.size();
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Y:\t " << num_grasps);
 
   // Add X translation grasps
-  num_grasps = grasp_poses_tcp.size();
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
-    for (double x = xy_min; x <= xy_max; x += xy_increment)
+    for (double x = x_max; x >= x_min; x -= xy_increment)
     {
       Eigen::Isometry3d grasp_pose_tcp;
 
@@ -1098,8 +1117,20 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
       grasp_poses_tcp.push_back(grasp_pose_tcp);
     }
   }
-
   num_grasps = grasp_poses_tcp.size();
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after X:\t " << num_grasps);
+
+  // Add rotated suction grasps (Yaw)
+  for (std::size_t i = 0; i < num_grasps; ++i)
+  {
+    for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
+    {
+      Eigen::Isometry3d grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+      grasp_poses_tcp.push_back(grasp_pose_tcp);
+    }
+  }
+  num_grasps = grasp_poses_tcp.size();
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Yaw:\t " << num_grasps);
 
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
@@ -1111,6 +1142,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
       visual_tools_->publishAxis(grasp_pose_eef_mount, rviz_visual_tools::SMALL, "eef_mount pose");
     }
   }
+
   if (debug_top_grasps_)
   {
     Eigen::Isometry3d ideal_copy = ideal_grasp_pose_;
@@ -1120,14 +1152,16 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   }
 
   if (!grasp_candidates.size())
-    ROS_WARN_STREAM_NAMED("grasp_generator", "Generated 0 grasps");
+    ROS_WARN_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated 0 grasps");
   else
-    ROS_INFO_STREAM_NAMED("grasp_generator", "Generated " << grasp_candidates.size() << " grasps");
+    ROS_INFO_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated " << grasp_candidates.size() << " grasp"
+                                                                                                                "s");
 
   // Visualize animated grasps that have been generated
   if (show_prefiltered_grasps_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "Animating all generated (candidate) grasps before filtering");
+    ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Animating all generated (candidate) grasps "
+                                                                      "before filtering");
     visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
   }
 
