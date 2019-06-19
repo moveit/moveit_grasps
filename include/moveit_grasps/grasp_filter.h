@@ -221,6 +221,14 @@ public:
                             const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
 
   /**
+   * \brief  For suction grippers, check that at least one voxel has an overlap > some cutoff.
+   *         This is used as a pre-filter step before IK.
+   * \param grasp_candidates - All grasp candidates
+   * \param cutoff - some fractional cutoff where at least one voxel must have > cutoff overlap with the target
+   */
+  void preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates, double cutoff);
+
+  /**
    * \brief add a cutting plane
    * \param pose - pose describing the cutting plane
    * \param plane - which plane to use as the cutting plane
