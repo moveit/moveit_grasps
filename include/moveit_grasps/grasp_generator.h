@@ -336,7 +336,7 @@ public:
    */
   double scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                            const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
-                           std::vector<double> suction_voxel_overlap);
+                           std::vector<double>& suction_voxel_overlap);
 
   /**
    * \brief Score the generated finger grasp poses
