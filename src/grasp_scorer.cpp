@@ -258,7 +258,7 @@ bool isApprox(double a, double b, double epsilon = 1.0e-5)
 
 double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                              const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                             std::vector<double> overlap_vector,
+                                             std::vector<double>& overlap_vector,
                                              moveit_visual_tools::MoveItVisualToolsPtr visual_tools)
 {
   overlap_vector.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
@@ -288,6 +288,7 @@ double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose
     std::shared_ptr<SuctionVoxel> voxel;
     if (!grasp_data->suction_voxel_matrix_->getSuctionVoxel(voxel_id, voxel))
     {
+      ROS_ERROR_STREAM_NAMED("grasp_scorer.voxels", "Invalid voxel id: " << voxel_id);
       overlap_vector.clear();
       overlap_vector.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
       return 0;

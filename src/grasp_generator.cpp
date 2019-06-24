@@ -777,7 +777,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
 
 double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                          const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
-                                         std::vector<double> suction_voxel_overlap)
+                                         std::vector<double>& suction_voxel_overlap)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
                          "Scoring grasp at: \n\tpose:  ("

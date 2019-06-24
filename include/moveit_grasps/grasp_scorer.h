@@ -138,7 +138,7 @@ public:
    */
   static double scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
                                          const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                         std::vector<double> overlap_vector,
+                                         std::vector<double>& overlap_vector,
                                          moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
 };
 
