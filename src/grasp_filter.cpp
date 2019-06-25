@@ -430,7 +430,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
 }
 
 void GraspFilter::preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
-                                                 double cutoff)
+                                                 double threshold)
 {
   // We pre-filter by removing all candidates with less than some overlap with the desired object.
   std::size_t grasp_candidates_before = grasp_candidates.size();
@@ -442,11 +442,12 @@ void GraspFilter::preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::Gras
     bool valid = false;
     for (double& voxel_overlap : grasp_candidates[ix]->suction_voxel_overlap_)
     {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "cutoff: " << cutoff << "\tvoxel score " << voxel_overlap);
-      if (voxel_overlap > cutoff)
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "threshold: " << threshold << "\tvoxel score "
+                                                                      << voxel_overlap);
+      if (voxel_overlap > threshold)
       {
         valid = true;
-        continue;
+        break;
       }
     }
     if (!valid)
