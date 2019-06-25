@@ -221,6 +221,16 @@ public:
                             const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
 
   /**
+   * \brief  For suction grippers, check that at least one voxel has an overlap with the grasp target greater than the
+   *         threshold. If not, the grasp_candidate is removed from the vector. This should be used as a pre-filter
+   *          step before IK.
+   * \param grasp_candidates - All grasp candidates
+   * \param threshold - some fractional cutoff where at least one voxel must have > threshold overlap with the target
+   */
+  void preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
+                                      double threshold);
+
+  /**
    * \brief add a cutting plane
    * \param pose - pose describing the cutting plane
    * \param plane - which plane to use as the cutting plane

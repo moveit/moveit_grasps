@@ -429,6 +429,48 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return remaining_grasps;
 }
 
+void GraspFilter::preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
+                                                 double threshold)
+{
+  // We pre-filter by removing all candidates with less than some overlap with the desired object.
+  std::size_t grasp_candidates_before = grasp_candidates.size();
+  std::size_t count = 0;
+  for (std::size_t ix = 0; ix < grasp_candidates.size();)
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Grasp candidate " << count++);
+    bool valid = false;
+    for (double& voxel_overlap : grasp_candidates[ix]->suction_voxel_overlap_)
+    {
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "threshold: " << threshold << "\tvoxel score "
+                                                                      << voxel_overlap);
+      if (voxel_overlap > threshold)
+      {
+        valid = true;
+        break;
+      }
+    }
+    if (!valid)
+    {
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Invalid");
+      grasp_candidates.erase(grasp_candidates.begin() + ix);
+    }
+    else
+    {
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Valid");
+      ++ix;
+    }
+  }
+  if (statistics_verbose_)
+  {
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "GRASP PRE-FILTER RESULTS ");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "total_grasp_candidates:     " << grasp_candidates_before);
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "remaining grasp candidates: " << grasp_candidates.size());
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
+  }
+}
+
 bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
