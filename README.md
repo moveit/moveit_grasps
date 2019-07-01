@@ -1,6 +1,6 @@
-# MoveIt! Grasps
+# MoveIt Grasps
 
-A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt! pick and place pipeline. Does not consider friction cones or other dynamics. It also has support for suction grippers.
+A basic grasp generator for objects such as blocks or cylinders for use with the MoveIt pick and place pipeline. Does not consider friction cones or other dynamics. It also has support for suction grippers.
 
 Its current implementation takes as input a pose vector (postition and orientation) and generates a large number of potential grasp approaches and directions. Also includes a grasp filter for removing kinematically infeasible grasps via threaded IK solvers.
 
@@ -69,7 +69,7 @@ There are four demo scripts in this package. To view the tests, first start Rviz
 
     roslaunch moveit_grasps rviz.launch
 
-To see the entire MoveIt! Grasps pipeline in actoin:
+To see the entire MoveIt Grasps pipeline in actoin:
 
     roslaunch moveit_grasps grasp_pipeline_demo.launch
 
