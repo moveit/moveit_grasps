@@ -1038,12 +1038,10 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   // if X range is less than y range then we use x range for the xy range
   double xy_increment = grasp_data->grasp_resolution_;
   double y_min = 0;
-  double y_max =
-      (width + grasp_data->active_suction_range_y_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_y_width_;
+  double y_max = (width + grasp_data->active_suction_range_y_) / 2.0 - xy_increment;
 
   double x_min = 0;
-  double x_max =
-      (depth + grasp_data->active_suction_range_x_) / 2.0 - grasp_data->suction_voxel_matrix_->voxel_x_width_;
+  double x_max = (depth + grasp_data->active_suction_range_x_) / 2.0 - xy_increment;
 
   double z_increment = grasp_data->grasp_depth_resolution_;
   double z_min = z_increment;
