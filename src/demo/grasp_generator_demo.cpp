@@ -33,7 +33,7 @@
  *********************************************************************/
 
 /* Author: Dave Coleman
-   Desc:   Tests the grasp generator
+   Desc:   Demonstrates use of the grasp generator
 */
 
 // ROS
@@ -47,8 +47,6 @@
 
 namespace moveit_grasps
 {
-static const double BLOCK_SIZE = 0.02;
-
 class GraspGeneratorDemo
 {
 private:
@@ -58,26 +56,23 @@ private:
   // Grasp generator
   moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
-  // class for publishing stuff to rviz
+  // Tool for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   rviz_visual_tools::RvizVisualToolsPtr grasp_visuals_;
 
-  // robot-specific data for generating grasps
+  // Robot-specific data for generating grasps
   moveit_grasps::GraspDataPtr grasp_data_;
 
-  // which baxter arm are we using
+  // Which arm should be used
   std::string ee_group_name_;
-  std::string planning_group_name_;
 
 public:
   // Constructor
   GraspGeneratorDemo(int num_tests) : nh_("~")
   {
     nh_.param("ee_group_name", ee_group_name_, std::string("hand"));
-    nh_.param("planning_group_name", planning_group_name_, std::string("panda_arm"));
 
-    ROS_INFO_STREAM_NAMED("test", "End Effector: " << ee_group_name_);
-    ROS_INFO_STREAM_NAMED("test", "Planning Group: " << planning_group_name_);
+    ROS_INFO_STREAM_NAMED("demo", "End Effector: " << ee_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
@@ -94,6 +89,7 @@ public:
     visual_tools_->hideRobot();
     visual_tools_->trigger();
 
+    // TODO(davetcoleman): do we need two VisualTools? ideally consolidate
     grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("world"));
     grasp_visuals_->setMarkerTopic("/grasp_visuals");
     grasp_visuals_->loadMarkerPub();
@@ -104,8 +100,6 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
     grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
-    robot_state::RobotStatePtr robot_state;
-    robot_state.reset(new moveit::core::RobotState(visual_tools_->getRobotModel()));
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
@@ -114,16 +108,19 @@ public:
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, true));
     grasp_generator_->setVerbose(true);
 
-    // We set the ideal grasp pose to be centered and 0.5m in the air (for visualization) with an orientation of roll =
-    // 3.14
+    // ---------------------------------------------------------------------------------------------
+    // Set the ideal grasp pose to be centered and 0.5m above (for visualization) with an orientation of roll = 3.14
+
     // Set the translation
     Eigen::Isometry3d ideal_grasp_pose = Eigen::Isometry3d::Identity();
     ideal_grasp_pose.translation() = Eigen::Vector3d(0.0, 0, 0.5);
-    grasp_generator_->setIdealGraspPose(ideal_grasp_pose);
+    grasp_generator_->setIdealTCPGraspPose(ideal_grasp_pose);
+
     // Set the ideal grasp orientation
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
-    grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
+    grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
+    // ---------------------------------------------------------------------------------------------
     // Visualize the ideal grasp pose
     grasp_visuals_->publishAxisLabeled(grasp_generator_->ideal_grasp_pose_, "IDEAL_TCP_GRASP_POSE");
     visual_tools_->publishEEMarkers(grasp_generator_->ideal_grasp_pose_ * grasp_data_->tcp_to_eef_mount_, ee_jmg,
@@ -132,6 +129,7 @@ public:
                                        "IDEAL EEF MOUNT POSE");
     visual_tools_->trigger();
 
+    // ---------------------------------------------------------------------------------------------
     // We also set custom grasp score weights
     moveit_grasps::GraspScoreWeights grasp_score_weights;
     grasp_score_weights.orientation_x_score_weight_ = 2.0;
@@ -140,37 +138,40 @@ public:
     grasp_score_weights.translation_x_score_weight_ = 1.0;
     grasp_score_weights.translation_y_score_weight_ = 1.0;
     grasp_score_weights.translation_z_score_weight_ = 1.0;
+
     // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our
     // finger gripper)
     grasp_score_weights.depth_score_weight_ = 2.0;
     grasp_score_weights.width_score_weight_ = 2.0;
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
-    // publish world coordinate system
+    // Publish world coordinate system
     grasp_visuals_->publishAxisLabeled(Eigen::Isometry3d::Identity(), "world frame");
     visual_tools_->trigger();
+
     // ---------------------------------------------------------------------------------------------
     // Animate open and closing end effector
     if (true)
     {
+      // TODO(davetcoleman): after next release of rviz_visual_tools:
+      // geometry_msgs::Pose pose = visual_tools_->getIdentityPose();
       geometry_msgs::Pose pose;
       visual_tools_->generateEmptyPose(pose);
       pose.position.x = .3;
 
       // Test visualization of end effector in OPEN position
-      ROS_INFO_STREAM_NAMED("test", "Pre-grasp posture: (Orange)");
+      ROS_INFO_STREAM_NAMED("demo", "Pre-grasp posture: (Orange)");
       visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->pre_grasp_posture_.points[0].positions,
-                                      rviz_visual_tools::ORANGE, "test_eef");
-      visual_tools_->trigger();
-      ros::Duration(0.1).sleep();
+                                      rviz_visual_tools::ORANGE, "demo_eef");
+      visual_tools_->publishText(pose, "Pre-Grasp Posture");
 
       // Test visualization of end effector in CLOSED position
-      ROS_INFO_STREAM_NAMED("test", "Grasp posture (Green");
+      ROS_INFO_STREAM_NAMED("demo", "Grasp posture (Green");
       pose.position.z += 0.15;
       visual_tools_->publishEEMarkers(pose, ee_jmg, grasp_data_->grasp_posture_.points[0].positions,
-                                      rviz_visual_tools::GREEN, "test_eef");
+                                      rviz_visual_tools::GREEN, "demo_eef");
+      visual_tools_->publishText(pose, "Grasp Posture");
       visual_tools_->trigger();
-      ros::Duration(0.1).sleep();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -191,7 +192,7 @@ public:
     int i = 0;
     while (ros::ok())
     {
-      ROS_INFO_STREAM_NAMED("test", "Adding random object " << i + 1 << " of " << num_tests);
+      ROS_INFO_STREAM_NAMED("demo", "Adding random posed object " << i + 1 << " of " << num_tests);
 
       // Remove randomness when we are only running one test
       if (num_tests == 1)
@@ -217,7 +218,7 @@ public:
       {
         visual_tools_->publishEEMarkers(possible_grasps.front()->grasp_.grasp_pose.pose, ee_jmg,
                                         grasp_data_->pre_grasp_posture_.points[0].positions, rviz_visual_tools::CYAN,
-                                        "test_eef");
+                                        "demo_eef");
         visual_tools_->trigger();
       }
       ++i;
@@ -276,10 +277,10 @@ public:
 
 int main(int argc, char* argv[])
 {
-  int num_tests = 1;
+  int num_tests = 10;
   ros::init(argc, argv, "grasp_generator_demo");
 
-  ROS_INFO_STREAM_NAMED("main", "GraspGenerator Test");
+  ROS_INFO_STREAM_NAMED("main", "GraspGenerator Demo");
 
   ros::AsyncSpinner spinner(2);
   spinner.start();
@@ -291,13 +292,12 @@ int main(int argc, char* argv[])
   ros::Time start_time;
   start_time = ros::Time::now();
 
-  // Run Tests
+  // Run Demos
   moveit_grasps::GraspGeneratorDemo tester(num_tests);
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;
   ROS_INFO_STREAM_NAMED("", "Total time: " << duration);
-  // std::cout << duration << "\t" << num_tests << std::endl;
 
   return 0;
 }
