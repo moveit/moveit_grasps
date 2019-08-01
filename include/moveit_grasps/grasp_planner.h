@@ -113,6 +113,7 @@ public:
    * \brief Allow an interrupt to be called that waits for user input, useful for debugging
    * \param message - text to display to user when waiting
    */
+  // TODO(davetcoleman): Ideally all the classes in moveit_grasps would leverage this approach
   void setWaitForNextStepCallback(WaitForNextStepCallback callback);
 
   /**
