@@ -61,29 +61,7 @@ Melodic (Ubuntu 18.04):
 
 ## Usage Instructions
 
-For a detailed usage instructions visit the MoveIt Grasps [tutorial](https://ros-planning.github.io/moveit_tutorials/doc/moveit_grasps/moveit_grasps_tutorial.html).
-
-### Demo Scripts
-
-There are four demo scripts in this package. To view the tests, first start Rviz with:
-
-    roslaunch moveit_grasps rviz.launch
-
-To see the entire MoveIt Grasps pipeline in actoin:
-
-    roslaunch moveit_grasps grasp_pipeline_demo.launch
-
-To visualize gripper specific parameters:
-
-    roslaunch moveit_grasps grasp_poses_visualizer_demo.launch
-
-To test just grasp generation for randomly placed blocks:
-
-    roslaunch moveit_grasps grasp_generator_demo.launch
-
-To test the grasp filtering:
-
-    roslaunch moveit_grasps grasp_filter_demo.launch
+For detailed usage instructions visit the MoveIt Grasps [tutorial](https://ros-planning.github.io/moveit_tutorials/doc/moveit_grasps/moveit_grasps_tutorial.html).
 
 ## Testing and Linting
 
