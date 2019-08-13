@@ -554,7 +554,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   }
   else
   {
-    ROS_WARN_STREAM_NAMED("grasp_filter", "Not filtering pregrasp!!");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter", "Not filtering pregrasp!!");
   }
 
   return true;
