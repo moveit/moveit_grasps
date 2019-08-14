@@ -5,4 +5,4 @@
 set breakpoint pending on
 
 ## Example break point:
-break moveit_visual_tools.cpp:322
+# break moveit_visual_tools.cpp:322
