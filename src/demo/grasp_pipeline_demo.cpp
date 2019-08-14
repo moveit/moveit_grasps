@@ -151,7 +151,7 @@ public:
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
-    grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
+    grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
     // Set custom grasp score weights
     moveit_grasps::GraspScoreWeights grasp_score_weights;
