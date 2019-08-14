@@ -423,7 +423,7 @@ public:
   [[deprecated("setIdealGraspPoseRPY has been renamed to setIdealTCPGraspPoseRPY")]] void
   setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
   {
-    setIdealGraspPoseRPY(ideal_grasp_orientation_rpy);
+    setIdealTCPGraspPoseRPY(ideal_grasp_orientation_rpy);
   }
 
   /**

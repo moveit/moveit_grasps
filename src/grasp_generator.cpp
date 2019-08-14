@@ -82,17 +82,17 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
 
 void GraspGenerator::setIdealTCPGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
 {
-  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3, "setIdealTCPGraspPoseRPY must be set with a vector of length "
+  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3, "setIdealTCPGraspPoseRPY must be set with a vector of len: "
                                                           "3");
 
   // copy the ideal_grasp_pose.translation() so that we only change the orientation.
   Eigen::Vector3d ideal_grasp_pose_translation(ideal_grasp_pose_.translation());
 
   // Set ideal grasp pose (currently only uses orientation of pose)
-  ideal_grasp_pose_ = Eigen::Isometry3d::Identity();
-  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[0], Eigen::Vector3d::UnitX());
-  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[1], Eigen::Vector3d::UnitY());
-  ideal_grasp_pose_ = ideal_grasp_pose_ * Eigen::AngleAxisd(ideal_grasp_orientation_rpy[2], Eigen::Vector3d::UnitZ());
+  ideal_grasp_pose_ = Eigen::Isometry3d::Identity() *
+                      Eigen::AngleAxisd(ideal_grasp_orientation_rpy[0], Eigen::Vector3d::UnitX()) *
+                      Eigen::AngleAxisd(ideal_grasp_orientation_rpy[1], Eigen::Vector3d::UnitY()) *
+                      Eigen::AngleAxisd(ideal_grasp_orientation_rpy[2], Eigen::Vector3d::UnitZ());
 
   ideal_grasp_pose_.translation() = ideal_grasp_pose_translation;
 }
