@@ -151,7 +151,7 @@ public:
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
-    grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
+    grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
     // We set custom grasp score weights
     moveit_grasps::GraspScoreWeights grasp_score_weights;
@@ -484,7 +484,7 @@ private:
   // Motion planning
   planning_pipeline::PlanningPipelinePtr planning_pipeline_;
 
-  // which baxter arm are we using
+  // Which arm should be used
   std::string ee_group_name_;
   std::string planning_group_name_;
 

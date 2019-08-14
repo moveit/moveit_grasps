@@ -80,9 +80,10 @@ GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_
   rosparam_shortcuts::shutdownIfError(parent_name, error);
 }
 
-void GraspGenerator::setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
+void GraspGenerator::setIdealTCPGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
 {
-  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3, "setIdealGraspPoseRPY must be set with a vector of length 3");
+  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3, "setIdealTCPGraspPoseRPY must be set with a vector of length "
+                                                          "3");
 
   // copy the ideal_grasp_pose.translation() so that we only change the orientation.
   Eigen::Vector3d ideal_grasp_pose_translation(ideal_grasp_pose_.translation());
@@ -823,13 +824,10 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
   total_score += translation_scores[2] * grasp_score_weights_.translation_z_score_weight_;
   total_score += suction_overlap_score * grasp_score_weights_.overhang_score_weight_;
 
-  weight_total += grasp_score_weights_.orientation_x_score_weight_;
-  weight_total += grasp_score_weights_.orientation_y_score_weight_;
-  weight_total += grasp_score_weights_.orientation_z_score_weight_;
-  weight_total += grasp_score_weights_.translation_x_score_weight_;
-  weight_total += grasp_score_weights_.translation_y_score_weight_;
-  weight_total += grasp_score_weights_.translation_z_score_weight_;
-  weight_total += grasp_score_weights_.overhang_score_weight_;
+  weight_total += grasp_score_weights_.orientation_x_score_weight_ + grasp_score_weights_.orientation_y_score_weight_ +
+                  grasp_score_weights_.orientation_z_score_weight_ + grasp_score_weights_.translation_x_score_weight_ +
+                  grasp_score_weights_.translation_y_score_weight_ + grasp_score_weights_.translation_z_score_weight_ +
+                  grasp_score_weights_.overhang_score_weight_;
 
   total_score /= weight_total;
   // clang-format off
@@ -981,7 +979,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   Eigen::Isometry3d cuboid_center_top_grasp(cuboid_top_pose);
   // Move the ideal top grasp to the correct location
   ideal_grasp_tcp.translation() = cuboid_center_top_grasp.translation();
-  setIdealGraspPose(ideal_grasp_tcp);
+  setIdealTCPGraspPose(ideal_grasp_tcp);
   Eigen::Vector3d object_size(depth, width, height);
 
   if (debug_top_grasps_)
