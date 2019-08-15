@@ -394,20 +394,37 @@ public:
   /**
    * \brief Getter for ideal grasp pose
    */
-  Eigen::Isometry3d getIdealGraspPose()
+  Eigen::Isometry3d getIdealTCPGraspPose()
   {
     return ideal_grasp_pose_;
+  }
+  [[deprecated("getIdealGraspPose has been renamed to getIdealTCPGraspPose")]] Eigen::Isometry3d getIdealGraspPose()
+  {
+    return getIdealTCPGraspPose();
   }
 
   /**
    * \brief Setter for ideal grasp pose for scoring
    */
-  void setIdealGraspPose(Eigen::Isometry3d ideal_pose)
+  void setIdealTCPGraspPose(Eigen::Isometry3d ideal_pose)
   {
     ideal_grasp_pose_ = ideal_pose;
   }
+  [[deprecated("setIdealGraspPose has been renamed to setIdealTCPGraspPose")]] void
+  setIdealGraspPose(Eigen::Isometry3d ideal_pose)
+  {
+    setIdealTCPGraspPose(ideal_pose);
+  }
 
-  void setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy);
+  /**
+   * \brief Setter for the roll pitch yall ideal grasp pose for scoring
+   */
+  void setIdealTCPGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy);
+  [[deprecated("setIdealGraspPoseRPY has been renamed to setIdealTCPGraspPoseRPY")]] void
+  setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
+  {
+    setIdealTCPGraspPoseRPY(ideal_grasp_orientation_rpy);
+  }
 
   /**
    * \brief Setter for grasp score weights
