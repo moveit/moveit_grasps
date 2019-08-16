@@ -1,0 +1,20 @@
+- git:
+    local-name: moveit_msgs
+    uri: https://github.com/ros-planning/moveit_msgs.git
+    version: master
+- git:
+    local-name: geometric_shapes
+    uri: https://github.com/ros-planning/geometric_shapes.git
+    version: melodic-devel
+- git:
+    local-name: moveit
+    uri: https://github.com/ros-planning/moveit.git
+    version: master
+- git:
+    local-name: rviz_visual_tools
+    uri: https://github.com/PickNikRobotics/rviz_visual_tools
+    version: master
+- git:
+    local-name: moveit_visual_tools
+    uri: https://github.com/ros-planning/moveit_visual_tools.git
+    version: master
