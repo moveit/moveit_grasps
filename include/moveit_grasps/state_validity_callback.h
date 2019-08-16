@@ -46,11 +46,19 @@ bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool
                        const robot_state::JointModelGroup* group, const double* ik_solution)
 {
   robot_state->setJointGroupPositions(group, ik_solution);
+  if (!robot_state->satisfiesBounds(group))
+  {
+    if (verbose)
+      ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solution invalid");
+
+    return false;
+  }
+
   robot_state->update();
 
   if (!planning_scene)
   {
-    ROS_ERROR_STREAM_NAMED("manipulation", "No planning scene provided");
+    ROS_ERROR_STREAM_NAMED("is_grasp_state_valid", "No planning scene provided");
     return false;
   }
   if (!planning_scene->isStateColliding(*robot_state, group->getName()))
