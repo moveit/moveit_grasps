@@ -49,7 +49,7 @@ bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool
   if (!robot_state->satisfiesBounds(group))
   {
     if (verbose)
-      ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solutoin invalid");
+      ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solution invalid");
 
     return false;
   }
