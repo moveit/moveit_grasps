@@ -28,11 +28,18 @@ hand:
     # minimum padding on each side of the object on approach
     grasp_padding_on_approach: 0.005  # meter
 
+    # We need to know the transform from the arm IK link to the grasp point. We can set this to a frame in the robot model
+    # by setting `define_tcp_by_name: true` and providing a value for `tcp_name`. If we want to set this directly bt the
+    # transform, We set `define_tcp_by_name: false` and give a value for `tcp_to_eef_mount_transform`.
+    define_tcp_by_name: false
     # Distance from the eef mount to the palm of end effector [x, y, z, r, p, y]
     # z-axis pointing toward object to grasp
     # x-axis perp. to movement of grippers
     # y-axis parallel to movement of grippers
     tcp_to_eef_mount_transform :  [0, 0, -0.105, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
+    # Alternatively, if we have a tool center point frame, we would set:
+    # define_tcp_by_name: true
+    # tcp_link_name: "tool_center_point"
 
     # Joint names and state values for the end effector.
     # The names should match the values of pregrasp_posture and grasp_posture.

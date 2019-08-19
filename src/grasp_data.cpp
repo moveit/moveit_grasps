@@ -109,8 +109,14 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   error += !rosparam_shortcuts::get(parent_name, child_nh, "joints", joint_names);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "pregrasp_posture", pre_grasp_posture);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
-  error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_to_eef_mount_transform", tcp_to_eef_mount_);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
+
+  bool use_tcp_name;
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "define_tcp_by_name", use_tcp_name);
+  if (use_tcp_name)
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_name", tcp_name_);
+  else
+    error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_to_eef_mount_transform", tcp_to_eef_mount_);
 
   // Find out if the end effector uses suction or fingers (NOTE: must be one of 'finger' or 'suction')
   std::string end_effector_type_str;
@@ -180,6 +186,29 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
 
   ROS_INFO_NAMED("grasp_data", "ee_name: %s, arm_jmg: %s, parent_link: %s", ee_jmg_->getName().c_str(),
                  arm_jmg_->getName().c_str(), parent_link_->getName().c_str());
+
+  if (use_tcp_name)
+  {
+    robot_state::RobotState state(robot_model_);
+    state.setToDefaultValues();
+    state.update();
+    if (!state.knowsFrameTransform(parent_link_->getName()))
+    {
+      ROS_ERROR_NAMED("grasp_data", "Robot Model does not know the frame transform for the end effector group parent "
+                                    "frame: %s. Did you set a parent link in the srdf?",
+                      parent_link_->getName().c_str());
+    }
+    if (!state.knowsFrameTransform(tcp_name_))
+    {
+      ROS_ERROR_NAMED("grasp_data", "Robot Model does not know the frame transform for the tcp frame: %s. Is it "
+                                    "available in the urdf?",
+                      tcp_name_.c_str());
+    }
+    Eigen::Isometry3d eef_mount_pose = state.getGlobalLinkTransform(parent_link_);
+    Eigen::Isometry3d tcp_mount_pose = state.getGlobalLinkTransform(tcp_name_);
+    tcp_to_eef_mount_ = tcp_mount_pose.inverse() * eef_mount_pose;
+  }
+
   return true;
 }
 
