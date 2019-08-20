@@ -111,9 +111,9 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_posture", grasp_posture);
   error += !rosparam_shortcuts::get(parent_name, child_nh, "grasp_padding_on_approach", grasp_padding_on_approach_);
 
-  bool use_tcp_name;
-  error += !rosparam_shortcuts::get(parent_name, child_nh, "define_tcp_by_name", use_tcp_name);
-  if (use_tcp_name)
+  bool define_tcp_by_name;
+  child_nh.param<bool>("define_tcp_by_name", define_tcp_by_name, false);
+  if (define_tcp_by_name)
     error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_name", tcp_name_);
   else
     error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_to_eef_mount_transform", tcp_to_eef_mount_);
@@ -187,7 +187,7 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   ROS_INFO_NAMED("grasp_data", "ee_name: %s, arm_jmg: %s, parent_link: %s", ee_jmg_->getName().c_str(),
                  arm_jmg_->getName().c_str(), parent_link_->getName().c_str());
 
-  if (use_tcp_name)
+  if (define_tcp_by_name)
   {
     robot_state::RobotState state(robot_model_);
     state.setToDefaultValues();
