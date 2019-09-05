@@ -45,7 +45,7 @@
 // Grasp generation
 #include <moveit_grasps/grasp_generator.h>
 
-namespace moveit_grasps
+namespace moveit_grasps_demo
 {
 class GraspGeneratorDemo
 {
@@ -76,7 +76,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world"));
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("world");
     visual_tools_->setMarkerTopic("/rviz_visual_tools");
     visual_tools_->loadMarkerPub();
     visual_tools_->loadRobotStatePub("/display_robot_state");
@@ -90,7 +90,7 @@ public:
     visual_tools_->trigger();
 
     // TODO(davetcoleman): do we need two VisualTools? ideally consolidate
-    grasp_visuals_.reset(new rviz_visual_tools::RvizVisualTools("world"));
+    grasp_visuals_ = std::make_shared<rviz_visual_tools::RvizVisualTools>("world");
     grasp_visuals_->setMarkerTopic("/grasp_visuals");
     grasp_visuals_->loadMarkerPub();
     grasp_visuals_->enableBatchPublishing();
@@ -99,13 +99,13 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    grasp_data_ = std::make_shared<moveit_grasps::GraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, true));
+    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_, true);
     grasp_generator_->setVerbose(true);
 
     // ---------------------------------------------------------------------------------------------
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Demos
-  moveit_grasps::GraspGeneratorDemo tester(num_tests);
+  moveit_grasps_demo::GraspGeneratorDemo tester(num_tests);
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toNSec() * 1e-6;

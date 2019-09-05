@@ -735,7 +735,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
 
     // Show visualization for widest grasp
 
-    grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+    grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
 
     // Create grasp with middle width fingers -------------------------------------------------
     percent_open = 0.5;
@@ -746,7 +746,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
       return false;
     }
     new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
-    grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+    grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
 
     // Create grasp with fingers at minimum width ---------------------------------------------
     percent_open = 0.0;
@@ -757,7 +757,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
       return false;
     }
     new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
-    grasp_candidates.push_back(GraspCandidatePtr(new GraspCandidate(new_grasp, grasp_data, object_pose)));
+    grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
 
     return true;
   }
@@ -767,7 +767,7 @@ bool GraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, con
     std::vector<double> suction_voxel_overlap;
     new_grasp.grasp_quality =
         scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
-    GraspCandidatePtr candidate(new GraspCandidate(new_grasp, grasp_data, object_pose));
+    GraspCandidatePtr candidate = std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose);
     candidate->setSuctionVoxelOverlap(suction_voxel_overlap);
     grasp_candidates.push_back(candidate);
     return true;
