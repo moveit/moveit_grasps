@@ -1,0 +1,55 @@
+moveit_grasps:
+  ####################################
+  # These settings are used by the grasp generator which generates GraspCandidates
+  ####################################
+  generator:
+    # Other verbose stuff
+    verbose: false
+
+    # Show hand of generated grasps
+    show_prefiltered_grasps: false
+    show_prefiltered_grasps_speed: 0.01
+
+    # --------------------------------
+    # Finger gripper specific settings
+    # --------------------------------
+    # None yet
+
+    # --------------------------------
+    # Suction gripper specific settings
+    # --------------------------------
+    # Visual debug options
+    debug_top_grasps: false
+    # Show suction gripper overhang
+    show_grasp_overhang: false
+
+  ####################################
+  # The grasp filter filters out unreachable GraspCandidates and populates valid GraspCandidates' pregrasp_ik_solution_ and grasp_ik_solution_'s
+  ####################################
+  filter:
+    # Show summary statistics
+    statistics_verbose: false
+    # Visualize the planes used by the filter
+    show_cutting_planes: false
+    # Collision checking in verbose
+    collision_verbose: false
+    collision_verbose_speed: 0.01
+    # Collision checking in verbose on second pass (after all failed)
+    show_grasp_filter_collision_if_failed: false
+    # Show post-filter arrows
+    show_filtered_grasps: false
+    # Show pose-filter arm ik solutions
+    show_filtered_arm_solutions: false
+    show_filtered_arm_solutions_pregrasp_speed: 0.01
+    show_filtered_arm_solutions_speed: 0.01
+
+  ####################################
+  # The GraspPlanner generates approach, lift and retreat paths for a GraspCandidate.
+  # If the GraspPlanner is unable to plan 100% of the approach path and at least ~90% of the lift and retreat paths, then it considers the GraspCandidate to be infeasible
+  ####################################
+  planner:
+    # Cartesian planning
+    statistics_verbose: false
+    verbose_cartesian_filtering: false
+    show_cartesian_waypoints: false
+    collision_checking_verbose: false
