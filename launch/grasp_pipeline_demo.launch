@@ -1,11 +1,11 @@
 <launch>
 
   <!-- Launch rviz.launch before running this demo to see visalizations -->
-
-  <!-- Debug -->
+  <!-- GDB Debug Arguments -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
-  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+  <arg     if="$(arg debug)" name="launch_prefix"
+           value="gdb -x $(find moveit_grasps)/launch/gdb_settings.gdb --ex run --args" />
 
   <!-- Verbose mode -->
   <arg name="verbose" default="false" />
