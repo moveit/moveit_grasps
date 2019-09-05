@@ -151,9 +151,9 @@ public:
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
-    grasp_generator_->setIdealGraspPoseRPY(ideal_grasp_rpy);
+    grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
-    // We set custom grasp score weights
+    // Set custom grasp score weights
     moveit_grasps::GraspScoreWeights grasp_score_weights;
     grasp_score_weights.orientation_x_score_weight_ = 2.0;
     grasp_score_weights.orientation_y_score_weight_ = 2.0;
@@ -161,8 +161,8 @@ public:
     grasp_score_weights.translation_x_score_weight_ = 1.0;
     grasp_score_weights.translation_y_score_weight_ = 1.0;
     grasp_score_weights.translation_z_score_weight_ = 1.0;
-    // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our
-    // finger gripper)
+    // Finger gripper specific weights.
+    // Note that we do not need to set the suction gripper specific weights for our finger gripper.
     grasp_score_weights.depth_score_weight_ = 2.0;
     grasp_score_weights.width_score_weight_ = 2.0;
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
@@ -174,11 +174,12 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load grasp planner for approach, lift and retreat planning
     grasp_planner_.reset(new moveit_grasps::GraspPlanner(visual_tools_));
-    // moveit_grasps::WaitForNextStepCallback wait_for_next_step = boost::bind(&waitForNextStep, visual_tools_, _1);
-    // grasp_planner_->setWaitForNextStepCallback(wait_for_next_step);
+
+    // MoveIt Grasps allows for a manual breakpoint debugging tool to be optionally passed in
+    grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStep, visual_tools_, _1));
 
     // -----------------------------------------------------
-    // load the motion planning pipeline
+    // Load the motion planning pipeline
     planning_pipeline_.reset(new planning_pipeline::PlanningPipeline(robot_model_, nh_, "planning_plugin", "request_"
                                                                                                            "adapter"));
   }
@@ -481,10 +482,10 @@ private:
   // Robot
   robot_model::RobotModelPtr robot_model_;
 
-  // Motion planning
+  // All the motion planning components
   planning_pipeline::PlanningPipelinePtr planning_pipeline_;
 
-  // which baxter arm are we using
+  // Choose which arm to use
   std::string ee_group_name_;
   std::string planning_group_name_;
 

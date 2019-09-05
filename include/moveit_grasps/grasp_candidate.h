@@ -33,7 +33,7 @@
  *********************************************************************/
 
 /* Author: Dave Coleman <dave@picknik.ai>
-   Desc:   Filters grasps based on kinematic feasibility and collision
+   Desc:   Contains collected data for each potential grasp after it has been verified / filtered
 */
 
 #ifndef MOVEIT_GRASPS__GRASP_CANDIDATE_
