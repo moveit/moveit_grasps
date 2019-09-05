@@ -794,7 +794,7 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
                              << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
 
   // get portion of score based on the orientation
-  Eigen::Isometry3d ideal_grasp_tcp = getIdealGraspPose();
+  Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
   // Move the ideal top grasp to the box location
   ideal_grasp_tcp.translation() = cuboid_pose.translation();
   Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_tcp);
@@ -975,7 +975,7 @@ bool GraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_p
   ////////////////
 
   // Move the ideal grasp pose to the center of the top of the box
-  Eigen::Isometry3d ideal_grasp_tcp = getIdealGraspPose();
+  Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
   Eigen::Isometry3d cuboid_center_top_grasp(cuboid_top_pose);
   // Move the ideal top grasp to the correct location
   ideal_grasp_tcp.translation() = cuboid_center_top_grasp.translation();
