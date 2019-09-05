@@ -39,6 +39,7 @@
 // moveit_grasps
 #include <moveit_grasps/grasp_planner.h>
 #include <moveit_grasps/state_validity_callback.h>
+#include <moveit/robot_state/cartesian_interpolator.h>
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
@@ -301,9 +302,10 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
     // Compute Cartesian Path
     grasp_candidate->segmented_cartesian_traj_.clear();
     grasp_candidate->segmented_cartesian_traj_.resize(3);
-    double valid_approach_percentage = start_state_copy->computeCartesianPath(
-        grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->segmented_cartesian_traj_[APPROACH], ik_tip_link,
-        waypoints[APPROACH], global_reference_frame, max_step, jump_threshold, constraint_fn,
+    double valid_approach_percentage = robot_state::CartesianInterpolator::computeCartesianPath(
+        start_state_copy.get(), grasp_candidate->grasp_data_->arm_jmg_,
+        grasp_candidate->segmented_cartesian_traj_[APPROACH], ik_tip_link, waypoints[APPROACH], global_reference_frame,
+        robot_state::MaxEEFStep(max_step), robot_state::JumpThreshold(jump_threshold), constraint_fn,
         kinematics::KinematicsQueryOptions());
 
     if (!grasp_candidate->getGraspStateClosedEEOnly(start_state_copy))
@@ -312,14 +314,16 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
       return false;
     }
 
-    double valid_lift_retreat_percentage = start_state_copy->computeCartesianPath(
-        grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->segmented_cartesian_traj_[LIFT], ik_tip_link,
-        waypoints[LIFT], global_reference_frame, max_step, jump_threshold, constraint_fn,
+    double valid_lift_retreat_percentage = robot_state::CartesianInterpolator::computeCartesianPath(
+        start_state_copy.get(), grasp_candidate->grasp_data_->arm_jmg_,
+        grasp_candidate->segmented_cartesian_traj_[LIFT], ik_tip_link, waypoints[LIFT], global_reference_frame,
+        robot_state::MaxEEFStep(max_step), robot_state::JumpThreshold(jump_threshold), constraint_fn,
         kinematics::KinematicsQueryOptions());
 
-    valid_lift_retreat_percentage *= start_state_copy->computeCartesianPath(
-        grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->segmented_cartesian_traj_[RETREAT], ik_tip_link,
-        waypoints[RETREAT], global_reference_frame, max_step, jump_threshold, constraint_fn,
+    valid_lift_retreat_percentage *= robot_state::CartesianInterpolator::computeCartesianPath(
+        start_state_copy.get(), grasp_candidate->grasp_data_->arm_jmg_,
+        grasp_candidate->segmented_cartesian_traj_[RETREAT], ik_tip_link, waypoints[RETREAT], global_reference_frame,
+        robot_state::MaxEEFStep(max_step), robot_state::JumpThreshold(jump_threshold), constraint_fn,
         kinematics::KinematicsQueryOptions());
 
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "valid_approach_percentage: " << valid_approach_percentage
