@@ -148,8 +148,8 @@ private:
 };  // end class
 
 // Create boost pointers for this class
-typedef boost::shared_ptr<GraspPlanner> GraspPlannerPtr;
-typedef boost::shared_ptr<const GraspPlanner> GraspPlannerConstPtr;
+typedef std::shared_ptr<GraspPlanner> GraspPlannerPtr;
+typedef std::shared_ptr<const GraspPlanner> GraspPlannerConstPtr;
 
 }  // end namespace
 

@@ -494,8 +494,8 @@ private:
 
 };  // end of class
 
-typedef boost::shared_ptr<GraspGenerator> GraspGeneratorPtr;
-typedef boost::shared_ptr<const GraspGenerator> GraspGeneratorConstPtr;
+typedef std::shared_ptr<GraspGenerator> GraspGeneratorPtr;
+typedef std::shared_ptr<const GraspGenerator> GraspGeneratorConstPtr;
 
 }  // namespace
 

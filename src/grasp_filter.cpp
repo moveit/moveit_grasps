@@ -76,7 +76,7 @@ GraspFilter::GraspFilter(robot_state::RobotStatePtr robot_state,
   : visual_tools_(visual_tools), nh_("~/moveit_grasps/filter")
 {
   // Make a copy of the robot state so that we are sure outside influence does not break our grasp filter
-  robot_state_.reset(new moveit::core::RobotState(*robot_state));
+  robot_state_ = std::make_shared<moveit::core::RobotState>(*robot_state);
   robot_state_->update();  // make sure transforms are computed
 
   // Load visulization settings
@@ -299,7 +299,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     for (std::size_t i = 0; i < num_threads; ++i)
     {
       // Copy the previous robot state
-      robot_states_.push_back(moveit::core::RobotStatePtr(new moveit::core::RobotState(*robot_state_)));
+      robot_states_.push_back(std::make_shared<robot_state::RobotState>(*robot_state_));
     }
   }
   else  // update the states
@@ -342,11 +342,11 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   ik_thread_structs.resize(num_threads);
   for (std::size_t thread_id = 0; thread_id < num_threads; ++thread_id)
   {
-    ik_thread_structs[thread_id].reset(new moveit_grasps::IkThreadStruct(grasp_candidates, cloned_scene, link_transform,
-                                                                         0,  // this is filled in by OpenMP
-                                                                         kin_solvers_[arm_jmg->getName()][thread_id],
-                                                                         robot_states_[thread_id], solver_timeout_,
-                                                                         filter_pregrasp, verbose, thread_id));
+    ik_thread_structs[thread_id] =
+        std::make_shared<IkThreadStruct>(grasp_candidates, cloned_scene, link_transform,
+                                         0,  // this is filled in by OpenMP
+                                         kin_solvers_[arm_jmg->getName()][thread_id], robot_states_[thread_id],
+                                         solver_timeout_, filter_pregrasp, verbose, thread_id);
     ik_thread_structs[thread_id]->ik_seed_state_ = ik_seed_state;
   }
 
@@ -429,8 +429,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return remaining_grasps;
 }
 
-void GraspFilter::preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
-                                                 double threshold)
+void GraspFilter::preFilterBySuctionVoxelOverlap(std::vector<GraspCandidatePtr>& grasp_candidates, double threshold)
 {
   // We pre-filter by removing all candidates with less than some overlap with the desired object.
   std::size_t grasp_candidates_before = grasp_candidates.size();
@@ -622,13 +621,12 @@ bool GraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution, IkThrea
 
 void GraspFilter::addCuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction)
 {
-  cutting_planes_.push_back(CuttingPlanePtr(new CuttingPlane(pose, plane, direction)));
+  cutting_planes_.push_back(std::make_shared<CuttingPlane>(pose, plane, direction));
 }
 
 void GraspFilter::addDesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset)
 {
-  desired_grasp_orientations_.push_back(
-      DesiredGraspOrientationPtr(new DesiredGraspOrientation(pose, max_angle_offset)));
+  desired_grasp_orientations_.push_back(std::make_shared<DesiredGraspOrientation>(pose, max_angle_offset));
 }
 
 bool GraspFilter::removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates)

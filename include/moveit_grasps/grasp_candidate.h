@@ -175,7 +175,7 @@ public:
   GraspTrajectories segmented_cartesian_traj_;
 };  // class
 
-typedef boost::shared_ptr<GraspCandidate> GraspCandidatePtr;
+typedef std::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
 }  // namespace
 
