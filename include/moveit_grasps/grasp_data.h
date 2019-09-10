@@ -111,10 +111,10 @@ public:
       suction_voxels_[voxel_y].resize(suction_cols_count_);
       for (std::size_t voxel_x = 0; voxel_x < suction_cols_count_; ++voxel_x)
       {
-        suction_voxels_[voxel_y][voxel_x].reset(
-            new SuctionVoxel(Eigen::Vector3d(-active_suction_range_x_ / 2.0 + voxel_x_width_ * (voxel_x + 0.5),
-                                             -active_suction_range_y_ / 2.0 + voxel_y_width_ * (voxel_y + 0.5), 0),
-                             voxel_x_width_, voxel_y_width_));
+        suction_voxels_[voxel_y][voxel_x] = std::make_shared<SuctionVoxel>(
+            Eigen::Vector3d(-active_suction_range_x_ / 2.0 + voxel_x_width_ * (voxel_x + 0.5),
+                            -active_suction_range_y_ / 2.0 + voxel_y_width_ * (voxel_y + 0.5), 0),
+            voxel_x_width_, voxel_y_width_);
       }
     }
   }

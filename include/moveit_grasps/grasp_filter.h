@@ -86,7 +86,7 @@ struct CuttingPlane
   {
   }
 };
-typedef boost::shared_ptr<CuttingPlane> CuttingPlanePtr;
+typedef std::shared_ptr<CuttingPlane> CuttingPlanePtr;
 
 /**
  * \brief Contains information to filter grasps by orientation
@@ -101,7 +101,7 @@ struct DesiredGraspOrientation
   {
   }
 };
-typedef boost::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
+typedef std::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
 
 /**
  * \brief Struct for passing parameters to threads, for cleaner code
@@ -142,7 +142,7 @@ struct IkThreadStruct
   moveit_msgs::MoveItErrorCodes error_code_;
   std::vector<double> ik_seed_state_;
 };
-typedef boost::shared_ptr<IkThreadStruct> IkThreadStructPtr;
+typedef std::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 
 // Class
 class GraspFilter
@@ -343,8 +343,8 @@ private:
 
 };  // end of class
 
-typedef boost::shared_ptr<GraspFilter> GraspFilterPtr;
-typedef boost::shared_ptr<const GraspFilter> GraspFilterConstPtr;
+typedef std::shared_ptr<GraspFilter> GraspFilterPtr;
+typedef std::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
 }  // namespace
 

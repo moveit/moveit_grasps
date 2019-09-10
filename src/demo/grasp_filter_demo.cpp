@@ -65,7 +65,7 @@
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-namespace moveit_grasps
+namespace moveit_grasps_demo
 {
 static const double BLOCK_SIZE = 0.04;
 
@@ -85,7 +85,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load planning scene to share
-    planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
     if (planning_scene_monitor_->getPlanningScene())
     {
       planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
@@ -103,8 +103,8 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/rviz_visual_tools",
-                                                                   planning_scene_monitor_));
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
+        robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
     visual_tools_->loadMarkerPub();
     visual_tools_->loadRobotStatePub("/display_robot_state");
     visual_tools_->loadTrajectoryPub("/display_planned_path");
@@ -119,7 +119,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    grasp_data_ = std::make_shared<moveit_grasps::GraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
@@ -127,7 +127,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
+    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_);
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
@@ -149,7 +149,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
-    grasp_filter_.reset(new moveit_grasps::GraspFilter(robot_state, visual_tools_));
+    grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(robot_state, visual_tools_);
 
     // ---------------------------------------------------------------------------------------------
     // Clear Markers
@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  moveit_grasps::GraspFilterDemo tester;
+  moveit_grasps_demo::GraspFilterDemo tester;
   tester.testRandomGrasps(num_tests);
 
   // Benchmark time
