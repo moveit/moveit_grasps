@@ -65,7 +65,7 @@ bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool
     return true;  // not in collision
 
   // Display more info about the collision
-  if (verbose)
+  if (verbose && visual_tools)
   {
     visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
     planning_scene->isStateColliding(*robot_state, group->getName(), true);
