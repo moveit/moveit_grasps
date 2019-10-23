@@ -14,7 +14,6 @@ env:
   matrix:
     - DOCKER_IMAGE=moveit/moveit:master-source   TEST=clang-format,catkin_lint
     - DOCKER_IMAGE=moveit/moveit:master-source
-    - DOCKER_IMAGE=moveit/moveit:melodic-source
 
 before_script:
   - git clone -q --depth=1 https://github.com/ros-planning/moveit_ci.git .moveit_ci
