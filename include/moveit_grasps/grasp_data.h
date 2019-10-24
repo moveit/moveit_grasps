@@ -52,6 +52,9 @@
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/robot_model/link_model.h>
 
+// moveit grasps
+#include <moveit_grasps/suction_voxel_matrix.h>
+
 namespace moveit_grasps
 {
 MOVEIT_CLASS_FORWARD(GraspData);
@@ -63,118 +66,6 @@ enum EndEffectorType
 {
   FINGER = 1,
   SUCTION = 2
-};
-
-struct SuctionVoxel
-{
-  /* \brief
-    @param center_point - position of voxel center point in tcp frame
-    @param x_width - width of voxel along x dim in tcp frame
-    @param y_width - width of voxel along y dim in tcp frame
-   */
-  SuctionVoxel(Eigen::Vector3d center_point, double x_width, double y_width)
-    : center_point_(center_point), x_width_(x_width), y_width_(y_width)
-  {
-    top_left_ = center_point + Eigen::Vector3d(-x_width / 2.0, y_width / 2.0, 0);
-    top_right_ = center_point + Eigen::Vector3d(x_width / 2.0, y_width / 2.0, 0);
-    bottom_left_ = center_point + Eigen::Vector3d(-x_width / 2.0, -y_width / 2.0, 0);
-    bottom_right_ = center_point + Eigen::Vector3d(x_width / 2.0, -y_width / 2.0, 0);
-  }
-
-  // Voxel center point in tcp frame
-  Eigen::Vector3d center_point_;
-  double x_width_;
-  double y_width_;
-  // Voxel corners in tcp frame
-  Eigen::Vector3d top_left_;
-  Eigen::Vector3d top_right_;
-  Eigen::Vector3d bottom_left_;
-  Eigen::Vector3d bottom_right_;
-};
-
-class SuctionVoxelMatrix
-{
-public:
-  SuctionVoxelMatrix(double suction_rows_count, double suction_cols_count, double total_suction_range_y,
-                     double total_suction_range_x)
-    : suction_rows_count_(suction_rows_count)
-    , suction_cols_count_(suction_cols_count)
-    , active_suction_range_x_(total_suction_range_x)
-    , active_suction_range_y_(total_suction_range_y)
-  {
-    voxel_x_width_ = active_suction_range_x_ / suction_cols_count_;
-    voxel_y_width_ = active_suction_range_y_ / suction_rows_count_;
-    suction_voxels_.resize(suction_rows_count_);
-    // We store the voxels starting bottom left and moving right then up
-    for (std::size_t voxel_y = 0; voxel_y < suction_rows_count_; ++voxel_y)
-    {
-      suction_voxels_[voxel_y].resize(suction_cols_count_);
-      for (std::size_t voxel_x = 0; voxel_x < suction_cols_count_; ++voxel_x)
-      {
-        suction_voxels_[voxel_y][voxel_x] = std::make_shared<SuctionVoxel>(
-            Eigen::Vector3d(-active_suction_range_x_ / 2.0 + voxel_x_width_ * (voxel_x + 0.5),
-                            -active_suction_range_y_ / 2.0 + voxel_y_width_ * (voxel_y + 0.5), 0),
-            voxel_x_width_, voxel_y_width_);
-      }
-    }
-  }
-
-  // \brief - get the voxel at the index location [row, col] with [0, 0] being the bottom left
-  bool getSuctionVoxel(std::size_t row, std::size_t col, std::shared_ptr<SuctionVoxel>& voxel)
-  {
-    if (row >= suction_rows_count_)
-    {
-      ROS_DEBUG_STREAM_NAMED("suction_voxel_matrix", "Invalid row " << row << "/" << suction_rows_count_ - 1);
-      return false;
-    }
-
-    if (col >= suction_cols_count_)
-    {
-      ROS_DEBUG_STREAM_NAMED("suction_voxel_matrix", "Invalid col " << col << "/" << suction_cols_count_ - 1);
-      return false;
-    }
-
-    voxel = suction_voxels_[row][col];
-    return true;
-  }
-
-  /** \brief Get the voxel at the index i where columns are the minor axis and rows are the major axes.
-   *  @param index - the index of the suction voxel where index / #cols is the row and index % #cols is the col
-   *                 index 0 is bottom left
-   */
-  bool getSuctionVoxel(std::size_t index, std::shared_ptr<SuctionVoxel>& voxel)
-  {
-    return getSuctionVoxel(index / suction_cols_count_, index % suction_cols_count_, voxel);
-  }
-
-  std::size_t getNumRows()
-  {
-    return suction_rows_count_;
-  }
-
-  std::size_t getNumCols()
-  {
-    return suction_cols_count_;
-  }
-
-  std::size_t getNumVoxels()
-  {
-    return suction_cols_count_ * suction_rows_count_;
-  }
-
-  double getVoxelArea()
-  {
-    return voxel_x_width_ * voxel_y_width_;
-  }
-
-public:
-  std::size_t suction_rows_count_;
-  std::size_t suction_cols_count_;
-  double voxel_x_width_;
-  double voxel_y_width_;
-  double active_suction_range_x_;
-  double active_suction_range_y_;
-  std::vector<std::vector<std::shared_ptr<SuctionVoxel>>> suction_voxels_;
 };
 
 class GraspData
