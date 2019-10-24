@@ -122,10 +122,6 @@ public:
   static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
                                                const Eigen::Isometry3d& ideal_pose);
 
-  static Eigen::Vector2d scoreGraspOverhang(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
-                                            const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                            moveit_visual_tools::MoveItVisualToolsPtr visual_tools = NULL);
-
   /**
    * \brief Score a suction grasp based on the overlap between each voxel and the object.
    * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
