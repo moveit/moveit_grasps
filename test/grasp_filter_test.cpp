@@ -58,7 +58,11 @@ class GraspFilterTest : public ::testing::Test
 public:
   GraspFilterTest() : nh_("~"), verbose_(true), ee_group_name_("hand")
   {
-    planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+  }
+
+  void SetUp() override
+  {
+    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
     if (planning_scene_monitor_->getPlanningScene())
     {
       planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
@@ -67,11 +71,15 @@ public:
     }
     const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor_->getRobotModel();
     arm_jmg_ = robot_model->getJointModelGroup("panda_arm");
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/rviz_visual_tools",
-                                                                   planning_scene_monitor_));
-    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
-    grasp_filter_.reset(new moveit_grasps::GraspFilter(visual_tools_->getSharedRobotState(), visual_tools_));
-    grasp_data_.reset(new moveit_grasps::TwoFingerGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    ASSERT_TRUE(arm_jmg_ != nullptr);
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
+        robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
+    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_);
+    grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+
+    ASSERT_TRUE(grasp_data_->loadGraspData(nh_, ee_group_name_));
   }
 
 protected:

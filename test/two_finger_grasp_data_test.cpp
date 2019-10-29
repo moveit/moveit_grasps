@@ -52,13 +52,18 @@
 
 namespace moveit_grasps
 {
-class GraspDataTest : public ::testing::Test
+class TwoFingerGraspDataTest : public ::testing::Test
 {
 public:
-  GraspDataTest()
-    : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
+  TwoFingerGraspDataTest() : nh_("~"), ee_group_name_("hand")
   {
+  }
+
+  void SetUp() override
+  {
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("panda_link0");
     grasp_data_ = std::make_shared<TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    ASSERT_TRUE(grasp_data_->loadGraspData(nh_, ee_group_name_));
   }
 
 protected:
@@ -68,7 +73,7 @@ protected:
   TwoFingerGraspDataPtr grasp_data_;
 };  // class GraspGenerator
 
-TEST_F(GraspDataTest, CheckConfigValues)
+TEST_F(TwoFingerGraspDataTest, CheckConfigValues)
 {
   // Grasp Pose To EEF Pose
   EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().x(), 0);
@@ -113,7 +118,7 @@ TEST_F(GraspDataTest, CheckConfigValues)
   EXPECT_GT(grasp_data_->min_finger_width_, 0);
 }
 
-TEST_F(GraspDataTest, SetRobotState)
+TEST_F(TwoFingerGraspDataTest, SetRobotState)
 {
   moveit::core::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
@@ -128,7 +133,7 @@ TEST_F(GraspDataTest, SetRobotState)
             robot_state->getJointPositions("panda_finger_joint1")[0]);
 }
 
-TEST_F(GraspDataTest, fingerWidthToGraspPosture)
+TEST_F(TwoFingerGraspDataTest, fingerWidthToGraspPosture)
 {
   moveit::core::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
@@ -150,7 +155,7 @@ TEST_F(GraspDataTest, fingerWidthToGraspPosture)
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "grasp_data_test");
+  ros::init(argc, argv, "two_finger_grasp_data_test");
 
   ros::AsyncSpinner spinner(1);
   spinner.start();

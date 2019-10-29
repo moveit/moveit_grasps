@@ -55,13 +55,15 @@ namespace moveit_grasps
 class GraspGeneratorTest : public ::testing::Test
 {
 public:
-  GraspGeneratorTest()
-    : nh_("~")
-    , verbose_(true)
-    , ee_group_name_("hand")
-    , visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
-    , grasp_data_(new moveit_grasps::TwoFingerGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
+  GraspGeneratorTest() : nh_("~"), verbose_(true), ee_group_name_("hand")
   {
+  }
+  void SetUp() override
+  {
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("panda_link0");
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    ASSERT_TRUE(grasp_data_->loadGraspData(nh_, ee_group_name_));
   }
 
 protected:

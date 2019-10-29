@@ -68,6 +68,7 @@
 namespace moveit_grasps_demo
 {
 static const double BLOCK_SIZE = 0.04;
+const std::string LOGNAME = "grasp_filter_demo";
 
 class GraspFilterDemo
 {
@@ -121,6 +122,11 @@ public:
     // Load grasp data specific to our robot
     grasp_data_ =
         std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    if (!grasp_data_->loadGraspData(nh_, ee_group_name_))
+    {
+      ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to load Grasp Data parameters.");
+      exit(-1);
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects

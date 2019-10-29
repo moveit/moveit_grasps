@@ -41,20 +41,22 @@ hand:
     # define_tcp_by_name: true
     # tcp_link_name: "tool_center_point"
 
-    # Joint names and state values for the end effector.
-    # The names should match the values of pregrasp_posture and grasp_posture.
-    # These values can be left empty if end_effector_type is 'suction'
-    joints : ['panda_finger_joint1']
-    pregrasp_posture : [0.04]  # open position
-    grasp_posture : [0.0]      # close position
-
     # Target durations in seconds for reaching pregrasp and grasp positions in end effector motions
     pregrasp_time_from_start : 0.0
     grasp_time_from_start : 0.0
 
+
+    # Joint names and state values for the end effector.
+    # The names should match the values of pregrasp_posture and grasp_posture.
+    # These values can be left empty if end_effector_type is 'suction'
+    pregrasp_posture : [0.04]  # open position
+    grasp_posture : [0.0]      # close position
+    joints : ['panda_finger_joint1']
+
     ##############################
     ##  Finger gripper parameters
     ##############################
+
     # Distances between fingers matching to pregrasp_posture and grasp_posture, in meters
     max_finger_width: 0.085
     min_finger_width: 0.06

@@ -62,12 +62,6 @@ MOVEIT_CLASS_FORWARD(GraspData);
 // Map various arms to end effector grasp datas
 typedef std::map<const robot_model::JointModelGroup*, moveit_grasps::GraspDataPtr> GraspDatas;
 
-enum EndEffectorType
-{
-  FINGER = 1,
-  SUCTION = 2
-};
-
 class GraspData
 {
 public:
@@ -107,44 +101,11 @@ public:
   bool setRobotState(robot_state::RobotStatePtr& robot_state, const trajectory_msgs::JointTrajectory& posture);
 
   /**
-   * \brief Set the width between fingers as a percentage of object size and max finger width
-   * \return true on success
-   */
-  bool setGraspWidth(const double& percent_open, const double& min_finger_width,
-                     trajectory_msgs::JointTrajectory& grasp_posture);
-
-  /**
-   * \brief Convert width between fingers to joint positions
-   * \return true on success
-   */
-  bool fingerWidthToGraspPosture(const double& distance_btw_fingers, trajectory_msgs::JointTrajectory& grasp_posture);
-
-  /**
-   * \brief Convert joint positions to full grasp posture
-   * \return true on success
-   */
-  bool jointPositionsToGraspPosture(std::vector<double> joint_positions,
-                                    trajectory_msgs::JointTrajectory& grasp_posture);
-
-  /**
-   * \brief Get the Suction Voxel at index (i, j). Counting starts at bottom left
-   */
-  bool getSuctionVoxel(std::size_t suction_voxel_index_x, std::size_t suction_voxel_index_y, SuctionVoxel& voxels);
-
-  /**
-   * \brief Get the Suction Voxels in an array
-   */
-  std::vector<const SuctionVoxel> getSuctionVoxels();
-
-  /**
    * \brief Debug data to console
    */
   void print();
 
 public:
-  // A representation of the gripper type as an integer. See EndEffectorType for values
-  EndEffectorType end_effector_type_;
-
   // The (possibly fictional) center point of a grasp
   std::string tcp_name_;
   Eigen::Isometry3d tcp_to_eef_mount_;  // Convert generic grasp pose to the parent arm's eef_mount frame of reference
@@ -173,23 +134,6 @@ public:
   double retreat_distance_desired_;   // this is in addition to the grasp_max_depth
   double lift_distance_desired_;
   double grasp_padding_on_approach_;
-
-  /////////////////////////////////////
-  // Finger gripper specific parameters
-  /////////////////////////////////////
-  // For calculating the ratio between the distance between fingers and the joint values
-  double max_grasp_width_;
-  double max_finger_width_;
-  double min_finger_width_;
-  double gripper_finger_width_;  // parameter used to ensure generated grasps will overlap object
-
-  //////////////////////////////////////
-  // Suction gripper specific parameters
-  //////////////////////////////////////
-  double active_suction_range_x_;
-  double active_suction_range_y_;
-
-  std::shared_ptr<SuctionVoxelMatrix> suction_voxel_matrix_;
 };
 
 }  // namespace

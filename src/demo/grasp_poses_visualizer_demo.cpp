@@ -85,6 +85,7 @@ public:
 
     // Load grasp data
     grasp_data_ = std::make_shared<TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    ROS_ASSERT_MSG(grasp_data_->loadGraspData(nh_, ee_group_name_), "Failed to load Grasp Data parameters.");
 
     // load grasp generator
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, verbose));
