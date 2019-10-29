@@ -44,6 +44,16 @@
 
 namespace moveit_grasps
 {
+struct SuctionGraspScoreWeights : public GraspScoreWeights
+{
+  SuctionGraspScoreWeights() : GraspScoreWeights(), overhang_score_weight_(1.0)
+  {
+  }
+
+  // Suction gripper specific weights
+  double overhang_score_weight_;
+};
+
 class SuctionGraspScorer : public GraspScorer
 {
 public:

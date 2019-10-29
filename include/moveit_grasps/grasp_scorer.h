@@ -60,9 +60,6 @@ struct GraspScoreWeights
     , translation_x_score_weight_(1.0)
     , translation_y_score_weight_(1.0)
     , translation_z_score_weight_(1.0)
-    , depth_score_weight_(1.0)
-    , width_score_weight_(1.0)
-    , overhang_score_weight_(1.0)
   {
   }
 
@@ -72,13 +69,6 @@ struct GraspScoreWeights
   double translation_x_score_weight_;
   double translation_y_score_weight_;
   double translation_z_score_weight_;
-
-  // Finger gripper specific weights
-  double depth_score_weight_;
-  double width_score_weight_;
-
-  // Suction gripper specific weights
-  double overhang_score_weight_;
 };
 
 class GraspScorer

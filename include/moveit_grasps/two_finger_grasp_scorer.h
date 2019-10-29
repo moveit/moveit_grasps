@@ -44,6 +44,17 @@
 
 namespace moveit_grasps
 {
+struct TwoFingerGraspScoreWeights : public GraspScoreWeights
+{
+  GraspScoreWeights() : GraspScoreWeights(), depth_score_weight_(1.0), width_score_weight_(1.0)
+  {
+  }
+
+  // Finger gripper specific weights
+  double depth_score_weight_;
+  double width_score_weight_;
+};
+
 class TwoFingerGraspScorer : public GraspScorer
 {
 public:
