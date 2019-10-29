@@ -45,80 +45,8 @@
 
 namespace moveit_grasps
 {
-static const double RAD2DEG = 57.2957795;
-static const double MIN_GRASP_DISTANCE = 0.001;  // m between grasps
-
-// Grasp axis orientation
-enum grasp_axis_t
-{
-  X_AXIS,
-  Y_AXIS,
-  Z_AXIS
-};
-
-struct GraspCandidateConfig
-{
-  GraspCandidateConfig()
-    : enable_corner_grasps_(true)
-    , enable_face_grasps_(true)
-    , enable_variable_angle_grasps_(true)
-    , enable_edge_grasps_(true)
-    , generate_x_axis_grasps_(true)
-    , generate_y_axis_grasps_(true)
-    , generate_z_axis_grasps_(true)
-  {
-  }
-  void enableAllGraspTypes()
-  {
-    enable_corner_grasps_ = true;
-    enable_face_grasps_ = true;
-    enable_variable_angle_grasps_ = true;
-    enable_edge_grasps_ = true;
-  }
-  void enableAllGraspAxes()
-  {
-    generate_x_axis_grasps_ = true;
-    generate_y_axis_grasps_ = true;
-    generate_z_axis_grasps_ = true;
-  }
-  void enableAll()
-  {
-    enableAllGraspTypes();
-    enableAllGraspAxes();
-  }
-  void disableAllGraspTypes()
-  {
-    enable_corner_grasps_ = false;
-    enable_face_grasps_ = false;
-    enable_variable_angle_grasps_ = false;
-    enable_edge_grasps_ = false;
-  }
-  void disableAllGraspAxes()
-  {
-    generate_x_axis_grasps_ = false;
-    generate_y_axis_grasps_ = false;
-    generate_z_axis_grasps_ = false;
-  }
-  void disableAll()
-  {
-    disableAllGraspTypes();
-    disableAllGraspAxes();
-  }
-
-  ///////////////////////////////
-  // Finger Gripper config values
-  ///////////////////////////////
-  bool enable_corner_grasps_;
-  bool enable_face_grasps_;
-  bool enable_variable_angle_grasps_;
-  bool enable_edge_grasps_;
-  bool generate_x_axis_grasps_;
-  bool generate_y_axis_grasps_;
-  bool generate_z_axis_grasps_;
-};
-
 // Class
-class GraspGenerator
+class SuctionGraspGenerator : public GraspGenerator
 {
 public:
   // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles).
@@ -128,7 +56,7 @@ public:
   /**
    * \brief Constructor
    */
-  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
+  SuctionGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
   // TODO(davetcoleman): reinstate ability to generate bounding boxes
   /**
@@ -155,8 +83,7 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                      const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates) override;
 
   /**
    * \brief Create grasp positions around one axis of a cuboid

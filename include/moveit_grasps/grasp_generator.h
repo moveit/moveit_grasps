@@ -94,67 +94,6 @@ enum grasp_axis_t
   Z_AXIS
 };
 
-struct GraspCandidateConfig
-{
-  GraspCandidateConfig()
-    : enable_corner_grasps_(true)
-    , enable_face_grasps_(true)
-    , enable_variable_angle_grasps_(true)
-    , enable_edge_grasps_(true)
-    , generate_x_axis_grasps_(true)
-    , generate_y_axis_grasps_(true)
-    , generate_z_axis_grasps_(true)
-  {
-  }
-  void enableAllGraspTypes()
-  {
-    enable_corner_grasps_ = true;
-    enable_face_grasps_ = true;
-    enable_variable_angle_grasps_ = true;
-    enable_edge_grasps_ = true;
-  }
-  void enableAllGraspAxes()
-  {
-    generate_x_axis_grasps_ = true;
-    generate_y_axis_grasps_ = true;
-    generate_z_axis_grasps_ = true;
-  }
-  void enableAll()
-  {
-    enableAllGraspTypes();
-    enableAllGraspAxes();
-  }
-  void disableAllGraspTypes()
-  {
-    enable_corner_grasps_ = false;
-    enable_face_grasps_ = false;
-    enable_variable_angle_grasps_ = false;
-    enable_edge_grasps_ = false;
-  }
-  void disableAllGraspAxes()
-  {
-    generate_x_axis_grasps_ = false;
-    generate_y_axis_grasps_ = false;
-    generate_z_axis_grasps_ = false;
-  }
-  void disableAll()
-  {
-    disableAllGraspTypes();
-    disableAllGraspAxes();
-  }
-
-  ///////////////////////////////
-  // Finger Gripper config values
-  ///////////////////////////////
-  bool enable_corner_grasps_;
-  bool enable_face_grasps_;
-  bool enable_variable_angle_grasps_;
-  bool enable_edge_grasps_;
-  bool generate_x_axis_grasps_;
-  bool generate_y_axis_grasps_;
-  bool generate_z_axis_grasps_;
-};
-
 // Class
 class GraspGenerator
 {
@@ -193,8 +132,7 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                      const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates) = 0;
 
   /**
    * \brief Create grasp positions around one axis of a cuboid

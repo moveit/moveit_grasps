@@ -45,17 +45,9 @@
 
 namespace moveit_grasps
 {
-// Grasp axis orientation
-enum grasp_axis_t
+struct TwoFingerGraspCandidateConfig
 {
-  X_AXIS,
-  Y_AXIS,
-  Z_AXIS
-};
-
-struct GraspCandidateConfig
-{
-  GraspCandidateConfig()
+  TwoFingerGraspCandidateConfig()
     : enable_corner_grasps_(true)
     , enable_face_grasps_(true)
     , enable_variable_angle_grasps_(true)
@@ -115,7 +107,7 @@ struct GraspCandidateConfig
 };
 
 // Class
-class GraspGenerator
+class TwoFingerGraspGenerator
 {
 public:
   // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles).
@@ -125,7 +117,7 @@ public:
   /**
    * \brief Constructor
    */
-  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
+  TwoFingerGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
   // TODO(davetcoleman): reinstate ability to generate bounding boxes
   /**
@@ -153,7 +145,7 @@ public:
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
                       const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                      const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
+                      const TwoFingerGraspCandidateConfig grasp_candidate_config = TwoFingerGraspCandidateConfig());
 
   /**
    * \brief Create grasp positions around one axis of a cuboid
