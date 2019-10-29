@@ -37,127 +37,22 @@
  * Desc    : Functions for scoring grasps. See *.h file for documentation
  */
 
-#include <moveit_grasps/grasp_scorer.h>
+#include <moveit_grasps/suction_grasp_scorer.h>
 
 namespace moveit_grasps
 {
-double GraspScorer::scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open)
-{
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.graspWidth", "raw score = " << percent_open);
-  return pow(percent_open, 2);
-}
-
-double GraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr grasp_data,
-                                        const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
-                                        const double& max_grasp_distance)
-{
-  // TODO(mcevoyandy): grasp_data is not used but should be. See *.h for explaination.
-
-  double distance = (grasp_pose_tcp.translation() - object_pose.translation()).norm();
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "distance = " << distance << ", " << min_grasp_distance << ":"
-                                                                << max_grasp_distance);
-
-  double score = 1.0 - (distance - min_grasp_distance) / (max_grasp_distance - min_grasp_distance);
-
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "raw score = " << score);
-  if (score < 0)
-    ROS_WARN_STREAM_NAMED("grasp_scorer.distance", "score < 0!");
-  return pow(score, 4);
-}
-
-Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                   const Eigen::Isometry3d& ideal_pose)
-{
-  // We assume that the ideal is in the middle
-  Eigen::Vector3d scores = -Eigen::Vector3d(grasp_pose_tcp.translation() - ideal_pose.translation()).array().abs();
-
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.scoreGraspTranslation",
-                         "value, ideal, score:\n"
-                             << "x: " << grasp_pose_tcp.translation()[0] << "\t" << ideal_pose.translation()[0] << "\t"
-                             << scores[0] << "\n"
-                             << "y: " << grasp_pose_tcp.translation()[1] << "\t" << ideal_pose.translation()[1] << "\t"
-                             << scores[1] << "\n"
-                             << "x: " << grasp_pose_tcp.translation()[2] << "\t" << ideal_pose.translation()[2] << "\t"
-                             << scores[2] << "\n");
-
-  return scores;
-}
-
-Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                   const Eigen::Vector3d& min_translations,
-                                                   const Eigen::Vector3d& max_translations)
-{
-  Eigen::Vector3d scores;
-
-  for (std::size_t i = 0; i < 3; i++)
-  {
-    // We assume that the ideal is in the middle
-    double ideal = (max_translations[i] + min_translations[i]) / 2;
-    double translation = grasp_pose_tcp.translation()[i] - ideal;
-    double range = max_translations[i] - min_translations[i];
-    double score;
-    if (range == 0)
-      score = 0;
-    else
-      score = translation / range;
-
-    scores[i] = pow(score, 2);
-  }
-
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.translation",
-                         "\nvalue, min, max, score:\n"
-                             << grasp_pose_tcp.translation()[0] << ", " << min_translations[0] << ", "
-                             << max_translations[0] << ", " << scores[0] << "\n"
-                             << grasp_pose_tcp.translation()[1] << ", " << min_translations[1] << ", "
-                             << max_translations[1] << ", " << scores[1] << "\n"
-                             << grasp_pose_tcp.translation()[2] << ", " << min_translations[2] << ", "
-                             << max_translations[2] << ", " << scores[2] << "\n");
-
-  return scores;
-}
-
-Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                       const Eigen::Isometry3d& ideal_pose)
-{
-  Eigen::Vector3d grasp_pose_axis;
-  Eigen::Vector3d ideal_pose_axis;
-  Eigen::Vector3d scores;
-  double angle;
-
-  // get angle between x-axes
-  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitX();
-  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
-  scores[0] = (M_PI - angle) / M_PI;
-
-  // get angle between y-axes
-  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitY();
-  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
-  scores[1] = (M_PI - angle) / M_PI;
-
-  // get angle between z-axes
-  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
-  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
-  scores[2] = (M_PI - angle) / M_PI;
-
-  return scores;
-}
-
 // is a within epsilon of b
 bool isApprox(double a, double b, double epsilon = 1.0e-5)
 {
   return std::abs(a - b) < epsilon;
 }
 
-double GraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
-                                             const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                             std::vector<double>& overlap_vector,
-                                             moveit_visual_tools::MoveItVisualToolsPtr visual_tools)
+double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp,
+                                                    const SuctionGraspDataPtr& grasp_data,
+                                                    const Eigen::Isometry3d& object_pose,
+                                                    const Eigen::Vector3d& object_size,
+                                                    std::vector<double>& overlap_vector,
+                                                    moveit_visual_tools::MoveItVisualToolsPtr visual_tools)
 {
   overlap_vector.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
 

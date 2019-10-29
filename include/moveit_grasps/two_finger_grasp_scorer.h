@@ -36,22 +36,15 @@
  * Desc    : Functions for scoring generated grasps
  */
 
-#ifndef MOVEIT_GRASPS_GRASP_SCORER_
-#define MOVEIT_GRASPS_GRASP_SCORER_
+#ifndef MOVEIT_GRASPS__TWO_FINGER_GRASP_SCORER_
+#define MOVEIT_GRASPS__TWO_FINGER_GRASP_SCORER_
 
-#include <cmath>
-
-#include <ros/ros.h>
-
-#include <moveit_grasps/grasp_data.h>
-#include <moveit_visual_tools/moveit_visual_tools.h>
-
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <moveit_grasps/two_finger_grasp_data.h>
+#include <moveit_grasps/grasp_scorer.h>
 
 namespace moveit_grasps
 {
-class GraspScorer
+class TwoFingerGraspScorer : public GraspScorer
 {
 public:
   /**
@@ -64,18 +57,7 @@ public:
    *         1.0 -> gripper is wide open,
    *         0.0 -> gripper is at minimum position.
    */
-  static double scoreGraspWidth(const GraspDataPtr grasp_data, double percent_open);
-
-  /**
-   * \brief Scores each axis of the grasp based on its angle to the desired pose axis.
-   * \param grasp_pose_tcp - the pose of the end effector
-   * \param ideal_pose - the ideal grasp pose (ex: straight into the bin)
-   * \return the unweighted scores:
-   *         1.0 -> 0 degrees between grasp axis and desired axis,
-   *         0.0 -> 180 degrees
-   */
-  static Eigen::Vector3d scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                   const Eigen::Isometry3d& ideal_pose);
+  static double scoreGraspWidth(const TwoFingerGraspDataPtr grasp_data, double percent_open);
 
   /**
    * \brief Score the grasp based on how far the object is from the palm of the hand
@@ -92,50 +74,9 @@ public:
   // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
   // arbitrary number given our target object set (i.e. I based it off of the cheese it box)
-  static double scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr grasp_data,
+  static double scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp, const TwoFingerGraspDataPtr grasp_data,
                                     const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
                                     const double& max_grasp_distance);
-
-  /**
-   * \brief Score the grasp based on the translation values of the grasp pose
-   * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
-   * \param min_translations - the minimum translation values for all grasp poses
-   * \param max_translations - the maximum translation values for all grasp poses
-   * \return the unweighted scores:
-   *         0.0 -> pose is at the minimum translation in that axis
-   *         1.0 -> pose is at the maximum translation in that axis
-   */
-  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
-                                               const Eigen::Vector3d& min_translations,
-                                               const Eigen::Vector3d& max_translations);
-
-  /**
-   * \brief Score the grasp based on the translation values of the grasp pose
-   * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
-   * \param ideal_pose - the ideal pose location
-   * \param object_pose - the pose of the object being grasped
-   * \param object_size - the size of the object represented as a vector [x,y,z]
-   * \param visual_tools - set to a moveit_visual_tools pointer to enable visual debugging
-   * \return the unweighted scores:
-   *         0.0 -> pose is at the ideal translation in that axis
-   */
-  static Eigen::Vector3d scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
-                                               const Eigen::Isometry3d& ideal_pose);
-
-  /**
-   * \brief Score a suction grasp based on the overlap between each voxel and the object.
-   * \param grasp_pose_tcp - the pose of the end effector (not the eef mount)
-   * \param object_pose - the pose of the object being grasped
-   * \param object_size - the size of the object represented as a vector [x,y,z]
-   * \param visual_tools - set to a moveit_visual_tools pointer to enable visual debugging
-   * \param overlap_vector - Populates with a vector of fractions. Each value represents the i'th voxel's fractional
-   * overlap
-   * \return double - a score. The sum of the squares of the fractions
-   */
-  static double scoreSuctionVoxelOverlap(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
-                                         const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                         std::vector<double>& overlap_vector,
-                                         moveit_visual_tools::MoveItVisualToolsPtr visual_tools = nullptr);
 };
 
 }  // end namespace moveit_grasps

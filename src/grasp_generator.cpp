@@ -797,15 +797,15 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
   Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
   // Move the ideal top grasp to the box location
   ideal_grasp_tcp.translation() = cuboid_pose.translation();
-  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_tcp);
+  Eigen::Vector3d orientation_scores = SuctionGraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_tcp);
 
   // get portion of score based on the translation
-  Eigen::Vector3d translation_scores = GraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
+  Eigen::Vector3d translation_scores = SuctionGraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
 
   // Score suction grasp overhang
-  double suction_overlap_score =
-      GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap,
-                                            (show_grasp_overhang_ ? visual_tools_ : nullptr));
+  double suction_overlap_score = SuctionGraspScorerGraspScorer::scoreSuctionVoxelOverlap(
+      grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap,
+      (show_grasp_overhang_ ? visual_tools_ : nullptr));
 
   double total_score = 0;
   double weight_total = 0;
@@ -844,10 +844,11 @@ double GraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose_tcp,
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp", "starting to score grasp...");
 
   // get portion of score based on the gripper's opening width on approach
-  double width_score = GraspScorer::scoreGraspWidth(grasp_data, percent_open);
+  double width_score = TwoFingerGraspScorer::scoreGraspWidth(grasp_data, percent_open);
 
   // get portion of score based on the pinchers being down
-  Eigen::Vector3d orientation_scores = GraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_pose_);
+  Eigen::Vector3d orientation_scores =
+      TwoFingerGraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_pose_);
 
   // get portion of score based on the distance of the grasp pose to the object pose
 
@@ -855,12 +856,12 @@ double GraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose_tcp,
   // max_distance should be the length of the fingers minus some minimum amount that the fingers need to grip an object
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
   // arbitrary number given our target object set
-  double distance_score = GraspScorer::scoreDistanceToPalm(grasp_pose_tcp, grasp_data, object_pose, min_grasp_distance_,
-                                                           max_grasp_distance_);
+  double distance_score = TwoFingerGraspScorer::scoreDistanceToPalm(grasp_pose_tcp, grasp_data, object_pose,
+                                                                    min_grasp_distance_, max_grasp_distance_);
 
   // should really change this to be like orienation_scores so we can score any translation
   Eigen::Vector3d translation_scores =
-      GraspScorer::scoreGraspTranslation(grasp_pose_tcp, min_translations_, max_translations_);
+      TwoFingerGraspScorer::scoreGraspTranslation(grasp_pose_tcp, min_translations_, max_translations_);
 
   // want minimum translation
   translation_scores *= -1.0;
