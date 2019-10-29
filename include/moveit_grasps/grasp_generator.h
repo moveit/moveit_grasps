@@ -359,7 +359,8 @@ public:
   //  static Eigen::Vector3d getPostGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
 
   /**
-   * \brief Using an input grasp description, get the pregrasp pose
+   * \brief Using an input grasp description, get the pregrasp pose. The pregrasp pose is the grasp pose translated
+   * backwards in the grasp frame away from the object being grasped.
    * \param grasp
    * \param name of parent link
    * \return pregrasp pose
