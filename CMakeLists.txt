@@ -67,6 +67,8 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/grasp_candidate.cpp
   src/grasp_data.cpp
+  src/two_finger_grasp_data.cpp
+  src/suction_grasp_data.cpp
   src/grasp_generator.cpp
   src/grasp_scorer.cpp
 )
@@ -146,8 +148,8 @@ install(TARGETS
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
 
-  add_rostest_gtest(grasp_data_test test/grasp_data_test.test test/grasp_data_test.cpp)
-  target_link_libraries(grasp_data_test
+  add_rostest_gtest(two_finger_grasp_data_test test/two_finger_grasp_data_test.test test/two_finger_grasp_data_test.cpp)
+  target_link_libraries(two_finger_grasp_data_test
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}

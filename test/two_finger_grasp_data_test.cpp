@@ -47,7 +47,7 @@
 #include <gtest/gtest.h>
 
 // Grasp generation
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 namespace moveit_grasps
@@ -58,14 +58,14 @@ public:
   GraspDataTest()
     : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
   {
-    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    grasp_data_ = std::make_shared<TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
   }
 
 protected:
   ros::NodeHandle nh_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  GraspDataPtr grasp_data_;
+  TwoFingerGraspDataPtr grasp_data_;
 };  // class GraspGenerator
 
 TEST_F(GraspDataTest, CheckConfigValues)

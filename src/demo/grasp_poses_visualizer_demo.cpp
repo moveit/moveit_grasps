@@ -39,6 +39,7 @@
 #include <rviz_visual_tools/rviz_visual_tools.h>
 
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 #include <string>
 #include <vector>
 
@@ -83,7 +84,7 @@ public:
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 
     // Load grasp data
-    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    grasp_data_ = std::make_shared<TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     // load grasp generator
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, verbose));
@@ -208,7 +209,7 @@ private:
   moveit_grasps::GraspGeneratorPtr grasp_generator_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   std::vector<GraspCandidatePtr> grasp_candidates_;
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
 
   // TODO(mcevoyandy): read in from param
 

@@ -45,6 +45,9 @@
 // Grasp generation
 #include <moveit_grasps/grasp_generator.h>
 
+// Grasp Data
+#include <moveit_grasps/two_finger_grasp_data.h>
+
 namespace moveit_grasps_demo
 {
 class GraspGeneratorDemo
@@ -61,7 +64,7 @@ private:
   rviz_visual_tools::RvizVisualToolsPtr grasp_visuals_;
 
   // Robot-specific data for generating grasps
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
 
   // Which arm should be used
   std::string ee_group_name_;
@@ -99,7 +102,8 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_ = std::make_shared<moveit_grasps::GraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     const moveit::core::JointModelGroup* ee_jmg = visual_tools_->getRobotModel()->getJointModelGroup(ee_group_name_);
 

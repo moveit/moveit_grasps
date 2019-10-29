@@ -60,7 +60,7 @@
 #include <moveit_grasps/grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
@@ -119,7 +119,8 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_ = std::make_shared<moveit_grasps::GraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
@@ -260,7 +261,7 @@ private:
   moveit_grasps::GraspFilterPtr grasp_filter_;
 
   // data for generating grasps
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
 
   // Shared planning scene (load once for everything)
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;

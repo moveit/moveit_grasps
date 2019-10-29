@@ -37,7 +37,7 @@
    Description: Data class used by the grasp generator.
 */
 
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/suction_grasp_data.h>
 
 // Eigen
 #include <Eigen/Core>
@@ -46,8 +46,6 @@
 
 // C++
 #include <math.h>
-// TODO(davetcoleman): remove this
-#define _USE_MATH_DEFINES
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
@@ -57,18 +55,18 @@
 
 namespace moveit_grasps
 {
-GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                     moveit::core::RobotModelConstPtr robot_model)
-  : base_link_("/base_link"), robot_model_(robot_model)
+SuctionGraspData::SuctionGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                                   moveit::core::RobotModelConstPtr robot_model)
+  : GraspData(nh, end_effector, robot_model)
 {
   if (!loadGraspData(nh, end_effector))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data", "Error loading grasp data, shutting down");
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Error loading suction grasp data, shutting down");
     exit(-1);
   }
 }
 
-bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)
+bool SuctionGraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)
 {
   std::vector<std::string> joint_names;
   std::vector<double> pre_grasp_posture;  // todo: remove all underscore post-fixes
@@ -212,19 +210,20 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
   return true;
 }
 
-bool GraspData::setRobotStatePreGrasp(robot_state::RobotStatePtr& robot_state)
+bool SuctionGraspData::setRobotStatePreGrasp(robot_state::RobotStatePtr& robot_state)
 {
   ROS_WARN_STREAM_NAMED("grasp_data", "setRobotStatePreGrasp is probably wrong");
   return setRobotState(robot_state, pre_grasp_posture_);
 }
 
-bool GraspData::setRobotStateGrasp(robot_state::RobotStatePtr& robot_state)
+bool SuctionGraspData::setRobotStateGrasp(robot_state::RobotStatePtr& robot_state)
 {
   ROS_WARN_STREAM_NAMED("grasp_data", "setRobotStateGrasp is probably wrong");
   return setRobotState(robot_state, grasp_posture_);
 }
 
-bool GraspData::setRobotState(robot_state::RobotStatePtr& robot_state, const trajectory_msgs::JointTrajectory& posture)
+bool SuctionGraspData::setRobotState(robot_state::RobotStatePtr& robot_state,
+                                     const trajectory_msgs::JointTrajectory& posture)
 {
   // Assume joint trajectory has only 1 waypoint
   if (end_effector_type_ == FINGER)
@@ -246,8 +245,8 @@ bool GraspData::setRobotState(robot_state::RobotStatePtr& robot_state, const tra
   return true;
 }
 
-bool GraspData::setGraspWidth(const double& percent_open, const double& min_finger_width,
-                              trajectory_msgs::JointTrajectory& grasp_posture)
+bool SuctionGraspData::setGraspWidth(const double& percent_open, const double& min_finger_width,
+                                     trajectory_msgs::JointTrajectory& grasp_posture)
 {
   if (percent_open < 0 || percent_open > 1)
   {
@@ -265,8 +264,8 @@ bool GraspData::setGraspWidth(const double& percent_open, const double& min_fing
   return fingerWidthToGraspPosture(distance_btw_fingers, grasp_posture);
 }
 
-bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
-                                          trajectory_msgs::JointTrajectory& grasp_posture)
+bool SuctionGraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
+                                                 trajectory_msgs::JointTrajectory& grasp_posture)
 {
   // TODO(mlautman): Change this function to take in a method for translating joint values to grasp width
   //       Currently this function simply interpolates between max open and max closed
@@ -320,8 +319,8 @@ bool GraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
 }
 
-bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions,
-                                             trajectory_msgs::JointTrajectory& grasp_posture)
+bool SuctionGraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions,
+                                                    trajectory_msgs::JointTrajectory& grasp_posture)
 {
   for (std::size_t joint_index = 0; joint_index < pre_grasp_posture_.joint_names.size(); joint_index++)
   {
@@ -358,7 +357,7 @@ bool GraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions
   return true;
 }
 
-void GraspData::print()
+void SuctionGraspData::print()
 {
   ROS_WARN_STREAM_NAMED("grasp_data", "Debug Grasp Data variable values:");
   std::cout << "tcp_to_eef_mount_: \n"

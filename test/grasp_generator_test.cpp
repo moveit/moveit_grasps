@@ -47,6 +47,9 @@
 // Grasp generation
 #include <moveit_grasps/grasp_generator.h>
 
+// Grasp Data
+#include <moveit_grasps/two_finger_grasp_data.h>
+
 namespace moveit_grasps
 {
 class GraspGeneratorTest : public ::testing::Test
@@ -57,7 +60,7 @@ public:
     , verbose_(true)
     , ee_group_name_("hand")
     , visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
-    , grasp_data_(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
+    , grasp_data_(new moveit_grasps::TwoFingerGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()))
   {
   }
 
@@ -66,7 +69,7 @@ protected:
   bool verbose_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
 };  // class GraspGenerator
 
 TEST_F(GraspGeneratorTest, ConstructDestruct)

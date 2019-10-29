@@ -37,38 +37,17 @@
    Description: Data class used by the grasp generator.
 */
 
-#ifndef MOVEIT_GRASPS__GRASP_DATA_H_
-#define MOVEIT_GRASPS__GRASP_DATA_H_
-
-// Ros
-#include <ros/node_handle.h>
-
-// Msgs
-#include <geometry_msgs/Pose.h>
-#include <trajectory_msgs/JointTrajectory.h>
-
-// MoveIt
-#include <moveit/macros/class_forward.h>
-#include <moveit/robot_state/robot_state.h>
-#include <moveit/robot_model/link_model.h>
+#ifndef MOVEIT_GRASPS__TWO_FINGER_GRASP_DATA_H_
+#define MOVEIT_GRASPS__TWO_FINGER_GRASP_DATA_H_
 
 // moveit grasps
-#include <moveit_grasps/suction_voxel_matrix.h>
+#include <moveit_grasps/grasp_data.h>
 
 namespace moveit_grasps
 {
-MOVEIT_CLASS_FORWARD(GraspData);
+MOVEIT_CLASS_FORWARD(TwoFingerGraspData);
 
-// Map various arms to end effector grasp datas
-typedef std::map<const robot_model::JointModelGroup*, moveit_grasps::GraspDataPtr> GraspDatas;
-
-enum EndEffectorType
-{
-  FINGER = 1,
-  SUCTION = 2
-};
-
-class GraspData
+class TwoFingerGraspData : public GraspData
 {
 public:
   /**
@@ -76,13 +55,14 @@ public:
    * \param node handle - allows for namespacing
    * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
    */
-  GraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
+  TwoFingerGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+                     moveit::core::RobotModelConstPtr robot_model);
 
   /**
    * \brief Helper function for constructor
    * \return true on success
    */
-  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector);
+  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector) override;
 
   /**
    * \brief Alter a robot state so that the end effector corresponding to this grasp data is in pre-grasp state (OPEN)

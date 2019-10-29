@@ -53,7 +53,7 @@
 // Grasp
 #include <moveit_grasps/grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 #include <moveit_grasps/grasp_planner.h>
 
 // Parameter loading
@@ -143,7 +143,8 @@ public:
   {
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_ = std::make_shared<moveit_grasps::GraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
@@ -468,7 +469,7 @@ private:
   moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
   // Robot-specific data for generating grasps
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
 
   // For planning approach and retreats
   moveit_grasps::GraspPlannerPtr grasp_planner_;

@@ -49,7 +49,7 @@
 #include <moveit_grasps/grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 
 namespace moveit_grasps
 {
@@ -71,7 +71,7 @@ public:
                                                                    planning_scene_monitor_));
     grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
     grasp_filter_.reset(new moveit_grasps::GraspFilter(visual_tools_->getSharedRobotState(), visual_tools_));
-    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    grasp_data_.reset(new moveit_grasps::TwoFingerGraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
   }
 
 protected:

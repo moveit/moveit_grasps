@@ -82,7 +82,7 @@ public:
    * \brief Helper function for constructor
    * \return true on success
    */
-  bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector);
+  virtual bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector);
 
   /**
    * \brief Alter a robot state so that the end effector corresponding to this grasp data is in pre-grasp state (OPEN)
