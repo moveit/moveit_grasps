@@ -66,11 +66,17 @@ include_directories(
 # Grasp Library
 add_library(${PROJECT_NAME}
   src/grasp_candidate.cpp
-  src/grasp_data.cpp
   src/two_finger_grasp_data.cpp
   src/suction_grasp_data.cpp
+  src/grasp_data.cpp
   src/grasp_generator.cpp
   src/grasp_scorer.cpp
+  src/suction_grasp_data.cpp
+  src/suction_grasp_generator.cpp
+  src/suction_grasp_scorer.cpp
+  src/two_finger_grasp_data.cpp
+  src/two_finger_grasp_generator.cpp
+  src/two_finger_grasp_scorer.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
