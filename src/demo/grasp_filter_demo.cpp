@@ -57,7 +57,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Grasp
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
@@ -134,14 +134,14 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_);
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
     grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
     // We set custom grasp score weights
-    moveit_grasps::GraspScoreWeights grasp_score_weights;
+    moveit_grasps::TwoFingerGraspScoreWeights grasp_score_weights;
     grasp_score_weights.orientation_x_score_weight_ = 2.0;
     grasp_score_weights.orientation_y_score_weight_ = 2.0;
     grasp_score_weights.orientation_z_score_weight_ = 2.0;
@@ -204,7 +204,8 @@ public:
       std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
       // Configure the desired types of grasps
-      moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+      moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+          moveit_grasps::TwoFingerGraspCandidateConfig();
       grasp_generator_config.disableAll();
       grasp_generator_config.enable_face_grasps_ = true;
       grasp_generator_config.generate_y_axis_grasps_ = true;
@@ -258,7 +259,7 @@ private:
   ros::NodeHandle nh_;
 
   // Grasp generator
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
 
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;

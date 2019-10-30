@@ -36,7 +36,7 @@
    Desc:   Generates geometric grasps for cuboids and blocks, not using physics or contact wrenches
 */
 
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
@@ -56,51 +56,136 @@ void debugFailedOpenGripper(double percent_open, double min_finger_open_on_appro
 }  // namespace
 
 namespace moveit_grasps
-
 {
+// Decalire test class for friend
+class TwoFingerGraspGeneratorTest;
+
 // Constructor
 TwoFingerGraspGenerator::TwoFingerGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
-  : ideal_grasp_pose_(Eigen::Isometry3d::Identity())
-  , visual_tools_(visual_tools)
-  , verbose_(verbose)
-  , nh_("~/moveit_grasps/generator")
-  , grasp_score_weights_(GraspScoreWeights())
+  : GraspGenerator(visual_tools, verbose), grasp_score_weights_(TwoFingerGraspScoreWeights())
 {
-  // Load visulization settings
-  const std::string parent_name = "grasps";  // for namespacing logging messages
-  std::size_t error = 0;
-
-  error += !rosparam_shortcuts::get(parent_name, nh_, "verbose", verbose_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps", show_prefiltered_grasps_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "show_prefiltered_grasps_speed", show_prefiltered_grasps_speed_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "debug_top_grasps", debug_top_grasps_);
-  error += !rosparam_shortcuts::get(parent_name, nh_, "show_grasp_overhang", show_grasp_overhang_);
-
-  // Load scoring weights
-  rosparam_shortcuts::shutdownIfError(parent_name, error);
+  grasp_candidate_config_ = TwoFingerGraspCandidateConfig();
 }
 
-void TwoFingerGraspGenerator::setIdealTCPGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
+void TwoFingerGraspGenerator::setGraspCandidateConfig(const TwoFingerGraspCandidateConfig grasp_candidate_config)
 {
-  ROS_ASSERT_MSG(ideal_grasp_orientation_rpy.size() == 3, "setIdealTCPGraspPoseRPY must be set with a vector of length "
-                                                          "3");
+  grasp_candidate_config_ = grasp_candidate_config;
+}
 
-  // copy the ideal_grasp_pose.translation() so that we only change the orientation.
-  Eigen::Vector3d ideal_grasp_pose_translation(ideal_grasp_pose_.translation());
+bool TwoFingerGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
+                                             double height, const TwoFingerGraspDataPtr& grasp_data,
+                                             std::vector<GraspCandidatePtr>& grasp_candidates)
+{
+  bool result =
+      generateFingerGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config_);
 
-  // Set ideal grasp pose (currently only uses orientation of pose)
-  ideal_grasp_pose_ = Eigen::Isometry3d::Identity() *
-                      Eigen::AngleAxisd(ideal_grasp_orientation_rpy[0], Eigen::Vector3d::UnitX()) *
-                      Eigen::AngleAxisd(ideal_grasp_orientation_rpy[1], Eigen::Vector3d::UnitY()) *
-                      Eigen::AngleAxisd(ideal_grasp_orientation_rpy[2], Eigen::Vector3d::UnitZ());
+  if (result)
+    std::sort(grasp_candidates.begin(), grasp_candidates.end(), GraspFilter::compareGraspScores);
 
-  ideal_grasp_pose_.translation() = ideal_grasp_pose_translation;
+  return result;
+}
+
+bool TwoFingerGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount,
+                                       const TwoFingerGraspDataPtr& grasp_data,
+                                       std::vector<GraspCandidatePtr>& grasp_candidates,
+                                       const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
+                                       double object_width)
+{
+  // Transform the grasp pose eef mount to the tcp grasp pose
+  Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
+
+  // The new grasp
+  moveit_msgs::Grasp new_grasp;
+
+  // Approach and retreat - aligned with eef to grasp transform
+  // set pregrasp
+  moveit_msgs::GripperTranslation pre_grasp_approach;
+  new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
+  new_grasp.pre_grasp_approach.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
+  new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
+  new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
+
+  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->tcp_to_eef_mount_.translation();
+  grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
+
+  new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector.x();
+  new_grasp.pre_grasp_approach.direction.vector.y = grasp_approach_vector.y();
+  new_grasp.pre_grasp_approach.direction.vector.z = grasp_approach_vector.z();
+
+  // set postgrasp
+  moveit_msgs::GripperTranslation post_grasp_retreat;
+  new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
+  new_grasp.post_grasp_retreat.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
+  new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
+  new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
+  new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
+  new_grasp.post_grasp_retreat.direction.vector.y = -1 * grasp_approach_vector.y();
+  new_grasp.post_grasp_retreat.direction.vector.z = -1 * grasp_approach_vector.z();
+
+  // set grasp pose
+  geometry_msgs::PoseStamped grasp_pose_msg;
+  grasp_pose_msg.header.stamp = ros::Time::now();
+  grasp_pose_msg.header.frame_id = grasp_data->base_link_;
+
+  // name the grasp
+  static std::size_t grasp_id = 0;
+  new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
+  grasp_id++;
+
+  tf::poseEigenToMsg(grasp_pose_eef_mount, grasp_pose_msg.pose);
+  new_grasp.grasp_pose = grasp_pose_msg;
+
+  // set grasp postures e.g. hand closed
+  new_grasp.grasp_posture = grasp_data->grasp_posture_;
+
+  // set minimum opening of fingers for pre grasp approach
+  double min_finger_open_on_approach = object_width + 2 * grasp_data->grasp_padding_on_approach_;
+  double percent_open;
+
+  // Create grasp with widest fingers possible ----------------------------------------------
+  percent_open = 1.0;
+  if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
+  {
+    debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
+                           grasp_data->grasp_padding_on_approach_);
+    return false;
+  }
+
+  new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
+
+  // Show visualization for widest grasp
+
+  grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
+
+  // Create grasp with middle width fingers -------------------------------------------------
+  percent_open = 0.5;
+  if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
+  {
+    debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
+                           grasp_data->grasp_padding_on_approach_);
+    return false;
+  }
+  new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
+  grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
+
+  // Create grasp with fingers at minimum width ---------------------------------------------
+  percent_open = 0.0;
+  if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
+  {
+    debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
+                           grasp_data->grasp_padding_on_approach_);
+    return false;
+  }
+  new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
+  grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
+
+  return true;
 }
 
 bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
                                                        double height, grasp_axis_t axis,
-                                                       const moveit_grasps::GraspDataPtr grasp_data,
-                                                       const GraspCandidateConfig& grasp_candidate_config,
+                                                       const TwoFingerGraspDataPtr& grasp_data,
+                                                       const TwoFingerGraspCandidateConfig& grasp_candidate_config,
                                                        std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   double finger_depth = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
@@ -460,6 +545,37 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
   return true;
 }
 
+std::size_t TwoFingerGraspGenerator::addCornerGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3],
+                                                           Eigen::Vector3d translation, double corner_rotation,
+                                                           std::size_t num_radial_grasps,
+                                                           std::vector<Eigen::Isometry3d>& grasp_poses_tcp)
+{
+  std::size_t num_grasps_added = 0;
+  double delta_angle = (M_PI / 2.0) / static_cast<double>(num_radial_grasps + 1);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "delta_angle = " << delta_angle);
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "num_radial_grasps = " << num_radial_grasps);
+
+  // rotate & translate pose to be aligned with edge of cuboid
+  Eigen::Isometry3d grasp_pose_tcp = pose;
+  grasp_pose_tcp *= Eigen::AngleAxisd(rotation_angles[0], Eigen::Vector3d::UnitX()) *
+                    Eigen::AngleAxisd(rotation_angles[1], Eigen::Vector3d::UnitY()) *
+                    Eigen::AngleAxisd(rotation_angles[2], Eigen::Vector3d::UnitZ());
+  grasp_pose_tcp *= Eigen::AngleAxisd(corner_rotation, Eigen::Vector3d::UnitY());
+  grasp_pose_tcp.translation() += translation;
+
+  for (std::size_t i = 0; i < num_radial_grasps; i++)
+  {
+    // Eigen::Vector3d grasp_dir = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
+    // Eigen::Isometry3d radial_pose = grasp_pose_tcp;
+    grasp_pose_tcp *= Eigen::AngleAxisd(delta_angle, Eigen::Vector3d::UnitY());
+    grasp_poses_tcp.push_back(grasp_pose_tcp);
+    num_grasps_added++;
+  }
+  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "num_grasps_added : grasp_poses_tcp.size() = "
+                                                          << num_grasps_added << " : " << grasp_poses_tcp.size());
+  return num_grasps_added;
+}
+
 std::size_t TwoFingerGraspGenerator::addFaceGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3],
                                                          Eigen::Vector3d translation, Eigen::Vector3d delta,
                                                          double alignment_rotation, std::size_t num_grasps,
@@ -518,40 +634,9 @@ std::size_t TwoFingerGraspGenerator::addEdgeGraspsHelper(Eigen::Isometry3d pose,
   return true;
 }
 
-std::size_t TwoFingerGraspGenerator::addCornerGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3],
-                                                           Eigen::Vector3d translation, double corner_rotation,
-                                                           std::size_t num_radial_grasps,
-                                                           std::vector<Eigen::Isometry3d>& grasp_poses_tcp)
-{
-  std::size_t num_grasps_added = 0;
-  double delta_angle = (M_PI / 2.0) / static_cast<double>(num_radial_grasps + 1);
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "delta_angle = " << delta_angle);
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "num_radial_grasps = " << num_radial_grasps);
-
-  // rotate & translate pose to be aligned with edge of cuboid
-  Eigen::Isometry3d grasp_pose_tcp = pose;
-  grasp_pose_tcp *= Eigen::AngleAxisd(rotation_angles[0], Eigen::Vector3d::UnitX()) *
-                    Eigen::AngleAxisd(rotation_angles[1], Eigen::Vector3d::UnitY()) *
-                    Eigen::AngleAxisd(rotation_angles[2], Eigen::Vector3d::UnitZ());
-  grasp_pose_tcp *= Eigen::AngleAxisd(corner_rotation, Eigen::Vector3d::UnitY());
-  grasp_pose_tcp.translation() += translation;
-
-  for (std::size_t i = 0; i < num_radial_grasps; i++)
-  {
-    // Eigen::Vector3d grasp_dir = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
-    // Eigen::Isometry3d radial_pose = grasp_pose_tcp;
-    grasp_pose_tcp *= Eigen::AngleAxisd(delta_angle, Eigen::Vector3d::UnitY());
-    grasp_poses_tcp.push_back(grasp_pose_tcp);
-    num_grasps_added++;
-  }
-  ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "num_grasps_added : grasp_poses_tcp.size() = "
-                                                          << num_grasps_added << " : " << grasp_poses_tcp.size());
-  return num_grasps_added;
-}
-
 bool TwoFingerGraspGenerator::graspIntersectionHelper(Eigen::Isometry3d cuboid_pose, double depth, double width,
                                                       double height, Eigen::Isometry3d grasp_pose_tcp,
-                                                      const GraspDataPtr grasp_data)
+                                                      const TwoFingerGraspDataPtr& grasp_data)
 {
   // TODO(davetcoleman): add parameter to enable vizualization commented lines after further testing
 
@@ -667,184 +752,9 @@ bool TwoFingerGraspGenerator::intersectionHelper(double t, double u1, double v1,
   return false;
 }
 
-bool TwoFingerGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const GraspDataPtr grasp_data,
-                                       std::vector<GraspCandidatePtr>& grasp_candidates,
-                                       const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                       double object_width)
-{
-  // Transform the grasp pose eef mount to the tcp grasp pose
-  Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
-
-  // The new grasp
-  moveit_msgs::Grasp new_grasp;
-
-  // Approach and retreat - aligned with eef to grasp transform
-  // set pregrasp
-  moveit_msgs::GripperTranslation pre_grasp_approach;
-  new_grasp.pre_grasp_approach.direction.header.stamp = ros::Time::now();
-  new_grasp.pre_grasp_approach.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->approach_distance_desired_;
-  new_grasp.pre_grasp_approach.min_distance = 0;  // NOT IMPLEMENTED
-  new_grasp.pre_grasp_approach.direction.header.frame_id = grasp_data->parent_link_->getName();
-
-  Eigen::Vector3d grasp_approach_vector = -1 * grasp_data->tcp_to_eef_mount_.translation();
-  grasp_approach_vector = grasp_approach_vector / grasp_approach_vector.norm();
-
-  new_grasp.pre_grasp_approach.direction.vector.x = grasp_approach_vector.x();
-  new_grasp.pre_grasp_approach.direction.vector.y = grasp_approach_vector.y();
-  new_grasp.pre_grasp_approach.direction.vector.z = grasp_approach_vector.z();
-
-  // set postgrasp
-  moveit_msgs::GripperTranslation post_grasp_retreat;
-  new_grasp.post_grasp_retreat.direction.header.stamp = ros::Time::now();
-  new_grasp.post_grasp_retreat.desired_distance = grasp_data->grasp_max_depth_ + grasp_data->retreat_distance_desired_;
-  new_grasp.post_grasp_retreat.min_distance = 0;  // NOT IMPLEMENTED
-  new_grasp.post_grasp_retreat.direction.header.frame_id = grasp_data->parent_link_->getName();
-  new_grasp.post_grasp_retreat.direction.vector.x = -1 * grasp_approach_vector.x();
-  new_grasp.post_grasp_retreat.direction.vector.y = -1 * grasp_approach_vector.y();
-  new_grasp.post_grasp_retreat.direction.vector.z = -1 * grasp_approach_vector.z();
-
-  // set grasp pose
-  geometry_msgs::PoseStamped grasp_pose_msg;
-  grasp_pose_msg.header.stamp = ros::Time::now();
-  grasp_pose_msg.header.frame_id = grasp_data->base_link_;
-
-  // name the grasp
-  static std::size_t grasp_id = 0;
-  new_grasp.id = "Grasp" + boost::lexical_cast<std::string>(grasp_id);
-  grasp_id++;
-
-  tf::poseEigenToMsg(grasp_pose_eef_mount, grasp_pose_msg.pose);
-  new_grasp.grasp_pose = grasp_pose_msg;
-
-  // set grasp postures e.g. hand closed
-  new_grasp.grasp_posture = grasp_data->grasp_posture_;
-
-  if (grasp_data->end_effector_type_ == FINGER)
-  {
-    // set minimum opening of fingers for pre grasp approach
-    double min_finger_open_on_approach = object_width + 2 * grasp_data->grasp_padding_on_approach_;
-    double percent_open;
-
-    // Create grasp with widest fingers possible ----------------------------------------------
-    percent_open = 1.0;
-    if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
-    {
-      debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
-                             grasp_data->grasp_padding_on_approach_);
-      return false;
-    }
-
-    new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
-
-    // Show visualization for widest grasp
-
-    grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
-
-    // Create grasp with middle width fingers -------------------------------------------------
-    percent_open = 0.5;
-    if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
-    {
-      debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
-                             grasp_data->grasp_padding_on_approach_);
-      return false;
-    }
-    new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
-    grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
-
-    // Create grasp with fingers at minimum width ---------------------------------------------
-    percent_open = 0.0;
-    if (!grasp_data->setGraspWidth(percent_open, min_finger_open_on_approach, new_grasp.pre_grasp_posture))
-    {
-      debugFailedOpenGripper(percent_open, min_finger_open_on_approach, object_width,
-                             grasp_data->grasp_padding_on_approach_);
-      return false;
-    }
-    new_grasp.grasp_quality = scoreFingerGrasp(grasp_pose_tcp, grasp_data, object_pose, percent_open);
-    grasp_candidates.push_back(std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose));
-
-    return true;
-  }
-
-  if (grasp_data->end_effector_type_ == SUCTION)
-  {
-    std::vector<double> suction_voxel_overlap;
-    new_grasp.grasp_quality =
-        scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
-    GraspCandidatePtr candidate = std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose);
-    candidate->setSuctionVoxelOverlap(suction_voxel_overlap);
-    grasp_candidates.push_back(candidate);
-    return true;
-  }
-
-  return false;
-}
-
-double TwoFingerGraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                  const GraspDataPtr& grasp_data, const Eigen::Isometry3d& cuboid_pose,
-                                                  const Eigen::Vector3d& object_size,
-                                                  std::vector<double>& suction_voxel_overlap)
-{
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                         "Scoring grasp at: \n\tpose:  ("
-                             << grasp_pose_tcp.translation().x() << ",\t" << grasp_pose_tcp.translation().y() << ",\t"
-                             << grasp_pose_tcp.translation().z() << ")\t("
-                             << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
-                             << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
-                             << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(2) << ")\n\tideal: ("
-                             << ideal_grasp_pose_.translation().x() << ",\t" << ideal_grasp_pose_.translation().y()
-                             << ",\t" << ideal_grasp_pose_.translation().z() << ")\t("
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
-
-  // get portion of score based on the orientation
-  Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
-  // Move the ideal top grasp to the box location
-  ideal_grasp_tcp.translation() = cuboid_pose.translation();
-  Eigen::Vector3d orientation_scores = SuctionGraspScorer::scoreRotationsFromDesired(grasp_pose_tcp, ideal_grasp_tcp);
-
-  // get portion of score based on the translation
-  Eigen::Vector3d translation_scores = SuctionGraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
-
-  // Score suction grasp overhang
-  double suction_overlap_score = SuctionGraspScorerGraspScorer::scoreSuctionVoxelOverlap(
-      grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap,
-      (show_grasp_overhang_ ? visual_tools_ : nullptr));
-
-  double total_score = 0;
-  double weight_total = 0;
-  total_score += orientation_scores[0] * grasp_score_weights_.orientation_x_score_weight_;
-  total_score += orientation_scores[1] * grasp_score_weights_.orientation_y_score_weight_;
-  total_score += orientation_scores[2] * grasp_score_weights_.orientation_z_score_weight_;
-  total_score += translation_scores[0] * grasp_score_weights_.translation_x_score_weight_;
-  total_score += translation_scores[1] * grasp_score_weights_.translation_y_score_weight_;
-  total_score += translation_scores[2] * grasp_score_weights_.translation_z_score_weight_;
-  total_score += suction_overlap_score * grasp_score_weights_.overhang_score_weight_;
-
-  weight_total += grasp_score_weights_.orientation_x_score_weight_ + grasp_score_weights_.orientation_y_score_weight_ +
-                  grasp_score_weights_.orientation_z_score_weight_ + grasp_score_weights_.translation_x_score_weight_ +
-                  grasp_score_weights_.translation_y_score_weight_ + grasp_score_weights_.translation_z_score_weight_ +
-                  grasp_score_weights_.overhang_score_weight_;
-
-  total_score /= weight_total;
-  // clang-format off
-  ROS_DEBUG_STREAM_NAMED(
-      "grasp_generator.scoreGrasp",
-      "Grasp score: " << "\n\torientation_score.x   = " << orientation_scores[0] << "\torientation_score.x weight = "<< grasp_score_weights_.orientation_x_score_weight_
-                      << "\n\torientation_score.y   = " << orientation_scores[1] << "\torientation_score.y weight = "<< grasp_score_weights_.orientation_y_score_weight_
-                      << "\n\torientation_score.z   = " << orientation_scores[2] << "\torientation_score.z weight = "<< grasp_score_weights_.orientation_z_score_weight_
-                      << "\n\ttranslation_score.x   = " << translation_scores[0] << "\ttranslation_score.x weight = "<< grasp_score_weights_.translation_x_score_weight_
-                      << "\n\ttranslation_score.y   = " << translation_scores[1] << "\ttranslation_score.y weight = "<< grasp_score_weights_.translation_y_score_weight_
-                      << "\n\ttranslation_score.z   = " << translation_scores[2] << "\ttranslation_score.z weight = "<< grasp_score_weights_.translation_z_score_weight_
-                      << "\n\tsuction overlap score = " << suction_overlap_score << "\toverhang_score weight      = "<< grasp_score_weights_.overhang_score_weight_
-                      << "\n\ttotal_score = " << total_score);
-  // clang-format on
-  return total_score;
-}
-
 double TwoFingerGraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                 const GraspDataPtr& grasp_data, const Eigen::Isometry3d& object_pose,
-                                                 double percent_open)
+                                                 const TwoFingerGraspDataPtr& grasp_data,
+                                                 const Eigen::Isometry3d& object_pose, double percent_open)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp", "starting to score grasp...");
 
@@ -940,238 +850,14 @@ double TwoFingerGraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_
   return total_score;
 }
 
-bool TwoFingerGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
-                                             double height, const moveit_grasps::GraspDataPtr grasp_data,
-                                             std::vector<GraspCandidatePtr>& grasp_candidates,
-                                             const GraspCandidateConfig grasp_candidate_config)
-{
-  bool result = false;
-  if (grasp_data->end_effector_type_ == FINGER)
-    result =
-        generateFingerGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config);
-  else if (grasp_data->end_effector_type_ == SUCTION)
-    result =
-        generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates, grasp_candidate_config);
-
-  if (result)
-    std::sort(grasp_candidates.begin(), grasp_candidates.end(), GraspFilter::compareGraspScores);
-
-  return result;
-}
-
-// X -> Depth
-// Y -> Width
-// Z -> Height
-bool TwoFingerGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth,
-                                                    double width, double height,
-                                                    const moveit_grasps::GraspDataPtr grasp_data,
-                                                    std::vector<GraspCandidatePtr>& grasp_candidates,
-                                                    const GraspCandidateConfig grasp_candidate_config)
-{
-  grasp_candidates.clear();
-  std::vector<Eigen::Isometry3d> grasp_poses_tcp;
-  ////////////////
-  // Re-orient the cuboid center top grasp so to be as close as possible to the ideal grasp
-  ////////////////
-
-  // Move the ideal grasp pose to the center of the top of the box
-  Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
-  Eigen::Isometry3d cuboid_center_top_grasp(cuboid_top_pose);
-  // Move the ideal top grasp to the correct location
-  ideal_grasp_tcp.translation() = cuboid_center_top_grasp.translation();
-  setIdealTCPGraspPose(ideal_grasp_tcp);
-  Eigen::Vector3d object_size(depth, width, height);
-
-  if (debug_top_grasps_)
-  {
-    visual_tools_->publishAxis(cuboid_top_pose, rviz_visual_tools::SMALL, "cuboid_top_pose");
-    visual_tools_->publishAxis(ideal_grasp_tcp, rviz_visual_tools::SMALL, "ideal_grasp_tcp");
-    visual_tools_->trigger();
-  }
-
-  ROS_DEBUG_STREAM_NAMED("grasp_generator", "cuboid_direction:\n" << cuboid_center_top_grasp.rotation() << "\n");
-  ROS_DEBUG_STREAM_NAMED("grasp_generator", "ideal_grasp_tcp:\n" << ideal_grasp_tcp.rotation() << "\n");
-
-  // If the ideal top grasp Z axis is in the opposite direction of the top pose then we rotate around X to flip the
-  // orientation vector
-  double dot_prodZ = (cuboid_center_top_grasp.rotation() * Eigen::Vector3d::UnitZ())
-                         .dot(ideal_grasp_tcp.rotation() * Eigen::Vector3d::UnitZ());
-  if (dot_prodZ < 0)
-  {
-    ROS_DEBUG_NAMED("grasp_generator", "flipping Z");
-    cuboid_center_top_grasp = cuboid_center_top_grasp * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "New cuboid_direction:\n" << cuboid_center_top_grasp.rotation() << "\n");
-  }
-
-  // If the ideal top grasp X axis is opposite the top pose then we rotate around Z
-  double dot_prodX = (cuboid_center_top_grasp.rotation() * Eigen::Vector3d::UnitX())
-                         .dot(ideal_grasp_tcp.rotation() * Eigen::Vector3d::UnitX());
-  if (dot_prodX < 0)
-  {
-    ROS_DEBUG_NAMED("generateSuctionGrasps", "flipping X");
-    cuboid_center_top_grasp = cuboid_center_top_grasp * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ());
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "New cuboid_direction:\n" << cuboid_center_top_grasp.rotation() << "\n");
-  }
-
-  ////////////////
-  // Create grasp candidate poses.
-  ////////////////
-  // First add the center point to ensure that it is a candidate
-
-  Eigen::Isometry3d center_grasp_pose_tcp =
-      cuboid_center_top_grasp * Eigen::Translation3d(0, 0, grasp_data->grasp_min_depth_);
-
-  if (debug_top_grasps_)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t"
-                                                             << height);
-    visual_tools_->publishAxisLabeled(cuboid_top_pose, "cuboid_top_pose", rviz_visual_tools::SMALL);
-    visual_tools_->publishWireframeCuboid(cuboid_top_pose, depth, width, 0.01, rviz_visual_tools::YELLOW);
-    visual_tools_->trigger();
-  }
-  grasp_poses_tcp.push_back(center_grasp_pose_tcp);
-
-  // We define min, max and inc for each for loop here for readability
-
-  // if X range is less than y range then we use x range for the xy range
-  double xy_increment = grasp_data->grasp_resolution_;
-  double y_min = 0;
-  double y_max = (width + grasp_data->active_suction_range_y_) / 2.0 - xy_increment;
-
-  double x_min = 0;
-  double x_max = (depth + grasp_data->active_suction_range_x_) / 2.0 - xy_increment;
-
-  double z_increment = grasp_data->grasp_depth_resolution_;
-  double z_min = z_increment;
-  double z_max = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
-
-  double yaw_increment = M_PI * (grasp_data->angle_resolution_ / 180.0);
-  double yaw_min = yaw_increment;
-  double yaw_max = 2.0 * M_PI;
-
-  // clang-format off
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_min:                  " << x_min);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_max:                  " << x_max);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "depth:                  " << depth);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_x: " << grasp_data->suction_voxel_matrix_->active_suction_range_x_);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_x_width:          " << grasp_data->suction_voxel_matrix_->voxel_x_width_);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_min:                  " << y_min);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_max:                  " << y_max);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "width:                  " << width);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_y: " << grasp_data->suction_voxel_matrix_->active_suction_range_y_);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_y_width:          " << grasp_data->suction_voxel_matrix_->voxel_y_width_);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_min:                  " << z_min);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_max:                  " << z_max);
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "xy_increment:           " << xy_increment);
-  // clang-format on
-
-  // For each range (X, Y, Z, Yaw) create copies of the grasp poses for each value in the range
-  std::size_t num_grasps;
-
-  // Add Depth grasps (Z-axis)
-  num_grasps = grasp_poses_tcp.size();
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps before Z:\t " << num_grasps);
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    for (double z = z_min; z <= z_max; z += z_increment)
-    {
-      Eigen::Isometry3d grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::Translation3d(0, 0, z);
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-    }
-  }
-  num_grasps = grasp_poses_tcp.size();
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Z:\t " << num_grasps);
-
-  // Add Y translation grasps
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    for (double y = y_max; y >= y_min; y -= xy_increment)
-    {
-      Eigen::Isometry3d grasp_pose_tcp;
-
-      grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::Translation3d(0, y, 0);
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-
-      grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::Translation3d(0, -y, 0);
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-    }
-  }
-  num_grasps = grasp_poses_tcp.size();
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Y:\t " << num_grasps);
-
-  // Add X translation grasps
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    for (double x = x_max; x >= x_min; x -= xy_increment)
-    {
-      Eigen::Isometry3d grasp_pose_tcp;
-
-      grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::Translation3d(x, 0, 0);
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-
-      grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::Translation3d(-x, 0, 0);
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-    }
-  }
-  num_grasps = grasp_poses_tcp.size();
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after X:\t " << num_grasps);
-
-  // Add rotated suction grasps (Yaw)
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    for (double yaw = yaw_min; yaw < yaw_max; yaw += yaw_increment)
-    {
-      Eigen::Isometry3d grasp_pose_tcp = grasp_poses_tcp[i] * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-      grasp_poses_tcp.push_back(grasp_pose_tcp);
-    }
-  }
-  num_grasps = grasp_poses_tcp.size();
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Yaw:\t " << num_grasps);
-
-  for (std::size_t i = 0; i < num_grasps; ++i)
-  {
-    Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;
-    addGrasp(grasp_pose_eef_mount, grasp_data, grasp_candidates, cuboid_top_pose, object_size, 0);
-    if (debug_top_grasps_)
-    {
-      visual_tools_->publishAxis(grasp_poses_tcp[i], rviz_visual_tools::MEDIUM, "tcp pose");
-      visual_tools_->publishAxis(grasp_pose_eef_mount, rviz_visual_tools::SMALL, "eef_mount pose");
-    }
-  }
-
-  if (debug_top_grasps_)
-  {
-    Eigen::Isometry3d ideal_copy = ideal_grasp_pose_;
-    ideal_copy.translation() += Eigen::Vector3d(0.0, 0.0, 1.0);
-    visual_tools_->publishAxisLabeled(ideal_copy, "ideal grasp orientation", rviz_visual_tools::MEDIUM);
-    visual_tools_->trigger();
-  }
-
-  if (!grasp_candidates.size())
-    ROS_WARN_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated 0 grasps");
-  else
-    ROS_INFO_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated " << grasp_candidates.size() << " grasp"
-                                                                                                                "s");
-
-  // Visualize animated grasps that have been generated
-  if (show_prefiltered_grasps_)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Animating all generated (candidate) grasps "
-                                                                      "before filtering");
-    visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
-  }
-
-  return true;
-}
-
 bool TwoFingerGraspGenerator::generateFingerGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
-                                                   double height, const moveit_grasps::GraspDataPtr grasp_data,
+                                                   double height, const TwoFingerGraspDataPtr& grasp_data,
                                                    std::vector<GraspCandidatePtr>& grasp_candidates,
-                                                   const GraspCandidateConfig grasp_candidate_config)
+                                                   const TwoFingerGraspCandidateConfig& grasp_candidate_config)
 {
   // Generate grasps over axes that aren't too wide to grip
   // Most default type of grasp is X axis
-  GraspCandidateConfig grasp_candidate_config_copy(grasp_candidate_config);
+  TwoFingerGraspCandidateConfig grasp_candidate_config_copy(grasp_candidate_config);
   if (grasp_candidate_config_copy.generate_x_axis_grasps_)
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "Generating grasps around x-axis of cuboid");
@@ -1226,109 +912,6 @@ bool TwoFingerGraspGenerator::generateFingerGrasps(const Eigen::Isometry3d& cubo
   }
 
   return true;
-}
-
-Eigen::Vector3d TwoFingerGraspGenerator::getPreGraspDirection(const moveit_msgs::Grasp& grasp,
-                                                              const std::string& ee_parent_link)
-{
-  // Grasp Pose Variables
-  Eigen::Isometry3d grasp_pose_eef_mount_eigen;
-  tf::poseMsgToEigen(grasp.grasp_pose.pose, grasp_pose_eef_mount_eigen);
-
-  // The direction of the pre-grasp in the frame of the parent link
-  Eigen::Vector3d pre_grasp_approach_direction =
-      Eigen::Vector3d(grasp.pre_grasp_approach.direction.vector.x, grasp.pre_grasp_approach.direction.vector.y,
-                      grasp.pre_grasp_approach.direction.vector.z);
-
-  // Decide if we need to change the approach_direction to the local frame of the end effector orientation
-  if (grasp.pre_grasp_approach.direction.header.frame_id == ee_parent_link)
-  {
-    // Apply/compute the approach_direction vector in the local frame of the grasp_pose orientation
-    return grasp_pose_eef_mount_eigen.rotation() * pre_grasp_approach_direction;
-  }
-  return pre_grasp_approach_direction;
-}
-
-geometry_msgs::PoseStamped TwoFingerGraspGenerator::getPreGraspPose(const GraspCandidatePtr& grasp_candidate,
-                                                                    const std::string& ee_parent_link)
-{
-  // Grasp Pose Variables
-  Eigen::Isometry3d grasp_pose_eef_mount_eigen;
-  tf::poseMsgToEigen(grasp_candidate->grasp_.grasp_pose.pose, grasp_pose_eef_mount_eigen);
-
-  // Get pre-grasp pose first
-  Eigen::Isometry3d pre_grasp_pose_eef_mount_eigen =
-      grasp_pose_eef_mount_eigen;  // Copy original grasp pose to pre-grasp pose
-
-  // Approach direction
-  Eigen::Vector3d pre_grasp_approach_direction_local = getPreGraspDirection(grasp_candidate->grasp_, ee_parent_link);
-
-  // Update the grasp matrix usign the new locally-framed approach_direction
-  pre_grasp_pose_eef_mount_eigen.translation() -=
-      pre_grasp_approach_direction_local * grasp_candidate->grasp_.pre_grasp_approach.desired_distance;
-
-  // Convert eigen pre-grasp position back to regular message
-  geometry_msgs::PoseStamped pre_grasp_pose_eef_mount_msg;
-  tf::poseEigenToMsg(pre_grasp_pose_eef_mount_eigen, pre_grasp_pose_eef_mount_msg.pose);
-
-  // Copy original header to new grasp
-  pre_grasp_pose_eef_mount_msg.header = grasp_candidate->grasp_.grasp_pose.header;
-
-  return pre_grasp_pose_eef_mount_msg;
-}
-
-void TwoFingerGraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate,
-                                                EigenSTL::vector_Isometry3d& grasp_waypoints)
-{
-  Eigen::Isometry3d grasp_pose;
-  tf::poseMsgToEigen(grasp_candidate->grasp_.grasp_pose.pose, grasp_pose);
-
-  const geometry_msgs::PoseStamped pregrasp_pose_msg =
-      TwoFingerGraspGenerator::getPreGraspPose(grasp_candidate, grasp_candidate->grasp_data_->parent_link_->getName());
-
-  // Create waypoints
-  Eigen::Isometry3d pregrasp_pose;
-  tf::poseMsgToEigen(pregrasp_pose_msg.pose, pregrasp_pose);
-
-  Eigen::Isometry3d lifted_grasp_pose = grasp_pose;
-  lifted_grasp_pose.translation().z() += grasp_candidate->grasp_data_->lift_distance_desired_;
-
-  // Solve for post grasp retreat
-  Eigen::Isometry3d retreat_pose = lifted_grasp_pose;
-  Eigen::Vector3d postgrasp_vector(grasp_candidate->grasp_.post_grasp_retreat.direction.vector.x,
-                                   grasp_candidate->grasp_.post_grasp_retreat.direction.vector.y,
-                                   grasp_candidate->grasp_.post_grasp_retreat.direction.vector.z);
-  postgrasp_vector.normalize();
-
-  retreat_pose.translation() +=
-      retreat_pose.rotation() * postgrasp_vector * grasp_candidate->grasp_.post_grasp_retreat.desired_distance;
-
-  grasp_waypoints.clear();
-  grasp_waypoints.resize(4);
-  grasp_waypoints[0] = pregrasp_pose;
-  grasp_waypoints[1] = grasp_pose;
-  grasp_waypoints[2] = lifted_grasp_pose;
-  grasp_waypoints[3] = retreat_pose;
-}
-
-void TwoFingerGraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
-                                                const rviz_visual_tools::colors& color, double approach_length)
-{
-  visual_tools_->publishArrow(grasp, color, rviz_visual_tools::MEDIUM);
-}
-
-bool TwoFingerGraspGenerator::visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
-                                                      const moveit::core::JointModelGroup* ee_jmg,
-                                                      double animation_speed)
-{
-  // Convert the grasp_candidates into a format moveit_visual_tools can use
-  std::vector<moveit_msgs::Grasp> grasps;
-  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
-  {
-    grasps.push_back(grasp_candidates[i]->grasp_);
-  }
-
-  return visual_tools_->publishAnimatedGrasps(grasps, ee_jmg, show_prefiltered_grasps_speed_);
 }
 
 }  // namespace moveit_grasps

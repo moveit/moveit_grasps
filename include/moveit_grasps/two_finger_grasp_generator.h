@@ -43,6 +43,9 @@
 #include <moveit_grasps/two_finger_grasp_scorer.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
 
+// Testing
+#include <gtest/gtest.h>
+
 namespace moveit_grasps
 {
 struct TwoFingerGraspCandidateConfig
@@ -107,7 +110,7 @@ struct TwoFingerGraspCandidateConfig
 };
 
 // Class
-class TwoFingerGraspGenerator
+class TwoFingerGraspGenerator : public GraspGenerator
 {
 public:
   // Eigen requires 128-bit alignment for the Eigen::Vector2d's array (of 2 doubles).
@@ -119,18 +122,10 @@ public:
    */
   TwoFingerGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
 
-  // TODO(davetcoleman): reinstate ability to generate bounding boxes
-  /**
-   * \brief Create possible grasp positions around a cuboid
-   * \param mesh_msg - model of object to grasp from perception
-   * \param cuboid_pose - centroid of object to grasp in world frame
-   * \param grasp_data data describing end effector
-   * \param grasp_candidates possible grasps generated
-   * \return true if successful
+  /* brief sets internal grasp_candidate_config_ variable
+   * \param grasp_candidate_config - a config describing the grasps to be generated
    */
-  // bool generateGrasps(const shape_msgs::Mesh& mesh_msg, const Eigen::Isometry3d& cuboid_pose,
-  //                          const moveit_grasps::GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>&
-  //                          grasp_candidates);
+  void setGraspCandidateConfig(const TwoFingerGraspCandidateConfig grasp_candidate_config);
 
   /**
    * \brief Create possible grasp positions around a cuboid
@@ -144,9 +139,23 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                      const TwoFingerGraspCandidateConfig grasp_candidate_config = TwoFingerGraspCandidateConfig());
+                      const TwoFingerGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
+  /**
+   * \brief creates grasp messages from the generated grasp poses
+   * \param grasp_pose_eef_mount - the grasp pose. (Note: this is the pose of the eef mount not the position of the tcp)
+   * \param grasp_data data describing the end effector
+   * \param grasp_candidates - list possible grasps
+   * \param object_pose - pose of object to grasp
+   * \param object_size - size of object to grasp
+   * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
+   * \return true on success
+   */
+  bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const TwoFingerGraspDataPtr& grasp_data,
+                std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Isometry3d& object_pose,
+                const Eigen::Vector3d& object_size, double object_width);
+
+protected:
   /**
    * \brief Create grasp positions around one axis of a cuboid
    * \param cuboid_pose:      centroid of object to grasp in world frame
@@ -160,8 +169,8 @@ public:
    * \return true if successful
    */
   bool generateCuboidAxisGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                                grasp_axis_t axis, const GraspDataPtr grasp_data,
-                                const GraspCandidateConfig& grasp_candidate_config,
+                                grasp_axis_t axis, const TwoFingerGraspDataPtr& grasp_data,
+                                const TwoFingerGraspCandidateConfig& grasp_candidate_config,
                                 std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
@@ -219,7 +228,7 @@ public:
    * \return true if the grasp intersects the cuboid
    */
   bool graspIntersectionHelper(Eigen::Isometry3d cuboid_pose, double depth, double width, double height,
-                               Eigen::Isometry3d grasp_pose_tcp, const GraspDataPtr grasp_data);
+                               Eigen::Isometry3d grasp_pose_tcp, const TwoFingerGraspDataPtr& grasp_data);
 
   /**
    * \brief helper function to test intersection of a line with a plane
@@ -233,33 +242,6 @@ public:
                           double& v);
 
   /**
-   * \brief creates grasp messages from the generated grasp poses
-   * \param grasp_pose_eef_mount - the grasp pose. (Note: this is the pose of the eef mount not the position of the tcp)
-   * \param grasp_data data describing the end effector
-   * \param grasp_candidates - list possible grasps
-   * \param object_pose - pose of object to grasp
-   * \param object_size - size of object to grasp
-   * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
-   * \return true on success
-   */
-  bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const GraspDataPtr grasp_data,
-                std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Isometry3d& object_pose,
-                const Eigen::Vector3d& object_size, double object_width);
-
-  /**
-   * \brief Score the generated suction grasp poses
-   * \param grasp_pose_tcp - the pose of the grasp
-   * \param grasp_data - data describing the end effector
-   * \param cuboid_pose - the pose of the object being grasped
-   * \param object size - the extents of the object being grasped
-   * \param suction_voxel_overlap - all voxels with a percentage of coverage above some cutoff
-   * \return a score with positive being better
-   */
-  double scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
-                           const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
-                           std::vector<double>& suction_voxel_overlap);
-
-  /**
    * \brief Score the generated finger grasp poses
    * \param grasp_pose_tcp - the grasp pose of the tcp
    * \param grasp_data - data describing the end effector
@@ -267,157 +249,28 @@ public:
    * \param percent_open - percentage that the grippers are open. 0.0 -> grippers are at object width + padding
    * \return a score with positive being better
    */
-  double scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const GraspDataPtr& grasp_data,
+  double scoreFingerGrasp(const Eigen::Isometry3d& grasp_pose_tcp, const TwoFingerGraspDataPtr& grasp_data,
                           const Eigen::Isometry3d& object_pose, double percent_open);
+  bool
+  generateFingerGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
+                       const TwoFingerGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
+                       const TwoFingerGraspCandidateConfig& grasp_candidate_config = TwoFingerGraspCandidateConfig());
 
-  /**
-   * \brief Get the grasp direction vector relative to the world frame
-   * \param grasp
-   * \param name of parent link
-   * \return the approach direction
-   */
-  static Eigen::Vector3d getPreGraspDirection(const moveit_msgs::Grasp& grasp, const std::string& ee_parent_link);
-  //  static Eigen::Vector3d getPostGraspDirection(const moveit_msgs::Grasp &grasp, const std::string &ee_parent_link);
+public:
+  TwoFingerGraspScoreWeights grasp_score_weights_;
 
-  /**
-   * \brief Using an input grasp description, get the pregrasp pose. The pregrasp pose is the grasp pose translated
-   * backwards in the grasp frame away from the object being grasped.
-   * \param grasp
-   * \param name of parent link
-   * \return pregrasp pose
-   */
-  static geometry_msgs::PoseStamped getPreGraspPose(const GraspCandidatePtr& grasp_candidate,
-                                                    const std::string& ee_parent_link);
-  /**
-   * \brief Compute the pre-grasp, grasp, lift and retreat poses for a grasp candidate
-   * \param grasp_candidate - the grasp candidate
-   * \param grasp_waypoints - a reference to a vector that will be populated with the pre-grasp, grasp, lift and retreat
-   * poses in that order.
-   */
-  static void getGraspWaypoints(const GraspCandidatePtr& grasp_candidate, EigenSTL::vector_Isometry3d& grasp_waypoints);
+protected:
+  TwoFingerGraspCandidateConfig grasp_candidate_config_;
 
-  /**
-   * \brief Helper to convert a robot-specific grasp to an arrow pointed in the right direction
-   * \param grasp - the grasp to show
-   * \param arm - the planning group of the arm we want to display
-   * \return true on success
-   */
-  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
-                         const rviz_visual_tools::colors& color, double approach_length = 0.1);
-
-  /**
-   * \brief Getter for Verbose
-   */
-  bool getVerbose()
-  {
-    return verbose_;
-  }
-
-  /**
-   * \brief Getter for ideal grasp pose
-   */
-  Eigen::Isometry3d getIdealTCPGraspPose()
-  {
-    return ideal_grasp_pose_;
-  }
-  [[deprecated("getIdealGraspPose has been renamed to getIdealTCPGraspPose")]] Eigen::Isometry3d getIdealGraspPose()
-  {
-    return getIdealTCPGraspPose();
-  }
-
-  /**
-   * \brief Setter for ideal grasp pose for scoring
-   */
-  void setIdealTCPGraspPose(Eigen::Isometry3d ideal_pose)
-  {
-    ideal_grasp_pose_ = ideal_pose;
-  }
-  [[deprecated("setIdealGraspPose has been renamed to setIdealTCPGraspPose")]] void
-  setIdealGraspPose(Eigen::Isometry3d ideal_pose)
-  {
-    setIdealTCPGraspPose(ideal_pose);
-  }
-
-  /**
-   * \brief Setter for the roll pitch yall ideal grasp pose for scoring
-   */
-  void setIdealTCPGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy);
-  [[deprecated("setIdealGraspPoseRPY has been renamed to setIdealTCPGraspPoseRPY")]] void
-  setIdealGraspPoseRPY(const std::vector<double>& ideal_grasp_orientation_rpy)
-  {
-    setIdealTCPGraspPoseRPY(ideal_grasp_orientation_rpy);
-  }
-
-  /**
-   * \brief Setter for grasp score weights
-   */
-  void setGraspScoreWeights(GraspScoreWeights grasp_score_weights)
-  {
-    grasp_score_weights_ = grasp_score_weights;
-  }
-
-  /**
-   * \brief Setter for grasp score weights
-   */
-  GraspScoreWeights getGraspScoreWeights()
-  {
-    return grasp_score_weights_;
-  }
-
-  /**
-   * \brief Setter for Verbose
-   */
-  void setVerbose(bool verbose)
-  {
-    verbose_ = verbose;
-  }
-
-  /**
-   * \brief Visualize animated grasps
-   * \return true on success
-   */
-  bool visualizeAnimatedGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates,
-                               const moveit::core::JointModelGroup* ee_jmg, double animation_speed);
-
-  // Ideal grasp pose for scoring purposes
-  Eigen::Isometry3d ideal_grasp_pose_;
-
-private:
-  bool generateFingerGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                            const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                            const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
-
-  bool generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width, double height,
-                             const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
-                             const GraspCandidateConfig grasp_candidate_config = GraspCandidateConfig());
-
-  // class for publishing stuff to rviz
-  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-
-  // Display more output both in console
-  bool verbose_;
-
-  // Visual debug settings
-  bool debug_top_grasps_;
-  bool show_prefiltered_grasps_;
-  double show_prefiltered_grasps_speed_;
-  bool show_grasp_overhang_;
-
-  // Shared node handle
-  ros::NodeHandle nh_;
-
-  // Transform from frame of box to global frame
-  Eigen::Isometry3d object_global_transform_;
-
-  double min_grasp_distance_, max_grasp_distance_;
-  Eigen::Vector3d min_translations_, max_translations_;
-
-  GraspScoreWeights grasp_score_weights_;
+  // Tests
+  FRIEND_TEST(TwoFingerGraspGeneratorTest, GenerateFaceGrasps);
+  FRIEND_TEST(TwoFingerGraspGeneratorTest, GenerateEdgeGrasps);
+  FRIEND_TEST(TwoFingerGraspGeneratorTest, GenerateCornerGrasps);
 
 };  // end of class
 
-typedef std::shared_ptr<GraspGenerator> GraspGeneratorPtr;
-typedef std::shared_ptr<const GraspGenerator> GraspGeneratorConstPtr;
+typedef std::shared_ptr<TwoFingerGraspGenerator> TwoFingerGraspGeneratorPtr;
+typedef std::shared_ptr<const TwoFingerGraspGenerator> TwoFingerGraspGeneratorConstPtr;
 
 }  // namespace
 

@@ -46,7 +46,7 @@
 #include <gtest/gtest.h>
 
 // Grasp
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
@@ -74,7 +74,7 @@ public:
     ASSERT_TRUE(arm_jmg_ != nullptr);
     visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
         robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
-    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_);
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
     grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
     grasp_data_ =
         std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
@@ -87,9 +87,9 @@ protected:
   bool verbose_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
   moveit_grasps::GraspFilterPtr grasp_filter_;
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
   const robot_model::JointModelGroup* arm_jmg_;
 };  // class GraspFilterTest
@@ -123,7 +123,8 @@ TEST_F(GraspFilterTest, TestGraspFilter)
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
     // Configure the desired types of grasps
-    moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+        moveit_grasps::TwoFingerGraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;

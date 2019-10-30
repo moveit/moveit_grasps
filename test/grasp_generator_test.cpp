@@ -45,17 +45,17 @@
 #include <gtest/gtest.h>
 
 // Grasp generation
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 
 // Grasp Data
 #include <moveit_grasps/two_finger_grasp_data.h>
 
 namespace moveit_grasps
 {
-class GraspGeneratorTest : public ::testing::Test
+class TwoFingerGraspGeneratorTest : public ::testing::Test
 {
 public:
-  GraspGeneratorTest() : nh_("~"), verbose_(true), ee_group_name_("hand")
+  TwoFingerGraspGeneratorTest() : nh_("~"), verbose_(true), ee_group_name_("hand")
   {
   }
   void SetUp() override
@@ -72,17 +72,17 @@ protected:
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
-};  // class GraspGenerator
+};  // class TwoFingerGraspGeneratorTest
 
-TEST_F(GraspGeneratorTest, ConstructDestruct)
+TEST_F(TwoFingerGraspGeneratorTest, ConstructDestruct)
 {
-  GraspGenerator grasp_generator(visual_tools_, verbose_);
+  TwoFingerGraspGenerator grasp_generator(visual_tools_, verbose_);
 }
 
-TEST_F(GraspGeneratorTest, GraspCandidateConfig)
+TEST_F(TwoFingerGraspGeneratorTest, TwoFingerGraspCandidateConfig)
 {
   // Default constructor
-  GraspCandidateConfig grasp_candidate_config;
+  TwoFingerGraspCandidateConfig grasp_candidate_config;
   EXPECT_TRUE(grasp_candidate_config.enable_corner_grasps_);
 
   // Grasp Types
@@ -121,13 +121,13 @@ TEST_F(GraspGeneratorTest, GraspCandidateConfig)
   EXPECT_FALSE(grasp_candidate_config.enable_edge_grasps_);
 }
 
-TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
+TEST_F(TwoFingerGraspGeneratorTest, GenerateFaceGrasps)
 {
-  GraspCandidateConfig grasp_candidate_config;
+  TwoFingerGraspCandidateConfig grasp_candidate_config;
   grasp_candidate_config.enable_face_grasps_ = true;
 
   // Construct
-  GraspGenerator grasp_generator(visual_tools_, verbose_);
+  TwoFingerGraspGenerator grasp_generator(visual_tools_, verbose_);
 
   // Input
   Eigen::Isometry3d cuboid_pose = Eigen::Isometry3d::Identity();
@@ -192,13 +192,13 @@ TEST_F(GraspGeneratorTest, GenerateFaceGrasps)
   EXPECT_TRUE(grasp->segmented_cartesian_traj_.empty());
 }
 
-TEST_F(GraspGeneratorTest, GenerateEdgeGrasps)
+TEST_F(TwoFingerGraspGeneratorTest, GenerateEdgeGrasps)
 {
-  GraspCandidateConfig grasp_candidate_config;
+  TwoFingerGraspCandidateConfig grasp_candidate_config;
   grasp_candidate_config.enable_edge_grasps_ = true;
 
   // Construct
-  GraspGenerator grasp_generator(visual_tools_, verbose_);
+  TwoFingerGraspGenerator grasp_generator(visual_tools_, verbose_);
 
   // Input
   Eigen::Isometry3d cuboid_pose = Eigen::Isometry3d::Identity();
@@ -232,13 +232,13 @@ TEST_F(GraspGeneratorTest, GenerateEdgeGrasps)
   EXPECT_EQ(NUM_EXPECTED_GRASPS, grasp_candidates.size());
 }
 
-TEST_F(GraspGeneratorTest, GenerateCornerGrasps)
+TEST_F(TwoFingerGraspGeneratorTest, GenerateCornerGrasps)
 {
-  GraspCandidateConfig grasp_candidate_config;
+  TwoFingerGraspCandidateConfig grasp_candidate_config;
   grasp_candidate_config.enable_corner_grasps_ = true;
 
   // Construct
-  GraspGenerator grasp_generator(visual_tools_, verbose_);
+  TwoFingerGraspGenerator grasp_generator(visual_tools_, verbose_);
 
   // Input
   Eigen::Isometry3d cuboid_pose = Eigen::Isometry3d::Identity();

@@ -43,7 +43,7 @@
 #include <Eigen/Geometry>
 
 // Grasp generation
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 
 // Grasp Data
 #include <moveit_grasps/two_finger_grasp_data.h>
@@ -59,7 +59,7 @@ private:
   ros::NodeHandle nh_;
 
   // Grasp generator
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
 
   // Tool for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
@@ -116,7 +116,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_, true);
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_, true);
     grasp_generator_->setVerbose(true);
 
     // ---------------------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // We also set custom grasp score weights
-    moveit_grasps::GraspScoreWeights grasp_score_weights;
+    moveit_grasps::TwoFingerGraspScoreWeights grasp_score_weights;
     grasp_score_weights.orientation_x_score_weight_ = 2.0;
     grasp_score_weights.orientation_y_score_weight_ = 2.0;
     grasp_score_weights.orientation_z_score_weight_ = 2.0;
@@ -191,7 +191,8 @@ public:
     std::vector<moveit_grasps::GraspCandidatePtr> possible_grasps;
 
     // Configure the desired types of grasps
-    moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+        moveit_grasps::TwoFingerGraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.enable_edge_grasps_ = true;

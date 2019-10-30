@@ -51,7 +51,7 @@
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 // Grasp
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 #include <moveit_grasps/grasp_filter.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
 #include <moveit_grasps/grasp_planner.h>
@@ -153,7 +153,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_);
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
