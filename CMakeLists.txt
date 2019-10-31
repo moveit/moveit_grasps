@@ -161,8 +161,8 @@ if(CATKIN_ENABLE_TESTING)
     ${Boost_LIBRARIES}
     )
 
-  add_rostest_gtest(grasp_generator_test test/grasp_generator_test.test test/grasp_generator_test.cpp)
-  target_link_libraries(grasp_generator_test
+  add_rostest_gtest(two_finger_grasp_generator_test test/two_finger_grasp_generator_test.test test/two_finger_grasp_generator_test.cpp)
+  target_link_libraries(two_finger_grasp_generator_test
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
