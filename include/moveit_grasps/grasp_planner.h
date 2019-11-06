@@ -43,7 +43,11 @@
 #include <ros/ros.h>
 
 // moveit_grasps
-#include <moveit_grasps/grasp_filter.h>
+#include <moveit_grasps/grasp_candidate.h>
+#include <moveit_grasps/grasp_generator.h>
+
+// moveit
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 namespace moveit_grasps
 {

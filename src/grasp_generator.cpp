@@ -803,17 +803,10 @@ double GraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_pose_tcp
   Eigen::Vector3d translation_scores = GraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
 
   // Score suction grasp overhang
-  double suction_overlap_score;
-  if (show_grasp_overhang_)
-  {
-    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
-                                                                  suction_voxel_overlap, visual_tools_);
-  }
-  else
-  {
-    suction_overlap_score = GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
-                                                                  suction_voxel_overlap);
-  }
+  double suction_overlap_score =
+      GraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap,
+                                            (show_grasp_overhang_ ? visual_tools_ : nullptr));
+
   double total_score = 0;
   double weight_total = 0;
   total_score += orientation_scores[0] * grasp_score_weights_.orientation_x_score_weight_;
