@@ -8,7 +8,7 @@ moveit_grasps:
 
     # Show hand of generated grasps
     show_prefiltered_grasps: true
-    show_prefiltered_grasps_speed: 0.01
+    show_prefiltered_grasps_speed: 0.001
 
     # --------------------------------
     # Finger gripper specific settings
