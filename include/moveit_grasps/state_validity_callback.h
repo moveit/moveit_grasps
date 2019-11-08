@@ -39,6 +39,13 @@
 #ifndef MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
 #define MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
 
+// Rviz
+#include <moveit_visual_tools/moveit_visual_tools.h>
+
+// MoveIt
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+#include <moveit/robot_state/robot_state.h>
+
 namespace
 {
 bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool verbose, double verbose_speed,

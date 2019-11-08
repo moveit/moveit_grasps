@@ -47,7 +47,7 @@
 
 // Grasp
 #include <moveit_grasps/two_finger_grasp_generator.h>
-#include <moveit_grasps/grasp_filter.h>
+#include <moveit_grasps/two_finger_grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
 
@@ -75,7 +75,8 @@ public:
     visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
         robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
     grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
-    grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+    grasp_filter_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
     grasp_data_ =
         std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
@@ -88,7 +89,7 @@ protected:
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
-  moveit_grasps::GraspFilterPtr grasp_filter_;
+  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
   moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
   const robot_model::JointModelGroup* arm_jmg_;
@@ -148,7 +149,7 @@ TEST_F(GraspFilterTest, TestGraspFilter)
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "grasp_filter_test");
+  ros::init(argc, argv, "two_finger_grasp_filter_test");
 
   // run test
   int result = RUN_ALL_TESTS();

@@ -61,7 +61,6 @@
 // C++
 #include <boost/thread.hpp>
 #include <math.h>
-#define _USE_MATH_DEFINES
 
 namespace moveit_grasps
 {
@@ -158,10 +157,10 @@ public:
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
    * \return number of grasps remaining
    */
-  bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                    planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
-                    bool filter_pregrasp = false);
+  virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                            planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                            const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
+                            bool filter_pregrasp = false);
 
   /**
    * \brief Filter grasps by cutting plane
@@ -202,7 +201,7 @@ public:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  bool processCandidateGrasp(IkThreadStructPtr& ik_thread_struct);
+  virtual bool processCandidateGrasp(IkThreadStructPtr& ik_thread_struct);
 
   /**
    * \brief Helper for the thread function to find IK solutions
@@ -211,24 +210,6 @@ public:
   bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
                       GraspCandidatePtr& grasp_candidate,
                       const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
-
-  /**
-   * \brief Check if ik solution is in collision with fingers closed
-   * \return true on success
-   */
-  bool checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
-                            GraspCandidatePtr& grasp_candidate,
-                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
-
-  /**
-   * \brief  For suction grippers, check that at least one voxel has an overlap with the grasp target greater than the
-   *         threshold. If not, the grasp_candidate is removed from the vector. This should be used as a pre-filter
-   *          step before IK.
-   * \param grasp_candidates - All grasp candidates
-   * \param threshold - some fractional cutoff where at least one voxel must have > threshold overlap with the target
-   */
-  void preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
-                                      double threshold);
 
   /**
    * \brief add a cutting plane
@@ -304,7 +285,7 @@ public:
     return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
   }
 
-private:
+protected:
   // Allow a writeable robot state
   robot_state::RobotStatePtr robot_state_;
 

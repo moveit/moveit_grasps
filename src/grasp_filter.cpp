@@ -429,47 +429,6 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return remaining_grasps;
 }
 
-void GraspFilter::preFilterBySuctionVoxelOverlap(std::vector<GraspCandidatePtr>& grasp_candidates, double threshold)
-{
-  // We pre-filter by removing all candidates with less than some overlap with the desired object.
-  std::size_t grasp_candidates_before = grasp_candidates.size();
-  std::size_t count = 0;
-  for (std::size_t ix = 0; ix < grasp_candidates.size();)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Grasp candidate " << count++);
-    bool valid = false;
-    for (double& voxel_overlap : grasp_candidates[ix]->suction_voxel_overlap_)
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "threshold: " << threshold << "\tvoxel score "
-                                                                      << voxel_overlap);
-      if (voxel_overlap > threshold)
-      {
-        valid = true;
-        break;
-      }
-    }
-    if (!valid)
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Invalid");
-      grasp_candidates.erase(grasp_candidates.begin() + ix);
-    }
-    else
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Valid");
-      ++ix;
-    }
-  }
-  if (statistics_verbose_)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "GRASP PRE-FILTER RESULTS ");
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "total_grasp_candidates:     " << grasp_candidates_before);
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "remaining grasp candidates: " << grasp_candidates.size());
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
-  }
-}
-
 bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
@@ -506,9 +465,8 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
       &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->verbose_,
       collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
-  // Set gripper position (how open the fingers are) to the custom open position
-  if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
-    grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
+  // Set gripper position (eg. how open the fingers are) to the custom open position
+  grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
 
   // Solve IK Problem for grasp posture
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
@@ -520,17 +478,6 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
 
   // Copy solution to seed state so that next solution is faster
   ik_thread_struct->ik_seed_state_ = grasp_candidate->grasp_ik_solution_;
-
-  // Check if IK solution for grasp pose is valid for fingers closed as well
-  if (grasp_candidate->grasp_data_->end_effector_type_ == FINGER)
-  {
-    if (!checkFingersClosedIK(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution with CLOSED fingers");
-      grasp_candidate->grasp_filtered_by_ik_closed_ = true;
-      return false;
-    }
-  }
 
   // Start pre-grasp section
   if (ik_thread_struct->filter_pregrasp_)  // optionally check the pregrasp
@@ -596,23 +543,6 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   {
     ROS_ERROR_STREAM_NAMED("grasp_filter",
                            "Unknown MoveItErrorCode from IK solver: " << ik_thread_struct->error_code_.val);
-    return false;
-  }
-
-  return true;
-}
-
-bool GraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
-                                       GraspCandidatePtr& grasp_candidate,
-                                       const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
-{
-  // Set gripper position (how open the fingers are) to CLOSED
-  grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
-
-  // Set callback function
-  if (!constraint_fn(ik_thread_struct->robot_state_.get(), grasp_candidate->grasp_data_->arm_jmg_, &ik_solution[0]))
-  {
-    ROS_WARN_STREAM_NAMED("grasp_filter", "Grasp filtered because in collision with fingers CLOSED");
     return false;
   }
 

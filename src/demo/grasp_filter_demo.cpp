@@ -58,7 +58,7 @@
 
 // Grasp
 #include <moveit_grasps/two_finger_grasp_generator.h>
-#include <moveit_grasps/grasp_filter.h>
+#include <moveit_grasps/two_finger_grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
 
@@ -156,7 +156,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
-    grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(robot_state, visual_tools_);
+    grasp_filter_ = std::make_shared<moveit_grasps::TwoFingerGraspFilter>(robot_state, visual_tools_);
 
     // ---------------------------------------------------------------------------------------------
     // Clear Markers
@@ -265,7 +265,7 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // Grasp filter
-  moveit_grasps::GraspFilterPtr grasp_filter_;
+  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
 
   // data for generating grasps
   moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
