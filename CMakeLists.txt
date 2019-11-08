@@ -85,6 +85,8 @@ target_link_libraries(${PROJECT_NAME}
 # Grasp Filter Library
 add_library(${PROJECT_NAME}_filter
   src/grasp_filter.cpp
+  src/suction_grasp_filter.cpp
+  src/two_finger_grasp_filter.cpp
   src/grasp_planner.cpp
 )
 target_link_libraries(${PROJECT_NAME}_filter
