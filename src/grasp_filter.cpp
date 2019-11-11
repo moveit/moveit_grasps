@@ -654,7 +654,7 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
                                    rviz_visual_tools::SMALL, size);
     // Publish in batch
     visual_tools_->trigger();
-    ros::Duration(.1).sleep();
+    ros::Duration(.01).sleep();
   }
 
   return true;

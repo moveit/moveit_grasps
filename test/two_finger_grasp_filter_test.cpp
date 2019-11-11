@@ -133,8 +133,9 @@ TEST_F(GraspFilterTest, TestGraspFilter)
     grasp_generator_config.generate_z_axis_grasps_ = true;
 
     // generate grasps
+    grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
     grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                     grasp_candidates, grasp_generator_config);
+                                     grasp_candidates);
 
     // Filter the grasp for only the ones that are reachable
     bool filter_pregrasps = true;

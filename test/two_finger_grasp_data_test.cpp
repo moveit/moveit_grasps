@@ -77,8 +77,9 @@ TEST_F(TwoFingerGraspDataTest, CheckConfigValues)
 {
   // Grasp Pose To EEF Pose
   EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().x(), 0);
-  EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().y(), 0);
-  EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().z(), -0.105);
+  double tolerance = 0.000001;
+  EXPECT_LT(grasp_data_->tcp_to_eef_mount_.translation().y() - (0), tolerance);
+  EXPECT_LT(grasp_data_->tcp_to_eef_mount_.translation().z() - (-0.105), tolerance);
 
   // Pre Grasp Posture
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");

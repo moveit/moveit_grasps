@@ -38,7 +38,7 @@
 
 #include <rviz_visual_tools/rviz_visual_tools.h>
 
-#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
 #include <string>
 #include <vector>
@@ -88,7 +88,7 @@ public:
     ROS_ASSERT_MSG(grasp_data_->loadGraspData(nh_, ee_group_name_), "Failed to load Grasp Data parameters.");
 
     // load grasp generator
-    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_, verbose));
+    grasp_generator_.reset(new moveit_grasps::TwoFingerGraspGenerator(visual_tools_, verbose));
 
     // initialize cuboid size
     depth_ = CUBOID_MIN_SIZE;
@@ -120,12 +120,14 @@ public:
     ROS_INFO_STREAM_NAMED(name_, "Generating grasps");
 
     grasp_candidates_.clear();
-    moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+        moveit_grasps::TwoFingerGraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;
+    grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
     grasp_generator_->generateGrasps(visual_tools_->convertPose(cuboid_pose_), depth_, width_, height_, grasp_data_,
-                                     grasp_candidates_, grasp_generator_config);
+                                     grasp_candidates_);
 
     // SHOW GRASP POSE
     visual_tools_->prompt("Press 'next' to show an example eef and grasp pose");
@@ -207,7 +209,7 @@ private:
   double width_;
   double height_;
   geometry_msgs::Pose cuboid_pose_;
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   std::vector<GraspCandidatePtr> grasp_candidates_;
   moveit_grasps::TwoFingerGraspDataPtr grasp_data_;

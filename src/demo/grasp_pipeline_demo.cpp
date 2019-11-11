@@ -169,8 +169,6 @@ public:
     grasp_score_weights.translation_z_score_weight_ = 1.0;
     // Finger gripper specific weights.
     // Note that we do not need to set the suction gripper specific weights for our finger gripper.
-    grasp_score_weights.depth_score_weight_ = 2.0;
-    grasp_score_weights.width_score_weight_ = 2.0;
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
     // ---------------------------------------------------------------------------------------------
@@ -212,15 +210,17 @@ public:
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
     // Configure the desired types of grasps
-    moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+        moveit_grasps::TwoFingerGraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;
     grasp_generator_config.generate_x_axis_grasps_ = true;
     grasp_generator_config.generate_z_axis_grasps_ = true;
 
+    grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
     if (!grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), object_x_depth, object_y_width,
-                                          object_z_height, grasp_data_, grasp_candidates, grasp_generator_config))
+                                          object_z_height, grasp_data_, grasp_candidates))
     {
       ROS_ERROR_NAMED(LOGNAME, "Grasp generator failed to generate any valid grasps");
       return false;
@@ -471,7 +471,7 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // MoveIt! Grasps
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
 
   // Robot-specific data for generating grasps
   moveit_grasps::TwoFingerGraspDataPtr grasp_data_;

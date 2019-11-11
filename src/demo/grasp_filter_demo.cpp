@@ -212,8 +212,9 @@ public:
       grasp_generator_config.generate_x_axis_grasps_ = true;
       grasp_generator_config.generate_z_axis_grasps_ = true;
 
+      grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                       grasp_candidates, grasp_generator_config);
+                                       grasp_candidates);
 
       // add grasps at variable depth
       // grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_,

@@ -223,8 +223,9 @@ public:
       grasp_visuals_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
       grasp_visuals_->trigger();
 
+      grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                       possible_grasps, grasp_generator_config);
+                                       possible_grasps);
 
       if (possible_grasps.size() > 0)
       {
