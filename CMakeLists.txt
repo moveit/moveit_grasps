@@ -66,11 +66,10 @@ include_directories(
 # Grasp Library
 add_library(${PROJECT_NAME}
   src/grasp_candidate.cpp
-  src/two_finger_grasp_data.cpp
-  src/suction_grasp_data.cpp
   src/grasp_data.cpp
   src/grasp_generator.cpp
   src/grasp_scorer.cpp
+  src/suction_grasp_candidate.cpp
   src/suction_grasp_data.cpp
   src/suction_grasp_generator.cpp
   src/suction_grasp_scorer.cpp

@@ -32,101 +32,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@picknik.ai>
-   Desc:   Filters grasps based on kinematic feasibility and collision
+/* Author: Mike Lautman <mike@picknik.ai>
+   Desc:   Filters suction grasps based on kinematic feasibility and collision
 */
 
 #include <moveit_grasps/suction_grasp_candidate.h>
 
 namespace moveit_grasps
 {
-GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Isometry3d cuboid_pose)
-  : grasp_(grasp)
-  , grasp_data_(grasp_data)
-  , cuboid_pose_(cuboid_pose)
-  , grasp_filtered_by_ik_(false)
-  , grasp_filtered_by_cutting_plane_(false)
-  , grasp_filtered_by_orientation_(false)
-  , grasp_filtered_by_ik_closed_(false)
-  , pregrasp_filtered_by_ik_(false)
+SuctionGraspCandidate::SuctionGraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data,
+                                             Eigen::Isometry3d cuboid_pose)
+  : GraspCandidate::GraspCandidate(grasp, grasp_data_, cuboid_pose)
 {
 }
-
-bool GraspCandidate::setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap)
-{
-  if (grasp_data_->end_effector_type_ == SUCTION)
-  {
-    suction_voxel_overlap_ = suction_voxel_overlap;
-    return true;
-  }
-  return false;
-}
-
-const std::vector<double> GraspCandidate::getSuctionVoxelOverlap()
-{
-  return suction_voxel_overlap_;
-}
-
-bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr& robot_state)
-{
-  // Error check
-  if (pregrasp_ik_solution_.empty())
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_candidate", "No pregrasp ik solution available to set");
-    return false;
-  }
-
-  // Apply IK solved arm joints to state
-  robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, pregrasp_ik_solution_);
-
-  // Set end effector to correct configuration
-  grasp_data_->setRobotState(robot_state, grasp_.pre_grasp_posture);
-
-  return true;
-}
-
-bool GraspCandidate::getGraspStateOpen(moveit::core::RobotStatePtr& robot_state)
-{
-  // Error check
-  if (grasp_ik_solution_.empty())
-  {
-    ROS_ERROR_STREAM_NAMED("grasp_candidate", "No grasp ik solution available to set");
-    return false;
-  }
-
-  // Apply IK solved arm joints to state
-  robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
-
-  // Set end effector to correct configuration
-  return getGraspStateOpenEEOnly(robot_state);
-}
-
-bool GraspCandidate::getGraspStateOpenEEOnly(moveit::core::RobotStatePtr& robot_state)
-{
-  return grasp_data_->setRobotState(robot_state, grasp_.pre_grasp_posture);
-}
-
-bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr& robot_state)
-{
-  // Apply IK solved arm joints to state
-  robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
-
-  // Set end effector to correct configuration
-  return getGraspStateClosedEEOnly(robot_state);
-}
-
-bool GraspCandidate::getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robot_state)
-{
-  return grasp_data_->setRobotState(robot_state, grasp_.grasp_posture);
-}
-
-bool GraspCandidate::isValid()
-{
-  if (grasp_filtered_by_ik_ || grasp_filtered_by_cutting_plane_ || grasp_filtered_by_orientation_ ||
-      pregrasp_filtered_by_ik_)
-    return false;
-  else
-    return true;
-}
-
 }  // namespace
