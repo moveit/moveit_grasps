@@ -1,8 +1,12 @@
 <launch>
 
+  <!-- Suction or two finger -->
+  <arg name="gripper" default="suction" doc="must be one of 'suction' or 'two_finger'" />
+
   <!-- PANDA -->
-  <include file="$(find panda_moveit_config)/launch/planning_context.launch">
+  <include file="$(find moveit_grasps)/launch/panda_planning_context.launch">
     <arg name="load_robot_description" value="true"/>
+    <arg name="gripper" value="$(arg gripper)"/>
   </include>
 
   <!-- We do not have a robot connected, so publish fake joint states -->

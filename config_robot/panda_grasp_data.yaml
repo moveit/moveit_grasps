@@ -36,15 +36,15 @@ hand:
     # z-axis pointing toward object to grasp
     # x-axis perp. to movement of grippers
     # y-axis parallel to movement of grippers
-    tcp_to_eef_mount_transform :  [0, 0, -0.105, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
-    # Alternatively, if we have a tool center point frame, we would set:
-    # define_tcp_by_name: true
-    # tcp_link_name: "tool_center_point"
+    # If we have a tool center point frame, we would set:
+    define_tcp_by_name: true
+    tcp_name: "tool_center_point"
+    # Alternatively, if we cannot add a frame for the tool center point, we can define tcp by transform
+    # tcp_to_eef_mount_transform :  [0, 0, -0.105, 0, 0, -0.7853] # NOTE: Imaginary point in the middle
 
     # Target durations in seconds for reaching pregrasp and grasp positions in end effector motions
     pregrasp_time_from_start : 0.0
     grasp_time_from_start : 0.0
-
 
     # Joint names and state values for the end effector.
     # The names should match the values of pregrasp_posture and grasp_posture.
@@ -73,8 +73,8 @@ hand:
     ## Suction gripper parameters
     ##############################
     # The width of the suction griper along the specified axes. (Assumes that Z points in the direction of the suction cups)
-    # active_suction_range_x : 0.25
-    # active_suction_range_y : 0.10
+    active_suction_range_x : 0.22
+    active_suction_range_y : 0.12
 
     # Some suction grippers can selectively enable and disable regions of suction. If you have more than one
     # region that can be selectively activated or de-activated, set those values here and moveit_grasps
@@ -84,5 +84,5 @@ hand:
     # Note that this metric assumes that suction regions are equally sized
     # ie. width = active_suction_range_x / suction_regions_x
     #
-    # suction_rows_count: 1
-    # suction_cols_count: 1
+    suction_rows_count: 2
+    suction_cols_count: 2

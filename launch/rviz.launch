@@ -1,9 +1,11 @@
 <launch>
-
   <!-- Debug -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Suction or two finger -->
+  <arg name="gripper" default="two_finger" doc="must be one of 'suction' or 'two_finger'" />
 
   <!-- Load Rviz -->
   <node name="$(anon rviz)" pkg="rviz" type="rviz" respawn="false"
@@ -14,8 +16,9 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_1" args="0 0 0 0 0 0 world panda_link0" />
 
   <!-- PANDA -->
-  <include file="$(find panda_moveit_config)/launch/planning_context.launch">
+  <include file="$(find moveit_grasps)/launch/panda_planning_context.launch">
     <arg name="load_robot_description" value="true"/>
+    <arg name="gripper" value="$(arg gripper)"/>
   </include>
 
 </launch>

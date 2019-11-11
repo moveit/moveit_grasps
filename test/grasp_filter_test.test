@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
-    <include file="$(find panda_moveit_config)/launch/planning_context.launch">
-      <arg name="load_robot_description" value="true"/>
+    <!-- Suction or two finger -->
+    <arg name="gripper" value="two_finger" doc="must be one of 'suction' or 'two_finger'" />
+
+    <!-- PANDA -->
+    <include file="$(find moveit_grasps)/launch/load_panda.launch">
+      <arg name="gripper" value="$(arg gripper)"/>
     </include>
 
     <test pkg="moveit_grasps" type="grasp_filter_test" test-name="grasp_filter_test" time-limit="500" args="">
