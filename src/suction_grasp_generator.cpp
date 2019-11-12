@@ -37,6 +37,7 @@
 */
 
 #include <moveit_grasps/suction_grasp_generator.h>
+#include <moveit_grasps/suction_grasp_candidate.h>
 #include <moveit_grasps/grasp_filter.h>
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
@@ -129,7 +130,8 @@ bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mou
   std::vector<double> suction_voxel_overlap;
   new_grasp.grasp_quality =
       scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
-  GraspCandidatePtr candidate = std::make_shared<GraspCandidate>(new_grasp, grasp_data, object_pose);
+
+  SuctionGraspCandidatePtr candidate = std::make_shared<SuctionGraspCandidate>(new_grasp, grasp_data, object_pose);
   candidate->suction_voxel_overlap_ = suction_voxel_overlap;
   grasp_candidates.push_back(candidate);
   return true;
