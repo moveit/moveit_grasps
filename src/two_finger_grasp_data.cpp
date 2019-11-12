@@ -61,7 +61,6 @@ TwoFingerGraspData::TwoFingerGraspData(const ros::NodeHandle& nh, const std::str
                                        moveit::core::RobotModelConstPtr robot_model)
   : GraspData(nh, end_effector, robot_model)
 {
-  end_effector_type_ = FINGER;
 }
 
 bool TwoFingerGraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)
@@ -109,9 +108,6 @@ bool TwoFingerGraspData::setGraspWidth(const double& percent_open, const double&
 bool TwoFingerGraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
                                                    trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  if (end_effector_type_ != FINGER)
-    return false;
-
   // TODO(mlautman): Change this function to take in a method for translating joint values to grasp width
   //       Currently this function simply interpolates between max open and max closed
   ROS_DEBUG_STREAM_NAMED("grasp_data", "Setting grasp posture to have distance_between_fingers of "

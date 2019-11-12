@@ -101,7 +101,6 @@ TEST_F(TwoFingerGraspDataTest, CheckConfigValues)
   // EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm");
   EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
-  EXPECT_EQ(grasp_data_->end_effector_type_, FINGER);
 
   // Geometry doubles
   EXPECT_GT(grasp_data_->angle_resolution_, 0);

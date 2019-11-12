@@ -61,7 +61,6 @@ SuctionGraspData::SuctionGraspData(const ros::NodeHandle& nh, const std::string&
                                    moveit::core::RobotModelConstPtr robot_model)
   : GraspData(nh, end_effector, robot_model)
 {
-  end_effector_type_ = SUCTION;
 }
 
 bool SuctionGraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)

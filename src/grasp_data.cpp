@@ -61,7 +61,6 @@ GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model)
   : base_link_("/base_link"), robot_model_(robot_model)
 {
-  end_effector_type_ = UNDEFINED;
 }
 
 bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector)
@@ -113,10 +112,6 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
     error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_name", tcp_name_);
   else
     error += !rosparam_shortcuts::get(parent_name, child_nh, "tcp_to_eef_mount_transform", tcp_to_eef_mount_);
-
-  // Find out if the end effector uses suction or fingers (NOTE: must be one of 'finger' or 'suction')
-  std::string end_effector_type_str;
-  child_nh.param<std::string>("end_effector_type", end_effector_type_str, "finger");
 
   rosparam_shortcuts::shutdownIfError(parent_name, error);
 
