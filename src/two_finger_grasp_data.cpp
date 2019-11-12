@@ -86,7 +86,7 @@ bool TwoFingerGraspData::loadGraspData(const ros::NodeHandle& nh, const std::str
   return true;
 }
 
-bool TwoFingerGraspData::setGraspWidth(const double& percent_open, const double& min_finger_width,
+bool TwoFingerGraspData::setGraspWidth(double percent_open, double min_finger_width,
                                        trajectory_msgs::JointTrajectory& grasp_posture)
 {
   if (percent_open < 0 || percent_open > 1)
@@ -105,7 +105,7 @@ bool TwoFingerGraspData::setGraspWidth(const double& percent_open, const double&
   return fingerWidthToGraspPosture(distance_btw_fingers, grasp_posture);
 }
 
-bool TwoFingerGraspData::fingerWidthToGraspPosture(const double& distance_btw_fingers,
+bool TwoFingerGraspData::fingerWidthToGraspPosture(double distance_btw_fingers,
                                                    trajectory_msgs::JointTrajectory& grasp_posture)
 {
   // TODO(mlautman): Change this function to take in a method for translating joint values to grasp width

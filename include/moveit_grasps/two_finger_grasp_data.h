@@ -54,31 +54,41 @@ public:
    * \brief Loads grasp data from a yaml file (load from roslaunch)
    * \param node handle - allows for namespacing
    * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
+   * \param robot model - The robot model
    */
   TwoFingerGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                      moveit::core::RobotModelConstPtr robot_model);
 
   /**
    * \brief Helper function for constructor
+   * \param nh - node handle allows for namespacing
+   * \param end effector - The end effector joint group name
    * \return true on success
    */
   bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector) override;
 
   /**
    * \brief Set the width between fingers as a percentage of object size and max finger width
+   * \param percent open - [0,1] the 0->closed 1->open
    * \return true on success
    */
-  bool setGraspWidth(const double& percent_open, const double& min_finger_width,
-                     trajectory_msgs::JointTrajectory& grasp_posture);
+  bool setGraspWidth(double percent_open, double min_finger_width, trajectory_msgs::JointTrajectory& grasp_posture);
 
   /**
    * \brief Convert width between fingers to joint positions
+   * \param distance_btw_fingers - (meters) The target distance between the fingers
+   * \param grasp_posture - output. A joint trajectory with the values for the end effector filled in.
+   * Note: we interpolate to get the joint value assuming a linear relationship between min and max
+   * finger distance and min and max finger joint value. This could likely be improved on a per-robot basis.
+   * \param end effector - The end effector joint group name
    * \return true on success
    */
-  bool fingerWidthToGraspPosture(const double& distance_btw_fingers, trajectory_msgs::JointTrajectory& grasp_posture);
+  bool fingerWidthToGraspPosture(double distance_btw_fingers, trajectory_msgs::JointTrajectory& grasp_posture);
 
   /**
    * \brief Convert joint positions to full grasp posture
+   * \param joint_positions - the full joint state as a vector of doubles
+   * \param grasp posture - output. The full grasp posture
    * \return true on success
    */
   bool jointPositionsToGraspPosture(std::vector<double> joint_positions,
@@ -93,11 +103,16 @@ public:
   /////////////////////////////////////
   // Finger gripper specific parameters
   /////////////////////////////////////
-  // For calculating the ratio between the distance between fingers and the joint values
+  // Maximum allowed finger width for a grasp.
+  // This value should be considerably smaller than max_finger_width
+  // to allow padded collision checks
   double max_grasp_width_;
+  // Maximum / Minimum distance between fingers
+  // For calculating the ratio between the distance between fingers and the joint values
   double max_finger_width_;
   double min_finger_width_;
-  double gripper_finger_width_;  // parameter used to ensure generated grasps will overlap object
+  // Parameter used to ensure generated grasps will overlap object
+  double gripper_finger_width_;
 };
 
 }  // namespace

@@ -106,7 +106,7 @@ bool SuctionGraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
   return GraspFilter::filterGrasps(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
 }
 
-void SuctionGraspFilter::setSuctionVoxelOverlap(double cutoff)
+void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)
 {
   suction_voxel_overlap_cutoff_ = cutoff;
 }

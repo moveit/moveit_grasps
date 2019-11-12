@@ -72,10 +72,11 @@ public:
    * \param cutoff - A fractional cutoff between (0, 1] where at least one voxel must at least that much
    *                 of it's surface overlaping with the target object
    */
-  void setSuctionVoxelOverlap(double cutoff);
+  void setSuctionVoxelOverlapCutoff(double cutoff);
 
 protected:
-  // Allow a writeable robot state
+  // A cutoff threshold [0,1] where at least one suction voxe must have more than this fraction overlap
+  // with the target object
   double suction_voxel_overlap_cutoff_;
 
 };  // end of class
