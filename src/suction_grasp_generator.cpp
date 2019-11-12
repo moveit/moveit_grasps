@@ -221,7 +221,7 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
                                                   std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   grasp_candidates.clear();
-  std::vector<Eigen::Isometry3d> grasp_poses_tcp;
+  EigenSTL::vector_Isometry3d grasp_poses_tcp;
   ////////////////
   // Re-orient the cuboid center top grasp so to be as close as possible to the ideal grasp
   ////////////////

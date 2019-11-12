@@ -195,7 +195,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
   Eigen::Vector3d object_size(depth, width, height);
 
   double object_width;
-  std::vector<Eigen::Isometry3d> grasp_poses_tcp;
+  EigenSTL::vector_Isometry3d grasp_poses_tcp;
 
   Eigen::Isometry3d grasp_pose_tcp = cuboid_pose;
   Eigen::Vector3d a_dir, b_dir, c_dir;
@@ -548,7 +548,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
 std::size_t TwoFingerGraspGenerator::addCornerGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3],
                                                            Eigen::Vector3d translation, double corner_rotation,
                                                            std::size_t num_radial_grasps,
-                                                           std::vector<Eigen::Isometry3d>& grasp_poses_tcp)
+                                                           EigenSTL::vector_Isometry3d& grasp_poses_tcp)
 {
   std::size_t num_grasps_added = 0;
   double delta_angle = (M_PI / 2.0) / static_cast<double>(num_radial_grasps + 1);
@@ -579,7 +579,7 @@ std::size_t TwoFingerGraspGenerator::addCornerGraspsHelper(Eigen::Isometry3d pos
 std::size_t TwoFingerGraspGenerator::addFaceGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3],
                                                          Eigen::Vector3d translation, Eigen::Vector3d delta,
                                                          double alignment_rotation, std::size_t num_grasps,
-                                                         std::vector<Eigen::Isometry3d>& grasp_poses_tcp)
+                                                         EigenSTL::vector_Isometry3d& grasp_poses_tcp)
 {
   std::size_t num_grasps_added = 0;
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps.helper", "delta = \n" << delta);
@@ -606,7 +606,7 @@ std::size_t TwoFingerGraspGenerator::addFaceGraspsHelper(Eigen::Isometry3d pose,
 std::size_t TwoFingerGraspGenerator::addEdgeGraspsHelper(Eigen::Isometry3d pose, double rotation_angles[3],
                                                          Eigen::Vector3d translation, Eigen::Vector3d delta,
                                                          double alignment_rotation, std::size_t num_grasps,
-                                                         std::vector<Eigen::Isometry3d>& grasp_poses_tcp,
+                                                         EigenSTL::vector_Isometry3d& grasp_poses_tcp,
                                                          double corner_rotation)
 {
   std::size_t num_grasps_added = 0;
