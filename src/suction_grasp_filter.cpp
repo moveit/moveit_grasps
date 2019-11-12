@@ -38,6 +38,7 @@
 
 // moveit_grasps
 #include <moveit_grasps/suction_grasp_filter.h>
+#include <moveit_grasps/suction_grasp_candidate.h>
 #include <moveit_grasps/state_validity_callback.h>
 
 // moveit
@@ -58,57 +59,51 @@ bool SuctionGraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_cand
                                       const robot_model::JointModelGroup* arm_jmg,
                                       const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp)
 {
+  // Pre-filter for suction voxel overlap
   if (suction_voxel_overlap_cutoff_ > 0)
-    preFilterBySuctionVoxelOverlap(grasp_candidates, suction_voxel_overlap_cutoff_);
+  {
+    std::size_t count = 0;
+    std::size_t grasp_candidates_before = grasp_candidates.size();
+    for (std::size_t ix = 0; ix < grasp_candidates.size();)
+    {
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "---------------\nGrasp candidate: " << count++);
+      bool valid = false;
+      auto suction_candidate = static_cast<SuctionGraspCandidate*>(grasp_candidates[ix].get());
+      if (suction_candidate)
+      {
+        for (double& voxel_overlap : suction_candidate->suction_voxel_overlap_)
+        {
+          if (voxel_overlap > suction_voxel_overlap_cutoff_)
+          {
+            valid = true;
+            break;
+          }
+        }
+      }
+      if (!valid)
+      {
+        ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Invalid");
+        grasp_candidates.erase(grasp_candidates.begin() + ix);
+      }
+      else
+      {
+        ++ix;
+      }
+    }
+    if (statistics_verbose_)
+    {
+      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter",
+                             "-------------------------------------------------------"
+                                 << "\nGRASP PRE-FILTER RESULTS"
+                                 << "\ntotal_grasp_candidates:     " << grasp_candidates_before
+                                 << "\nremaining grasp candidates: " << grasp_candidates.size()
+                                 << "\n-------------------------------------------------------");
+    }
+  }
   if (!grasp_candidates.size())
     return false;
 
   return GraspFilter::filterGrasps(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
-}
-
-void SuctionGraspFilter::preFilterBySuctionVoxelOverlap(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                                        double threshold)
-{
-  // We pre-filter by removing all candidates with less than some overlap with the desired object.
-  std::size_t grasp_candidates_before = grasp_candidates.size();
-  std::size_t count = 0;
-  for (std::size_t ix = 0; ix < grasp_candidates.size();)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------");
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Grasp candidate " << count++);
-    bool valid = false;
-    for (double& voxel_overlap : grasp_candidates[ix]->suction_voxel_overlap_)
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "threshold: " << threshold << "\tvoxel score "
-                                                                      << voxel_overlap);
-      if (voxel_overlap > threshold)
-      {
-        valid = true;
-        break;
-      }
-    }
-    if (!valid)
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Invalid");
-      grasp_candidates.erase(grasp_candidates.begin() + ix);
-    }
-    else
-    {
-      ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Valid");
-      ++ix;
-    }
-  }
-  if (statistics_verbose_)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter",
-                           "-------------------------------------------------------"
-                               << "\n"
-                               << "GRASP PRE-FILTER RESULTS "
-                               << "\n"
-                               << "total_grasp_candidates:     " << grasp_candidates_before << "\n"
-                               << "remaining grasp candidates: " << grasp_candidates.size() << "\n"
-                               << "-------------------------------------------------------");
-  }
 }
 
 void SuctionGraspFilter::setSuctionVoxelOverlap(double cutoff)

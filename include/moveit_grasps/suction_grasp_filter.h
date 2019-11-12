@@ -67,16 +67,6 @@ public:
                     bool filter_pregrasp = false) override;
 
   /**
-   * \brief  For suction grippers, check that at least one voxel has an overlap with the grasp target greater than the
-   *         threshold. If not, the grasp_candidate is removed from the vector. This should be used as a pre-filter
-   *          step before IK.
-   * \param grasp_candidates - All grasp candidates
-   * \param threshold - some fractional cutoff where at least one voxel must have > threshold overlap with the target
-   */
-  void preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
-                                      double threshold);
-
-  /**
    * \brief  For suction grippers, set the cutoff threshold used by preFilterBySuctionVoxelOverlap to
    *         pre filter grasps.
    * \param cutoff - A fractional cutoff between (0, 1] where at least one voxel must at least that much
@@ -84,7 +74,7 @@ public:
    */
   void setSuctionVoxelOverlap(double cutoff);
 
-private:
+protected:
   // Allow a writeable robot state
   double suction_voxel_overlap_cutoff_;
 
