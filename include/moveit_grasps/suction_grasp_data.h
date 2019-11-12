@@ -68,7 +68,7 @@ public:
   /**
    * \brief Debug data to console
    */
-  void print();
+  void print() override;
 
 public:
   //////////////////////////////////////

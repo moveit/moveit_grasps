@@ -103,7 +103,7 @@ public:
   /**
    * \brief Debug data to console
    */
-  void print();
+  virtual void print();
 
 public:
   // The (possibly fictional) center point of a grasp

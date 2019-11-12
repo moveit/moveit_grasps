@@ -65,14 +65,6 @@ public:
   bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector) override;
 
   /**
-   * \brief Alter a robot state so that the end effector corresponding to this grasp data is in a grasp posture
-   * \param joint state of robot
-   * \param posture - what state to set the end effector
-   * \return true on success
-   */
-  bool setRobotState(robot_state::RobotStatePtr& robot_state, const trajectory_msgs::JointTrajectory& posture);
-
-  /**
    * \brief Set the width between fingers as a percentage of object size and max finger width
    * \return true on success
    */
@@ -95,7 +87,7 @@ public:
   /**
    * \brief Debug data to console
    */
-  void print();
+  void print() override;
 
 public:
   /////////////////////////////////////
