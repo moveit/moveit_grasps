@@ -40,6 +40,7 @@
 #define MOVEIT_GRASPS__SUCTION_GRASP_GENERATOR_H_
 
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/suction_grasp_candidate.h>
 #include <moveit_grasps/suction_grasp_scorer.h>
 #include <moveit_grasps/suction_grasp_data.h>
 
@@ -72,7 +73,7 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const SuctionGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                      const SuctionGraspDataPtr& grasp_data, std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief creates grasp messages from the generated grasp poses
@@ -85,7 +86,7 @@ public:
    * \return true on success
    */
   bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const SuctionGraspDataPtr& grasp_data,
-                std::vector<GraspCandidatePtr>& grasp_candidates, const Eigen::Isometry3d& object_pose,
+                std::vector<SuctionGraspCandidatePtr>& grasp_candidates, const Eigen::Isometry3d& object_pose,
                 const Eigen::Vector3d& object_size, double object_width);
 
   /**
@@ -103,7 +104,8 @@ public:
 
 protected:
   bool generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width, double height,
-                             const SuctionGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                             const SuctionGraspDataPtr& grasp_data,
+                             std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
 
 public:
   // Visual debug settings

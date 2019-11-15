@@ -41,7 +41,7 @@
 namespace moveit_grasps
 {
 SuctionGraspCandidate::SuctionGraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data,
-                                             Eigen::Isometry3d cuboid_pose)
+                                             const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, grasp_data_, cuboid_pose)
 {
 }

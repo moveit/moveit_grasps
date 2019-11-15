@@ -93,21 +93,19 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
     Eigen::Vector3d tmp_voxel_bb_3 = grasp_pose_tcp_in_box_frame * voxel->top_right_;
     Eigen::Vector3d tmp_voxel_bb_4 = grasp_pose_tcp_in_box_frame * voxel->bottom_right_;
 
-    std::vector<double> m(4);
-    std::vector<double> b(4);
-    m[0] = (tmp_voxel_bb_1.y() - tmp_voxel_bb_2.y()) / (tmp_voxel_bb_1.x() - tmp_voxel_bb_2.x());
-    m[1] = (tmp_voxel_bb_2.y() - tmp_voxel_bb_3.y()) / (tmp_voxel_bb_2.x() - tmp_voxel_bb_3.x());
-    m[2] = (tmp_voxel_bb_3.y() - tmp_voxel_bb_4.y()) / (tmp_voxel_bb_3.x() - tmp_voxel_bb_4.x());
-    m[3] = (tmp_voxel_bb_4.y() - tmp_voxel_bb_1.y()) / (tmp_voxel_bb_4.x() - tmp_voxel_bb_1.x());
-    b[0] = tmp_voxel_bb_1.y() - m[0] * tmp_voxel_bb_1.x();
-    b[1] = tmp_voxel_bb_2.y() - m[1] * tmp_voxel_bb_2.x();
-    b[2] = tmp_voxel_bb_3.y() - m[2] * tmp_voxel_bb_3.x();
-    b[3] = tmp_voxel_bb_4.y() - m[3] * tmp_voxel_bb_4.x();
+    std::vector<double> slope(4);
+    std::vector<double> intercept(4);
+    slope[0] = (tmp_voxel_bb_1.y() - tmp_voxel_bb_2.y()) / (tmp_voxel_bb_1.x() - tmp_voxel_bb_2.x());
+    slope[1] = (tmp_voxel_bb_2.y() - tmp_voxel_bb_3.y()) / (tmp_voxel_bb_2.x() - tmp_voxel_bb_3.x());
+    slope[2] = (tmp_voxel_bb_3.y() - tmp_voxel_bb_4.y()) / (tmp_voxel_bb_3.x() - tmp_voxel_bb_4.x());
+    slope[3] = (tmp_voxel_bb_4.y() - tmp_voxel_bb_1.y()) / (tmp_voxel_bb_4.x() - tmp_voxel_bb_1.x());
+    intercept[0] = tmp_voxel_bb_1.y() - slope[0] * tmp_voxel_bb_1.x();
+    intercept[1] = tmp_voxel_bb_2.y() - slope[1] * tmp_voxel_bb_2.x();
+    intercept[2] = tmp_voxel_bb_3.y() - slope[2] * tmp_voxel_bb_3.x();
+    intercept[3] = tmp_voxel_bb_4.y() - slope[3] * tmp_voxel_bb_4.x();
 
-    double max_y =
-        std::max(std::max(tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y()), std::max(tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y()));
-    double min_y =
-        std::min(std::min(tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y()), std::min(tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y()));
+    double max_y = std::max({ tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y(), tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y() });
+    double min_y = std::min({ tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y(), tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y() });
     double y_inc = (max_y - min_y) / slices;
     std::vector<double> slice_overlap(slices);
     overlap_vector[voxel_id] = 0;
@@ -125,7 +123,7 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
       {
         // We compute the x intercepts for each line of the box and take the middle two.
         for (std::size_t quadrant_ix = 0; quadrant_ix < 4; ++quadrant_ix)
-          x_intercept[quadrant_ix] = (y - b[quadrant_ix]) / m[quadrant_ix];
+          x_intercept[quadrant_ix] = (y - intercept[quadrant_ix]) / slope[quadrant_ix];
         std::sort(x_intercept.begin(), x_intercept.end());
       }
 

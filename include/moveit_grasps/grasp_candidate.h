@@ -67,7 +67,7 @@ enum GraspTrajectorySegments
 class GraspCandidate
 {
 public:
-  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Isometry3d cuboid_pose);
+  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, const Eigen::Isometry3d& cuboid_pose);
 
   bool getPreGraspState(moveit::core::RobotStatePtr& robot_state);
 

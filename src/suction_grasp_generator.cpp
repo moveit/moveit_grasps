@@ -76,7 +76,7 @@ SuctionGraspGenerator::SuctionGraspGenerator(moveit_visual_tools::MoveItVisualTo
 
 bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount,
                                      const SuctionGraspDataPtr& grasp_data,
-                                     std::vector<GraspCandidatePtr>& grasp_candidates,
+                                     std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
                                      const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
                                      double object_width)
 {
@@ -203,7 +203,7 @@ double SuctionGraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_p
 
 bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
                                            double height, const moveit_grasps::SuctionGraspDataPtr& grasp_data,
-                                           std::vector<GraspCandidatePtr>& grasp_candidates)
+                                           std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
 {
   bool result = generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates);
 
@@ -218,7 +218,7 @@ bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose,
 // Z -> Height
 bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width,
                                                   double height, const moveit_grasps::SuctionGraspDataPtr& grasp_data,
-                                                  std::vector<GraspCandidatePtr>& grasp_candidates)
+                                                  std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
 {
   grasp_candidates.clear();
   EigenSTL::vector_Isometry3d grasp_poses_tcp;
@@ -410,7 +410,8 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Animating all generated (candidate) grasps "
                                                                       "before filtering");
-    visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+    std::vector<GraspCandidatePtr> grasp_candidates_base(grasp_candidates.begin(), grasp_candidates.end());
+    visualizeAnimatedGrasps(grasp_candidates_base, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
   }
 
   return true;

@@ -40,6 +40,7 @@
 #define MOVEIT_GRASPS__TWO_FINGER_GRASP_GENERATOR_H_
 
 #include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_candidate.h>
 #include <moveit_grasps/two_finger_grasp_scorer.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
 
