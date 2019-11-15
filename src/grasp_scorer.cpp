@@ -124,4 +124,4 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& 
   return scores;
 }
 
-}  // end namespace moveit_grasps
+}  // namespace moveit_grasps

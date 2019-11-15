@@ -46,7 +46,6 @@
 
 namespace moveit_grasps
 {
-// Class
 class SuctionGraspGenerator : public GraspGenerator
 {
   friend class GraspGeneratorTest;
@@ -79,15 +78,15 @@ public:
    * \brief creates grasp messages from the generated grasp poses
    * \param grasp_pose_eef_mount - the grasp pose. (Note: this is the pose of the eef mount not the position of the tcp)
    * \param grasp_data data describing the end effector
-   * \param grasp_candidates - list possible grasps
    * \param object_pose - pose of object to grasp
    * \param object_size - size of object to grasp
    * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
+   * \param grasp_candidates - output, list possible grasps with new grasp appended
    * \return true on success
    */
   bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const SuctionGraspDataPtr& grasp_data,
-                std::vector<SuctionGraspCandidatePtr>& grasp_candidates, const Eigen::Isometry3d& object_pose,
-                const Eigen::Vector3d& object_size, double object_width);
+                const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size, double object_width,
+                std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief Score the generated suction grasp poses

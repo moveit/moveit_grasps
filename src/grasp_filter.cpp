@@ -178,7 +178,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   return true;
 }
 
-bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d filter_pose,
+bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& filter_pose,
                                      grasp_parallel_plane plane, int direction)
 {
   Eigen::Isometry3d grasp_pose;
@@ -212,7 +212,7 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::I
   return grasp_candidate->grasp_filtered_by_cutting_plane_;
 }
 
-bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
+bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& desired_pose,
                                            double max_angular_offset)
 {
   Eigen::Isometry3d tcp_grasp_pose;
@@ -549,12 +549,12 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   return true;
 }
 
-void GraspFilter::addCuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction)
+void GraspFilter::addCuttingPlane(const Eigen::Isometry3d& pose, grasp_parallel_plane plane, int direction)
 {
   cutting_planes_.push_back(std::make_shared<CuttingPlane>(pose, plane, direction));
 }
 
-void GraspFilter::addDesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset)
+void GraspFilter::addDesiredGraspOrientation(const Eigen::Isometry3d& pose, double max_angle_offset)
 {
   desired_grasp_orientations_.push_back(std::make_shared<DesiredGraspOrientation>(pose, max_angle_offset));
 }

@@ -68,7 +68,7 @@ public:
    *         1.0 -> gripper is wide open,
    *         0.0 -> gripper is at minimum position.
    */
-  static double scoreGraspWidth(const TwoFingerGraspDataPtr grasp_data, double percent_open);
+  static double scoreGraspWidth(const TwoFingerGraspDataPtr& grasp_data, double percent_open);
 
   /**
    * \brief Score the grasp based on how far the object is from the palm of the hand
@@ -90,6 +90,6 @@ public:
                                     const double& max_grasp_distance);
 };
 
-}  // end namespace moveit_grasps
+}  // namespace moveit_grasps
 
 #endif

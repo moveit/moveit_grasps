@@ -62,9 +62,9 @@ MOVEIT_CLASS_FORWARD(GraspData);
 // Map various arms to end effector grasp datas
 typedef std::map<const robot_model::JointModelGroup*, moveit_grasps::GraspDataPtr> GraspDatas;
 
-class GraspData
+struct GraspData
 {
-public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /**
    * \brief Loads grasp data from a yaml file (load from roslaunch)
    * \param node handle - allows for namespacing
@@ -105,7 +105,6 @@ public:
    */
   virtual void print();
 
-public:
   // The (possibly fictional) center point of a grasp
   std::string tcp_name_;
   Eigen::Isometry3d tcp_to_eef_mount_;  // Convert generic grasp pose to the parent arm's eef_mount frame of reference

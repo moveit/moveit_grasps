@@ -75,10 +75,9 @@ SuctionGraspGenerator::SuctionGraspGenerator(moveit_visual_tools::MoveItVisualTo
 }
 
 bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount,
-                                     const SuctionGraspDataPtr& grasp_data,
-                                     std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
-                                     const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
-                                     double object_width)
+                                     const SuctionGraspDataPtr& grasp_data, const Eigen::Isometry3d& object_pose,
+                                     const Eigen::Vector3d& object_size, double object_width,
+                                     std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
 {
   // Transform the grasp pose eef mount to the tcp grasp pose
   Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
@@ -383,7 +382,7 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;
-    addGrasp(grasp_pose_eef_mount, grasp_data, grasp_candidates, cuboid_top_pose, object_size, 0);
+    addGrasp(grasp_pose_eef_mount, grasp_data, cuboid_top_pose, object_size, 0, grasp_candidates);
     if (debug_top_grasps_)
     {
       visual_tools_->publishAxis(grasp_poses_tcp[i], rviz_visual_tools::MEDIUM, "tcp pose");

@@ -41,7 +41,7 @@
 
 namespace moveit_grasps
 {
-double TwoFingerGraspScorer::scoreGraspWidth(const TwoFingerGraspDataPtr grasp_data, double percent_open)
+double TwoFingerGraspScorer::scoreGraspWidth(const TwoFingerGraspDataPtr& grasp_data, double percent_open)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.graspWidth", "raw score = " << percent_open);
   return pow(percent_open, 2);
@@ -66,4 +66,4 @@ double TwoFingerGraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_
   return pow(score, 4);
 }
 
-}  // end namespace moveit_grasps
+}  // namespace moveit_grasps

@@ -47,7 +47,6 @@
 
 namespace moveit_grasps
 {
-// Class
 class TwoFingerGraspFilter : public GraspFilter
 {
 public:

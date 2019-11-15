@@ -94,7 +94,6 @@ enum grasp_axis_t
   Z_AXIS
 };
 
-// Class
 class GraspGenerator
 {
 public:

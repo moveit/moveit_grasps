@@ -112,6 +112,6 @@ public:
                                                const Eigen::Isometry3d& ideal_pose);
 };
 
-}  // end namespace moveit_grasps
+}  // namespace moveit_grasps
 
 #endif

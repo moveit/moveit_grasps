@@ -8,7 +8,7 @@ moveit_grasps:
 
     # Show hand of generated grasps
     show_prefiltered_grasps: true
-    show_prefiltered_grasps_speed: 0.001
+    show_prefiltered_grasps_speed: 0.001  # (sec / grasp)
 
     # --------------------------------
     # Finger gripper specific settings
@@ -33,15 +33,15 @@ moveit_grasps:
     show_cutting_planes: true
     # Collision checking in verbose
     collision_verbose: true
-    collision_verbose_speed: 0.01
+    collision_verbose_speed: 0.01  # (sec/ solution)
     # Collision checking in verbose on second pass (after all failed)
     show_grasp_filter_collision_if_failed: true
     # Show post-filter arrows
     show_filtered_grasps: true
     # Show pose-filter arm ik solutions
     show_filtered_arm_solutions: true
-    show_filtered_arm_solutions_pregrasp_speed: 0.01
-    show_filtered_arm_solutions_speed: 0.01
+    show_filtered_arm_solutions_pregrasp_speed: 0.01  # (sec / solution)
+    show_filtered_arm_solutions_speed: 0.01  # (sec / solution)
 
   ####################################
   # The GraspPlanner generates approach, lift and retreat paths for a GraspCandidate.

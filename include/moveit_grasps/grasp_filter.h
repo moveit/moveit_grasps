@@ -143,7 +143,6 @@ struct IkThreadStruct
 };
 typedef std::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 
-// Class
 class GraspFilter
 {
 public:
@@ -170,8 +169,8 @@ public:
    * \param direction - which side of this plane to cut (+/- 1)
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d filter_pose, grasp_parallel_plane plane,
-                          int direction);
+  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& filter_pose,
+                          grasp_parallel_plane plane, int direction);
 
   /**
    * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
@@ -186,7 +185,7 @@ public:
    * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
+  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& desired_pose,
                                 double max_angular_offset);
 
   /**
@@ -217,7 +216,7 @@ public:
    * \param plane - which plane to use as the cutting plane
    * \param direction - on which side of the plane the grasps will be removed
    */
-  void addCuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction);
+  void addCuttingPlane(const Eigen::Isometry3d& pose, grasp_parallel_plane plane, int direction);
 
   /**
    * \brief Show all cutting planes that are currently enables
@@ -235,7 +234,7 @@ public:
    * \param pose - the desired grasping pose
    * \param max_angle_offset - maximum amount a generated grasp can deviate from the desired pose
    */
-  void addDesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset);
+  void addDesiredGraspOrientation(const Eigen::Isometry3d& pose, double max_angle_offset);
 
   /**
    * \brief clear all desired orientations

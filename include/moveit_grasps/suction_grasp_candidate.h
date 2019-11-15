@@ -51,7 +51,9 @@ namespace moveit_grasps
 class SuctionGraspCandidate : public GraspCandidate
 {
 public:
-  SuctionGraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, const Eigen::Isometry3d& cuboid_pose);
+  SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataPtr grasp_data,
+                        const Eigen::Isometry3d& cuboid_pose);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object

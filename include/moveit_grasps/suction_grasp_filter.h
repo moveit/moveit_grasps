@@ -47,7 +47,6 @@
 
 namespace moveit_grasps
 {
-// Class
 class SuctionGraspFilter : public GraspFilter
 {
 public:
@@ -74,7 +73,7 @@ public:
    */
   void setSuctionVoxelOverlapCutoff(double cutoff);
 
-protected:
+private:
   // A cutoff threshold [0,1] where at least one suction voxe must have more than this fraction overlap
   // with the target object
   double suction_voxel_overlap_cutoff_;
@@ -84,6 +83,6 @@ protected:
 typedef std::shared_ptr<SuctionGraspFilter> SuctionGraspFilterPtr;
 typedef std::shared_ptr<const SuctionGraspFilter> SuctionGraspFilterConstPtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

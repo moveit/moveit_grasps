@@ -73,6 +73,6 @@ public:
                                          moveit_visual_tools::MoveItVisualToolsPtr visual_tools = nullptr);
 };
 
-}  // end namespace moveit_grasps
+}  // namespace moveit_grasps
 
 #endif

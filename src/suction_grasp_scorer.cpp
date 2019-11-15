@@ -229,4 +229,4 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
   return overhang_score;
 }
 
-}  // end namespace moveit_grasps
+}  // namespace moveit_grasps

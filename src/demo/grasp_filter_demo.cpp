@@ -259,11 +259,11 @@ private:
   // A shared node handle
   ros::NodeHandle nh_;
 
-  // Grasp generator
-  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
-
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+
+  // Grasp generator
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
 
   // Grasp filter
   moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;

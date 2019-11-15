@@ -51,12 +51,13 @@ namespace moveit_grasps
 {
 struct SuctionVoxel
 {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /* \brief
     @param center_point - position of voxel center point in tcp frame
     @param x_width - width of voxel along x dim in tcp frame
     @param y_width - width of voxel along y dim in tcp frame
    */
-  SuctionVoxel(Eigen::Vector3d center_point, double x_width, double y_width)
+  SuctionVoxel(const Eigen::Vector3d& center_point, double x_width, double y_width)
     : center_point_(center_point), x_width_(x_width), y_width_(y_width)
   {
     top_left_ = center_point + Eigen::Vector3d(-x_width / 2.0, y_width / 2.0, 0);
@@ -79,6 +80,7 @@ struct SuctionVoxel
 class SuctionVoxelMatrix
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   SuctionVoxelMatrix(double suction_rows_count, double suction_cols_count, double total_suction_range_y,
                      double total_suction_range_x)
     : suction_rows_count_(suction_rows_count)

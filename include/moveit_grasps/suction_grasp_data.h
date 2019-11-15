@@ -48,22 +48,22 @@ namespace moveit_grasps
 {
 MOVEIT_CLASS_FORWARD(SuctionGraspData);
 
-class SuctionGraspData : public GraspData
+struct SuctionGraspData : public GraspData
 {
-public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /**
-   * \brief Loads grasp data from a yaml file (load from roslaunch)
-   * \param node handle - allows for namespacing
-   * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
-   * \param robot model - The robot model
+   * \brief Creates a suction grasp data object
+   * \param node_handle - allows for namespacing
+   * \param end_effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
+   * \param robot_model - The robot model
    */
   SuctionGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
                    moveit::core::RobotModelConstPtr robot_model);
 
   /**
-   * \brief Helper function for constructor
+   * \brief Helper function that loads grasp data from a yaml file (load from roslaunch)
    * \param nh - node handle allows for namespacing
-   * \param end effector - The end effector joint group name
+   * \param end_effector - The end effector joint group name
    * \return true on success
    */
   bool loadGraspData(const ros::NodeHandle& nh, const std::string& end_effector) override;
@@ -83,6 +83,6 @@ public:
   std::shared_ptr<SuctionVoxelMatrix> suction_voxel_matrix_;
 };
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif
