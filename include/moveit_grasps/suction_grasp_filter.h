@@ -60,10 +60,10 @@ public:
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
    * \return number of grasps remaining
    */
-  bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+  bool filterGrasps(std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
                     const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
-                    bool filter_pregrasp = false) override;
+                    bool filter_pregrasp = false);
 
   /**
    * \brief  For suction grippers, set the cutoff threshold used by preFilterBySuctionVoxelOverlap to
