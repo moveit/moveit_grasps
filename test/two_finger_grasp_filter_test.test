@@ -8,7 +8,7 @@
       <arg name="gripper" value="$(arg gripper)"/>
     </include>
 
-    <test pkg="moveit_grasps" type="grasp_filter_test" test-name="grasp_filter_test" time-limit="500" args="">
+    <test pkg="moveit_grasps" type="two_finger_grasp_filter_test" test-name="two_finger_grasp_filter_test" time-limit="500" args="">
       <rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>
       <rosparam command="load" file="$(find moveit_grasps)/test/config/moveit_grasps_config.yaml"/>
     </test>
