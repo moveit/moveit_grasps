@@ -86,12 +86,12 @@ bool TwoFingerGraspData::loadGraspData(const ros::NodeHandle& nh, const std::str
   return true;
 }
 
-bool TwoFingerGraspData::setGraspWidth(double percent_open, double min_finger_width,
+bool TwoFingerGraspData::setGraspWidth(double fraction_open, double min_finger_width,
                                        trajectory_msgs::JointTrajectory& grasp_posture)
 {
-  if (percent_open < 0 || percent_open > 1)
+  if (fraction_open < 0 || fraction_open > 1)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data", "Invalid percentage passed in " << percent_open);
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Invalid percentage passed in " << fraction_open);
     return false;
   }
 
@@ -101,7 +101,7 @@ bool TwoFingerGraspData::setGraspWidth(double percent_open, double min_finger_wi
   // Max width = max_finger_width_
   // Min width = min_finger_width_adjusted
   double distance_btw_fingers =
-      min_finger_width_adjusted + (max_finger_width_ - min_finger_width_adjusted) * percent_open;
+      min_finger_width_adjusted + (max_finger_width_ - min_finger_width_adjusted) * fraction_open;
   return fingerWidthToGraspPosture(distance_btw_fingers, grasp_posture);
 }
 

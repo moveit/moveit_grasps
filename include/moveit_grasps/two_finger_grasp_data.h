@@ -69,10 +69,10 @@ public:
 
   /**
    * \brief Set the width between fingers as a percentage of object size and max finger width
-   * \param percent open - [0,1] the 0->closed 1->open
+   * \param fraction open - [0,1] the 0->closed 1->open
    * \return true on success
    */
-  bool setGraspWidth(double percent_open, double min_finger_width, trajectory_msgs::JointTrajectory& grasp_posture);
+  bool setGraspWidth(double fraction_open, double min_finger_width, trajectory_msgs::JointTrajectory& grasp_posture);
 
   /**
    * \brief Convert width between fingers to joint positions
