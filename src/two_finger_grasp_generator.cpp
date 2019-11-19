@@ -105,7 +105,8 @@ void TwoFingerGraspCandidateConfig::disableAll()
 }
 
 // Constructor
-TwoFingerGraspGenerator::TwoFingerGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
+TwoFingerGraspGenerator::TwoFingerGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
+                                                 bool verbose)
   : GraspGenerator(visual_tools, verbose), grasp_score_weights_(TwoFingerGraspScoreWeights())
 {
   grasp_candidate_config_ = TwoFingerGraspCandidateConfig();

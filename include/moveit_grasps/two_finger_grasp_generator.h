@@ -81,7 +81,7 @@ public:
   /**
    * \brief Constructor
    */
-  TwoFingerGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
+  TwoFingerGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
 
   /* brief sets internal grasp_candidate_config_ variable
    * \param grasp_candidate_config - a config describing the grasps to be generated

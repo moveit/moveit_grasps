@@ -58,7 +58,7 @@ public:
   /**
    * \brief Constructor
    */
-  SuctionGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
+  SuctionGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
 
   /**
    * \brief Create possible grasp positions around a cuboid

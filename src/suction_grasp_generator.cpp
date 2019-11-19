@@ -57,10 +57,10 @@ void debugFailedOpenGripper(double percent_open, double min_finger_open_on_appro
 }  // namespace
 
 namespace moveit_grasps
-
 {
 // Constructor
-SuctionGraspGenerator::SuctionGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
+SuctionGraspGenerator::SuctionGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
+                                             bool verbose)
   : GraspGenerator(visual_tools, verbose), grasp_score_weights_(SuctionGraspScoreWeights())
 {
   // Load visulization settings

@@ -104,7 +104,7 @@ public:
   /**
    * \brief Constructor
    */
-  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
+  GraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
 
   /**
    * \brief Create possible grasp positions around a cuboid

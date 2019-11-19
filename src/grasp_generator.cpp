@@ -59,7 +59,7 @@ namespace moveit_grasps
 
 {
 // Constructor
-GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
+GraspGenerator::GraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
   : ideal_grasp_pose_(Eigen::Isometry3d::Identity())
   , visual_tools_(visual_tools)
   , verbose_(verbose)
