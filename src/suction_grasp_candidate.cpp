@@ -44,5 +44,7 @@ SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, co
                                              const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, grasp_data_, cuboid_pose)
 {
+  grasp_filtered_code_ = SuctionGraspCandidateFilterCode::NOT_FILTERED;
 }
-}  // namespace
+
+}  // namespace moveit_grasps

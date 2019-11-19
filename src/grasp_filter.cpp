@@ -194,22 +194,22 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Ei
   {
     case XY:
       if ((direction == -1 && grasp_position(2) < 0 + epsilon) || (direction == 1 && grasp_position(2) > 0 - epsilon))
-        grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
+        grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       break;
     case XZ:
       if ((direction == -1 && grasp_position(1) < 0 + epsilon) || (direction == 1 && grasp_position(1) > 0 - epsilon))
-        grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
+        grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       break;
     case YZ:
       if ((direction == -1 && grasp_position(0) < 0 + epsilon) || (direction == 1 && grasp_position(0) > 0 - epsilon))
-        grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
+        grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       break;
     default:
       ROS_WARN_STREAM_NAMED("filter_by_plane", "plane not specified correctly");
       break;
   }
 
-  return grasp_candidate->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
+  return grasp_candidate->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
 }
 
 bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& desired_pose,
@@ -232,7 +232,7 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, co
 
   if (angle > max_angular_offset)
   {
-    grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_ORIENTATION;
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION;
     return true;
   }
   else
@@ -370,13 +370,14 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     // Assign grasp to process
     ik_thread_structs[thread_id]->grasp_id = grasp_id;
 
-    // Process the grasp
-    processCandidateGrasp(ik_thread_structs[thread_id]);
+    // Process the grasp if it hasn't already been filtered out
+    if (grasp_candidates[grasp_id]->isValid())
+      processCandidateGrasp(ik_thread_structs[thread_id]);
   }
 
   // Count number of grasps remaining
-  std::size_t misc_filtered = 0;
   std::size_t not_filtered = 0;
+  std::size_t misc_filtered = 0;
   std::size_t grasp_filtered_by_ik = 0;
   std::size_t grasp_filtered_by_cutting_plane = 0;
   std::size_t grasp_filtered_by_orientation = 0;
@@ -384,15 +385,15 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
 
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
-    if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_IK)
+    if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_IK)
       grasp_filtered_by_ik++;
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE)
       grasp_filtered_by_cutting_plane++;
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_ORIENTATION)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION)
       grasp_filtered_by_orientation++;
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::PREGRASP_FILTERED_BY_IK)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::PREGRASP_FILTERED_BY_IK)
       pregrasp_filtered_by_ik++;
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::NOT_FILTERED)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::NOT_FILTERED)
       not_filtered++;
     else
       misc_filtered++;
@@ -449,7 +450,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     if (filterGraspByPlane(grasp_candidate, cutting_planes_[i]->pose_, cutting_planes_[i]->plane_,
                            cutting_planes_[i]->direction_) == true)
     {
-      grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
+      grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       return false;
     }
   }
@@ -460,7 +461,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientations_[i]->pose_,
                                  desired_grasp_orientations_[i]->max_angle_offset_) == true)
     {
-      grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_ORIENTATION;
+      grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION;
       return false;
     }
   }
@@ -476,7 +477,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
   {
     ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution");
-    grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_IK;
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK;
     return false;
   }
 
@@ -494,7 +495,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
     {
       ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find PRE-grasp IK solution");
-      grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::PREGRASP_FILTERED_BY_IK;
+      grasp_candidate->grasp_filtered_code_ = GraspFilterCode::PREGRASP_FILTERED_BY_IK;
       return false;
     }
     else if (grasp_candidate->pregrasp_ik_solution_.empty())
@@ -635,27 +636,27 @@ bool GraspFilter::visualizeGrasps(const std::vector<GraspCandidatePtr>& grasp_ca
   {
     double size = 0.03;  // 0.01 * grasp_candidates[i]->grasp_.grasp_quality;
 
-    if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_IK)
+    if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_IK)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::RED,
                                    rviz_visual_tools::SMALL, size);
     }
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::PREGRASP_FILTERED_BY_IK)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::PREGRASP_FILTERED_BY_IK)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::BLUE,
                                    rviz_visual_tools::SMALL, size);
     }
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::MAGENTA,
                                    rviz_visual_tools::SMALL, size);
     }
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::GRASP_FILTERED_BY_ORIENTATION)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::YELLOW,
                                    rviz_visual_tools::SMALL, size);
     }
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspCandidateFilterCode::NOT_FILTERED)
+    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::NOT_FILTERED)
     {
       visual_tools_->publishZArrow(grasp_candidates[i]->grasp_.grasp_pose.pose, rviz_visual_tools::GREEN,
                                    rviz_visual_tools::SMALL, size);

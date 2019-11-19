@@ -55,17 +55,14 @@ SuctionGraspFilter::SuctionGraspFilter(robot_state::RobotStatePtr robot_state,
 {
 }
 
-bool SuctionGraspFilter::filterGrasps(std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
-                                      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                                      const robot_model::JointModelGroup* arm_jmg,
-                                      const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp)
+void SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
 {
   // Pre-filter for suction voxel overlap
   if (suction_voxel_overlap_cutoff_ > 0)
   {
     std::size_t count = 0;
-    std::size_t grasp_candidates_before = grasp_candidates.size();
-    for (std::size_t ix = 0; ix < grasp_candidates.size();)
+    std::size_t valid_grasps = 0;
+    for (std::size_t ix = 0; ix < grasp_candidates.size(); ++ix)
     {
       ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "---------------\nGrasp candidate: " << count++);
       bool valid = false;
@@ -74,17 +71,13 @@ bool SuctionGraspFilter::filterGrasps(std::vector<SuctionGraspCandidatePtr>& gra
         if (voxel_overlap > suction_voxel_overlap_cutoff_)
         {
           valid = true;
+          ++valid_grasps;
           break;
         }
       }
       if (!valid)
       {
-        ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "Invalid");
-        grasp_candidates.erase(grasp_candidates.begin() + ix);
-      }
-      else
-      {
-        ++ix;
+        grasp_candidates[ix]->grasp_filtered_code_ = SuctionGraspFilterCode::GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP;
       }
     }
     if (statistics_verbose_)
@@ -92,35 +85,22 @@ bool SuctionGraspFilter::filterGrasps(std::vector<SuctionGraspCandidatePtr>& gra
       ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter",
                              "-------------------------------------------------------"
                                  << "\nGRASP PRE-FILTER RESULTS"
-                                 << "\ntotal_grasp_candidates:     " << grasp_candidates_before
-                                 << "\nremaining grasp candidates: " << grasp_candidates.size()
+                                 << "\ntotal_grasp_candidates:     " << grasp_candidates.size()
+                                 << "\nremaining grasp candidates: " << valid_grasps
                                  << "\n-------------------------------------------------------");
     }
   }
-  if (!grasp_candidates.size())
-    return false;
+}
 
+bool SuctionGraspFilter::filterGrasps(std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
+                                      planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                      const robot_model::JointModelGroup* arm_jmg,
+                                      const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp)
+{
+  filterBySuctionVoxelOverlapCutoff(grasp_candidates);
   std::vector<GraspCandidatePtr> grasp_candidates_base(grasp_candidates.begin(), grasp_candidates.end());
-  bool result =
+  return
       GraspFilter::filterGrasps(grasp_candidates_base, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
-  grasp_candidates.clear();
-  if (result)
-  {
-    grasp_candidates.resize(grasp_candidates_base.size());
-    for (std::size_t ix = 0; ix < grasp_candidates.size(); ++ix)
-    {
-      try
-      {
-        grasp_candidates[ix] = std::static_pointer_cast<SuctionGraspCandidate>(grasp_candidates_base[ix]);
-      }
-      catch (const std::bad_cast& e)
-      {
-        ROS_ERROR_STREAM_NAMED("grasp_filter", "bad cast from GraspCandidatePtr to SuctionGraspCandidatePtr");
-        return false;
-      }
-    }
-  }
-  return result;
 }
 
 void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)

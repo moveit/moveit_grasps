@@ -45,7 +45,7 @@ GraspCandidate::GraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataP
   : grasp_(grasp)
   , grasp_data_(grasp_data)
   , cuboid_pose_(cuboid_pose)
-  , grasp_filtered_code_(GraspCandidateFilterCode::NOT_FILTERED)
+  , grasp_filtered_code_(GraspFilterCode::NOT_FILTERED)
 {
 }
 
@@ -104,7 +104,7 @@ bool GraspCandidate::getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robo
 
 bool GraspCandidate::isValid()
 {
-  return grasp_filtered_code_ == GraspCandidateFilterCode::NOT_FILTERED;
+  return grasp_filtered_code_ == GraspFilterCode::NOT_FILTERED;
 }
 
 }  // namespace

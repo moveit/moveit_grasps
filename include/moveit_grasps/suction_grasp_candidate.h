@@ -44,6 +44,15 @@
 
 namespace moveit_grasps
 {
+
+struct SuctionGraspFilterCode : public GraspFilterCode
+{
+  enum codes
+  {
+    GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1,  // No suction voxel is in sufficient contact with the target
+  };
+};
+
 /**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
  *        This includes the pregrasp and grasp IK solution

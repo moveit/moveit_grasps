@@ -154,7 +154,7 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \return number of grasps remaining
+   * \return some grasps remaining
    */
   bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,

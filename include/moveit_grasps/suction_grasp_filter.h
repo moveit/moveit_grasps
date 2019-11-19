@@ -54,6 +54,12 @@ public:
   SuctionGraspFilter(robot_state::RobotStatePtr robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
+   * \brief Filter grasps that do not have a valid suction voxel overlap
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   */
+  void filterBySuctionVoxelOverlapCutoff(std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
+
+  /**
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
