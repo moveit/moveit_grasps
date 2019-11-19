@@ -48,7 +48,7 @@ double TwoFingerGraspScorer::scoreGraspWidth(const TwoFingerGraspDataPtr& grasp_
 }
 
 double TwoFingerGraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                 const TwoFingerGraspDataPtr grasp_data,
+                                                 const TwoFingerGraspDataPtr& grasp_data,
                                                  const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
                                                  const double& max_grasp_distance)
 {

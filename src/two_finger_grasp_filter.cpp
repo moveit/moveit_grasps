@@ -55,7 +55,7 @@ TwoFingerGraspFilter::TwoFingerGraspFilter(const robot_state::RobotStatePtr& rob
 {
 }
 
-bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
+bool TwoFingerGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
 
@@ -139,7 +139,8 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
   return true;
 }
 
-bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
+bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution,
+                                                const IkThreadStructPtr& ik_thread_struct,
                                                 GraspCandidatePtr& grasp_candidate,
                                                 const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
 {

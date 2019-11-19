@@ -49,7 +49,7 @@
 namespace moveit_grasps
 {
 // Constructor
-SuctionGraspFilter::SuctionGraspFilter(robot_state::RobotStatePtr robot_state,
+SuctionGraspFilter::SuctionGraspFilter(robot_state::RobotStatePtr& robot_state,
                                        moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : GraspFilter::GraspFilter(robot_state, visual_tools), suction_voxel_overlap_cutoff_(0)
 {

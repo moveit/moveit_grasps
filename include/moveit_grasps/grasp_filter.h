@@ -200,13 +200,13 @@ public:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  virtual bool processCandidateGrasp(IkThreadStructPtr& ik_thread_struct);
+  virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct);
 
   /**
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
-  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
+  bool findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                       GraspCandidatePtr& grasp_candidate,
                       const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
 

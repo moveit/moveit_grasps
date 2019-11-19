@@ -59,7 +59,7 @@ namespace moveit_grasps
 
 {
 // Constructor
-GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
+GraspGenerator::GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
   : ideal_grasp_pose_(Eigen::Isometry3d::Identity())
   , visual_tools_(visual_tools)
   , verbose_(verbose)
@@ -177,7 +177,7 @@ void GraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate,
   grasp_waypoints[3] = retreat_pose;
 }
 
-void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
+void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr& grasp_data,
                                        const rviz_visual_tools::colors& color, double approach_length)
 {
   visual_tools_->publishArrow(grasp, color, rviz_visual_tools::MEDIUM);

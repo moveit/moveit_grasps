@@ -104,7 +104,7 @@ public:
   /**
    * \brief Constructor
    */
-  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose = false);
+  GraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose = false);
 
   /**
    * \brief Create possible grasp positions around a cuboid
@@ -118,7 +118,7 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                      const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
@@ -152,7 +152,7 @@ public:
    * \param arm - the planning group of the arm we want to display
    * \return true on success
    */
-  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr grasp_data,
+  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr& grasp_data,
                          const rviz_visual_tools::colors& color, double approach_length = 0.1);
 
   /**

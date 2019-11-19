@@ -51,7 +51,7 @@ class SuctionGraspFilter : public GraspFilter
 {
 public:
   // Constructor
-  SuctionGraspFilter(robot_state::RobotStatePtr robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  SuctionGraspFilter(robot_state::RobotStatePtr& robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Filter grasps that do not have a valid suction voxel overlap

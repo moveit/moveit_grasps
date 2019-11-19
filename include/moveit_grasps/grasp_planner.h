@@ -71,11 +71,11 @@ public:
    * \return true on success
    */
   bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                  const robot_state::RobotStatePtr robot_state,
+                                  const robot_state::RobotStatePtr& robot_state,
                                   planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor);
 
   bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                  const robot_state::RobotStatePtr robot_state,
+                                  const robot_state::RobotStatePtr& robot_state,
                                   const planning_scene::PlanningSceneConstPtr& planning_scene);
 
   /**
@@ -83,11 +83,11 @@ public:
    * \param input - description
    * \return true on success
    */
-  bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr robot_state,
+  bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
                                planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                bool verbose_cartesian_filtering);
 
-  bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr robot_state,
+  bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
                                const planning_scene::PlanningSceneConstPtr& planning_scene,
                                bool verbose_cartesian_filtering);
 
@@ -97,13 +97,13 @@ public:
    */
   bool computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                     planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                                    const moveit::core::RobotStatePtr start_state,
+                                    const moveit::core::RobotStatePtr& start_state,
                                     const EigenSTL::vector_Isometry3d& waypoints,
                                     const std::string& grasp_object_id = "");
 
   bool computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                     const planning_scene::PlanningSceneConstPtr& planning_scene,
-                                    const moveit::core::RobotStatePtr start_state,
+                                    const moveit::core::RobotStatePtr& start_state,
                                     const EigenSTL::vector_Isometry3d& waypoints,
                                     const std::string& grasp_object_id = "");
 

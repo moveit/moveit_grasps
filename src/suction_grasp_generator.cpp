@@ -60,7 +60,7 @@ namespace moveit_grasps
 
 {
 // Constructor
-SuctionGraspGenerator::SuctionGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, bool verbose)
+SuctionGraspGenerator::SuctionGraspGenerator(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
   : GraspGenerator(visual_tools, verbose), grasp_score_weights_(SuctionGraspScoreWeights())
 {
   // Load visulization settings

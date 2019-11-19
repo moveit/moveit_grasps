@@ -434,7 +434,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return not_filtered;
 }
 
-bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
+bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
 
@@ -511,7 +511,7 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   return true;
 }
 
-bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
+bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                                  GraspCandidatePtr& grasp_candidate,
                                  const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
 {
