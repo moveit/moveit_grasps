@@ -72,8 +72,8 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
     visual_tools->trigger();
   }
 
-  double visual_buffer = 0.0001;
-  double slices = 10;
+  const double kVisualBuffer = 0.0001;
+  const double kSlices = 10;
   double voxel_area = grasp_data->suction_voxel_matrix_->getVoxelArea();
   Eigen::Isometry3d grasp_pose_tcp_in_box_frame = object_pose.inverse() * grasp_pose_tcp;
   for (std::size_t voxel_id = 0; voxel_id < grasp_data->suction_voxel_matrix_->getNumVoxels(); ++voxel_id)
@@ -106,10 +106,10 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
 
     double max_y = std::max({ tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y(), tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y() });
     double min_y = std::min({ tmp_voxel_bb_1.y(), tmp_voxel_bb_2.y(), tmp_voxel_bb_3.y(), tmp_voxel_bb_4.y() });
-    double y_inc = (max_y - min_y) / slices;
-    std::vector<double> slice_overlap(slices);
+    double y_inc = (max_y - min_y) / kSlices;
+    std::vector<double> slice_overlap(kSlices);
     overlap_vector[voxel_id] = 0;
-    for (std::size_t slice_ix = 0; slice_ix < slices - 0; ++slice_ix)
+    for (std::size_t slice_ix = 0; slice_ix < kSlices - 0; ++slice_ix)
     {
       double y = min_y + y_inc * slice_ix;
       std::vector<double> x_intercept(4);
@@ -174,8 +174,8 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
         visual_tools->publishAxisLabeled(vsbb1, "vsbb1", rviz_visual_tools::XXXSMALL);
         visual_tools->publishAxisLabeled(vsbb2, "vsbb2", rviz_visual_tools::XXXSMALL);
 
-        double mesh_x_wid = x_intercept[2] - x_intercept[1] - visual_buffer;
-        double mesh_y_wid = y_inc - visual_buffer;
+        double mesh_x_wid = x_intercept[2] - x_intercept[1] - kVisualBuffer;
+        double mesh_y_wid = y_inc - kVisualBuffer;
 
         if (overlap / voxel_slice_area > 0.75)
         {
@@ -202,14 +202,14 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
     {
       Eigen::Isometry3d voxel_center_point = grasp_pose_tcp * Eigen::Translation3d(voxel->center_point_);
       if (overlap_vector[voxel_id] > 0.75)
-        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - visual_buffer,
-                                             voxel->y_width_ - visual_buffer, 0.001, rviz_visual_tools::GREEN);
+        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - kVisualBuffer,
+                                             voxel->y_width_ - kVisualBuffer, 0.001, rviz_visual_tools::GREEN);
       else if (overlap_vector[voxel_id] > 0.25)
-        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - visual_buffer,
-                                             voxel->y_width_ - visual_buffer, 0.001, rviz_visual_tools::YELLOW);
+        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - kVisualBuffer,
+                                             voxel->y_width_ - kVisualBuffer, 0.001, rviz_visual_tools::YELLOW);
       else
-        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - visual_buffer,
-                                             voxel->y_width_ - visual_buffer, 0.001, rviz_visual_tools::RED);
+        visual_tools->publishWireframeCuboid(voxel_center_point, voxel->x_width_ - kVisualBuffer,
+                                             voxel->y_width_ - kVisualBuffer, 0.001, rviz_visual_tools::RED);
       visual_tools->trigger();
     }
   }

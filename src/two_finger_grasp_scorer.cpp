@@ -52,8 +52,6 @@ double TwoFingerGraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_
                                                  const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
                                                  const double& max_grasp_distance)
 {
-  // TODO(mcevoyandy): grasp_data is not used but should be. See *.h for explaination.
-
   double distance = (grasp_pose_tcp.translation() - object_pose.translation()).norm();
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "distance = " << distance << ", " << min_grasp_distance << ":"
                                                                 << max_grasp_distance);

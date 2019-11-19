@@ -58,7 +58,7 @@ struct SuctionGraspData : public GraspData
    * \param robot_model - The robot model
    */
   SuctionGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                   moveit::core::RobotModelConstPtr robot_model);
+                   const moveit::core::RobotModelConstPtr& robot_model);
 
   /**
    * \brief Helper function that loads grasp data from a yaml file (load from roslaunch)

@@ -67,8 +67,8 @@ public:
    * \return number of grasps remaining
    */
   bool filterGrasps(std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
-                    planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
+                    planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
                     bool filter_pregrasp = false);
 
   /**

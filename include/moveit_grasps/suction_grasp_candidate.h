@@ -59,7 +59,7 @@ struct SuctionGraspFilterCode : public GraspFilterCode
 class SuctionGraspCandidate : public GraspCandidate
 {
 public:
-  SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataPtr grasp_data,
+  SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataPtr& grasp_data,
                         const Eigen::Isometry3d& cuboid_pose);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

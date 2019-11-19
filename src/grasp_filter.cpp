@@ -99,9 +99,9 @@ GraspFilter::GraspFilter(const robot_state::RobotStatePtr& robot_state,
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                               planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                               planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                const robot_model::JointModelGroup* arm_jmg,
-                               const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp)
+                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
 {
   bool verbose = false;
 
@@ -178,7 +178,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   return true;
 }
 
-bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& filter_pose,
+bool GraspFilter::filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& filter_pose,
                                      GraspParallelPlane plane, int direction)
 {
   Eigen::Isometry3d grasp_pose;
@@ -212,7 +212,7 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Ei
   return grasp_candidate->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
 }
 
-bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& desired_pose,
+bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& desired_pose,
                                            double max_angular_offset)
 {
   Eigen::Isometry3d tcp_grasp_pose;
@@ -240,9 +240,9 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr grasp_candidate, co
 }
 
 std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                            planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                            planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                             const robot_model::JointModelGroup* arm_jmg,
-                                            const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp,
+                                            const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
                                             bool verbose)
 {
   // Setup collision checking

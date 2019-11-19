@@ -58,7 +58,7 @@ namespace moveit_grasps
 const std::string LOGNAME = "grasp_data.suction_gripper";
 
 SuctionGraspData::SuctionGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                                   moveit::core::RobotModelConstPtr robot_model)
+                                   const moveit::core::RobotModelConstPtr& robot_model)
   : GraspData(nh, end_effector, robot_model)
 {
 }

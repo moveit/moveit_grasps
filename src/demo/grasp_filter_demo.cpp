@@ -67,7 +67,7 @@
 
 namespace moveit_grasps_demo
 {
-static const double BLOCK_SIZE = 0.04;
+constexpr double BLOCK_SIZE = 0.04;
 const std::string LOGNAME = "grasp_filter_demo";
 
 class GraspFilterDemo

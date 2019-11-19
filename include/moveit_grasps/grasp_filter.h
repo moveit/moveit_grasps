@@ -157,8 +157,8 @@ public:
    * \return some grasps remaining
    */
   bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                    planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
+                    planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
                     bool filter_pregrasp = false);
 
   /**
@@ -169,7 +169,7 @@ public:
    * \param direction - which side of this plane to cut (+/- 1)
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& filter_pose,
+  bool filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& filter_pose,
                           GraspParallelPlane plane, int direction);
 
   /**
@@ -185,7 +185,7 @@ public:
    * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& desired_pose,
+  bool filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& desired_pose,
                                 double max_angular_offset);
 
   /**
@@ -193,9 +193,9 @@ public:
    * \return number of grasps remaining
    */
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                 planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                 planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
-                                 const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp, bool verbose);
+                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
 
   /**
    * \brief Thread for checking part of the possible grasps list
@@ -278,7 +278,7 @@ public:
    * \brief Used for sorting an array of CandidateGrasps
    * \return true if A is less than B
    */
-  static bool compareGraspScores(GraspCandidatePtr grasp_a, GraspCandidatePtr grasp_b)
+  static bool compareGraspScores(const GraspCandidatePtr& grasp_a, const GraspCandidatePtr& grasp_b)
   {
     // Determine if A or B has higher quality
     return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);

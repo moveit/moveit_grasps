@@ -70,7 +70,8 @@ struct GraspData
    * \param node handle - allows for namespacing
    * \param end effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
    */
-  GraspData(const ros::NodeHandle& nh, const std::string& end_effector, moveit::core::RobotModelConstPtr robot_model);
+  GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
+            const moveit::core::RobotModelConstPtr& robot_model);
 
   /**
    * \brief Helper function for constructor

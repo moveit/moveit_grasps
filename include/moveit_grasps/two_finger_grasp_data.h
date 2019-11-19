@@ -57,7 +57,7 @@ public:
    * \param robot_model - The robot model
    */
   TwoFingerGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                     moveit::core::RobotModelConstPtr robot_model);
+                     const moveit::core::RobotModelConstPtr& robot_model);
 
   /**
    * \brief Helper function for constructor, loads grasp data from a yaml file (load from roslaunch)

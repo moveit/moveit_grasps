@@ -58,7 +58,7 @@ namespace moveit_grasps
 const std::string LOGNAME = "grasp_data";
 
 GraspData::GraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                     moveit::core::RobotModelConstPtr robot_model)
+                     const moveit::core::RobotModelConstPtr& robot_model)
   : base_link_("/base_link"), robot_model_(robot_model)
 {
 }
