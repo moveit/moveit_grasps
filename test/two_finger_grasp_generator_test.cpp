@@ -178,11 +178,11 @@ TEST_F(TwoFingerGraspGeneratorTest, GenerateFaceGrasps)
   EXPECT_EQ(3, grasp->cuboid_pose_.translation().z());
 
   // No filtering has happend yet
-  EXPECT_FALSE(grasp->grasp_filtered_by_ik_);
-  EXPECT_FALSE(grasp->grasp_filtered_by_cutting_plane_);
-  EXPECT_FALSE(grasp->grasp_filtered_by_orientation_);
-  EXPECT_FALSE(grasp->grasp_filtered_by_ik_closed_);
-  EXPECT_FALSE(grasp->pregrasp_filtered_by_ik_);
+  EXPECT_FALSE(grasp->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_IK);
+  EXPECT_FALSE(grasp->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE);
+  EXPECT_FALSE(grasp->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_ORIENTATION);
+  EXPECT_FALSE(grasp->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_IK_CLOSED);
+  EXPECT_FALSE(grasp->grasp_filtered_code_ = GraspCandidateFilterCode::PREGRASP_FILTERED_BY_IK);
 
   // No IK solutions have been generated yet
   EXPECT_TRUE(grasp->grasp_ik_solution_.empty());

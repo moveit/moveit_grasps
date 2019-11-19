@@ -71,7 +71,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
     if (filterGraspByPlane(grasp_candidate, cutting_planes_[i]->pose_, cutting_planes_[i]->plane_,
                            cutting_planes_[i]->direction_) == true)
     {
-      grasp_candidate->grasp_filtered_by_cutting_plane_ = true;
+      grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       return false;
     }
   }
@@ -82,7 +82,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
     if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientations_[i]->pose_,
                                  desired_grasp_orientations_[i]->max_angle_offset_) == true)
     {
-      grasp_candidate->grasp_filtered_by_orientation_ = true;
+      grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_ORIENTATION;
       return false;
     }
   }
@@ -98,7 +98,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
   if (!findIKSolution(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
   {
     ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution");
-    grasp_candidate->grasp_filtered_by_ik_ = true;
+    grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_IK;
     return false;
   }
 
@@ -109,7 +109,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
   if (!checkFingersClosedIK(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
   {
     ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution with CLOSED fingers");
-    grasp_candidate->grasp_filtered_by_ik_closed_ = true;
+    grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
     return false;
   }
 
@@ -124,7 +124,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
     if (!findIKSolution(grasp_candidate->pregrasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
     {
       ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find PRE-grasp IK solution");
-      grasp_candidate->pregrasp_filtered_by_ik_ = true;
+      grasp_candidate->grasp_filtered_code_ = GraspCandidateFilterCode::PREGRASP_FILTERED_BY_IK;
       return false;
     }
     else if (grasp_candidate->pregrasp_ik_solution_.empty())
