@@ -44,7 +44,22 @@ SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, co
                                              const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, grasp_data_, cuboid_pose)
 {
-  grasp_filtered_code_ = SuctionGraspCandidateFilterCode::NOT_FILTERED;
+  grasp_filtered_code_ = SuctionGraspFilterCode::NOT_FILTERED;
+}
+
+std::vector<GraspCandidatePtr> convertToGraspCandidatePtrVector(std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
+{
+  std::vector<GraspCandidatePtr> grasp_candidates_base(grasp_candidates.begin(), grasp_candidates.end());
+  return grasp_candidates_base;
+}
+
+std::vector<SuctionGraspCandidatePtr>
+convertToSuctionGraspCandidatePtrVector(std::vector<GraspCandidatePtr>& grasp_candidates)
+{
+  std::vector<SuctionGraspCandidatePtr> grasp_candidates_child(grasp_candidates.size());
+  for (std::size_t ix = 0; ix < grasp_candidates.size(); ++ix)
+    grasp_candidates_child[ix] = std::static_pointer_cast<SuctionGraspCandidate>(grasp_candidates[ix]);
+  return grasp_candidates_child;
 }
 
 }  // namespace moveit_grasps

@@ -66,11 +66,12 @@ struct GraspFilterCode
   {
     NOT_FILTERED = 0,
     GRASP_FILTERED_BY_IK,             // Ik solution at grasp failed
-    GRASP_FILTERED_BY_CUTTING_PLANE,  // grasp pose is in an unreachable part of the environment (ex: inside or behind a wall)
+    GRASP_FILTERED_BY_CUTTING_PLANE,  // grasp pose is in an unreachable part of the environment (ex: inside or behind a
+                                      // wall)
     GRASP_FILTERED_BY_ORIENTATION,    // grasp pose is not desireable
     GRASP_FILTERED_BY_IK_CLOSED,      // ik solution was fine with grasp opened, but failed with grasp closed
     PREGRASP_FILTERED_BY_IK,          // Ik solution before approach failed
-    LAST                             // Used to track last value in the base class when inheriting
+    LAST                              // Used to track last value in the base class when inheriting
   };
 };
 
@@ -163,7 +164,7 @@ public:
   // TODO(davetcoleman): possibly remove
   Eigen::Isometry3d cuboid_pose_;  // pose of original object to grasp
 
-  int grasp_filtered_code_;        // 0 -> the grasp is valid. All other codes defined in enum
+  int grasp_filtered_code_;  // 0 -> the grasp is valid. All other codes defined in enum
 
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;

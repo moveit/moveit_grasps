@@ -98,9 +98,8 @@ bool SuctionGraspFilter::filterGrasps(std::vector<SuctionGraspCandidatePtr>& gra
                                       const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp)
 {
   filterBySuctionVoxelOverlapCutoff(grasp_candidates);
-  std::vector<GraspCandidatePtr> grasp_candidates_base(grasp_candidates.begin(), grasp_candidates.end());
-  return
-      GraspFilter::filterGrasps(grasp_candidates_base, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
+  std::vector<GraspCandidatePtr> grasp_candidates_base = convertToGraspCandidatePtrVector(grasp_candidates);
+  return GraspFilter::filterGrasps(grasp_candidates_base, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
 }
 
 void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)
