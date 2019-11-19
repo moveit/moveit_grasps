@@ -45,7 +45,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 // C++
-#include <math.h>
+#include <cmath>
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>

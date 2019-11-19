@@ -49,7 +49,7 @@
 namespace moveit_grasps
 {
 // Constructor
-TwoFingerGraspFilter::TwoFingerGraspFilter(robot_state::RobotStatePtr robot_state,
+TwoFingerGraspFilter::TwoFingerGraspFilter(const robot_state::RobotStatePtr& robot_state,
                                            moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : GraspFilter(robot_state, visual_tools)
 {
@@ -66,10 +66,9 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
   // Filter by cutting planes
-  for (std::size_t i = 0; i < cutting_planes_.size(); i++)
+  for (auto& cutting_plane : cutting_planes_)
   {
-    if (filterGraspByPlane(grasp_candidate, cutting_planes_[i]->pose_, cutting_planes_[i]->plane_,
-                           cutting_planes_[i]->direction_) == true)
+    if (filterGraspByPlane(grasp_candidate, cutting_plane->pose_, cutting_plane->plane_, cutting_plane->direction_))
     {
       grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       return false;
@@ -77,10 +76,10 @@ bool TwoFingerGraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_st
   }
 
   // Filter by desired orientation
-  for (std::size_t i = 0; i < desired_grasp_orientations_.size(); i++)
+  for (auto& desired_grasp_orientation : desired_grasp_orientations_)
   {
-    if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientations_[i]->pose_,
-                                 desired_grasp_orientations_[i]->max_angle_offset_) == true)
+    if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientation->pose_,
+                                 desired_grasp_orientation->max_angle_offset_))
     {
       grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION;
       return false;

@@ -71,7 +71,7 @@ bool ikCallbackFnAdapter(moveit::core::RobotState* state, const moveit::core::Jo
 namespace moveit_grasps
 {
 // Constructor
-GraspFilter::GraspFilter(robot_state::RobotStatePtr robot_state,
+GraspFilter::GraspFilter(const robot_state::RobotStatePtr& robot_state,
                          moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : visual_tools_(visual_tools), nh_("~/moveit_grasps/filter")
 {
@@ -179,7 +179,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 }
 
 bool GraspFilter::filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& filter_pose,
-                                     grasp_parallel_plane plane, int direction)
+                                     GraspParallelPlane plane, int direction)
 {
   Eigen::Isometry3d grasp_pose;
   Eigen::Vector3d grasp_position;
@@ -445,10 +445,10 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
   // Filter by cutting planes
-  for (std::size_t i = 0; i < cutting_planes_.size(); i++)
+  for (std::size_t i = 0; i < cutting_planes_.size(); ++i)
   {
     if (filterGraspByPlane(grasp_candidate, cutting_planes_[i]->pose_, cutting_planes_[i]->plane_,
-                           cutting_planes_[i]->direction_) == true)
+                           cutting_planes_[i]->direction_))
     {
       grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       return false;
@@ -456,10 +456,10 @@ bool GraspFilter::processCandidateGrasp(IkThreadStructPtr& ik_thread_struct)
   }
 
   // Filter by desired orientation
-  for (std::size_t i = 0; i < desired_grasp_orientations_.size(); i++)
+  for (std::size_t i = 0; i < desired_grasp_orientations_.size(); ++i)
   {
     if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientations_[i]->pose_,
-                                 desired_grasp_orientations_[i]->max_angle_offset_) == true)
+                                 desired_grasp_orientations_[i]->max_angle_offset_))
     {
       grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION;
       return false;
@@ -554,7 +554,7 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, IkThreadStruc
   return true;
 }
 
-void GraspFilter::addCuttingPlane(const Eigen::Isometry3d& pose, grasp_parallel_plane plane, int direction)
+void GraspFilter::addCuttingPlane(const Eigen::Isometry3d& pose, GraspParallelPlane plane, int direction)
 {
   cutting_planes_.push_back(std::make_shared<CuttingPlane>(pose, plane, direction));
 }
@@ -730,18 +730,18 @@ bool GraspFilter::visualizeCuttingPlanes()
 {
   if (show_cutting_planes_)
   {
-    for (std::size_t i = 0; i < cutting_planes_.size(); i++)
+    for (auto& cutting_plane : cutting_planes_)
     {
-      switch (cutting_planes_[i]->plane_)
+      switch (cutting_plane->plane_)
       {
         case XY:
-          visual_tools_->publishXYPlane(cutting_planes_[i]->pose_);
+          visual_tools_->publishXYPlane(cutting_plane->pose_);
           break;
         case XZ:
-          visual_tools_->publishXZPlane(cutting_planes_[i]->pose_);
+          visual_tools_->publishXZPlane(cutting_plane->pose_);
           break;
         case YZ:
-          visual_tools_->publishYZPlane(cutting_planes_[i]->pose_);
+          visual_tools_->publishYZPlane(cutting_plane->pose_);
           break;
         default:
           ROS_ERROR_STREAM_NAMED("grasp_filter", "Unknown cutting plane type");

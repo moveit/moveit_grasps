@@ -60,11 +60,11 @@
 
 // C++
 #include <boost/thread.hpp>
-#include <math.h>
+#include <cmath>
 
 namespace moveit_grasps
 {
-enum grasp_parallel_plane
+enum GraspParallelPlane
 {
   XY,
   XZ,
@@ -77,10 +77,10 @@ enum grasp_parallel_plane
 struct CuttingPlane
 {
   Eigen::Isometry3d pose_;
-  grasp_parallel_plane plane_;
+  GraspParallelPlane plane_;
   int direction_;
 
-  CuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction)
+  CuttingPlane(Eigen::Isometry3d pose, GraspParallelPlane plane, int direction)
     : pose_(pose), plane_(plane), direction_(direction)
   {
   }
@@ -147,7 +147,7 @@ class GraspFilter
 {
 public:
   // Constructor
-  GraspFilter(robot_state::RobotStatePtr robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  GraspFilter(const robot_state::RobotStatePtr& robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Return grasps that are kinematically feasible
@@ -170,7 +170,7 @@ public:
    * \return true if grasp is filtered by operation
    */
   bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, const Eigen::Isometry3d& filter_pose,
-                          grasp_parallel_plane plane, int direction);
+                          GraspParallelPlane plane, int direction);
 
   /**
    * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
@@ -216,7 +216,7 @@ public:
    * \param plane - which plane to use as the cutting plane
    * \param direction - on which side of the plane the grasps will be removed
    */
-  void addCuttingPlane(const Eigen::Isometry3d& pose, grasp_parallel_plane plane, int direction);
+  void addCuttingPlane(const Eigen::Isometry3d& pose, GraspParallelPlane plane, int direction);
 
   /**
    * \brief Show all cutting planes that are currently enables

@@ -111,7 +111,7 @@ TwoFingerGraspGenerator::TwoFingerGraspGenerator(moveit_visual_tools::MoveItVisu
   grasp_candidate_config_ = TwoFingerGraspCandidateConfig();
 }
 
-void TwoFingerGraspGenerator::setGraspCandidateConfig(const TwoFingerGraspCandidateConfig grasp_candidate_config)
+void TwoFingerGraspGenerator::setGraspCandidateConfig(const TwoFingerGraspCandidateConfig& grasp_candidate_config)
 {
   grasp_candidate_config_ = grasp_candidate_config;
 }
@@ -410,8 +410,8 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
   std::size_t num_grasps = grasp_poses_tcp.size();
   if (grasp_candidate_config.enable_variable_angle_grasps_)
   {
-    for (std::size_t i = num_corner_grasps; i < num_grasps;
-         i++)  // corner grasps at zero depth don't need variable angles
+    // corner grasps at zero depth don't need variable angles
+    for (std::size_t i = num_corner_grasps; i < num_grasps; ++i)
     {
       base_pose = grasp_poses_tcp[i];
 
@@ -421,9 +421,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
       while (graspIntersectionHelper(cuboid_pose, depth, width, height, grasp_pose_tcp, grasp_data))
       {
         grasp_poses_tcp.push_back(grasp_pose_tcp);
-        // visual_tools_->publishZArrow(grasp_pose_tcp, rviz_visual_tools::BLUE, rviz_visual_tools::XSMALL, 0.02);
         grasp_pose_tcp *= Eigen::AngleAxisd(angle_res, Eigen::Vector3d::UnitY());
-        // ros::Duration(0.2).sleep();
         iterations++;
         if (iterations > max_iterations)
         {
@@ -514,11 +512,11 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
   Eigen::Vector3d grasp_dir;
   Eigen::Isometry3d depth_pose;
 
-  for (std::size_t i = 0; i < num_grasps; i++)
+  for (std::size_t i = 0; i < num_grasps; ++i)
   {
     grasp_dir = grasp_poses_tcp[i].rotation() * Eigen::Vector3d::UnitZ();
     depth_pose = grasp_poses_tcp[i];
-    for (std::size_t j = 0; j < num_depth_grasps; j++)
+    for (std::size_t j = 0; j < num_depth_grasps; ++j)
     {
       depth_pose.translation() += delta_f * grasp_dir;
       grasp_poses_tcp.push_back(depth_pose);
@@ -528,7 +526,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
   // add grasps in both directions
   ROS_DEBUG_STREAM_NAMED("cuboid_axis_grasps", "adding bi-directional grasps...");
   num_grasps = grasp_poses_tcp.size();
-  for (std::size_t i = 0; i < num_grasps; i++)
+  for (std::size_t i = 0; i < num_grasps; ++i)
   {
     grasp_pose_tcp = grasp_poses_tcp[i];
     grasp_pose_tcp *= Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ());
@@ -546,7 +544,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
                                       std::numeric_limits<double>::min());
   double grasp_distance;
 
-  for (std::size_t i = 0; i < num_grasps; i++)
+  for (std::size_t i = 0; i < num_grasps; ++i)
   {
     grasp_pose_tcp = grasp_poses_tcp[i];
     grasp_distance = (grasp_pose_tcp.translation() - cuboid_pose.translation()).norm();
@@ -556,7 +554,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
     if (grasp_distance < min_grasp_distance_)
       min_grasp_distance_ = grasp_distance;
 
-    for (std::size_t j = 0; j < 3; j++)
+    for (std::size_t j = 0; j < 3; ++j)
     {
       if (grasp_pose_tcp.translation()[j] < min_translations_[j])
         min_translations_[j] = grasp_pose_tcp.translation()[j];
@@ -572,7 +570,7 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
   // add all poses as possible grasps
   std::size_t num_grasps_added = 0;
 
-  for (std::size_t i = 0; i < grasp_poses_tcp.size(); i++)
+  for (std::size_t i = 0; i < grasp_poses_tcp.size(); ++i)
   {
     Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;
     if (!addGrasp(grasp_pose_eef_mount, grasp_data, cuboid_pose, object_size, object_width, grasp_candidates))
@@ -606,7 +604,7 @@ std::size_t TwoFingerGraspGenerator::addCornerGraspsHelper(const Eigen::Isometry
   grasp_pose_tcp *= Eigen::AngleAxisd(corner_rotation, Eigen::Vector3d::UnitY());
   grasp_pose_tcp.translation() += translation;
 
-  for (std::size_t i = 0; i < num_radial_grasps; i++)
+  for (std::size_t i = 0; i < num_radial_grasps; ++i)
   {
     // Eigen::Vector3d grasp_dir = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
     // Eigen::Isometry3d radial_pose = grasp_pose_tcp;
@@ -636,7 +634,7 @@ std::size_t TwoFingerGraspGenerator::addFaceGraspsHelper(const Eigen::Isometry3d
   grasp_pose_tcp *= Eigen::AngleAxisd(alignment_rotation, Eigen::Vector3d::UnitY());
   grasp_pose_tcp.translation() += translation;
 
-  for (std::size_t i = 0; i < num_grasps; i++)
+  for (std::size_t i = 0; i < num_grasps; ++i)
   {
     grasp_pose_tcp.translation() += delta;
     grasp_poses_tcp.push_back(grasp_pose_tcp);
@@ -668,7 +666,7 @@ std::size_t TwoFingerGraspGenerator::addEdgeGraspsHelper(const Eigen::Isometry3d
   grasp_pose_tcp *= Eigen::AngleAxisd(corner_rotation, Eigen::Vector3d::UnitX());
   grasp_pose_tcp.translation() += translation;
 
-  for (std::size_t i = 0; i < num_grasps; i++)
+  for (std::size_t i = 0; i < num_grasps; ++i)
   {
     grasp_pose_tcp.translation() += delta;
     grasp_poses_tcp.push_back(grasp_pose_tcp);
@@ -700,26 +698,12 @@ bool TwoFingerGraspGenerator::graspIntersectionHelper(const Eigen::Isometry3d& c
   t = (height / 2.0 - point_a[2]) / (point_b[2] - point_a[2]);  // parameterization of line segment in 3d
   if (intersectionHelper(t, point_a[0], point_a[1], point_b[0], point_b[1], depth, width, u, v))
   {
-    // if (verbose_)
-    // {
-    //   intersection[0]= u;
-    //   intersection[1]= v;
-    //   intersection[2]= height / 2.0;
-    //   visual_tools_->publishSphere(intersection, rviz_visual_tools::BLUE, 0.005);
-    // }
     return true;
   }
 
   t = (-height / 2.0 - point_a[2]) / (point_b[2] - point_a[2]);
   if (intersectionHelper(t, point_a[0], point_a[1], point_b[0], point_b[1], depth, width, u, v))
   {
-    // if (verbose_)
-    // {
-    //   intersection[0]= u;
-    //   intersection[1]= v;
-    //   intersection[2]= -height / 2.0;
-    //   visual_tools_->publishSphere(intersection, rviz_visual_tools::CYAN, 0.005);
-    // }
     return true;
   }
 
@@ -727,26 +711,12 @@ bool TwoFingerGraspGenerator::graspIntersectionHelper(const Eigen::Isometry3d& c
   t = (width / 2.0 - point_a[1]) / (point_b[1] - point_a[1]);
   if (intersectionHelper(t, point_a[0], point_a[2], point_b[0], point_b[2], depth, height, u, v))
   {
-    // if (verbose_)
-    // {
-    //   intersection[0]= u;
-    //   intersection[1]= width / 2.0;
-    //   intersection[2]= v;
-    //   visual_tools_->publishSphere(intersection, rviz_visual_tools::GREEN, 0.005);
-    // }
     return true;
   }
 
   t = (-width / 2.0 - point_a[1]) / (point_b[1] - point_a[1]);
   if (intersectionHelper(t, point_a[0], point_a[2], point_b[0], point_b[2], depth, height, u, v))
   {
-    // if (verbose_)
-    // {
-    //   intersection[0]= u;
-    //   intersection[1]= -width / 2.0;
-    //   intersection[2]= v;
-    //   visual_tools_->publishSphere(intersection, rviz_visual_tools::LIME_GREEN, 0.005);
-    // }
     return true;
   }
 
@@ -754,26 +724,12 @@ bool TwoFingerGraspGenerator::graspIntersectionHelper(const Eigen::Isometry3d& c
   t = (depth / 2.0 - point_a[0]) / (point_b[0] - point_a[0]);
   if (intersectionHelper(t, point_a[1], point_a[2], point_b[1], point_b[2], width, height, u, v))
   {
-    // if (verbose_)
-    // {
-    //   intersection[0]= depth / 2.0;
-    //   intersection[1]= u;
-    //   intersection[2]= v;
-    //   visual_tools_->publishSphere(intersection, rviz_visual_tools::RED, 0.005);
-    // }
     return true;
   }
 
   t = (-depth / 2.0 - point_a[0]) / (point_b[0] - point_a[0]);
   if (intersectionHelper(t, point_a[1], point_a[2], point_b[1], point_b[2], width, height, u, v))
   {
-    // if (verbose_)
-    // {
-    //   intersection[0]= -depth / 2.0;
-    //   intersection[1]= u;
-    //   intersection[2]= v;
-    //   visual_tools_->publishSphere(intersection, rviz_visual_tools::PINK, 0.005);
-    // }
     return true;
   }
 
@@ -851,7 +807,7 @@ double TwoFingerGraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_
 
   double total_score = 0;
   double high_score = 0;
-  for (std::size_t i = 0; i < num_scores; i++)
+  for (std::size_t i = 0; i < num_scores; ++i)
   {
     total_score += weights[i] * scores[i];
     high_score += weights[i];
@@ -860,25 +816,21 @@ double TwoFingerGraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_
 
   if (verbose_)
   {
+    // clang-format off
     ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                           "Grasp score: \n "
-                               << "\twidth_score         = " << width_score << "\n"
-                               << "\torientation_score.x = " << orientation_scores[0] << "\n"
-                                                                                         "\torientation_score.y = "
-                               << orientation_scores[1] << "\n"
-                                                           "\torientation_score.z = "
-                               << orientation_scores[2] << "\n"
-                                                           "\tdistance_score      = "
-                               << distance_score << "\n"
-                               << "\ttranslation_score.x = " << translation_scores[0] << "\n"
-                                                                                         "\ttranslation_score.y = "
-                               << translation_scores[1] << "\n"
-                                                           "\ttranslation_score.z = "
-                               << translation_scores[2] << "\n"
-                                                           "\tweights             = "
-                               << weights[0] << ", " << weights[1] << ", " << weights[2] << ", " << weights[3] << ", "
-                               << weights[4] << ", " << weights[5] << ", " << weights[6] << ", " << weights[7] << "\n"
-                               << "\ttotal_score         = " << total_score);
+                           "Grasp score: "
+                               << "\n\twidth_score         = " << width_score
+                               << "\n\torientation_score.x = " << orientation_scores[0]
+                               << "\n\torientation_score.y = " << orientation_scores[1]
+                               << "\n\torientation_score.z = " << orientation_scores[2]
+                               << "\n\tdistance_score      = " << distance_score
+                               << "\n\ttranslation_score.x = " << translation_scores[0]
+                               << "\n\ttranslation_score.y = " << translation_scores[1]
+                               << "\n\ttranslation_score.z = " << translation_scores[2]
+                               << "\n\tweights             = " << weights[0] << ", " << weights[1] << ", " << weights[2] << ", " << weights[3] << ", "
+                               << weights[4] << ", " << weights[5] << ", " << weights[6] << ", " << weights[7]
+                               << "\n\ttotal_score         = " << total_score);
+    // clang-format on
     visual_tools_->publishSphere(grasp_pose_tcp.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
 
     if (false)

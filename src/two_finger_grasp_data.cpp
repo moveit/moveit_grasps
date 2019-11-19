@@ -45,7 +45,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 // C++
-#include <math.h>
+#include <cmath>
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
@@ -114,8 +114,8 @@ bool TwoFingerGraspData::fingerWidthToGraspPosture(double distance_btw_fingers,
                                            << distance_btw_fingers);
 
   // Error check
-  const double EPSILON = 0.0000001;
-  if (distance_btw_fingers > max_finger_width_ + EPSILON || distance_btw_fingers < min_finger_width_ - EPSILON)
+  if (distance_btw_fingers > max_finger_width_ + std::numeric_limits<double>::epsilon() ||
+      distance_btw_fingers < min_finger_width_ - std::numeric_limits<double>::epsilon())
   {
     ROS_DEBUG_STREAM_NAMED("grasp_data", "Requested " << distance_btw_fingers << " is beyond limits of "
                                                       << min_finger_width_ << "," << max_finger_width_);
@@ -160,7 +160,7 @@ bool TwoFingerGraspData::fingerWidthToGraspPosture(double distance_btw_fingers,
   return jointPositionsToGraspPosture(joint_positions, grasp_posture);
 }
 
-bool TwoFingerGraspData::jointPositionsToGraspPosture(std::vector<double> joint_positions,
+bool TwoFingerGraspData::jointPositionsToGraspPosture(const std::vector<double>& joint_positions,
                                                       trajectory_msgs::JointTrajectory& grasp_posture)
 {
   for (std::size_t joint_index = 0; joint_index < pre_grasp_posture_.joint_names.size(); joint_index++)

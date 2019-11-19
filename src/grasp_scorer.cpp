@@ -65,7 +65,7 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& gras
 {
   Eigen::Vector3d scores;
 
-  for (std::size_t i = 0; i < 3; i++)
+  for (std::size_t i = 0; i < 3; ++i)
   {
     // We assume that the ideal is in the middle
     double ideal = (max_translations[i] + min_translations[i]) / 2;

@@ -75,7 +75,7 @@
 // C++
 #include <cstdlib>
 #include <string>
-#include <math.h>
+#include <cmath>
 #include <limits>
 #define _USE_MATH_DEFINES
 

@@ -86,7 +86,7 @@ public:
   /* brief sets internal grasp_candidate_config_ variable
    * \param grasp_candidate_config - a config describing the grasps to be generated
    */
-  void setGraspCandidateConfig(const TwoFingerGraspCandidateConfig grasp_candidate_config);
+  void setGraspCandidateConfig(const TwoFingerGraspCandidateConfig& grasp_candidate_config);
 
   /**
    * \brief Create possible grasp positions around a cuboid

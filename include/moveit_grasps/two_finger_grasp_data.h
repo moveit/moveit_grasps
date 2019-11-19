@@ -91,7 +91,7 @@ public:
    * \param grasp_posture - output. The full grasp posture
    * \return true on success
    */
-  bool jointPositionsToGraspPosture(std::vector<double> joint_positions,
+  bool jointPositionsToGraspPosture(const std::vector<double>& joint_positions,
                                     trajectory_msgs::JointTrajectory& grasp_posture);
 
   /**
