@@ -130,9 +130,8 @@ bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mou
   new_grasp.grasp_quality =
       scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
 
-  SuctionGraspCandidatePtr candidate = std::make_shared<SuctionGraspCandidate>(new_grasp, grasp_data, object_pose);
-  candidate->suction_voxel_overlap_ = suction_voxel_overlap;
-  grasp_candidates.push_back(candidate);
+  grasp_candidates.emplace_back(std::make_shared<SuctionGraspCandidate>(new_grasp, grasp_data, object_pose));
+  grasp_candidates.back()->suction_voxel_overlap_ = suction_voxel_overlap;
   return true;
 }
 

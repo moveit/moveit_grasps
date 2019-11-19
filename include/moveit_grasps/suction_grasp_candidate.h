@@ -41,6 +41,7 @@
 
 // Parent class
 #include <moveit_grasps/grasp_candidate.h>
+#include <moveit_grasps/suction_grasp_data.h>
 
 namespace moveit_grasps
 {
@@ -59,13 +60,15 @@ struct SuctionGraspFilterCode : public GraspFilterCode
 class SuctionGraspCandidate : public GraspCandidate
 {
 public:
-  SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataPtr& grasp_data,
+  SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
                         const Eigen::Isometry3d& cuboid_pose);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object
   std::vector<double> suction_voxel_overlap_;
+
+  const SuctionGraspDataPtr grasp_data_;
 
 };  // class
 
