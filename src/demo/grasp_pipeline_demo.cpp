@@ -228,7 +228,8 @@ public:
 
     // --------------------------------------------
     // Generating a seed state for filtering grasps
-    robot_state::RobotStatePtr seed_state(new robot_state::RobotState(*visual_tools_->getSharedRobotState()));
+    robot_state::RobotStatePtr seed_state =
+        std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
     Eigen::Isometry3d eef_mount_grasp_pose =
         visual_tools_->convertPose(object_pose) * grasp_data_->tcp_to_eef_mount_.inverse();
     if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))

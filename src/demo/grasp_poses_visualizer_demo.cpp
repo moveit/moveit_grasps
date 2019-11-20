@@ -69,7 +69,7 @@ public:
     ROS_INFO_STREAM_NAMED("init", "Planning Group: " << planning_group_name_);
 
     // set up rviz
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world", "/rviz_visual_tools"));
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("world", "/rviz_visual_tools");
     visual_tools_->loadMarkerPub();
     visual_tools_->loadRobotStatePub("/display_robot_state");
     visual_tools_->loadTrajectoryPub("/display_planned_path");
@@ -88,7 +88,7 @@ public:
     ROS_ASSERT_MSG(grasp_data_->loadGraspData(nh_, ee_group_name_), "Failed to load Grasp Data parameters.");
 
     // load grasp generator
-    grasp_generator_.reset(new moveit_grasps::TwoFingerGraspGenerator(visual_tools_, verbose));
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_, verbose);
 
     // initialize cuboid size
     depth_ = CUBOID_MIN_SIZE;
