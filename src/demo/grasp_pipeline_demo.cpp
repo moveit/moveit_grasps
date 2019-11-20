@@ -52,8 +52,8 @@
 
 // Grasp
 #include <moveit_grasps/two_finger_grasp_generator.h>
-#include <moveit_grasps/grasp_filter.h>
 #include <moveit_grasps/two_finger_grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_filter.h>
 #include <moveit_grasps/grasp_planner.h>
 
 // Parameter loading
@@ -173,7 +173,8 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
-    grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+    grasp_filter_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp planner for approach, lift and retreat planning
