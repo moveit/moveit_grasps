@@ -87,12 +87,13 @@ bool SuctionGraspData::loadGraspData(const ros::NodeHandle& nh, const std::strin
   ros::NodeHandle child_nh(nh, end_effector);
 
   int suction_rows_count, suction_cols_count;
-  error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x_);
-  error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y_);
+  double active_suction_range_x, active_suction_range_y;
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_x", active_suction_range_x);
+  error += !rosparam_shortcuts::get(parent_name, child_nh, "active_suction_range_y", active_suction_range_y);
   child_nh.param<int>("suction_rows_count", suction_rows_count, 1);
   child_nh.param<int>("suction_cols_count", suction_cols_count, 1);
   suction_voxel_matrix_ = std::make_shared<SuctionVoxelMatrix>(suction_rows_count, suction_cols_count,
-                                                               active_suction_range_y_, active_suction_range_x_);
+                                                               active_suction_range_y, active_suction_range_x);
   rosparam_shortcuts::shutdownIfError(parent_name, error);
 
   return true;
@@ -102,8 +103,8 @@ void SuctionGraspData::print()
 {
   GraspData::print();
   std::cout << "Suction Gripper Parameters: " << std::endl;
-  std::cout << "\tactive_suction_range_x_: " << active_suction_range_x_ << std::endl;
-  std::cout << "\tactive_suction_range_y_: " << active_suction_range_y_ << std::endl;
+  std::cout << "\tactive_suction_range_x_: " << suction_voxel_matrix_->active_suction_range_x_ << std::endl;
+  std::cout << "\tactive_suction_range_y_: " << suction_voxel_matrix_->active_suction_range_y_ << std::endl;
 }
 
 }  // namespace

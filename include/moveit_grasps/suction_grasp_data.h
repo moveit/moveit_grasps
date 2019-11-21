@@ -77,9 +77,6 @@ public:
   //////////////////////////////////////
   // Suction gripper specific parameters
   //////////////////////////////////////
-  double active_suction_range_x_;
-  double active_suction_range_y_;
-
   std::shared_ptr<SuctionVoxelMatrix> suction_voxel_matrix_;
 };
 
