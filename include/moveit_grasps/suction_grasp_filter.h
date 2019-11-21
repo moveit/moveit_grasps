@@ -54,22 +54,22 @@ public:
   SuctionGraspFilter(robot_state::RobotStatePtr& robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
-   * \brief Filter grasps that do not have a valid suction voxel overlap
-   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
-   */
-  void filterBySuctionVoxelOverlapCutoff(std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
-
-  /**
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
    * \return number of grasps remaining
    */
-  bool filterGrasps(std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
+  bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                     planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                     const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                    bool filter_pregrasp = false);
+                    bool filter_pregrasp = false) override;
+
+  /**
+   * \brief Filter grasps that do not have a valid suction voxel overlap
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   */
+  bool filterBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief  For suction grippers, set the cutoff threshold used by preFilterBySuctionVoxelOverlap to

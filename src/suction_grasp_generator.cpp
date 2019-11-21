@@ -77,7 +77,7 @@ SuctionGraspGenerator::SuctionGraspGenerator(const moveit_visual_tools::MoveItVi
 bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount,
                                      const SuctionGraspDataPtr& grasp_data, const Eigen::Isometry3d& object_pose,
                                      const Eigen::Vector3d& object_size, double object_width,
-                                     std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
+                                     std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   // Transform the grasp pose eef mount to the tcp grasp pose
   Eigen::Isometry3d grasp_pose_tcp = grasp_pose_eef_mount * grasp_data->tcp_to_eef_mount_.inverse();
@@ -130,8 +130,9 @@ bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mou
   new_grasp.grasp_quality =
       scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
 
-  grasp_candidates.emplace_back(std::make_shared<SuctionGraspCandidate>(new_grasp, grasp_data, object_pose));
-  grasp_candidates.back()->suction_voxel_overlap_ = suction_voxel_overlap;
+  auto suction_grasp_candidate = std::make_shared<SuctionGraspCandidate>(new_grasp, grasp_data, object_pose);
+  suction_grasp_candidate->suction_voxel_overlap_ = suction_voxel_overlap;
+  grasp_candidates.emplace_back(std::move(suction_grasp_candidate));
   return true;
 }
 
@@ -200,8 +201,22 @@ double SuctionGraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_p
 }
 
 bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
+                                           double height, const moveit_grasps::GraspDataPtr& grasp_data,
+                                           std::vector<GraspCandidatePtr>& grasp_candidates)
+{
+  auto suction_grasp_data = std::dynamic_pointer_cast<SuctionGraspData>(grasp_data);
+  if (!suction_grasp_data)
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_generator", "grasp_data is not castable to SuctionGraspData. Make sure you are using "
+                                              "the child class");
+    return false;
+  }
+  return generateGrasps(cuboid_pose, depth, width, height, suction_grasp_data, grasp_candidates);
+}
+
+bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
                                            double height, const moveit_grasps::SuctionGraspDataPtr& grasp_data,
-                                           std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
+                                           std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   bool result = generateSuctionGrasps(cuboid_pose, depth, width, height, grasp_data, grasp_candidates);
 
@@ -216,7 +231,7 @@ bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose,
 // Z -> Height
 bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width,
                                                   double height, const moveit_grasps::SuctionGraspDataPtr& grasp_data,
-                                                  std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
+                                                  std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   grasp_candidates.clear();
   EigenSTL::vector_Isometry3d grasp_poses_tcp;
@@ -283,10 +298,10 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   // if X range is less than y range then we use x range for the xy range
   double xy_increment = grasp_data->grasp_resolution_;
   double y_min = 0;
-  double y_max = (width + grasp_data->active_suction_range_y_) / 2.0 - xy_increment;
+  double y_max = (width + grasp_data->suction_voxel_matrix_->active_suction_range_y_) / 2.0 - xy_increment;
 
   double x_min = 0;
-  double x_max = (depth + grasp_data->active_suction_range_x_) / 2.0 - xy_increment;
+  double x_max = (depth + grasp_data->suction_voxel_matrix_->active_suction_range_x_) / 2.0 - xy_increment;
 
   double z_increment = grasp_data->grasp_depth_resolution_;
   double z_min = z_increment;
@@ -396,8 +411,7 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   {
     ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Animating all generated (candidate) grasps "
                                                                       "before filtering");
-    std::vector<GraspCandidatePtr> grasp_candidates_base(grasp_candidates.begin(), grasp_candidates.end());
-    visualizeAnimatedGrasps(grasp_candidates_base, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
+    visualizeAnimatedGrasps(grasp_candidates, grasp_data->ee_jmg_, show_prefiltered_grasps_speed_);
   }
 
   return true;

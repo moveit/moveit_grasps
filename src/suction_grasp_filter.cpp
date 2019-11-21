@@ -55,7 +55,7 @@ SuctionGraspFilter::SuctionGraspFilter(robot_state::RobotStatePtr& robot_state,
 {
 }
 
-void SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<SuctionGraspCandidatePtr>& grasp_candidates)
+bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   // Pre-filter for suction voxel overlap
   if (suction_voxel_overlap_cutoff_ > 0)
@@ -66,7 +66,13 @@ void SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<SuctionGr
     {
       ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "---------------\nGrasp candidate: " << count++);
       bool valid = false;
-      for (double& voxel_overlap : grasp_candidates[ix]->suction_voxel_overlap_)
+      auto suction_grasp_candidate = std::dynamic_pointer_cast<SuctionGraspCandidate>(grasp_candidates[ix]);
+      if (!suction_grasp_candidate)
+      {
+        ROS_ERROR_NAMED("grasp_filter.pre_filter", "grasp_candidate is not castable as SuctionGraspCandidatePtr");
+        return false;
+      }
+      for (double& voxel_overlap : suction_grasp_candidate->suction_voxel_overlap_)
       {
         if (voxel_overlap > suction_voxel_overlap_cutoff_)
         {
@@ -90,16 +96,17 @@ void SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<SuctionGr
                                  << "\n-------------------------------------------------------");
     }
   }
+  return true;
 }
 
-bool SuctionGraspFilter::filterGrasps(std::vector<SuctionGraspCandidatePtr>& grasp_candidates,
+bool SuctionGraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                       planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                       const robot_model::JointModelGroup* arm_jmg,
                                       const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
 {
-  filterBySuctionVoxelOverlapCutoff(grasp_candidates);
-  std::vector<GraspCandidatePtr> grasp_candidates_base = convertToGraspCandidatePtrVector(grasp_candidates);
-  return GraspFilter::filterGrasps(grasp_candidates_base, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
+  if (!filterBySuctionVoxelOverlapCutoff(grasp_candidates))
+    return false;
+  return GraspFilter::filterGrasps(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp);
 }
 
 void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)

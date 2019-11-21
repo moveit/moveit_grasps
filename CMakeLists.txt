@@ -122,6 +122,12 @@ target_link_libraries(${PROJECT_NAME}_grasp_pipeline_demo
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
+# Demo suction grasp pipeline
+add_executable(${PROJECT_NAME}_suction_grasp_pipeline_demo src/demo/suction_grasp_pipeline_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_suction_grasp_pipeline_demo
+  ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
 #############
 ## INSTALL ##
 #############

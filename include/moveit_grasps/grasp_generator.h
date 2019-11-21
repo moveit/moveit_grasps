@@ -77,7 +77,6 @@
 #include <string>
 #include <cmath>
 #include <limits>
-#define _USE_MATH_DEFINES
 
 #include <moveit_grasps/grasp_data.h>
 
@@ -117,8 +116,8 @@ public:
    * \param grasp_candidates possible grasps generated
    * \return true if successful
    */
-  bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+  virtual bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
+                              const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief Get the grasp direction vector relative to the world frame

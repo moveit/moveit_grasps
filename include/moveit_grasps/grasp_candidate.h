@@ -95,7 +95,7 @@ public:
 
   bool getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robot_state);
 
-  bool isValid();
+  virtual bool isValid();
 
   moveit_msgs::Grasp grasp_;
 

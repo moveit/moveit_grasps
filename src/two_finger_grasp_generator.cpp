@@ -118,6 +118,20 @@ void TwoFingerGraspGenerator::setGraspCandidateConfig(const TwoFingerGraspCandid
 }
 
 bool TwoFingerGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
+                                             double height, const moveit_grasps::GraspDataPtr& grasp_data,
+                                             std::vector<GraspCandidatePtr>& grasp_candidates)
+{
+  auto two_finger_grasp_data = std::dynamic_pointer_cast<TwoFingerGraspData>(grasp_data);
+  if (!two_finger_grasp_data)
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_generator", "grasp_data is not castable to SuctionGraspData. Make sure you are using "
+                                              "the child class");
+    return false;
+  }
+  return generateGrasps(cuboid_pose, depth, width, height, two_finger_grasp_data, grasp_candidates);
+}
+
+bool TwoFingerGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width,
                                              double height, const TwoFingerGraspDataPtr& grasp_data,
                                              std::vector<GraspCandidatePtr>& grasp_candidates)
 {

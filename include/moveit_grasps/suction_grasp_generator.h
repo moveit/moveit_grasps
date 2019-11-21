@@ -72,7 +72,9 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                      const SuctionGraspDataPtr& grasp_data, std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
+                      const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates) override;
+  bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
+                      const SuctionGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief creates grasp messages from the generated grasp poses
@@ -86,8 +88,9 @@ public:
    */
   bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const SuctionGraspDataPtr& grasp_data,
                 const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size, double object_width,
-                std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
+                std::vector<GraspCandidatePtr>& grasp_candidates);
 
+protected:
   /**
    * \brief Score the generated suction grasp poses
    * \param grasp_pose_tcp - the pose of the grasp
@@ -101,10 +104,9 @@ public:
                            const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
                            std::vector<double>& suction_voxel_overlap);
 
-protected:
+  /* \brief helper function for generating suction grasps */
   bool generateSuctionGrasps(const Eigen::Isometry3d& cuboid_top_pose, double depth, double width, double height,
-                             const SuctionGraspDataPtr& grasp_data,
-                             std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
+                             const SuctionGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
 public:
   // Visual debug settings

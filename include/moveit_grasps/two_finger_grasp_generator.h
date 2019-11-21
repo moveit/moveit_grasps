@@ -100,8 +100,12 @@ public:
    * \return true if successful
    */
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
+                      const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates) override;
+
+  bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
                       const TwoFingerGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
+protected:
   /**
    * \brief creates grasp messages from the generated grasp poses
    * \param grasp_pose_eef_mount - the grasp pose. (Note: this is the pose of the eef mount not the position of the tcp)
@@ -116,7 +120,6 @@ public:
                 const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size, double object_width,
                 std::vector<GraspCandidatePtr>& grasp_candidates);
 
-protected:
   /**
    * \brief Create grasp positions around one axis of a cuboid
    * \param cuboid_pose:      centroid of object to grasp in world frame

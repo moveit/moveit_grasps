@@ -33,7 +33,7 @@
  *********************************************************************/
 
 /* Author: Mike Laumtman
-   Desc:   Demonstrates a full pick using MoveIt Grasps
+   Desc:   Demonstrates a full suction pick using MoveIt Grasps
 */
 
 // ROS
@@ -51,9 +51,9 @@
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 // Grasp
-#include <moveit_grasps/two_finger_grasp_generator.h>
-#include <moveit_grasps/two_finger_grasp_data.h>
-#include <moveit_grasps/two_finger_grasp_filter.h>
+#include <moveit_grasps/suction_grasp_generator.h>
+#include <moveit_grasps/suction_grasp_filter.h>
+#include <moveit_grasps/suction_grasp_data.h>
 #include <moveit_grasps/grasp_planner.h>
 
 // Parameter loading
@@ -81,11 +81,11 @@ void waitForNextStep(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, std
 
 }  // end annonymous namespace
 
-class GraspPipelineDemo
+class SuctionGraspPipelineDemo
 {
 public:
   // Constructor
-  GraspPipelineDemo() : nh_("~")
+  SuctionGraspPipelineDemo() : nh_("~")
   {
     // Get arm info from param server
     const std::string parent_name = "grasp_filter_demo";  // for namespacing logging messages
@@ -144,7 +144,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
     grasp_data_ =
-        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+        std::make_shared<moveit_grasps::SuctionGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
     if (!grasp_data_->loadGraspData(nh_, ee_group_name_))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to load Grasp Data parameters.");
@@ -153,7 +153,7 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
+    grasp_generator_ = std::make_shared<moveit_grasps::SuctionGraspGenerator>(visual_tools_);
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
@@ -174,7 +174,7 @@ public:
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
     grasp_filter_ =
-        std::make_shared<moveit_grasps::TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+        std::make_shared<moveit_grasps::SuctionGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp planner for approach, lift and retreat planning
@@ -210,16 +210,6 @@ public:
     // Generate grasp candidates
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
-    // Configure the desired types of grasps
-    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
-        moveit_grasps::TwoFingerGraspCandidateConfig();
-    grasp_generator_config.disableAll();
-    grasp_generator_config.enable_face_grasps_ = true;
-    grasp_generator_config.generate_y_axis_grasps_ = true;
-    grasp_generator_config.generate_x_axis_grasps_ = true;
-    grasp_generator_config.generate_z_axis_grasps_ = true;
-
-    grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
     if (!grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), object_x_depth, object_y_width,
                                           object_z_height, grasp_data_, grasp_candidates))
     {
@@ -473,16 +463,16 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // MoveIt! Grasps
-  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
+  moveit_grasps::SuctionGraspGeneratorPtr grasp_generator_;
 
   // Robot-specific data for generating grasps
-  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
+  moveit_grasps::SuctionGraspDataPtr grasp_data_;
 
   // For planning approach and retreats
   moveit_grasps::GraspPlannerPtr grasp_planner_;
 
   // For selecting good grasps
-  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
+  moveit_grasps::SuctionGraspFilterPtr grasp_filter_;
 
   // Shared planning scene (load once for everything)
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
@@ -522,7 +512,7 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Tests
-  moveit_grasps_demo::GraspPipelineDemo tester;
+  moveit_grasps_demo::SuctionGraspPipelineDemo tester;
   tester.demoRandomGrasp();
 
   // Benchmark time

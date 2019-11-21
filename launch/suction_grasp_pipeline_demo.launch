@@ -1,0 +1,49 @@
+<launch>
+  <!-- Launch rviz.launch before running this demo to see visalizations -->
+
+  <!-- Suction or two finger -->
+  <arg name="gripper" default="suction" doc="must be one of 'suction' or 'two_finger'" />
+
+  <!-- GDB Debug Arguments -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix"
+           value="gdb -x $(find moveit_grasps)/launch/gdb_settings.gdb --ex run --args" />
+
+  <!-- Verbose mode -->
+  <arg name="verbose" default="false" />
+  <arg unless="$(arg verbose)" name="command_args" value="" />
+  <arg     if="$(arg verbose)" name="command_args" value="--verbose" />
+
+  <!-- Callgrind Arguments -->
+  <arg name="callgrind" default="false" />
+  <arg unless="$(arg callgrind)" name="launch_prefix2" value="" />
+  <arg     if="$(arg callgrind)" name="launch_prefix2" value="valgrind --tool=callgrind --collect-atstart=no" />
+
+  <!-- Valgrind Arguments -->
+  <arg name="valgrind" default="false" />
+  <arg unless="$(arg valgrind)" name="launch_prefix3" value="" />
+  <arg     if="$(arg valgrind)" name="launch_prefix3" value="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes -v" />
+
+  <!-- PANDA -->
+  <include file="$(find moveit_grasps)/launch/load_panda.launch">
+    <arg name="gripper" value="$(arg gripper)"/>
+  </include>
+
+  <!-- Start the demo -->
+  <node name="moveit_grasps_demo" launch-prefix="$(arg launch_prefix) $(arg launch_prefix2) $(arg launch_prefix3)" pkg="moveit_grasps"
+  type="moveit_grasps_suction_grasp_pipeline_demo" output="screen" args="$(arg command_args)">
+    <param name="gripper" value="$(arg gripper)"/>
+    <param name="ee_group_name" value="hand"/>
+    <param name="planning_group_name" value="panda_arm"/>
+    <rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>
+    <rosparam command="load" file="$(find moveit_grasps)/config/moveit_grasps_config.yaml"/>
+  </node>
+
+  <!-- Planning Functionality -->
+  <arg name="planner" default="ompl" />
+  <include ns="moveit_grasps_demo" file="$(find panda_moveit_config)/launch/planning_pipeline.launch.xml">
+    <arg name="pipeline" value="$(arg planner)" />
+  </include>
+
+</launch>
