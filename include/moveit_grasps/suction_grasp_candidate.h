@@ -71,20 +71,7 @@ public:
   const SuctionGraspDataPtr grasp_data_;
 
 };  // class
-
 typedef std::shared_ptr<SuctionGraspCandidate> SuctionGraspCandidatePtr;
 
-/*
- * \brief Convenience function for casting vector<SuctionGraspCandidatePtr> to vector<GraspCandidatePtr>
- */
-std::vector<GraspCandidatePtr>
-convertToGraspCandidatePtrVector(std::vector<SuctionGraspCandidatePtr>& grasp_candidates);
-
-/*
- * \brief Convenience function for casting vector<GraspCandidatePtr> to vector<SuctionGraspCandidatePtr>
- */
-std::vector<SuctionGraspCandidatePtr>
-convertToSuctionGraspCandidatePtrVector(std::vector<GraspCandidatePtr>& grasp_candidates);
-}  // namespace
-
+}  // namespace moveit_grasps
 #endif
