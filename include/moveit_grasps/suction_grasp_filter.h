@@ -51,7 +51,8 @@ class SuctionGraspFilter : public GraspFilter
 {
 public:
   // Constructor
-  SuctionGraspFilter(robot_state::RobotStatePtr& robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  SuctionGraspFilter(const robot_state::RobotStatePtr& robot_state,
+                     const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Return grasps that are kinematically feasible

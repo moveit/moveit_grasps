@@ -52,7 +52,7 @@ class TwoFingerGraspFilter : public GraspFilter
 public:
   // Constructor
   TwoFingerGraspFilter(const robot_state::RobotStatePtr& robot_state,
-                       moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+                       const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Thread for checking part of the possible grasps list

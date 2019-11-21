@@ -72,7 +72,7 @@ namespace moveit_grasps
 {
 // Constructor
 GraspFilter::GraspFilter(const robot_state::RobotStatePtr& robot_state,
-                         moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
+                         const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : visual_tools_(visual_tools), nh_("~/moveit_grasps/filter")
 {
   // Make a copy of the robot state so that we are sure outside influence does not break our grasp filter

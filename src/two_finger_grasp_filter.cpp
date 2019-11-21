@@ -50,7 +50,7 @@ namespace moveit_grasps
 {
 // Constructor
 TwoFingerGraspFilter::TwoFingerGraspFilter(const robot_state::RobotStatePtr& robot_state,
-                                           moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
+                                           const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : GraspFilter(robot_state, visual_tools)
 {
 }

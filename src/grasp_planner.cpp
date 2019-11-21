@@ -49,7 +49,7 @@ namespace moveit_grasps
 constexpr char ENABLED_PARENT_NAME[] = "grasp_planner";  // for namespacing logging messages
 constexpr char ENABLED_SETTINGS_NAMESPACE[] = "moveit_grasps/planner";
 
-GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
+GraspPlanner::GraspPlanner(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : nh_("~"), visual_tools_(visual_tools)
 {
   loadEnabledSettings();

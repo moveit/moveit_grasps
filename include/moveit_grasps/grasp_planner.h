@@ -60,7 +60,7 @@ public:
   /**
    * \brief Constructor
    */
-  GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  GraspPlanner(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Plan entire cartesian manipulation sequence

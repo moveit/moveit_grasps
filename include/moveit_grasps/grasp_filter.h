@@ -147,7 +147,8 @@ class GraspFilter
 {
 public:
   // Constructor
-  GraspFilter(const robot_state::RobotStatePtr& robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  GraspFilter(const robot_state::RobotStatePtr& robot_state,
+              const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Return grasps that are kinematically feasible
