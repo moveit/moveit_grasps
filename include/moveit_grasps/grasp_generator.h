@@ -117,7 +117,7 @@ public:
    * \return true if successful
    */
   virtual bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
-                              const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
+                              const GraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates) = 0;
 
   /**
    * \brief Get the grasp direction vector relative to the world frame
