@@ -63,6 +63,13 @@ struct GraspScoreWeights
   {
   }
 
+  /* \brief Compute the weighted score given the orientation and translation scores */
+  double computeScore(const Eigen::Vector3d& orientation_scores, const Eigen::Vector3d& translation_scores,
+                      bool verbose = false) const;
+
+  /* \brief returns the sum of the grasp score weights*/
+  virtual double getWeightTotal() const;
+
   double orientation_x_score_weight_;
   double orientation_y_score_weight_;
   double orientation_z_score_weight_;
@@ -70,6 +77,8 @@ struct GraspScoreWeights
   double translation_y_score_weight_;
   double translation_z_score_weight_;
 };
+// Create smart pointers for this struct
+typedef std::shared_ptr<GraspScoreWeights> GraspScoreWeightsPtr;
 
 class GraspScorer
 {

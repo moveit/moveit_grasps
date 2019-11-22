@@ -61,8 +61,11 @@ namespace moveit_grasps
 // Constructor
 SuctionGraspGenerator::SuctionGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
                                              bool verbose)
-  : GraspGenerator(visual_tools, verbose), grasp_score_weights_(SuctionGraspScoreWeights())
+  : GraspGenerator(visual_tools, verbose)
 {
+  auto suction_grasp_score_weights = std::make_shared<SuctionGraspScoreWeights>();
+  grasp_score_weights_ = std::dynamic_pointer_cast<GraspScoreWeights>(suction_grasp_score_weights);
+
   // Load visulization settings
   const std::string parent_name = "grasps";  // for namespacing logging messages
   std::size_t error = 0;
@@ -142,18 +145,22 @@ double SuctionGraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_p
                                                 const Eigen::Vector3d& object_size,
                                                 std::vector<double>& suction_voxel_overlap)
 {
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                         "Scoring grasp at: \n\tpose:  ("
-                             << grasp_pose_tcp.translation().x() << ",\t" << grasp_pose_tcp.translation().y() << ",\t"
-                             << grasp_pose_tcp.translation().z() << ")\t("
-                             << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
-                             << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
-                             << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(2) << ")\n\tideal: ("
-                             << ideal_grasp_pose_.translation().x() << ",\t" << ideal_grasp_pose_.translation().y()
-                             << ",\t" << ideal_grasp_pose_.translation().z() << ")\t("
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
-                             << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
+  static const std::string logger_name = "grasp_generator.scoreGrasp";
+  if (getVerbose())
+  {
+    ROS_DEBUG_STREAM_NAMED(logger_name,
+                           "Scoring grasp at: \n\tpose:  ("
+                               << grasp_pose_tcp.translation().x() << ",\t" << grasp_pose_tcp.translation().y() << ",\t"
+                               << grasp_pose_tcp.translation().z() << ")\t("
+                               << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
+                               << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
+                               << grasp_pose_tcp.rotation().eulerAngles(0, 1, 2)(2) << ")\n\tideal: ("
+                               << ideal_grasp_pose_.translation().x() << ",\t" << ideal_grasp_pose_.translation().y()
+                               << ",\t" << ideal_grasp_pose_.translation().z() << ")\t("
+                               << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(0) << ",\t"
+                               << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(1) << ",\t"
+                               << ideal_grasp_pose_.rotation().eulerAngles(0, 1, 2)(2) << ")");
+  }
 
   // get portion of score based on the orientation
   Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
@@ -170,33 +177,19 @@ double SuctionGraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_p
       (show_grasp_overhang_ ? visual_tools_ : nullptr));
 
   double total_score = 0;
-  double weight_total = 0;
-  total_score += orientation_scores[0] * grasp_score_weights_.orientation_x_score_weight_;
-  total_score += orientation_scores[1] * grasp_score_weights_.orientation_y_score_weight_;
-  total_score += orientation_scores[2] * grasp_score_weights_.orientation_z_score_weight_;
-  total_score += translation_scores[0] * grasp_score_weights_.translation_x_score_weight_;
-  total_score += translation_scores[1] * grasp_score_weights_.translation_y_score_weight_;
-  total_score += translation_scores[2] * grasp_score_weights_.translation_z_score_weight_;
-  total_score += suction_overlap_score * grasp_score_weights_.overhang_score_weight_;
+  auto suction_grasp_score_weights = std::dynamic_pointer_cast<SuctionGraspScoreWeights>(grasp_score_weights_);
+  if (suction_grasp_score_weights)
+  {
+    total_score = suction_grasp_score_weights->computeScore(orientation_scores, translation_scores,
+                                                            suction_overlap_score, getVerbose());
+  }
+  else
+  {
+    ROS_WARN_NAMED(logger_name, "Failed to cast grasp_score_weights_ as SuctionGraspScoreWeights. continuing without "
+                                "finger specific scores");
+    total_score = grasp_score_weights_->computeScore(orientation_scores, translation_scores, getVerbose());
+  }
 
-  weight_total += grasp_score_weights_.orientation_x_score_weight_ + grasp_score_weights_.orientation_y_score_weight_ +
-                  grasp_score_weights_.orientation_z_score_weight_ + grasp_score_weights_.translation_x_score_weight_ +
-                  grasp_score_weights_.translation_y_score_weight_ + grasp_score_weights_.translation_z_score_weight_ +
-                  grasp_score_weights_.overhang_score_weight_;
-
-  total_score /= weight_total;
-  // clang-format off
-  ROS_DEBUG_STREAM_NAMED(
-      "grasp_generator.scoreGrasp",
-      "Grasp score: " << "\n\torientation_score.x   = " << orientation_scores[0] << "\torientation_score.x weight = "<< grasp_score_weights_.orientation_x_score_weight_
-                      << "\n\torientation_score.y   = " << orientation_scores[1] << "\torientation_score.y weight = "<< grasp_score_weights_.orientation_y_score_weight_
-                      << "\n\torientation_score.z   = " << orientation_scores[2] << "\torientation_score.z weight = "<< grasp_score_weights_.orientation_z_score_weight_
-                      << "\n\ttranslation_score.x   = " << translation_scores[0] << "\ttranslation_score.x weight = "<< grasp_score_weights_.translation_x_score_weight_
-                      << "\n\ttranslation_score.y   = " << translation_scores[1] << "\ttranslation_score.y weight = "<< grasp_score_weights_.translation_y_score_weight_
-                      << "\n\ttranslation_score.z   = " << translation_scores[2] << "\ttranslation_score.z weight = "<< grasp_score_weights_.translation_z_score_weight_
-                      << "\n\tsuction overlap score = " << suction_overlap_score << "\toverhang_score weight      = "<< grasp_score_weights_.overhang_score_weight_
-                      << "\n\ttotal_score = " << total_score);
-  // clang-format on
   return total_score;
 }
 

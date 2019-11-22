@@ -151,7 +151,7 @@ private:
 
 };  // end class
 
-// Create boost pointers for this class
+// Create smart pointers for this class
 typedef std::shared_ptr<GraspPlanner> GraspPlannerPtr;
 typedef std::shared_ptr<const GraspPlanner> GraspPlannerConstPtr;
 

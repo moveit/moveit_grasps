@@ -142,18 +142,18 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // We also set custom grasp score weights
-    moveit_grasps::TwoFingerGraspScoreWeights grasp_score_weights;
-    grasp_score_weights.orientation_x_score_weight_ = 2.0;
-    grasp_score_weights.orientation_y_score_weight_ = 2.0;
-    grasp_score_weights.orientation_z_score_weight_ = 2.0;
-    grasp_score_weights.translation_x_score_weight_ = 1.0;
-    grasp_score_weights.translation_y_score_weight_ = 1.0;
-    grasp_score_weights.translation_z_score_weight_ = 1.0;
+    auto grasp_score_weights = std::make_shared<moveit_grasps::TwoFingerGraspScoreWeights>();
+    grasp_score_weights->orientation_x_score_weight_ = 2.0;
+    grasp_score_weights->orientation_y_score_weight_ = 2.0;
+    grasp_score_weights->orientation_z_score_weight_ = 2.0;
+    grasp_score_weights->translation_x_score_weight_ = 1.0;
+    grasp_score_weights->translation_y_score_weight_ = 1.0;
+    grasp_score_weights->translation_z_score_weight_ = 1.0;
 
     // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our
     // finger gripper)
-    grasp_score_weights.depth_score_weight_ = 2.0;
-    grasp_score_weights.width_score_weight_ = 2.0;
+    grasp_score_weights->depth_score_weight_ = 2.0;
+    grasp_score_weights->width_score_weight_ = 2.0;
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
     // Publish world coordinate system

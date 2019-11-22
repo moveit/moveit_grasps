@@ -50,10 +50,19 @@ struct TwoFingerGraspScoreWeights : public GraspScoreWeights
   {
   }
 
+  /* \brief Compute the weighted score given the orientation and translation scores */
+  double computeScore(const Eigen::Vector3d& orientation_scores, const Eigen::Vector3d& translation_scores,
+                      double depth_score, double width_score, bool verbose = false) const;
+
+  /* \brief returns the sum of the grasp score weights*/
+  double getWeightTotal() const override;
+
   // Finger gripper specific weights
   double depth_score_weight_;
   double width_score_weight_;
 };
+// Create smart pointers for this class
+typedef std::shared_ptr<TwoFingerGraspScoreWeights> TwoFingerGraspScoreWeightsPtr;
 
 class TwoFingerGraspScorer : public GraspScorer
 {

@@ -186,15 +186,15 @@ public:
   /**
    * \brief Setter for grasp score weights
    */
-  void setGraspScoreWeights(GraspScoreWeights grasp_score_weights)
+  void setGraspScoreWeights(const GraspScoreWeightsPtr& grasp_score_weights)
   {
-    grasp_score_weights_ = grasp_score_weights;
+    grasp_score_weights_ = std::make_shared<GraspScoreWeights>(*grasp_score_weights);
   }
 
   /**
    * \brief Setter for grasp score weights
    */
-  GraspScoreWeights getGraspScoreWeights()
+  const GraspScoreWeightsPtr& getGraspScoreWeights()
   {
     return grasp_score_weights_;
   }
@@ -237,7 +237,7 @@ protected:
   double min_grasp_distance_, max_grasp_distance_;
   Eigen::Vector3d min_translations_, max_translations_;
 
-  GraspScoreWeights grasp_score_weights_;
+  GraspScoreWeightsPtr grasp_score_weights_;
 
 };  // end of class
 

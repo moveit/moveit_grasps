@@ -41,6 +41,41 @@
 
 namespace moveit_grasps
 {
+double TwoFingerGraspScoreWeights::computeScore(const Eigen::Vector3d& orientation_scores,
+                                                const Eigen::Vector3d& translation_scores, double depth_score,
+                                                double width_score, bool verbose) const
+{
+  double total_score = GraspScoreWeights::computeScore(orientation_scores, translation_scores, false) *
+                       GraspScoreWeights::getWeightTotal();
+  total_score += depth_score * depth_score_weight_ + width_score * width_score_weight_;
+
+  total_score /= getWeightTotal();
+
+  if (verbose)
+  {
+    static const std::string logger_name = "grasp_scorer.compute_score";
+    // clang-format off
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Two Finger Grasp score: ");
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.x = " << orientation_scores[0] << "\tweight = "<< orientation_x_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.y = " << orientation_scores[1] << "\tweight = "<< orientation_y_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.z = " << orientation_scores[2] << "\tweight = "<< orientation_z_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttranslation_score.x = " << translation_scores[0] << "\tweight = "<< translation_x_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttranslation_score.y = " << translation_scores[1] << "\tweight = "<< translation_y_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttranslation_score.z = " << translation_scores[2] << "\tweight = "<< translation_z_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\tdepth_score         = " << depth_score           << "\tweight = "<< depth_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\twidth_score         = " << width_score           << "\tweight = "<< width_score_weight_);
+    // Total
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttotal_score = " << total_score);
+    // clang-format on
+  }
+  return total_score;
+}
+
+double TwoFingerGraspScoreWeights::getWeightTotal() const
+{
+  return GraspScoreWeights::getWeightTotal() + depth_score_weight_ + width_score_weight_;
+}
+
 double TwoFingerGraspScorer::scoreGraspWidth(const TwoFingerGraspDataPtr& grasp_data, double percent_open)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.graspWidth", "raw score = " << percent_open);

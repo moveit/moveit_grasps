@@ -90,6 +90,23 @@ public:
                 const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size, double object_width,
                 std::vector<GraspCandidatePtr>& grasp_candidates);
 
+  /**
+   * \brief Setter for grasp score weights
+   */
+  void setGraspScoreWeights(const SuctionGraspScoreWeightsPtr& grasp_score_weights)
+  {
+    auto suction_grasp_score_weights = std::make_shared<SuctionGraspScoreWeights>(*grasp_score_weights);
+    grasp_score_weights_ = std::dynamic_pointer_cast<GraspScoreWeights>(suction_grasp_score_weights);
+  }
+
+  /**
+   * \brief Setter for grasp score weights
+   */
+  const SuctionGraspScoreWeightsPtr getGraspScoreWeights()
+  {
+    return std::dynamic_pointer_cast<SuctionGraspScoreWeights>(grasp_score_weights_);
+  }
+
 protected:
   /**
    * \brief Score the generated suction grasp poses
@@ -112,8 +129,6 @@ public:
   // Visual debug settings
   bool debug_top_grasps_;
   bool show_grasp_overhang_;
-
-  SuctionGraspScoreWeights grasp_score_weights_;
 
 };  // end of class
 

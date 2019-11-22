@@ -105,6 +105,23 @@ public:
   bool generateGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
                       const TwoFingerGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates);
 
+  /**
+   * \brief Setter for grasp score weights
+   */
+  void setGraspScoreWeights(const TwoFingerGraspScoreWeightsPtr& grasp_score_weights)
+  {
+    auto two_finger_grasp_score_weights = std::make_shared<TwoFingerGraspScoreWeights>(*grasp_score_weights);
+    grasp_score_weights_ = std::dynamic_pointer_cast<GraspScoreWeights>(two_finger_grasp_score_weights);
+  }
+
+  /**
+   * \brief Setter for grasp score weights
+   */
+  const TwoFingerGraspScoreWeightsPtr getGraspScoreWeights()
+  {
+    return std::dynamic_pointer_cast<TwoFingerGraspScoreWeights>(grasp_score_weights_);
+  }
+
 protected:
   /**
    * \brief creates grasp messages from the generated grasp poses
@@ -221,9 +238,6 @@ protected:
   generateFingerGrasps(const Eigen::Isometry3d& cuboid_pose, double depth, double width, double height,
                        const TwoFingerGraspDataPtr& grasp_data, std::vector<GraspCandidatePtr>& grasp_candidates,
                        const TwoFingerGraspCandidateConfig& grasp_candidate_config = TwoFingerGraspCandidateConfig());
-
-public:
-  TwoFingerGraspScoreWeights grasp_score_weights_;
 
 protected:
   TwoFingerGraspCandidateConfig grasp_candidate_config_;

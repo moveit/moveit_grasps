@@ -41,6 +41,72 @@
 
 namespace moveit_grasps
 {
+double GraspScoreWeights::computeScore(const Eigen::Vector3d& orientation_scores,
+                                       const Eigen::Vector3d& translation_scores, bool verbose) const
+{
+  double total_score =
+      orientation_scores[0] * orientation_x_score_weight_ + orientation_scores[1] * orientation_y_score_weight_ +
+      orientation_scores[2] * orientation_z_score_weight_ + translation_scores[0] * translation_x_score_weight_ +
+      translation_scores[1] * translation_y_score_weight_ + translation_scores[2] * translation_z_score_weight_;
+
+  total_score /= getWeightTotal();
+
+  if (verbose)
+  {
+    static const std::string logger_name = "grasp_scorer.compute_score";
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Grasp score: ");
+    // clang-format off
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.x = " << orientation_scores[0] << "\tweight = "<< orientation_x_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.y = " << orientation_scores[1] << "\tweight = "<< orientation_y_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.z = " << orientation_scores[2] << "\tweight = "<< orientation_z_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttranslation_score.x = " << translation_scores[0] << "\tweight = "<< translation_x_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttranslation_score.y = " << translation_scores[1] << "\tweight = "<< translation_y_score_weight_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttranslation_score.z = " << translation_scores[2] << "\tweight = "<< translation_z_score_weight_);
+    // Total
+    ROS_DEBUG_STREAM_NAMED(logger_name, "\ttotal_score = " << total_score);
+    // clang-format on
+  }
+  return total_score;
+}
+
+double GraspScoreWeights::getWeightTotal() const
+{
+  return orientation_x_score_weight_ + orientation_y_score_weight_ + orientation_z_score_weight_ +
+         translation_x_score_weight_ + translation_y_score_weight_ + translation_z_score_weight_;
+}
+
+Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose_tcp,
+                                                       const Eigen::Isometry3d& ideal_pose)
+{
+  Eigen::Vector3d grasp_pose_axis;
+  Eigen::Vector3d ideal_pose_axis;
+  Eigen::Vector3d scores;
+  double angle;
+
+  // get angle between x-axes
+  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitX();
+  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
+  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
+  scores[0] = (M_PI - angle) / M_PI;
+
+  // get angle between y-axes
+  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitY();
+  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
+  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
+  scores[1] = (M_PI - angle) / M_PI;
+
+  // get angle between z-axes
+  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
+  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
+  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
+  scores[2] = (M_PI - angle) / M_PI;
+
+  return scores;
+}
+
 Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& grasp_pose_tcp,
                                                    const Eigen::Isometry3d& ideal_pose)
 {
@@ -88,38 +154,6 @@ Eigen::Vector3d GraspScorer::scoreGraspTranslation(const Eigen::Isometry3d& gras
                              << max_translations[1] << ", " << scores[1] << "\n"
                              << grasp_pose_tcp.translation()[2] << ", " << min_translations[2] << ", "
                              << max_translations[2] << ", " << scores[2] << "\n");
-
-  return scores;
-}
-
-Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& grasp_pose_tcp,
-                                                       const Eigen::Isometry3d& ideal_pose)
-{
-  Eigen::Vector3d grasp_pose_axis;
-  Eigen::Vector3d ideal_pose_axis;
-  Eigen::Vector3d scores;
-  double angle;
-
-  // get angle between x-axes
-  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitX();
-  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
-  scores[0] = (M_PI - angle) / M_PI;
-
-  // get angle between y-axes
-  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitY();
-  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
-  scores[1] = (M_PI - angle) / M_PI;
-
-  // get angle between z-axes
-  grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
-  ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
-  scores[2] = (M_PI - angle) / M_PI;
 
   return scores;
 }

@@ -50,9 +50,19 @@ struct SuctionGraspScoreWeights : public GraspScoreWeights
   {
   }
 
+  /* \brief Compute the weighted score given the orientation and translation scores */
+  double computeScore(const Eigen::Vector3d& orientation_scores, const Eigen::Vector3d& translation_scores,
+                      double overhang_score, bool verbose = false) const;
+
+  /* \brief returns the sum of the grasp score weights*/
+  double getWeightTotal() const override;
+
   // Suction gripper specific weights
   double overhang_score_weight_;
 };
+// Create smart pointers for this class
+typedef std::shared_ptr<SuctionGraspScoreWeights> SuctionGraspScoreWeightsPtr;
+typedef std::shared_ptr<const SuctionGraspScoreWeights> SuctionGraspScoreWeightsConstPtr;
 
 class SuctionGraspScorer : public GraspScorer
 {

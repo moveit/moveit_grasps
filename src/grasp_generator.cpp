@@ -64,7 +64,7 @@ GraspGenerator::GraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& 
   , visual_tools_(visual_tools)
   , verbose_(verbose)
   , nh_("~/moveit_grasps/generator")
-  , grasp_score_weights_(GraspScoreWeights())
+  , grasp_score_weights_(std::make_shared<GraspScoreWeights>())
 {
   // Load visulization settings
   const std::string parent_name = "grasps";  // for namespacing logging messages

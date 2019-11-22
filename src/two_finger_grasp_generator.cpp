@@ -107,8 +107,11 @@ void TwoFingerGraspCandidateConfig::disableAll()
 // Constructor
 TwoFingerGraspGenerator::TwoFingerGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
                                                  bool verbose)
-  : GraspGenerator(visual_tools, verbose), grasp_score_weights_(TwoFingerGraspScoreWeights())
+  : GraspGenerator(visual_tools, verbose)
 {
+  auto two_finger_grasp_score_weights = std::make_shared<TwoFingerGraspScoreWeights>();
+  grasp_score_weights_ = std::dynamic_pointer_cast<GraspScoreWeights>(two_finger_grasp_score_weights);
+
   grasp_candidate_config_ = TwoFingerGraspCandidateConfig();
 }
 
@@ -772,7 +775,8 @@ double TwoFingerGraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_
                                                  const TwoFingerGraspDataPtr& grasp_data,
                                                  const Eigen::Isometry3d& object_pose, double percent_open)
 {
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp", "starting to score grasp...");
+  static const std::string logger_name = "grasp_generator.scoreGrasp";
+  ROS_DEBUG_STREAM_NAMED(logger_name, "starting to score grasp...");
 
   // get portion of score based on the gripper's opening width on approach
   double width_score = TwoFingerGraspScorer::scoreGraspWidth(grasp_data, percent_open);
@@ -798,65 +802,18 @@ double TwoFingerGraspGenerator::scoreFingerGrasp(const Eigen::Isometry3d& grasp_
   translation_scores *= -1.0;
   translation_scores += Eigen::Vector3d(1.0, 1.0, 1.0);
 
-  // Get total score
-  std::size_t num_scores = 8;
-  double weights[num_scores], scores[num_scores];
-  weights[0] = grasp_score_weights_.width_score_weight_;
-  weights[1] = grasp_score_weights_.orientation_x_score_weight_;
-  weights[2] = grasp_score_weights_.orientation_y_score_weight_;
-  weights[3] = grasp_score_weights_.orientation_z_score_weight_;
-  weights[4] = grasp_score_weights_.depth_score_weight_;
-  weights[5] = grasp_score_weights_.translation_x_score_weight_;
-  weights[6] = grasp_score_weights_.translation_y_score_weight_;
-  weights[7] = grasp_score_weights_.translation_z_score_weight_;
-
-  // Every score is normalized to be in the same range, so new scoring features should also be normalized
-  scores[0] = width_score;
-  scores[1] = orientation_scores[0];
-  scores[2] = orientation_scores[1];
-  scores[3] = orientation_scores[2];
-  scores[4] = distance_score;
-  scores[5] = translation_scores[0];
-  scores[6] = translation_scores[1];
-  scores[7] = translation_scores[2];
-
   double total_score = 0;
-  double high_score = 0;
-  for (std::size_t i = 0; i < num_scores; ++i)
+  auto two_finger_grasp_score_weights = std::dynamic_pointer_cast<TwoFingerGraspScoreWeights>(grasp_score_weights_);
+  if (two_finger_grasp_score_weights)
   {
-    total_score += weights[i] * scores[i];
-    high_score += weights[i];
+    total_score = two_finger_grasp_score_weights->computeScore(orientation_scores, translation_scores, distance_score,
+                                                               width_score, getVerbose());
   }
-  total_score /= high_score;
-
-  if (verbose_)
+  else
   {
-    // clang-format off
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.scoreGrasp",
-                           "Grasp score: "
-                               << "\n\twidth_score         = " << width_score
-                               << "\n\torientation_score.x = " << orientation_scores[0]
-                               << "\n\torientation_score.y = " << orientation_scores[1]
-                               << "\n\torientation_score.z = " << orientation_scores[2]
-                               << "\n\tdistance_score      = " << distance_score
-                               << "\n\ttranslation_score.x = " << translation_scores[0]
-                               << "\n\ttranslation_score.y = " << translation_scores[1]
-                               << "\n\ttranslation_score.z = " << translation_scores[2]
-                               << "\n\tweights             = " << weights[0] << ", " << weights[1] << ", " << weights[2] << ", " << weights[3] << ", "
-                               << weights[4] << ", " << weights[5] << ", " << weights[6] << ", " << weights[7]
-                               << "\n\ttotal_score         = " << total_score);
-    // clang-format on
-    visual_tools_->publishSphere(grasp_pose_tcp.translation(), rviz_visual_tools::PINK, 0.01 * total_score);
-
-    if (false)
-    {
-      char entry[256];
-      ROS_INFO_STREAM_NAMED("grasp_generator", "\033[1;36m\nPress 'Enter' to continue. Enter 'y' to skip scoring "
-                                               "info...\033[0m");
-      std::cin.getline(entry, 256);
-      if (entry[0] == 'y')
-        verbose_ = false;
-    }
+    ROS_WARN_NAMED(logger_name, "Failed to cast grasp_score_weights_ as TwoFingerGraspScoreWeights. continuing without "
+                                "finger specific scores");
+    total_score = grasp_score_weights_->computeScore(orientation_scores, translation_scores, getVerbose());
   }
 
   return total_score;
