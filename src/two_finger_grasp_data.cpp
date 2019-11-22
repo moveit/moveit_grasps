@@ -91,7 +91,7 @@ bool TwoFingerGraspData::setGraspWidth(double fraction_open, double min_finger_w
 {
   if (fraction_open < 0 || fraction_open > 1)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_data", "Invalid percentage passed in " << fraction_open);
+    ROS_ERROR_STREAM_NAMED("grasp_data", "Invalid fraction passed in " << fraction_open);
     return false;
   }
 

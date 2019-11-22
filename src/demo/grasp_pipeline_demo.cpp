@@ -320,7 +320,7 @@ public:
     ros::Duration(0.25).sleep();
   }
 
-  bool planFullGrasp(std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates,
+  bool planFullGrasp(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
                      moveit_grasps::GraspCandidatePtr& valid_grasp_candidate,
                      moveit_msgs::MotionPlanResponse& pre_approach_plan)
   {

@@ -166,14 +166,14 @@ if(CATKIN_ENABLE_TESTING)
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    )
+  )
 
   add_rostest_gtest(two_finger_grasp_generator_test test/two_finger_grasp_generator_test.test test/two_finger_grasp_generator_test.cpp)
   target_link_libraries(two_finger_grasp_generator_test
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    )
+  )
 
   add_rostest_gtest(two_finger_grasp_filter_test test/two_finger_grasp_filter_test.test test/two_finger_grasp_filter_test.cpp)
   target_link_libraries(two_finger_grasp_filter_test
@@ -181,7 +181,15 @@ if(CATKIN_ENABLE_TESTING)
     ${PROJECT_NAME}_filter
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    )
+  )
+
+  add_rostest_gtest(suction_grasp_pipeline_test test/suction_grasp_pipeline_test.test test/suction_grasp_pipeline_test.cpp)
+  target_link_libraries(suction_grasp_pipeline_test
+    ${PROJECT_NAME}
+    ${PROJECT_NAME}_filter
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
 
   ## Test for correct C++ source code
   roslint_cpp()
