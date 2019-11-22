@@ -66,7 +66,7 @@ static const std::string LOGNAME = "grasp_pipeline_demo";
 namespace
 {
 bool isStateValid(const planning_scene::PlanningScene* planning_scene,
-                  moveit_visual_tools::MoveItVisualToolsPtr visual_tools, robot_state::RobotState* robot_state,
+                  const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, robot_state::RobotState* robot_state,
                   const robot_model::JointModelGroup* group, const double* ik_solution)
 {
   robot_state->setJointGroupPositions(group, ik_solution);
@@ -74,7 +74,7 @@ bool isStateValid(const planning_scene::PlanningScene* planning_scene,
   return !planning_scene->isStateColliding(*robot_state, group->getName());
 }
 
-void waitForNextStep(moveit_visual_tools::MoveItVisualToolsPtr visual_tools, std::string prompt)
+void waitForNextStep(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, const std::string& prompt)
 {
   visual_tools->prompt(prompt);
 }

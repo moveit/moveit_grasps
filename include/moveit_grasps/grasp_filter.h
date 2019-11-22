@@ -158,7 +158,7 @@ public:
    * \return some grasps remaining
    */
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                            planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                            const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                             const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
                             bool filter_pregrasp = false);
 
@@ -194,7 +194,7 @@ public:
    * \return number of grasps remaining
    */
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                 planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                 const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
                                  const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
 

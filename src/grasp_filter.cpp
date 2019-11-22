@@ -99,7 +99,7 @@ GraspFilter::GraspFilter(const robot_state::RobotStatePtr& robot_state,
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                               planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                               const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                const robot_model::JointModelGroup* arm_jmg,
                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
 {
@@ -239,11 +239,11 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, c
     return false;
 }
 
-std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                            planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                                            const robot_model::JointModelGroup* arm_jmg,
-                                            const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                            bool verbose)
+std::size_t
+GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                const robot_model::JointModelGroup* arm_jmg,
+                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose)
 {
   // Setup collision checking
 
