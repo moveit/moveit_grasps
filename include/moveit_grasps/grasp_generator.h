@@ -50,7 +50,6 @@
 
 // MoveIt
 #include <moveit_msgs/Grasp.h>
-#include <moveit/macros/deprecation.h>
 
 // geometric_shapes
 #include <geometric_shapes/shape_operations.h>

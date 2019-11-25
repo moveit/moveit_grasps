@@ -47,7 +47,7 @@ namespace moveit_grasps
 {
 struct SuctionGraspFilterCode : public GraspFilterCode
 {
-  enum codes
+  enum
   {
     GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1,  // No suction voxel is in sufficient contact with the target
   };

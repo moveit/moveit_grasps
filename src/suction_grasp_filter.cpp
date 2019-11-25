@@ -72,7 +72,7 @@ bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCand
         ROS_ERROR_NAMED("grasp_filter.pre_filter", "grasp_candidate is not castable as SuctionGraspCandidatePtr");
         return false;
       }
-      for (double voxel_overlap : suction_grasp_candidate->suction_voxel_overlap_)
+      for (const double& voxel_overlap : suction_grasp_candidate->suction_voxel_overlap_)
       {
         if (voxel_overlap > suction_voxel_overlap_cutoff_)
         {
