@@ -95,8 +95,8 @@ public:
   // since we don't know the distance from the centoid of the object to the edge of the object, this is set as an
   // arbitrary number given our target object set (i.e. I based it off of the cheese it box)
   static double scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp, const TwoFingerGraspDataPtr& grasp_data,
-                                    const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
-                                    const double& max_grasp_distance);
+                                    const Eigen::Isometry3d& object_pose, double min_grasp_distance,
+                                    double max_grasp_distance);
 };
 
 }  // namespace moveit_grasps

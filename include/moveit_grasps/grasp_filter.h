@@ -175,13 +175,10 @@ public:
 
   /**
    * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
-   * a tiny
-   *        amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't
-   * removed
-   *        by the cutting plane operations. We know we'll never get to them because they deviate too much from the
-   * desired
-   *        grasping pose... straight in.
-   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * a tiny amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't
+   * removed by the cutting plane operations. We know we'll never get to them because they deviate too much from the
+   * desired grasping pose... straight in.
+   * \param grasp_candidates - a grasp candidate that this will test.
    * \param desired_pose - the desired grasp pose ( using standard grasping orientation )
    * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
    * \return true if grasp is filtered by operation

@@ -126,9 +126,9 @@ bool TwoFingerGraspData::fingerWidthToGraspPosture(double distance_btw_fingers,
   //       This is probably incorrect but until we expose an interface for passing in a function to translate from
   //       joint values to grasp width, it's the best we got...
   // TODO(mlautman): Make it so that a user can pass in a function here.
-  std::vector<std::string> joint_names = pre_grasp_posture_.joint_names;
-  std::vector<double> grasp_pose = grasp_posture_.points[0].positions;
-  std::vector<double> pre_grasp_pose = pre_grasp_posture_.points[0].positions;
+  const std::vector<std::string>& joint_names = pre_grasp_posture_.joint_names;
+  const std::vector<double>& grasp_pose = grasp_posture_.points[0].positions;
+  const std::vector<double>& pre_grasp_pose = pre_grasp_posture_.points[0].positions;
   if (joint_names.size() != grasp_pose.size() || grasp_pose.size() != pre_grasp_pose.size())
   {
     ROS_ERROR_NAMED("grasp_data", "Mismatched vector sizes joint_names.size()=%zu, grasp_pose.size()=%zu, and "

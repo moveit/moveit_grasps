@@ -147,7 +147,7 @@ bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution
   // Set gripper position (how open the fingers are) to CLOSED
   grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);
 
-  // Set callback function
+  // Check constraint function
   if (!constraint_fn(ik_thread_struct->robot_state_.get(), grasp_candidate->grasp_data_->arm_jmg_, &ik_solution[0]))
   {
     ROS_WARN_STREAM_NAMED("grasp_filter", "Grasp filtered because in collision with fingers CLOSED");

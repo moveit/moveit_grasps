@@ -100,11 +100,11 @@ public:
   }
 
   /**
-   * \brief Setter for grasp score weights
+   * \brief Getter for grasp score weights
    */
-  const SuctionGraspScoreWeightsPtr getGraspScoreWeights()
+  SuctionGraspScoreWeightsConstPtr getGraspScoreWeights()
   {
-    return std::dynamic_pointer_cast<SuctionGraspScoreWeights>(grasp_score_weights_);
+    return std::dynamic_pointer_cast<const SuctionGraspScoreWeights>(grasp_score_weights_);
   }
 
 protected:

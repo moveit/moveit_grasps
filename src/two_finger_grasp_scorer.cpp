@@ -84,8 +84,8 @@ double TwoFingerGraspScorer::scoreGraspWidth(const TwoFingerGraspDataPtr& grasp_
 
 double TwoFingerGraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_pose_tcp,
                                                  const TwoFingerGraspDataPtr& grasp_data,
-                                                 const Eigen::Isometry3d& object_pose, const double& min_grasp_distance,
-                                                 const double& max_grasp_distance)
+                                                 const Eigen::Isometry3d& object_pose, double min_grasp_distance,
+                                                 double max_grasp_distance)
 {
   double distance = (grasp_pose_tcp.translation() - object_pose.translation()).norm();
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "distance = " << distance << ", " << min_grasp_distance << ":"

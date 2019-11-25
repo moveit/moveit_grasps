@@ -151,7 +151,7 @@ public:
    * \param arm - the planning group of the arm we want to display
    * \return true on success
    */
-  void publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr& grasp_data,
+  void publishGraspArrow(const geometry_msgs::Pose& grasp, const GraspDataPtr& grasp_data,
                          const rviz_visual_tools::colors& color, double approach_length = 0.1);
 
   /**

@@ -177,7 +177,7 @@ void GraspGenerator::getGraspWaypoints(const GraspCandidatePtr& grasp_candidate,
   grasp_waypoints[3] = retreat_pose;
 }
 
-void GraspGenerator::publishGraspArrow(geometry_msgs::Pose grasp, const GraspDataPtr& grasp_data,
+void GraspGenerator::publishGraspArrow(const geometry_msgs::Pose& grasp, const GraspDataPtr& grasp_data,
                                        const rviz_visual_tools::colors& color, double approach_length)
 {
   visual_tools_->publishArrow(grasp, color, rviz_visual_tools::MEDIUM);
