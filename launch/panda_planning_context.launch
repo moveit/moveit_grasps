@@ -1,0 +1,31 @@
+<launch>
+  <!-- Suction or two finger -->
+  <arg name="gripper" default="two_finger" doc="must be one of 'suction' or 'two_finger'" />
+
+  <!-- By default we do not overwrite the URDF. Change the following to true to change the default behavior -->
+  <arg name="load_robot_description" default="false"/>
+
+  <!-- The name of the parameter under which the URDF is loaded -->
+  <arg name="robot_description" default="robot_description"/>
+
+  <!-- Should the panda be loaded with the two finger gripper or the suction gripper -->
+
+  <!-- Load universal robot description format (URDF) -->
+  <param if="$(eval arg('load_robot_description') and arg('gripper')=='two_finger')" name="$(arg robot_description)" command="$(find xacro)/xacro '$(find moveit_grasps)/robots/panda_arm_two_finger_hand.urdf.xacro'"/>
+  <param if="$(eval arg('load_robot_description') and arg('gripper')=='suction')"    name="$(arg robot_description)" command="$(find xacro)/xacro '$(find moveit_grasps)/robots/panda_arm_suction_hand.urdf.xacro'"/>
+
+  <!-- The semantic description that corresponds to the URDF -->
+  <param if="$(eval arg('gripper')=='two_finger')" name="$(arg robot_description)_semantic" command="$(find xacro)/xacro '$(find moveit_grasps)/robots/panda_arm_two_finger_hand.srdf.xacro'"  />
+  <param if="$(eval arg('gripper')=='suction')"    name="$(arg robot_description)_semantic" command="$(find xacro)/xacro '$(find moveit_grasps)/robots/panda_arm_suction_hand.srdf.xacro'"     />
+
+  <!-- Load updated joint limits (override information from URDF) -->
+  <group ns="$(arg robot_description)_planning">
+    <rosparam command="load" file="$(find panda_moveit_config)/config/joint_limits.yaml"/>
+  </group>
+
+  <!-- Load default settings for kinematics; these settings are overridden by settings in a node's namespace -->
+  <group ns="$(arg robot_description)_kinematics">
+    <rosparam command="load" file="$(find panda_moveit_config)/config/kinematics.yaml"/>
+  </group>
+
+</launch>

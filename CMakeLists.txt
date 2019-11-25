@@ -69,6 +69,13 @@ add_library(${PROJECT_NAME}
   src/grasp_data.cpp
   src/grasp_generator.cpp
   src/grasp_scorer.cpp
+  src/suction_grasp_candidate.cpp
+  src/suction_grasp_data.cpp
+  src/suction_grasp_generator.cpp
+  src/suction_grasp_scorer.cpp
+  src/two_finger_grasp_data.cpp
+  src/two_finger_grasp_generator.cpp
+  src/two_finger_grasp_scorer.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
@@ -77,6 +84,8 @@ target_link_libraries(${PROJECT_NAME}
 # Grasp Filter Library
 add_library(${PROJECT_NAME}_filter
   src/grasp_filter.cpp
+  src/suction_grasp_filter.cpp
+  src/two_finger_grasp_filter.cpp
   src/grasp_planner.cpp
 )
 target_link_libraries(${PROJECT_NAME}_filter
@@ -113,6 +122,12 @@ target_link_libraries(${PROJECT_NAME}_grasp_pipeline_demo
   ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
+# Demo suction grasp pipeline
+add_executable(${PROJECT_NAME}_suction_grasp_pipeline_demo src/demo/suction_grasp_pipeline_demo.cpp)
+target_link_libraries(${PROJECT_NAME}_suction_grasp_pipeline_demo
+  ${PROJECT_NAME} ${PROJECT_NAME}_filter ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
 #############
 ## INSTALL ##
 #############
@@ -146,27 +161,35 @@ install(TARGETS
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
 
-  add_rostest_gtest(grasp_data_test test/grasp_data_test.test test/grasp_data_test.cpp)
-  target_link_libraries(grasp_data_test
+  add_rostest_gtest(two_finger_grasp_data_test test/two_finger_grasp_data_test.test test/two_finger_grasp_data_test.cpp)
+  target_link_libraries(two_finger_grasp_data_test
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    )
+  )
 
-  add_rostest_gtest(grasp_generator_test test/grasp_generator_test.test test/grasp_generator_test.cpp)
-  target_link_libraries(grasp_generator_test
+  add_rostest_gtest(two_finger_grasp_generator_test test/two_finger_grasp_generator_test.test test/two_finger_grasp_generator_test.cpp)
+  target_link_libraries(two_finger_grasp_generator_test
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    )
+  )
 
-  add_rostest_gtest(grasp_filter_test test/grasp_filter_test.test test/grasp_filter_test.cpp)
-  target_link_libraries(grasp_filter_test
+  add_rostest_gtest(two_finger_grasp_filter_test test/two_finger_grasp_filter_test.test test/two_finger_grasp_filter_test.cpp)
+  target_link_libraries(two_finger_grasp_filter_test
     ${PROJECT_NAME}
     ${PROJECT_NAME}_filter
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
-    )
+  )
+
+  add_rostest_gtest(suction_grasp_pipeline_test test/suction_grasp_pipeline_test.test test/suction_grasp_pipeline_test.cpp)
+  target_link_libraries(suction_grasp_pipeline_test
+    ${PROJECT_NAME}
+    ${PROJECT_NAME}_filter
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
 
   ## Test for correct C++ source code
   roslint_cpp()

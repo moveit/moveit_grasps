@@ -32,58 +32,46 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@picknik.ai>
-   Desc:   Callback for checking if a state is in collision
+/* Author: Mike Lautman <mike@picknik.ai>
+   Desc:   Contains collected data for each potential suction grasp after it has been verified / filtered
 */
 
-#ifndef MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
-#define MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
+#ifndef MOVEIT_GRASPS__SUCTION_GRASP_CANDIDATE_
+#define MOVEIT_GRASPS__SUCTION_GRASP_CANDIDATE_
 
-// Rviz
-#include <moveit_visual_tools/moveit_visual_tools.h>
+// Parent class
+#include <moveit_grasps/grasp_candidate.h>
+#include <moveit_grasps/suction_grasp_data.h>
 
-// MoveIt
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <moveit/robot_state/robot_state.h>
-
-namespace
+namespace moveit_grasps
 {
-bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool verbose, double verbose_speed,
-                       const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
-                       robot_state::RobotState* robot_state, const robot_state::JointModelGroup* group,
-                       const double* ik_solution)
+struct SuctionGraspFilterCode : public GraspFilterCode
 {
-  robot_state->setJointGroupPositions(group, ik_solution);
-  if (!robot_state->satisfiesBounds(group))
+  enum
   {
-    if (verbose)
-      ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solution invalid");
+    GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1,  // No suction voxel is in sufficient contact with the target
+  };
+};
 
-    return false;
-  }
+/**
+ * \brief Contains collected data for each potential grasp after it has been verified / filtered
+ *        This includes the pregrasp and grasp IK solution
+ */
+class SuctionGraspCandidate : public GraspCandidate
+{
+public:
+  SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
+                        const Eigen::Isometry3d& cuboid_pose);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  robot_state->update();
+  // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
+  // suction voxel that overlaps the object
+  std::vector<double> suction_voxel_overlap_;
 
-  if (!planning_scene)
-  {
-    ROS_ERROR_STREAM_NAMED("is_grasp_state_valid", "No planning scene provided");
-    return false;
-  }
-  if (!planning_scene->isStateColliding(*robot_state, group->getName()))
-    return true;  // not in collision
+  const SuctionGraspDataPtr grasp_data_;
 
-  // Display more info about the collision
-  if (verbose && visual_tools)
-  {
-    visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
-    planning_scene->isStateColliding(*robot_state, group->getName(), true);
-    visual_tools->publishContactPoints(*robot_state, planning_scene);
-    visual_tools->trigger();
-    ros::Duration(verbose_speed).sleep();
-  }
-  return false;
-}
+};  // class
+typedef std::shared_ptr<SuctionGraspCandidate> SuctionGraspCandidatePtr;
 
-}  // namespace
-
+}  // namespace moveit_grasps
 #endif

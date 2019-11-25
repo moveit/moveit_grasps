@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hand">
+  <xacro:include filename="two_finger_hand.xacro"/>
+  <xacro:two_finger_hand ns="panda"/>
+
+</robot>

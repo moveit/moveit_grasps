@@ -46,10 +46,10 @@
 #include <gtest/gtest.h>
 
 // Grasp
-#include <moveit_grasps/grasp_generator.h>
-#include <moveit_grasps/grasp_filter.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 
 namespace moveit_grasps
 {
@@ -58,7 +58,11 @@ class GraspFilterTest : public ::testing::Test
 public:
   GraspFilterTest() : nh_("~"), verbose_(true), ee_group_name_("hand")
   {
-    planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+  }
+
+  void SetUp() override
+  {
+    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
     if (planning_scene_monitor_->getPlanningScene())
     {
       planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
@@ -67,11 +71,16 @@ public:
     }
     const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor_->getRobotModel();
     arm_jmg_ = robot_model->getJointModelGroup("panda_arm");
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model->getModelFrame(), "/rviz_visual_tools",
-                                                                   planning_scene_monitor_));
-    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
-    grasp_filter_.reset(new moveit_grasps::GraspFilter(visual_tools_->getSharedRobotState(), visual_tools_));
-    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+    ASSERT_TRUE(arm_jmg_ != nullptr);
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
+        robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
+    grasp_filter_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+
+    ASSERT_TRUE(grasp_data_->loadGraspData(nh_, ee_group_name_));
   }
 
 protected:
@@ -79,9 +88,9 @@ protected:
   bool verbose_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
-  moveit_grasps::GraspFilterPtr grasp_filter_;
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
+  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
   const robot_model::JointModelGroup* arm_jmg_;
 };  // class GraspFilterTest
@@ -115,7 +124,8 @@ TEST_F(GraspFilterTest, TestGraspFilter)
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
     // Configure the desired types of grasps
-    moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+        moveit_grasps::TwoFingerGraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;
@@ -123,8 +133,9 @@ TEST_F(GraspFilterTest, TestGraspFilter)
     grasp_generator_config.generate_z_axis_grasps_ = true;
 
     // generate grasps
+    grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
     grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                     grasp_candidates, grasp_generator_config);
+                                     grasp_candidates);
 
     // Filter the grasp for only the ones that are reachable
     bool filter_pregrasps = true;
@@ -139,7 +150,7 @@ TEST_F(GraspFilterTest, TestGraspFilter)
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "grasp_filter_test");
+  ros::init(argc, argv, "two_finger_grasp_filter_test");
 
   // run test
   int result = RUN_ALL_TESTS();

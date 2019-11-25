@@ -60,6 +60,21 @@ enum GraspTrajectorySegments
   RETREAT = 2
 };
 
+struct GraspFilterCode
+{
+  enum
+  {
+    NOT_FILTERED = 0,
+    GRASP_FILTERED_BY_IK,             // Ik solution at grasp failed
+    GRASP_FILTERED_BY_CUTTING_PLANE,  // grasp pose is in an unreachable part of the environment (ex: inside or behind a
+                                      // wall)
+    GRASP_FILTERED_BY_ORIENTATION,    // grasp pose is not desireable
+    GRASP_FILTERED_BY_IK_CLOSED,      // ik solution was fine with grasp opened, but failed with grasp closed
+    PREGRASP_FILTERED_BY_IK,          // Ik solution before approach failed
+    LAST                              // Used to track last value in the base class when inheriting
+  };
+};
+
 /**
  * \brief Contains collected data for each potential grasp after it has been verified / filtered
  *        This includes the pregrasp and grasp IK solution
@@ -67,7 +82,8 @@ enum GraspTrajectorySegments
 class GraspCandidate
 {
 public:
-  GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Isometry3d cuboid_pose);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  GraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataPtr& grasp_data, const Eigen::Isometry3d& cuboid_pose);
 
   bool getPreGraspState(moveit::core::RobotStatePtr& robot_state);
 
@@ -79,16 +95,7 @@ public:
 
   bool getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robot_state);
 
-  bool isValid();
-
-  /** \brief set voxel overlap with pick target. Each index maps to a the corresponding suction voxel
-   *         in the suctionVoxelMatrix. The values are the fraction of the suction voxel in contact
-   *         with the pick target
-   *  @param suction_voxel_overlap - A vector of fractions where each value's maps the voxel with the same index.
-   */
-  bool setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap);
-
-  const std::vector<double> getSuctionVoxelOverlap();
+  virtual bool isValid();
 
   moveit_msgs::Grasp grasp_;
 
@@ -157,19 +164,10 @@ public:
   // TODO(davetcoleman): possibly remove
   Eigen::Isometry3d cuboid_pose_;  // pose of original object to grasp
 
-  bool grasp_filtered_by_ik_;
-  bool grasp_filtered_by_cutting_plane_;  // grasp pose is in an unreachable part of the environment (ex: inside or
-                                          // behind a wall)
-  bool grasp_filtered_by_orientation_;    // grasp pose is not desireable
-  bool grasp_filtered_by_ik_closed_;      // ik solution was fine with fingers opened, but failed with fingers closed
-  bool pregrasp_filtered_by_ik_;
+  int grasp_filtered_code_;  // All codes defined in enum
 
   std::vector<double> grasp_ik_solution_;
   std::vector<double> pregrasp_ik_solution_;
-
-  // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
-  // suction voxel that overlaps the object
-  std::vector<double> suction_voxel_overlap_;
 
   // Store pregrasp, grasp, lifted, and retreat trajectories
   GraspTrajectories segmented_cartesian_traj_;

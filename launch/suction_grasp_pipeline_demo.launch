@@ -2,7 +2,7 @@
   <!-- Launch rviz.launch before running this demo to see visalizations -->
 
   <!-- Suction or two finger -->
-  <arg name="gripper" default="two_finger" doc="must be one of 'suction' or 'two_finger'" />
+  <arg name="gripper" default="suction" doc="must be one of 'suction' or 'two_finger'" />
 
   <!-- GDB Debug Arguments -->
   <arg name="debug" default="false" />
@@ -32,8 +32,7 @@
 
   <!-- Start the demo -->
   <node name="moveit_grasps_demo" launch-prefix="$(arg launch_prefix) $(arg launch_prefix2) $(arg launch_prefix3)" pkg="moveit_grasps"
-  type="moveit_grasps_grasp_pipeline_demo" output="screen" args="$(arg command_args)">
-    <param name="gripper" value="$(arg gripper)"/>
+  type="moveit_grasps_suction_grasp_pipeline_demo" output="screen" args="$(arg command_args)">
     <param name="ee_group_name" value="hand"/>
     <param name="planning_group_name" value="panda_arm"/>
     <rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>

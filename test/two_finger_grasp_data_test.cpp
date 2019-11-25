@@ -47,33 +47,39 @@
 #include <gtest/gtest.h>
 
 // Grasp generation
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 namespace moveit_grasps
 {
-class GraspDataTest : public ::testing::Test
+class TwoFingerGraspDataTest : public ::testing::Test
 {
 public:
-  GraspDataTest()
-    : nh_("~"), ee_group_name_("hand"), visual_tools_(new moveit_visual_tools::MoveItVisualTools("panda_link0"))
+  TwoFingerGraspDataTest() : nh_("~"), ee_group_name_("hand")
   {
-    grasp_data_.reset(new GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
+  }
+
+  void SetUp() override
+  {
+    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("panda_link0");
+    grasp_data_ = std::make_shared<TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    ASSERT_TRUE(grasp_data_->loadGraspData(nh_, ee_group_name_));
   }
 
 protected:
   ros::NodeHandle nh_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  GraspDataPtr grasp_data_;
+  TwoFingerGraspDataPtr grasp_data_;
 };  // class GraspGenerator
 
-TEST_F(GraspDataTest, CheckConfigValues)
+TEST_F(TwoFingerGraspDataTest, CheckConfigValues)
 {
   // Grasp Pose To EEF Pose
   EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().x(), 0);
-  EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().y(), 0);
-  EXPECT_EQ(grasp_data_->tcp_to_eef_mount_.translation().z(), -0.105);
+  double tolerance = 0.000001;
+  EXPECT_LT(grasp_data_->tcp_to_eef_mount_.translation().y() - (0), tolerance);
+  EXPECT_LT(grasp_data_->tcp_to_eef_mount_.translation().z() - (-0.105), tolerance);
 
   // Pre Grasp Posture
   EXPECT_EQ(grasp_data_->pre_grasp_posture_.header.frame_id, "world");
@@ -95,7 +101,6 @@ TEST_F(GraspDataTest, CheckConfigValues)
   // EXPECT_EQ(grasp_data_->arm_jmg_->getName(), "panda_arm");
   EXPECT_EQ(grasp_data_->parent_link_->getName(), "panda_link8");
   EXPECT_EQ(grasp_data_->robot_model_->getName(), "panda");
-  EXPECT_EQ(grasp_data_->end_effector_type_, FINGER);
 
   // Geometry doubles
   EXPECT_GT(grasp_data_->angle_resolution_, 0);
@@ -113,7 +118,7 @@ TEST_F(GraspDataTest, CheckConfigValues)
   EXPECT_GT(grasp_data_->min_finger_width_, 0);
 }
 
-TEST_F(GraspDataTest, SetRobotState)
+TEST_F(TwoFingerGraspDataTest, SetRobotState)
 {
   moveit::core::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
@@ -128,7 +133,7 @@ TEST_F(GraspDataTest, SetRobotState)
             robot_state->getJointPositions("panda_finger_joint1")[0]);
 }
 
-TEST_F(GraspDataTest, fingerWidthToGraspPosture)
+TEST_F(TwoFingerGraspDataTest, fingerWidthToGraspPosture)
 {
   moveit::core::RobotStatePtr robot_state = visual_tools_->getSharedRobotState();
 
@@ -150,7 +155,7 @@ TEST_F(GraspDataTest, fingerWidthToGraspPosture)
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "grasp_data_test");
+  ros::init(argc, argv, "two_finger_grasp_data_test");
 
   ros::AsyncSpinner spinner(1);
   spinner.start();

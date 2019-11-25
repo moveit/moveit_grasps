@@ -32,58 +32,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman <dave@picknik.ai>
-   Desc:   Callback for checking if a state is in collision
+/* Author: Mike Lautman <mike@picknik.ai>
+   Desc:   Filters suction grasps based on kinematic feasibility and collision
 */
 
-#ifndef MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
-#define MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
+#include <moveit_grasps/suction_grasp_candidate.h>
 
-// Rviz
-#include <moveit_visual_tools/moveit_visual_tools.h>
-
-// MoveIt
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <moveit/robot_state/robot_state.h>
-
-namespace
+namespace moveit_grasps
 {
-bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool verbose, double verbose_speed,
-                       const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
-                       robot_state::RobotState* robot_state, const robot_state::JointModelGroup* group,
-                       const double* ik_solution)
+SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
+                                             const Eigen::Isometry3d& cuboid_pose)
+  : GraspCandidate::GraspCandidate(grasp, std::dynamic_pointer_cast<GraspData>(grasp_data), cuboid_pose)
+  , grasp_data_(grasp_data)
 {
-  robot_state->setJointGroupPositions(group, ik_solution);
-  if (!robot_state->satisfiesBounds(group))
-  {
-    if (verbose)
-      ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solution invalid");
-
-    return false;
-  }
-
-  robot_state->update();
-
-  if (!planning_scene)
-  {
-    ROS_ERROR_STREAM_NAMED("is_grasp_state_valid", "No planning scene provided");
-    return false;
-  }
-  if (!planning_scene->isStateColliding(*robot_state, group->getName()))
-    return true;  // not in collision
-
-  // Display more info about the collision
-  if (verbose && visual_tools)
-  {
-    visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
-    planning_scene->isStateColliding(*robot_state, group->getName(), true);
-    visual_tools->publishContactPoints(*robot_state, planning_scene);
-    visual_tools->trigger();
-    ros::Duration(verbose_speed).sleep();
-  }
-  return false;
+  grasp_filtered_code_ = SuctionGraspFilterCode::NOT_FILTERED;
 }
 
-}  // namespace
-
-#endif
+}  // namespace moveit_grasps

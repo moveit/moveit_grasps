@@ -49,15 +49,15 @@ namespace moveit_grasps
 constexpr char ENABLED_PARENT_NAME[] = "grasp_planner";  // for namespacing logging messages
 constexpr char ENABLED_SETTINGS_NAMESPACE[] = "moveit_grasps/planner";
 
-GraspPlanner::GraspPlanner(moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
+GraspPlanner::GraspPlanner(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
   : nh_("~"), visual_tools_(visual_tools)
 {
   loadEnabledSettings();
 }
 
-bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                              const robot_state::RobotStatePtr robot_state,
-                                              planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor)
+bool GraspPlanner::planAllApproachLiftRetreat(
+    std::vector<GraspCandidatePtr>& grasp_candidates, const robot_state::RobotStatePtr& robot_state,
+    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
   ls.reset(new planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor));
@@ -66,7 +66,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
 }
 
 bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                              const robot_state::RobotStatePtr robot_state,
+                                              const robot_state::RobotStatePtr& robot_state,
                                               const planning_scene::PlanningSceneConstPtr& planning_scene)
 {
   ROS_INFO_STREAM_NAMED("grasp_planner", "Planning all remaining grasps with approach lift retreat cartesian path");
@@ -130,10 +130,9 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
   return true;
 }
 
-bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
-                                           const robot_state::RobotStatePtr robot_state,
-                                           planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                                           bool verbose_cartesian_filtering)
+bool GraspPlanner::planApproachLiftRetreat(
+    GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
+    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor, bool verbose_cartesian_filtering)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
   ls.reset(new planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor));
@@ -143,7 +142,7 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
 }
 
 bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
-                                           const robot_state::RobotStatePtr robot_state,
+                                           const robot_state::RobotStatePtr& robot_state,
                                            const planning_scene::PlanningSceneConstPtr& planning_scene,
                                            bool verbose_cartesian_filtering)
 {
@@ -232,11 +231,10 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
   return true;
 }
 
-bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
-                                                planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                                                const moveit::core::RobotStatePtr start_state,
-                                                const EigenSTL::vector_Isometry3d& waypoints,
-                                                const std::string& grasp_object_id)
+bool GraspPlanner::computeCartesianWaypointPath(
+    GraspCandidatePtr& grasp_candidate, const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+    const moveit::core::RobotStatePtr& start_state, const EigenSTL::vector_Isometry3d& waypoints,
+    const std::string& grasp_object_id)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
   ls.reset(new planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor));
@@ -247,7 +245,7 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
 
 bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candidate,
                                                 const planning_scene::PlanningSceneConstPtr& planning_scene,
-                                                const moveit::core::RobotStatePtr start_state,
+                                                const moveit::core::RobotStatePtr& start_state,
                                                 const EigenSTL::vector_Isometry3d& waypoints,
                                                 const std::string& grasp_object_id)
 {

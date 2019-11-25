@@ -33,56 +33,45 @@
  *********************************************************************/
 
 /* Author: Dave Coleman <dave@picknik.ai>
-   Desc:   Callback for checking if a state is in collision
+   Desc:   Filters grasps based on kinematic feasibility and collision
 */
 
-#ifndef MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
-#define MOVEIT_GRASPS__STATE_VALIDITY_CALLBACK
+#ifndef MOVEIT_GRASPS__TWO_FINGER_GRASP_FILTER_
+#define MOVEIT_GRASPS__TWO_FINGER_GRASP_FILTER_
 
-// Rviz
-#include <moveit_visual_tools/moveit_visual_tools.h>
+// Parent class
+#include <moveit_grasps/grasp_filter.h>
 
-// MoveIt
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <moveit/robot_state/robot_state.h>
+// Grasping
+#include <moveit_grasps/two_finger_grasp_generator.h>
 
-namespace
+namespace moveit_grasps
 {
-bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool verbose, double verbose_speed,
-                       const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
-                       robot_state::RobotState* robot_state, const robot_state::JointModelGroup* group,
-                       const double* ik_solution)
+class TwoFingerGraspFilter : public GraspFilter
 {
-  robot_state->setJointGroupPositions(group, ik_solution);
-  if (!robot_state->satisfiesBounds(group))
-  {
-    if (verbose)
-      ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solution invalid");
+public:
+  // Constructor
+  TwoFingerGraspFilter(const robot_state::RobotStatePtr& robot_state,
+                       const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
-    return false;
-  }
+  /**
+   * \brief Thread for checking part of the possible grasps list
+   */
+  bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) override;
 
-  robot_state->update();
+  /**
+   * \brief Check if ik solution is in collision with fingers closed
+   * \return true on success
+   */
+  bool checkFingersClosedIK(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
+                            GraspCandidatePtr& grasp_candidate,
+                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
 
-  if (!planning_scene)
-  {
-    ROS_ERROR_STREAM_NAMED("is_grasp_state_valid", "No planning scene provided");
-    return false;
-  }
-  if (!planning_scene->isStateColliding(*robot_state, group->getName()))
-    return true;  // not in collision
+private:
+};  // end of class
 
-  // Display more info about the collision
-  if (verbose && visual_tools)
-  {
-    visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
-    planning_scene->isStateColliding(*robot_state, group->getName(), true);
-    visual_tools->publishContactPoints(*robot_state, planning_scene);
-    visual_tools->trigger();
-    ros::Duration(verbose_speed).sleep();
-  }
-  return false;
-}
+typedef std::shared_ptr<TwoFingerGraspFilter> TwoFingerGraspFilterPtr;
+typedef std::shared_ptr<const TwoFingerGraspFilter> TwoFingerGraspFilterConstPtr;
 
 }  // namespace
 

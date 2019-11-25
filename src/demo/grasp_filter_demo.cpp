@@ -57,17 +57,18 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Grasp
-#include <moveit_grasps/grasp_generator.h>
-#include <moveit_grasps/grasp_filter.h>
+#include <moveit_grasps/two_finger_grasp_generator.h>
+#include <moveit_grasps/two_finger_grasp_filter.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
-#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/two_finger_grasp_data.h>
 
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace moveit_grasps_demo
 {
-static const double BLOCK_SIZE = 0.04;
+constexpr double BLOCK_SIZE = 0.04;
+const std::string LOGNAME = "grasp_filter_demo";
 
 class GraspFilterDemo
 {
@@ -119,7 +120,13 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_ = std::make_shared<moveit_grasps::GraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    grasp_data_ =
+        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+    if (!grasp_data_->loadGraspData(nh_, ee_group_name_))
+    {
+      ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to load Grasp Data parameters.");
+      exit(-1);
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Clear out old collision objects
@@ -127,29 +134,30 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_ = std::make_shared<moveit_grasps::GraspGenerator>(visual_tools_);
+    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
     grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
     // We set custom grasp score weights
-    moveit_grasps::GraspScoreWeights grasp_score_weights;
-    grasp_score_weights.orientation_x_score_weight_ = 2.0;
-    grasp_score_weights.orientation_y_score_weight_ = 2.0;
-    grasp_score_weights.orientation_z_score_weight_ = 2.0;
-    grasp_score_weights.translation_x_score_weight_ = 1.0;
-    grasp_score_weights.translation_y_score_weight_ = 1.0;
-    grasp_score_weights.translation_z_score_weight_ = 1.0;
+    moveit_grasps::TwoFingerGraspScoreWeightsPtr grasp_score_weights =
+        std::make_shared<moveit_grasps::TwoFingerGraspScoreWeights>();
+    grasp_score_weights->orientation_x_score_weight_ = 2.0;
+    grasp_score_weights->orientation_y_score_weight_ = 2.0;
+    grasp_score_weights->orientation_z_score_weight_ = 2.0;
+    grasp_score_weights->translation_x_score_weight_ = 1.0;
+    grasp_score_weights->translation_y_score_weight_ = 1.0;
+    grasp_score_weights->translation_z_score_weight_ = 1.0;
     // Finger gripper specific weights. (Note that we do not need to set the suction gripper specific weights for our
     // finger gripper)
-    grasp_score_weights.depth_score_weight_ = 2.0;
-    grasp_score_weights.width_score_weight_ = 2.0;
+    grasp_score_weights->depth_score_weight_ = 2.0;
+    grasp_score_weights->width_score_weight_ = 2.0;
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
-    grasp_filter_ = std::make_shared<moveit_grasps::GraspFilter>(robot_state, visual_tools_);
+    grasp_filter_ = std::make_shared<moveit_grasps::TwoFingerGraspFilter>(robot_state, visual_tools_);
 
     // ---------------------------------------------------------------------------------------------
     // Clear Markers
@@ -197,15 +205,17 @@ public:
       std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
       // Configure the desired types of grasps
-      moveit_grasps::GraspCandidateConfig grasp_generator_config = moveit_grasps::GraspCandidateConfig();
+      moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
+          moveit_grasps::TwoFingerGraspCandidateConfig();
       grasp_generator_config.disableAll();
       grasp_generator_config.enable_face_grasps_ = true;
       grasp_generator_config.generate_y_axis_grasps_ = true;
       grasp_generator_config.generate_x_axis_grasps_ = true;
       grasp_generator_config.generate_z_axis_grasps_ = true;
 
+      grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
       grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), depth, width, height, grasp_data_,
-                                       grasp_candidates, grasp_generator_config);
+                                       grasp_candidates);
 
       // add grasps at variable depth
       // grasp_generator_->addVariableDepthGrasps(visual_tools_->convertPose(object_pose), grasp_data_,
@@ -250,17 +260,17 @@ private:
   // A shared node handle
   ros::NodeHandle nh_;
 
-  // Grasp generator
-  moveit_grasps::GraspGeneratorPtr grasp_generator_;
-
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
+  // Grasp generator
+  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
+
   // Grasp filter
-  moveit_grasps::GraspFilterPtr grasp_filter_;
+  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
 
   // data for generating grasps
-  moveit_grasps::GraspDataPtr grasp_data_;
+  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
 
   // Shared planning scene (load once for everything)
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;

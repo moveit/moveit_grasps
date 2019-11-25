@@ -60,12 +60,11 @@
 
 // C++
 #include <boost/thread.hpp>
-#include <math.h>
-#define _USE_MATH_DEFINES
+#include <cmath>
 
 namespace moveit_grasps
 {
-enum grasp_parallel_plane
+enum GraspParallelPlane
 {
   XY,
   XZ,
@@ -78,10 +77,10 @@ enum grasp_parallel_plane
 struct CuttingPlane
 {
   Eigen::Isometry3d pose_;
-  grasp_parallel_plane plane_;
+  GraspParallelPlane plane_;
   int direction_;
 
-  CuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction)
+  CuttingPlane(Eigen::Isometry3d pose, GraspParallelPlane plane, int direction)
     : pose_(pose), plane_(plane), direction_(direction)
   {
   }
@@ -144,24 +143,24 @@ struct IkThreadStruct
 };
 typedef std::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 
-// Class
 class GraspFilter
 {
 public:
   // Constructor
-  GraspFilter(robot_state::RobotStatePtr robot_state, moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
+  GraspFilter(const robot_state::RobotStatePtr& robot_state,
+              const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools);
 
   /**
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \return number of grasps remaining
+   * \return some grasps remaining
    */
-  bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                    planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
-                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr seed_state,
-                    bool filter_pregrasp = false);
+  virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                            const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                            const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
+                            bool filter_pregrasp = false);
 
   /**
    * \brief Filter grasps by cutting plane
@@ -171,23 +170,20 @@ public:
    * \param direction - which side of this plane to cut (+/- 1)
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByPlane(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d filter_pose, grasp_parallel_plane plane,
-                          int direction);
+  bool filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& filter_pose,
+                          GraspParallelPlane plane, int direction);
 
   /**
    * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
-   * a tiny
-   *        amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't
-   * removed
-   *        by the cutting plane operations. We know we'll never get to them because they deviate too much from the
-   * desired
-   *        grasping pose... straight in.
-   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * a tiny amount and still grasp an object. If there's empty space behind an object, grasps behind the object aren't
+   * removed by the cutting plane operations. We know we'll never get to them because they deviate too much from the
+   * desired grasping pose... straight in.
+   * \param grasp_candidates - a grasp candidate that this will test.
    * \param desired_pose - the desired grasp pose ( using standard grasping orientation )
    * \param max_angular_offset - maximum angle allowed between the grasp pose and the desired pose
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByOrientation(GraspCandidatePtr grasp_candidate, Eigen::Isometry3d desired_pose,
+  bool filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& desired_pose,
                                 double max_angular_offset);
 
   /**
@@ -195,40 +191,22 @@ public:
    * \return number of grasps remaining
    */
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                 planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor,
+                                 const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
-                                 const moveit::core::RobotStatePtr seed_state, bool filter_pregrasp, bool verbose);
+                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
 
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  bool processCandidateGrasp(IkThreadStructPtr& ik_thread_struct);
+  virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct);
 
   /**
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
-  bool findIKSolution(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
+  bool findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                       GraspCandidatePtr& grasp_candidate,
                       const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
-
-  /**
-   * \brief Check if ik solution is in collision with fingers closed
-   * \return true on success
-   */
-  bool checkFingersClosedIK(std::vector<double>& ik_solution, IkThreadStructPtr& ik_thread_struct,
-                            GraspCandidatePtr& grasp_candidate,
-                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
-
-  /**
-   * \brief  For suction grippers, check that at least one voxel has an overlap with the grasp target greater than the
-   *         threshold. If not, the grasp_candidate is removed from the vector. This should be used as a pre-filter
-   *          step before IK.
-   * \param grasp_candidates - All grasp candidates
-   * \param threshold - some fractional cutoff where at least one voxel must have > threshold overlap with the target
-   */
-  void preFilterBySuctionVoxelOverlap(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
-                                      double threshold);
 
   /**
    * \brief add a cutting plane
@@ -236,7 +214,7 @@ public:
    * \param plane - which plane to use as the cutting plane
    * \param direction - on which side of the plane the grasps will be removed
    */
-  void addCuttingPlane(Eigen::Isometry3d pose, grasp_parallel_plane plane, int direction);
+  void addCuttingPlane(const Eigen::Isometry3d& pose, GraspParallelPlane plane, int direction);
 
   /**
    * \brief Show all cutting planes that are currently enables
@@ -254,7 +232,7 @@ public:
    * \param pose - the desired grasping pose
    * \param max_angle_offset - maximum amount a generated grasp can deviate from the desired pose
    */
-  void addDesiredGraspOrientation(Eigen::Isometry3d pose, double max_angle_offset);
+  void addDesiredGraspOrientation(const Eigen::Isometry3d& pose, double max_angle_offset);
 
   /**
    * \brief clear all desired orientations
@@ -298,13 +276,13 @@ public:
    * \brief Used for sorting an array of CandidateGrasps
    * \return true if A is less than B
    */
-  static bool compareGraspScores(GraspCandidatePtr grasp_a, GraspCandidatePtr grasp_b)
+  static bool compareGraspScores(const GraspCandidatePtr& grasp_a, const GraspCandidatePtr& grasp_b)
   {
     // Determine if A or B has higher quality
     return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
   }
 
-private:
+protected:
   // Allow a writeable robot state
   robot_state::RobotStatePtr robot_state_;
 

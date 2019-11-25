@@ -40,31 +40,13 @@
 
 namespace moveit_grasps
 {
-GraspCandidate::GraspCandidate(moveit_msgs::Grasp grasp, const GraspDataPtr grasp_data, Eigen::Isometry3d cuboid_pose)
+GraspCandidate::GraspCandidate(const moveit_msgs::Grasp& grasp, const GraspDataPtr& grasp_data,
+                               const Eigen::Isometry3d& cuboid_pose)
   : grasp_(grasp)
   , grasp_data_(grasp_data)
   , cuboid_pose_(cuboid_pose)
-  , grasp_filtered_by_ik_(false)
-  , grasp_filtered_by_cutting_plane_(false)
-  , grasp_filtered_by_orientation_(false)
-  , grasp_filtered_by_ik_closed_(false)
-  , pregrasp_filtered_by_ik_(false)
+  , grasp_filtered_code_(GraspFilterCode::NOT_FILTERED)
 {
-}
-
-bool GraspCandidate::setSuctionVoxelOverlap(const std::vector<double>& suction_voxel_overlap)
-{
-  if (grasp_data_->end_effector_type_ == SUCTION)
-  {
-    suction_voxel_overlap_ = suction_voxel_overlap;
-    return true;
-  }
-  return false;
-}
-
-const std::vector<double> GraspCandidate::getSuctionVoxelOverlap()
-{
-  return suction_voxel_overlap_;
 }
 
 bool GraspCandidate::getPreGraspState(moveit::core::RobotStatePtr& robot_state)
@@ -122,11 +104,7 @@ bool GraspCandidate::getGraspStateClosedEEOnly(moveit::core::RobotStatePtr& robo
 
 bool GraspCandidate::isValid()
 {
-  if (grasp_filtered_by_ik_ || grasp_filtered_by_cutting_plane_ || grasp_filtered_by_orientation_ ||
-      pregrasp_filtered_by_ik_)
-    return false;
-  else
-    return true;
+  return grasp_filtered_code_ == GraspFilterCode::NOT_FILTERED;
 }
 
 }  // namespace
