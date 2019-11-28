@@ -134,7 +134,8 @@ bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mou
       scoreSuctionGrasp(grasp_pose_tcp, grasp_data, object_pose, object_size, suction_voxel_overlap);
 
   auto suction_grasp_candidate = std::make_shared<SuctionGraspCandidate>(new_grasp, grasp_data, object_pose);
-  suction_grasp_candidate->suction_voxel_overlap_ = suction_voxel_overlap;
+  suction_grasp_candidate->setSuctionVoxelOverlap(suction_voxel_overlap);
+
   grasp_candidates.push_back(suction_grasp_candidate);
   return true;
 }
@@ -238,7 +239,6 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   // Move the ideal top grasp to the correct location
   ideal_grasp_tcp.translation() = cuboid_center_top_grasp.translation();
   setIdealTCPGraspPose(ideal_grasp_tcp);
-  Eigen::Vector3d object_size(depth, width, height);
 
   if (debug_top_grasps_)
   {
@@ -374,6 +374,7 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   num_grasps = grasp_poses_tcp.size();
   ROS_DEBUG_STREAM_NAMED("grasp_generator.generate_suction_grasps", "num grasps after Yaw:\t " << num_grasps);
 
+  Eigen::Vector3d object_size(depth, width, height);
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;

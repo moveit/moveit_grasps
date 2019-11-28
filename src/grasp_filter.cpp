@@ -103,6 +103,19 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                const robot_model::JointModelGroup* arm_jmg,
                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
 {
+  planning_scene::PlanningScenePtr planning_scene;
+  {
+    planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
+    planning_scene = planning_scene::PlanningScene::clone(scene);
+  }
+  return filterGrasps(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp);
+}
+
+bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                               const planning_scene::PlanningScenePtr& planning_scene,
+                               const robot_model::JointModelGroup* arm_jmg,
+                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
+{
   bool verbose = false;
 
   // Error check
@@ -139,7 +152,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 
   // Try to filter grasps not in verbose mode
   std::size_t remaining_grasps =
-      filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
+      filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
 
   if (remaining_grasps == 0)
   {
@@ -149,7 +162,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
       ROS_INFO_STREAM_NAMED("grasp_filter", "Re-running in verbose mode since it failed");
       verbose = true;
       remaining_grasps =
-          filterGraspsHelper(grasp_candidates, planning_scene_monitor, arm_jmg, seed_state, filter_pregrasp, verbose);
+          filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
     }
     else
       ROS_INFO_STREAM_NAMED("grasp_filter", "NOT re-running in verbose mode");
@@ -245,15 +258,22 @@ GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates
                                 const robot_model::JointModelGroup* arm_jmg,
                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose)
 {
-  // Setup collision checking
-
-  // Copy planning scene that is locked
-  planning_scene::PlanningScenePtr cloned_scene;
+  planning_scene::PlanningScenePtr planning_scene;
   {
     planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
-    cloned_scene = planning_scene::PlanningScene::clone(scene);
+    planning_scene = planning_scene::PlanningScene::clone(scene);
   }
-  *robot_state_ = cloned_scene->getCurrentState();
+  return filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
+}
+
+std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                            const planning_scene::PlanningScenePtr& planning_scene,
+                                            const robot_model::JointModelGroup* arm_jmg,
+                                            const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                            bool verbose)
+{
+  // Setup collision checking
+  *robot_state_ = planning_scene->getCurrentState();
 
   // Choose Number of cores
   std::size_t num_threads = omp_get_max_threads();
@@ -343,7 +363,7 @@ GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates
   for (std::size_t thread_id = 0; thread_id < num_threads; ++thread_id)
   {
     ik_thread_structs[thread_id] =
-        std::make_shared<IkThreadStruct>(grasp_candidates, cloned_scene, link_transform,
+        std::make_shared<IkThreadStruct>(grasp_candidates, planning_scene, link_transform,
                                          0,  // this is filled in by OpenMP
                                          kin_solvers_[arm_jmg->getName()][thread_id], robot_states_[thread_id],
                                          solver_timeout_, filter_pregrasp, verbose, thread_id);
@@ -445,10 +465,9 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
   // Filter by cutting planes
-  for (std::size_t i = 0; i < cutting_planes_.size(); ++i)
+  for (auto& cutting_plane : cutting_planes_)
   {
-    if (filterGraspByPlane(grasp_candidate, cutting_planes_[i]->pose_, cutting_planes_[i]->plane_,
-                           cutting_planes_[i]->direction_))
+    if (filterGraspByPlane(grasp_candidate, cutting_plane->pose_, cutting_plane->plane_, cutting_plane->direction_))
     {
       grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE;
       return false;
@@ -456,10 +475,10 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
   }
 
   // Filter by desired orientation
-  for (std::size_t i = 0; i < desired_grasp_orientations_.size(); ++i)
+  for (auto& desired_grasp_orientation : desired_grasp_orientations_)
   {
-    if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientations_[i]->pose_,
-                                 desired_grasp_orientations_[i]->max_angle_offset_))
+    if (filterGraspByOrientation(grasp_candidate, desired_grasp_orientation->pose_,
+                                 desired_grasp_orientation->max_angle_offset_))
     {
       grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION;
       return false;
@@ -470,7 +489,7 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
       &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->verbose_,
       collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
-  // Set gripper position (eg. how open the fingers are) to the custom open position
+  // Set gripper position (eg. how open the eef is) to the custom open position
   grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
 
   // Solve IK Problem for grasp posture

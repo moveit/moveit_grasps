@@ -67,6 +67,11 @@ public:
                     bool filter_pregrasp = false) override;
 
   /**
+   * \brief Thread for checking part of the possible grasps list
+   */
+  bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) override;
+
+  /**
    * \brief Filter grasps that do not have a valid suction voxel overlap
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    */
@@ -79,6 +84,8 @@ public:
    *                 of it's surface overlaping with the target object
    */
   void setSuctionVoxelOverlapCutoff(double cutoff);
+
+
 
 private:
   // A cutoff threshold [0,1] where at least one suction voxe must have more than this fraction overlap
