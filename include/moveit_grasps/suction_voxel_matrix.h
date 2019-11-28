@@ -153,7 +153,17 @@ public:
     return voxel_x_width_ * voxel_y_width_;
   }
 
-public:
+  double getVoxelWidthX()
+  {
+    return voxel_x_width_;
+  }
+
+  double getVoxelWidthY()
+  {
+    return voxel_y_width_;
+  }
+
+protected:
   std::size_t suction_rows_count_;
   std::size_t suction_cols_count_;
   double voxel_x_width_;

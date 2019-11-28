@@ -310,13 +310,13 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_min:                  " << x_min);
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_max:                  " << x_max);
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "depth:                  " << depth);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_x: " << grasp_data->suction_voxel_matrix_->active_suction_range_x_);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_x_width:          " << grasp_data->suction_voxel_matrix_->voxel_x_width_);
+    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_x: " << grasp_data->suction_voxel_matrix_->getActiveSuctionWidthX());
+    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_x_width:          " << grasp_data->suction_voxel_matrix_->getVoxelWidthX());
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_min:                  " << y_min);
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_max:                  " << y_max);
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "width:                  " << width);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_y: " << grasp_data->suction_voxel_matrix_->active_suction_range_y_);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_y_width:          " << grasp_data->suction_voxel_matrix_->voxel_y_width_);
+    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_y: " << grasp_data->suction_voxel_matrix_->getActiveSuctionWidthY());
+    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_y_width:          " << grasp_data->suction_voxel_matrix_->getVoxelWidthY());
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_min:                  " << z_min);
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_max:                  " << z_max);
     ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "xy_increment:           " << xy_increment);
