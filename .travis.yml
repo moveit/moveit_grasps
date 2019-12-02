@@ -11,9 +11,11 @@ notifications:
   email:
     recipients:
 env:
-  matrix:
-    - DOCKER_IMAGE=moveit/moveit:master-source   TEST=clang-format,catkin_lint
+  global:
     - DOCKER_IMAGE=moveit/moveit:master-source
+  matrix:
+    - TEST=clang-format,catkin_lint
+    - TEST=code-coverage
 
 before_script:
   - git clone -q --depth=1 https://github.com/ros-planning/moveit_ci.git .moveit_ci
