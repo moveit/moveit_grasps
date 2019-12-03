@@ -104,10 +104,10 @@ bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCand
 std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                                    const planning_scene::PlanningScenePtr& planning_scene,
                                                    const robot_model::JointModelGroup* arm_jmg,
-                                                   const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose)
+                                                   const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize)
 {
   filterBySuctionVoxelOverlapCutoff(grasp_candidates);
-  return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
+  return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, visualize);
 }
 
 bool SuctionGraspFilter::filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const

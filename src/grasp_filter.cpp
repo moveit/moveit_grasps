@@ -256,21 +256,21 @@ std::size_t
 GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                 const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                 const robot_model::JointModelGroup* arm_jmg,
-                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose)
+                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize)
 {
   planning_scene::PlanningScenePtr planning_scene;
   {
     planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
     planning_scene = planning_scene::PlanningScene::clone(scene);
   }
-  return filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
+  return filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, visualize);
 }
 
 std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                             const planning_scene::PlanningScenePtr& planning_scene,
                                             const robot_model::JointModelGroup* arm_jmg,
                                             const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                            bool verbose)
+                                            bool visualize)
 {
   // Setup collision checking
   *robot_state_ = planning_scene->getCurrentState();
@@ -283,7 +283,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   }
 
   // Debug
-  if (verbose || collision_verbose_)
+  if (visualize || collision_verbose_)
   {
     num_threads = 1;
     ROS_WARN_STREAM_NAMED("grasp_filter", "Using only " << num_threads << " threads because verbose is true");
@@ -366,7 +366,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
         std::make_shared<IkThreadStruct>(grasp_candidates, planning_scene, link_transform,
                                          0,  // this is filled in by OpenMP
                                          kin_solvers_[arm_jmg->getName()][thread_id], robot_states_[thread_id],
-                                         solver_timeout_, filter_pregrasp, verbose, thread_id);
+                                         solver_timeout_, filter_pregrasp, visualize, thread_id);
     ik_thread_structs[thread_id]->ik_seed_state_ = ik_seed_state;
   }
 
