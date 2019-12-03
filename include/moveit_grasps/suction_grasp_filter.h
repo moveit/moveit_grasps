@@ -59,17 +59,18 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param visual_debug - visualize IK filtering
    * \return number of grasps remaining
    */
-  bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                    bool filter_pregrasp = false) override;
+  std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                 const planning_scene::PlanningScenePtr& planning_scene_monitor,
+                                 const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
+                                 bool filter_pregrasp, bool visual_debug) override;
 
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) override;
+  bool filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const override;
 
   /**
    * \brief Filter grasps that do not have a valid suction voxel overlap
@@ -84,8 +85,6 @@ public:
    *                 of it's surface overlaping with the target object
    */
   void setSuctionVoxelOverlapCutoff(double cutoff);
-
-
 
 private:
   // A cutoff threshold [0,1] where at least one suction voxe must have more than this fraction overlap

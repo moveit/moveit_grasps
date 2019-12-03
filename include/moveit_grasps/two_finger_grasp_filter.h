@@ -57,7 +57,7 @@ public:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) override;
+  bool filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const override;
 
   /**
    * \brief Check if ik solution is in collision with fingers closed
@@ -65,7 +65,7 @@ public:
    */
   bool checkFingersClosedIK(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                             GraspCandidatePtr& grasp_candidate,
-                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
+                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn)  const;
 
 private:
 };  // end of class

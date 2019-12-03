@@ -55,9 +55,9 @@ TwoFingerGraspFilter::TwoFingerGraspFilter(const robot_state::RobotStatePtr& rob
 {
 }
 
-bool TwoFingerGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)
+bool TwoFingerGraspFilter::filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
 {
-  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
+  bool filer_results = GraspFilter::filterCandidateGrasp(ik_thread_struct);
   if (!filer_results)
     return false;
 
@@ -65,7 +65,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thr
   GraspCandidatePtr& grasp_candidate = ik_thread_struct->grasp_candidates_[ik_thread_struct->grasp_id];
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn = boost::bind(
-      &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->verbose_,
+      &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->visual_debug_,
       collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Check if IK solution for grasp pose is valid for fingers closed as well
@@ -82,7 +82,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thr
 bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution,
                                                 const IkThreadStructPtr& ik_thread_struct,
                                                 GraspCandidatePtr& grasp_candidate,
-                                                const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
+                                                const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const
 {
   // Set gripper position (how open the fingers are) to CLOSED
   grasp_candidate->getGraspStateClosedEEOnly(ik_thread_struct->robot_state_);

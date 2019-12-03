@@ -64,14 +64,14 @@ public:
                         const Eigen::Isometry3d& cuboid_pose);
 
 
-  void setSuctionVoxelOverlap(suction_voxel_overlap)
+  void setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap)
   {
     suction_voxel_overlap_ = suction_voxel_overlap;
   }
 
-  void getSuctionVoxelOverlap(suction_voxel_overlap)
+  std::vector<double> getSuctionVoxelOverlap()
   {
-    suction_voxel_overlap_ = suction_voxel_overlap;
+    return suction_voxel_overlap_;
   }
 
   void setSuctionVoxelCutoff(double cutoff)
@@ -79,14 +79,13 @@ public:
     suction_voxel_cutoff_ = cutoff;
   }
 
-  void getSuctionVoxelEnabled(std::vector<double>& suction_voxel_enabled)
+  std::vector<bool> getSuctionVoxelEnabled()
   {
-    suction_voxel_enabled.resize(suction_voxel_overlap_);
-    for (std::size_t voxel_ix=0; ix<suction_voxel_overlap_.size(); ++ix)
-      suction_voxel_enabled[ix] = suction_voxel_overlap_ > suction_voxel_cutoff_;
+    std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
+    for (std::size_t voxel_ix=0; voxel_ix<suction_voxel_enabled.size(); ++voxel_ix)
+      suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff_;
+    return suction_voxel_enabled;
   }
-
-  const SuctionGraspDataPtr grasp_data_;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:

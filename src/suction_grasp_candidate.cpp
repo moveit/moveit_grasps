@@ -43,7 +43,6 @@ namespace moveit_grasps
 SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
                                              const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, std::dynamic_pointer_cast<GraspData>(grasp_data), cuboid_pose)
-  , grasp_data_(grasp_data)
 {
   grasp_filtered_code_ = SuctionGraspFilterCode::NOT_FILTERED;
 }

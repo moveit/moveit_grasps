@@ -192,7 +192,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 }
 
 bool GraspFilter::filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& filter_pose,
-                                     GraspParallelPlane plane, int direction)
+                                     GraspParallelPlane plane, int direction) const
 {
   Eigen::Isometry3d grasp_pose;
   Eigen::Vector3d grasp_position;
@@ -226,7 +226,7 @@ bool GraspFilter::filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const E
 }
 
 bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& desired_pose,
-                                           double max_angular_offset)
+                                           double max_angular_offset) const
 {
   Eigen::Isometry3d tcp_grasp_pose;
   Eigen::Isometry3d eef_mount_grasp_pose;
@@ -384,7 +384,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
     ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Thread " << thread_id << " processing grasp " << grasp_id);
 
     // If in verbose mode allow for quick exit
-    if (ik_thread_structs[thread_id]->verbose_ && !ros::ok())
+    if (ik_thread_structs[thread_id]->visual_debug_ && !ros::ok())
       continue;  // breaking a for loop is not allows with OpenMP
 
     // Assign grasp to process
@@ -392,7 +392,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
 
     // Process the grasp if it hasn't already been filtered out
     if (grasp_candidates[grasp_id]->isValid())
-      processCandidateGrasp(ik_thread_structs[thread_id]);
+      filterCandidateGrasp(ik_thread_structs[thread_id]);
   }
 
   // Count number of grasps remaining
@@ -454,7 +454,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return not_filtered;
 }
 
-bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)
+bool GraspFilter::filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
 
@@ -486,7 +486,7 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
   }
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn = boost::bind(
-      &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->verbose_,
+      &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->visual_debug_,
       collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Set gripper position (eg. how open the eef is) to the custom open position
@@ -532,7 +532,7 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
 
 bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                                  GraspCandidatePtr& grasp_candidate,
-                                 const moveit::core::GroupStateValidityCallbackFn& constraint_fn)
+                                 const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const
 {
   // Transform current pose to frame of planning group
   Eigen::Isometry3d eigen_eef_mount_pose;

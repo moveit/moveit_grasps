@@ -163,6 +163,16 @@ public:
     return voxel_y_width_;
   }
 
+  double getActiveSuctionWidthX()
+  {
+    return active_suction_range_x_;
+  }
+
+  double getActiveSuctionWidthY()
+  {
+    return active_suction_range_y_;
+  }
+
 protected:
   std::size_t suction_rows_count_;
   std::size_t suction_cols_count_;

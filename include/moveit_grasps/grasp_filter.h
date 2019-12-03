@@ -110,7 +110,7 @@ struct IkThreadStruct
   IkThreadStruct(std::vector<GraspCandidatePtr>& grasp_candidates,  // the input
                  planning_scene::PlanningScenePtr planning_scene, Eigen::Isometry3d& link_transform,
                  std::size_t grasp_id, kinematics::KinematicsBaseConstPtr kin_solver,
-                 robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool verbose,
+                 robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
                  std::size_t thread_id)
     : grasp_candidates_(grasp_candidates)
     , planning_scene_(planning_scene)
@@ -120,7 +120,7 @@ struct IkThreadStruct
     , robot_state_(robot_state)
     , timeout_(timeout)
     , filter_pregrasp_(filter_pregrasp)
-    , verbose_(verbose)
+    , visual_debug_(visual_debug)
     , thread_id_(thread_id)
   {
   }
@@ -133,7 +133,7 @@ struct IkThreadStruct
   const robot_model::JointModelGroup* arm_jmg_;
   double timeout_;
   bool filter_pregrasp_;
-  bool verbose_;
+  bool visual_debug_;
   std::size_t thread_id_;
 
   // Used within processing function
@@ -155,7 +155,7 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \return some grasps remaining
+   * \return if some grasps are still valid
    */
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                             const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
@@ -166,7 +166,40 @@ public:
                                const planning_scene::PlanningScenePtr& planning_scene,
                                const robot_model::JointModelGroup* arm_jmg,
                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp);
+  /**
+   * \brief Return grasps that are kinematically feasible
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param arm_jmg - the arm to solve the IK problem on
+   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param visual_debug - visualize IK filtering
+   * \return number of grasps remaining
+   */
+  virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                         const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                         const robot_model::JointModelGroup* arm_jmg,
+                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
 
+  virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                         const planning_scene::PlanningScenePtr& planning_scene,
+                                         const robot_model::JointModelGroup* arm_jmg,
+                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
+
+  /**
+   * \brief Method for checking part of the possible grasps list. MUST BE THREAD SAFE
+   */
+  virtual bool filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const;
+
+  /**
+   * \brief Used for sorting an array of CandidateGrasps
+   * \return true if A is less than B
+   */
+  static bool compareGraspScores(const GraspCandidatePtr& grasp_a, const GraspCandidatePtr& grasp_b)
+  {
+    // Determine if A or B has higher quality
+    return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
+  }
+
+protected:
   /**
    * \brief Filter grasps by cutting plane
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
@@ -176,7 +209,7 @@ public:
    * \return true if grasp is filtered by operation
    */
   bool filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& filter_pose,
-                          GraspParallelPlane plane, int direction);
+                          GraspParallelPlane plane, int direction) const;
 
   /**
    * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
@@ -189,26 +222,7 @@ public:
    * \return true if grasp is filtered by operation
    */
   bool filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& desired_pose,
-                                double max_angular_offset);
-
-  /**
-   * \brief Helper for filterGrasps
-   * \return number of grasps remaining
-   */
-  std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                                const robot_model::JointModelGroup* arm_jmg,
-                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
-
-  std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                 const planning_scene::PlanningScenePtr& planning_scene,
-                                 const robot_model::JointModelGroup* arm_jmg,
-                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
-
-  /**
-   * \brief Thread for checking part of the possible grasps list
-   */
-  virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct);
+                                double max_angular_offset) const;
 
   /**
    * \brief Helper for the thread function to find IK solutions
@@ -216,7 +230,7 @@ public:
    */
   bool findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                       GraspCandidatePtr& grasp_candidate,
-                      const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
+                      const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const;
 
   /**
    * \brief add a cutting plane
@@ -282,15 +296,6 @@ public:
   bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
                               const double& bin_width, const double& bin_height);
 
-  /**
-   * \brief Used for sorting an array of CandidateGrasps
-   * \return true if A is less than B
-   */
-  static bool compareGraspScores(const GraspCandidatePtr& grasp_a, const GraspCandidatePtr& grasp_b)
-  {
-    // Determine if A or B has higher quality
-    return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
-  }
 
 protected:
   // Allow a writeable robot state

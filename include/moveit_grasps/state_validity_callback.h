@@ -48,7 +48,7 @@
 
 namespace
 {
-bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool verbose, double verbose_speed,
+bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool visual_debug, double verbose_speed,
                        const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
                        robot_state::RobotState* robot_state, const robot_state::JointModelGroup* group,
                        const double* ik_solution)
@@ -56,7 +56,7 @@ bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool
   robot_state->setJointGroupPositions(group, ik_solution);
   if (!robot_state->satisfiesBounds(group))
   {
-    if (verbose)
+    if (visual_debug)
       ROS_DEBUG_STREAM_NAMED("is_grasp_state_valid", "Ik solution invalid");
 
     return false;
@@ -73,7 +73,7 @@ bool isGraspStateValid(const planning_scene::PlanningScene* planning_scene, bool
     return true;  // not in collision
 
   // Display more info about the collision
-  if (verbose && visual_tools)
+  if (visual_debug && visual_tools)
   {
     visual_tools->publishRobotState(*robot_state, rviz_visual_tools::RED);
     planning_scene->isStateColliding(*robot_state, group->getName(), true);
