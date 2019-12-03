@@ -63,7 +63,6 @@ public:
   SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
                         const Eigen::Isometry3d& cuboid_pose);
 
-
   void setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap)
   {
     suction_voxel_overlap_ = suction_voxel_overlap;
@@ -82,7 +81,7 @@ public:
   std::vector<bool> getSuctionVoxelEnabled()
   {
     std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
-    for (std::size_t voxel_ix=0; voxel_ix<suction_voxel_enabled.size(); ++voxel_ix)
+    for (std::size_t voxel_ix = 0; voxel_ix < suction_voxel_enabled.size(); ++voxel_ix)
       suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff_;
     return suction_voxel_enabled;
   }

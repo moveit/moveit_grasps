@@ -163,9 +163,9 @@ public:
                             bool filter_pregrasp = false);
 
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
-                               const planning_scene::PlanningScenePtr& planning_scene,
-                               const robot_model::JointModelGroup* arm_jmg,
-                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp);
+                            const planning_scene::PlanningScenePtr& planning_scene,
+                            const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
+                            bool filter_pregrasp);
   /**
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
@@ -177,12 +177,14 @@ public:
   virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                          const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                          const robot_model::JointModelGroup* arm_jmg,
-                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize);
+                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                         bool visualize);
 
   virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                          const planning_scene::PlanningScenePtr& planning_scene,
                                          const robot_model::JointModelGroup* arm_jmg,
-                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize);
+                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                         bool visualize);
 
   /**
    * \brief Method for checking part of the possible grasps list. MUST BE THREAD SAFE

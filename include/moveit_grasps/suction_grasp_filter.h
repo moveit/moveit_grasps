@@ -64,8 +64,9 @@ public:
    */
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                  const planning_scene::PlanningScenePtr& planning_scene_monitor,
-                                 const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                                 bool filter_pregrasp, bool visualize) override;
+                                 const robot_model::JointModelGroup* arm_jmg,
+                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                 bool visualize) override;
 
   /**
    * \brief Thread for checking part of the possible grasps list

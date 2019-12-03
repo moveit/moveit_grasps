@@ -298,13 +298,15 @@ public:
       visual_tools_->prompt("grasp");
       visual_tools_->publishRobotState(grasp_state, rviz_visual_tools::YELLOW);
     }
-    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > 1 && valid_grasp_candidate->segmented_cartesian_traj_[1].size())
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > 1 &&
+        valid_grasp_candidate->segmented_cartesian_traj_[1].size())
     {
       visual_tools_->prompt("lift");
       visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[1].back(),
                                        rviz_visual_tools::BLUE);
     }
-    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > 2 && valid_grasp_candidate->segmented_cartesian_traj_[2].size())
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > 2 &&
+        valid_grasp_candidate->segmented_cartesian_traj_[2].size())
     {
       visual_tools_->prompt("retreat");
       visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[2].back(),

@@ -91,12 +91,12 @@ bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCand
   }
   if (statistics_verbose_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter",
-                           "-------------------------------------------------------"
-                               << "\nGRASP PRE-FILTER RESULTS"
-                               << "\ntotal_grasp_candidates:     " << grasp_candidates.size()
-                               << "\nremaining grasp candidates: " << valid_grasps
-                               << "\n-------------------------------------------------------");
+    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "-------------------------------------------------------"
+                                                          << "\nGRASP PRE-FILTER RESULTS"
+                                                          << "\ntotal_grasp_candidates:     " << grasp_candidates.size()
+                                                          << "\nremaining grasp candidates: " << valid_grasps
+                                                          << "\n------------------------------------------------------"
+                                                             "-");
   }
   return valid_grasps;
 }
@@ -104,10 +104,12 @@ bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCand
 std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                                    const planning_scene::PlanningScenePtr& planning_scene,
                                                    const robot_model::JointModelGroup* arm_jmg,
-                                                   const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize)
+                                                   const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                                   bool visualize)
 {
   filterBySuctionVoxelOverlapCutoff(grasp_candidates);
-  return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, visualize);
+  return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp,
+                                         visualize);
 }
 
 bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
@@ -122,13 +124,15 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   // attachActiveSuctionCupCO(grasp_candidate, ik_thread_struct->planning_scene_);
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn = boost::bind(
-      &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->visual_debug_,
-      collision_verbose_speed_, visual_tools_, _1, _2, _3);
+      &isGraspStateValid, ik_thread_struct->planning_scene_.get(),
+      collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Check if IK solution for grasp pose is valid for fingers closed as well
-  // if (!checkActiveSuctionVoxelCollisions(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
+  // if (!checkActiveSuctionVoxelCollisions(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate,
+  // constraint_fn))
   // {
-  //   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find IK solution where the suction voxels are not in contact with other objects");
+  //   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find IK solution where the suction voxels are not in
+  //   contact with other objects");
   //   grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
   //   return false;
   // }
@@ -136,7 +140,8 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   return true;
 }
 
-// bool SuctionGraspFilter::attachActiveSuctionCupCO(GraspCandidateConstPtr& grasp_candidate, planning_scene::PlanningScenePtr& planning_scene)
+// bool SuctionGraspFilter::attachActiveSuctionCupCO(GraspCandidateConstPtr& grasp_candidate,
+// planning_scene::PlanningScenePtr& planning_scene)
 // {
 //   static const std::string logger_name = "grasp_filter.attachActiveSuctionCupCO";
 
@@ -175,7 +180,8 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
 //     suction_cups.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = suction_voxel->z_width_;
 //     suction_cups.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = grasp_data->grasp_max_depth_;
 
-//     Eigen::Isometry3d ik_link_to_voxel_center = ik_link_to_tcp * suction_voxel->center_point_ * Eigen::Isometry3d(0, 0, grasp_data->grasp_max_depth_ / 2.0);
+//     Eigen::Isometry3d ik_link_to_voxel_center = ik_link_to_tcp * suction_voxel->center_point_ * Eigen::Isometry3d(0,
+//     0, grasp_data->grasp_max_depth_ / 2.0);
 //     suction_cups.primitive_poses.resize(1);
 //     suction_cups.primitive_poses[0] = tf2::toMsg(ik_link_to_voxel_center);
 

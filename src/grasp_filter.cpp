@@ -486,8 +486,8 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
   }
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn = boost::bind(
-      &isGraspStateValid, ik_thread_struct->planning_scene_.get(), collision_verbose_ || ik_thread_struct->visual_debug_,
-      collision_verbose_speed_, visual_tools_, _1, _2, _3);
+      &isGraspStateValid, ik_thread_struct->planning_scene_.get(),
+      collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Set gripper position (eg. how open the eef is) to the custom open position
   grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);

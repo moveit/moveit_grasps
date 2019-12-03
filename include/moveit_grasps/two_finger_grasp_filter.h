@@ -65,7 +65,7 @@ public:
    */
   bool checkFingersClosedIK(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                             GraspCandidatePtr& grasp_candidate,
-                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn)  const;
+                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const;
 
 private:
 };  // end of class
