@@ -583,7 +583,7 @@ void GraspFilter::addDesiredGraspOrientation(const Eigen::Isometry3d& pose, doub
   desired_grasp_orientations_.push_back(std::make_shared<DesiredGraspOrientation>(pose, max_angle_offset));
 }
 
-bool GraspFilter::removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates)
+bool GraspFilter::removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates) const
 {
   std::size_t original_num_grasps = grasp_candidates.size();
 
@@ -726,20 +726,22 @@ bool GraspFilter::visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>&
       continue;
 
     // Apply the pregrasp state
-    grasp_candidates[i]->getPreGraspState(robot_state_);
-
-    // Show in Rviz
-    visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::ORANGE);
-    visual_tools_->trigger();
-    ros::Duration(show_filtered_arm_solutions_pregrasp_speed_).sleep();
+    if (grasp_candidates[i]->getPreGraspState(robot_state_))
+    {
+      // Show in Rviz
+      visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::ORANGE);
+      visual_tools_->trigger();
+      ros::Duration(show_filtered_arm_solutions_pregrasp_speed_).sleep();
+    }
 
     // Apply the grasp state
-    grasp_candidates[i]->getGraspStateClosed(robot_state_);
-
-    // Show in Rviz
-    visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::WHITE);
-    visual_tools_->trigger();
-    ros::Duration(show_filtered_arm_solutions_speed_).sleep();
+    if (grasp_candidates[i]->getGraspStateClosed(robot_state_))
+    {
+      // Show in Rviz
+      visual_tools_->publishRobotState(robot_state_, rviz_visual_tools::WHITE);
+      visual_tools_->trigger();
+      ros::Duration(show_filtered_arm_solutions_speed_).sleep();
+    }
   }
 
   return true;

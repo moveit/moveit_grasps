@@ -90,6 +90,12 @@ bool GraspCandidate::getGraspStateOpenEEOnly(moveit::core::RobotStatePtr& robot_
 
 bool GraspCandidate::getGraspStateClosed(moveit::core::RobotStatePtr& robot_state)
 {
+  if (grasp_ik_solution_.empty())
+  {
+    ROS_ERROR_STREAM_NAMED("grasp_candidate", "No grasp ik solution available to set");
+    return false;
+  }
+
   // Apply IK solved arm joints to state
   robot_state->setJointGroupPositions(grasp_data_->arm_jmg_, grasp_ik_solution_);
 

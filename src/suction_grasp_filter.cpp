@@ -106,9 +106,7 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
                                                    const robot_model::JointModelGroup* arm_jmg,
                                                    const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose)
 {
-  std::size_t valid_grasps = filterBySuctionVoxelOverlapCutoff(grasp_candidates);
-  if (valid_grasps)
-    return 0;
+  filterBySuctionVoxelOverlapCutoff(grasp_candidates);
   return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
 }
 

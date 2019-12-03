@@ -168,15 +168,18 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
     // grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
     // visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::GREEN);
 
-    waitForNextStep("see pre grasp state");
-    grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState());
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::RED);
-
-    waitForNextStep("see grasp state");
-    grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
-    visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::BLUE);
-
-    visual_tools_->trigger();
+    if(grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState()))
+    {
+      waitForNextStep("see pre grasp state");
+      visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::RED);
+      visual_tools_->trigger();
+    }
+    if (grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState()))
+    {
+      waitForNextStep("see grasp state");
+      visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::BLUE);
+      visual_tools_->trigger();
+    }
     waitForNextStep("continue cartesian planning");
   }
 

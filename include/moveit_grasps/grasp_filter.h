@@ -199,6 +199,19 @@ public:
     return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
   }
 
+  /**
+   * \brief Of an array of grasps, sort the valid ones from best score to worse score
+   * \return true on success, false if no grasps remain
+   */
+  bool removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates) const;
+
+  /**
+   * \brief Add a cutting plane filter for a shelf bin
+   * \return true on success
+   */
+  bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
+                              const double& bin_width, const double& bin_height);
+
 protected:
   /**
    * \brief Filter grasps by cutting plane
@@ -264,12 +277,6 @@ protected:
   void clearDesiredGraspOrientations();
 
   /**
-   * \brief Of an array of grasps, sort the valid ones from best score to worse score
-   * \return true on success, false if no grasps remain
-   */
-  bool removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates);
-
-  /**
    * \brief Show grasps after being filtered
    * \return true on success
    */
@@ -288,14 +295,6 @@ protected:
    * \return true on success
    */
   bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
-
-  /**
-   * \brief Add a cutting plane filter for a shelf bin
-   * \return true on success
-   */
-  bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
-                              const double& bin_width, const double& bin_height);
-
 
 protected:
   // Allow a writeable robot state

@@ -291,17 +291,25 @@ public:
         std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
     valid_grasp_candidate->getPreGraspState(pre_grasp_state);
     visual_tools_->publishRobotState(pre_grasp_state, rviz_visual_tools::ORANGE);
-    visual_tools_->prompt("grasp");
     robot_state::RobotStatePtr grasp_state =
         std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
-    valid_grasp_candidate->getGraspStateClosed(grasp_state);
-    visual_tools_->publishRobotState(grasp_state, rviz_visual_tools::YELLOW);
-    visual_tools_->prompt("lift");
-    visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[1].back(),
-                                     rviz_visual_tools::BLUE);
-    visual_tools_->prompt("retreat");
-    visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[2].back(),
-                                     rviz_visual_tools::PURPLE);
+    if (valid_grasp_candidate->getGraspStateClosed(grasp_state))
+    {
+      visual_tools_->prompt("grasp");
+      visual_tools_->publishRobotState(grasp_state, rviz_visual_tools::YELLOW);
+    }
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > 1 && valid_grasp_candidate->segmented_cartesian_traj_[1].size())
+    {
+      visual_tools_->prompt("lift");
+      visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[1].back(),
+                                       rviz_visual_tools::BLUE);
+    }
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > 2 && valid_grasp_candidate->segmented_cartesian_traj_[2].size())
+    {
+      visual_tools_->prompt("retreat");
+      visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[2].back(),
+                                       rviz_visual_tools::PURPLE);
+    }
 
     visual_tools_->prompt("show free space approach");
     visual_tools_->hideRobot();
@@ -310,13 +318,19 @@ public:
     bool wait_for_animation = true;
     visual_tools_->publishTrajectoryPath(pre_approach_plan.trajectory, pre_grasp_state, wait_for_animation);
     ros::Duration(0.25).sleep();
-    visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH],
-                                         valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > moveit_grasps::APPROACH)
+      visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH],
+                                           valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
     ros::Duration(0.25).sleep();
-    visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::LIFT],
-                                         valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::RETREAT],
-                                         valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > moveit_grasps::LIFT)
+      visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::LIFT],
+                                           valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    ros::Duration(0.25).sleep();
+
+    if (valid_grasp_candidate->segmented_cartesian_traj_.size() > moveit_grasps::RETREAT)
+      visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::RETREAT],
+                                           valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
     ros::Duration(0.25).sleep();
   }
 
