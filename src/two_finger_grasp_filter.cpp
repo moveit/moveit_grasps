@@ -55,9 +55,9 @@ TwoFingerGraspFilter::TwoFingerGraspFilter(const robot_state::RobotStatePtr& rob
 {
 }
 
-bool TwoFingerGraspFilter::filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
+bool TwoFingerGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
 {
-  bool filer_results = GraspFilter::filterCandidateGrasp(ik_thread_struct);
+  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
   if (!filer_results)
     return false;
 

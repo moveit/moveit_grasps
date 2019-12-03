@@ -70,7 +70,7 @@ public:
   /**
    * \brief Thread for checking part of the possible grasps list
    */
-  bool filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const override;
+  bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const override;
 
   /**
    * \brief Filter grasps that do not have a valid suction voxel overlap

@@ -110,9 +110,9 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
   return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, visualize);
 }
 
-bool SuctionGraspFilter::filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
+bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
 {
-  bool filer_results = GraspFilter::filterCandidateGrasp(ik_thread_struct);
+  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
   if (!filer_results)
     return false;
 

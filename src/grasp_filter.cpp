@@ -392,7 +392,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
 
     // Process the grasp if it hasn't already been filtered out
     if (grasp_candidates[grasp_id]->isValid())
-      filterCandidateGrasp(ik_thread_structs[thread_id]);
+      processCandidateGrasp(ik_thread_structs[thread_id]);
   }
 
   // Count number of grasps remaining
@@ -454,7 +454,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return not_filtered;
 }
 
-bool GraspFilter::filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
+bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
 

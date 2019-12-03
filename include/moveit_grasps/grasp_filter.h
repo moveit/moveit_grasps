@@ -187,7 +187,7 @@ public:
   /**
    * \brief Method for checking part of the possible grasps list. MUST BE THREAD SAFE
    */
-  virtual bool filterCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const;
+  virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const;
 
   /**
    * \brief Used for sorting an array of CandidateGrasps
