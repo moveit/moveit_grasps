@@ -240,11 +240,31 @@ protected:
                                 double max_angular_offset) const;
 
   /**
+   * \brief Filter grasps by feasablity of the grasp pose.
+   * \param grasp_candidates - a grasp candidate that this will test
+   * \param grasp_ik_solution - the IK solution if one exists
+   * \param ik_thread_struct - a struct containing the planning_scene
+   * \return true if grasp is filtered by operation
+   */
+  bool filterGraspByGraspIK(GraspCandidatePtr& grasp_candidate, std::vector<double>& grasp_ik_solution,
+                            const IkThreadStructPtr& ik_thread_struct) const;
+
+  /**
+   * \brief Filter grasps by feasablity of the pre grasp pose.
+   * \param grasp_candidates - a grasp candidate that this will test
+   * \param grasp_ik_solution - the IK solution if one exists
+   * \param ik_thread_struct - a struct containing the planning_scene
+   * \return true if grasp is filtered by operation
+   */
+  bool filterGraspByPreGraspIK(const GraspCandidatePtr& grasp_candidate, std::vector<double>& pregrasp_ik_solution,
+                               const IkThreadStructPtr& ik_thread_struct) const;
+
+  /**
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
   bool findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
-                      GraspCandidatePtr& grasp_candidate,
+                      const GraspCandidatePtr& grasp_candidate,
                       const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const;
 
   /**
