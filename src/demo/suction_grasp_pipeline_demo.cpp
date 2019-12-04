@@ -428,13 +428,23 @@ public:
                             double& y_width, double& z_height)
   {
     // Generate random cuboid
-    double xmin = 0.5;
-    double xmax = 0.7;
-    double ymin = -0.25;
-    double ymax = 0.25;
-    double zmin = 0.2;
-    double zmax = 0.7;
-    rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax);
+    double xmin = 0.125;
+    double xmax = 0.250;
+    double ymin = 0.125;
+    double ymax = 0.250;
+    double zmin = 0.200;
+    double zmax = 0.500;
+
+    double rot_tol = 0.05;
+    double elevation_min = rot_tol;
+    double elevation_max = rot_tol;
+    double azimuth_min = rot_tol;
+    double azimuth_max = rot_tol;
+    double angle_min = rot_tol;
+    double angle_max = rot_tol;
+
+    rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax, elevation_min, elevation_max,
+                                                    azimuth_min, azimuth_max, angle_min, angle_max);
 
     double cuboid_size_min = 0.01;
     double cuboid_size_max = 0.03;

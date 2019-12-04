@@ -144,8 +144,17 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   std::vector<std::string> collision_object_names;
   attachActiveSuctionCupCO(suction_grasp_data, suction_grasp_candidate->getSuctionVoxelEnabled(),
                            ik_thread_struct->planning_scene_, collision_object_names);
-  robot_state::RobotState& current_state = ik_thread_struct->planning_scene_->getCurrentStateNonConst();
+  if (true)
+  {
+    moveit_msgs::DisplayRobotState display_robot_state_msg;
+    robot_state::robotStateToRobotStateMsg(ik_thread_struct->planning_scene_->getCurrentState(),
+                                           display_robot_state_msg.state, true);
+    visual_tools_->publishRobotState(display_robot_state_msg);
+    visual_tools_->trigger();
+    visual_tools_->prompt("look good?");
+  }
 
+  removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_);
   moveit::core::GroupStateValidityCallbackFn constraint_fn =
       boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
                   collision_verbose_ || ik_thread_struct->visual_debug_ || true, collision_verbose_speed_,
@@ -164,12 +173,100 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   return true;
 }
 
+std::string SuctionGraspFilter::suctionVoxelIxToCollisionObjectId(std::size_t voxel_ix)
+{
+  return "suction_voxel_" + std::to_string(voxel_ix);
+}
+
+bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_data,
+                                               const planning_scene::PlanningScenePtr& planning_scene)
+{
+  static const std::string logger_name = name_ + ".remove_all_suction_cup_co";
+
+  // Get the attach link
+  std::string ik_link;
+  if (!grasp_data->tcp_name_.empty())
+  {
+    ik_link = grasp_data->tcp_name_;
+  }
+  else
+  {
+    ROS_WARN_STREAM_NAMED(logger_name, "It is strongly encouraged to define the tcp link by name");
+    ik_link = grasp_data->parent_link_->getName();
+  }
+
+  // Create an AttachedCollisionObject
+  moveit_msgs::AttachedCollisionObject suction_voxel_aco;
+
+  // Set the aco attached link name
+  suction_voxel_aco.link_name = ik_link;
+
+  // Create a reference to the collision object for convenience
+  moveit_msgs::CollisionObject& suction_voxel_co = suction_voxel_aco.object;
+
+  // Mark object to be removed
+  suction_voxel_co.operation = moveit_msgs::CollisionObject::REMOVE;
+
+  // Iterate through the suction voxels and remove any that exist in the PS.
+  std::size_t num_voxels = grasp_data->suction_voxel_matrix_->getNumVoxels();
+  for (std::size_t voxel_ix = 0; voxel_ix < num_voxels; ++voxel_ix)
+  {
+    // Set the aco name
+    suction_voxel_co.id = suctionVoxelIxToCollisionObjectId(voxel_ix);
+
+    // Check if the ACO already exists
+    moveit_msgs::AttachedCollisionObject aco;
+    if (planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
+    {
+      ROS_DEBUG_STREAM_NAMED(logger_name, "Removing ACO: " << suction_voxel_aco.object.id);
+      // Dettach the collision object
+      if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name,
+                              "Failed to processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
+        return false;
+      }
+
+      // Check if the collision object was successfully detached
+      aco = moveit_msgs::AttachedCollisionObject();
+      if (planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to detach object: " << suction_voxel_aco.object.id);
+        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << aco);
+        return false;
+      }
+    }
+    // Check if the collision object exists
+    moveit_msgs::CollisionObject co;
+    if (planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
+    {
+      ROS_DEBUG_STREAM_NAMED(logger_name, "Removing CO: " << suction_voxel_co.id);
+      // Remove Collision object from planning scene
+      if (!planning_scene->processCollisionObjectMsg(suction_voxel_co))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to processCollisionObjectMsg for: " << suction_voxel_co.id);
+        return false;
+      }
+
+      // Check to make sure the object is no longer in the planning scene
+      co = moveit_msgs::CollisionObject();
+      if (planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to remove object " << suction_voxel_co.id << " from planning scene");
+        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << co);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& grasp_data,
                                                   const std::vector<bool>& suction_voxel_enabled,
                                                   const planning_scene::PlanningScenePtr& planning_scene,
                                                   std::vector<std::string>& collision_object_names)
 {
-  static const std::string logger_name = name_ + ".attachActiveSuctionCupCO";
+  static const std::string logger_name = name_ + ".attach_active_suction_cup_co";
 
   // Handle both cases where the grasp_data defines TCP by transform or by frame_id
   Eigen::Isometry3d ik_link_to_tcp = Eigen::Isometry3d::Identity();
@@ -187,6 +284,11 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
 
   std::size_t num_voxels = grasp_data->suction_voxel_matrix_->getNumVoxels();
   collision_object_names.resize(num_voxels);
+
+  ROS_DEBUG_STREAM_NAMED(logger_name, "~~~~~~~~~~~");
+  for (std::size_t ix = 0; ix < suction_voxel_enabled.size(); ++ix)
+    ROS_DEBUG_STREAM_NAMED(logger_name, "voxel_" << ix << ":\t" << suction_voxel_enabled[ix]);
+
   for (std::size_t voxel_ix = 0; voxel_ix < num_voxels; ++voxel_ix)
   {
     std::shared_ptr<SuctionVoxel> suction_voxel;
@@ -196,8 +298,13 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
       return false;
     }
 
-    moveit_msgs::CollisionObject suction_voxel_co;
-    suction_voxel_co.id = "suction_cup_number_" + std::to_string(voxel_ix);
+    // Create an AttachedCollisionObject
+    moveit_msgs::AttachedCollisionObject suction_voxel_aco;
+
+    // Create a reference to the collision object for convenience
+    moveit_msgs::CollisionObject& suction_voxel_co = suction_voxel_aco.object;
+
+    suction_voxel_co.id = suctionVoxelIxToCollisionObjectId(voxel_ix);
     suction_voxel_co.header.frame_id = ik_link;
 
     suction_voxel_co.primitives.resize(1);
@@ -213,26 +320,78 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
                                                 Eigen::Translation3d(0, 0, grasp_data->grasp_max_depth_ / 2.0);
     suction_voxel_co.primitive_poses[0] = tf2::toMsg(ik_link_to_voxel_center);
 
-    if (suction_voxel_enabled[voxel_ix])
+    // Set the aco attached link name
+    suction_voxel_aco.link_name = ik_link;
+
+    // Check if the ACO already exists
+    moveit_msgs::AttachedCollisionObject aco;
+    bool aco_exists = planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id);
+
+    // If the suction voxel is not attached to the robot in the planning scene but should be
+    if (suction_voxel_enabled[voxel_ix] && !aco_exists)
+    {
+      // Mark object to be added
       suction_voxel_co.operation = moveit_msgs::CollisionObject::ADD;
-    else
+
+      // Attach the collision object
+      if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
+      {
+        ROS_WARN_STREAM_NAMED(
+            logger_name, "Failed to process processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
+        return false;
+      }
+      // Check if the collision object was successfully attached
+      if (!planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name, "Object: " << suction_voxel_aco.object.id << " not attached to the robot");
+        return false;
+      }
+    }
+    // If the suction voxel is attached to the robot in the planning scene but shouldn't be
+    else if (!suction_voxel_enabled[voxel_ix] && aco_exists)
+    {
+      // Mark object to be removed
       suction_voxel_co.operation = moveit_msgs::CollisionObject::REMOVE;
 
-    planning_scene->processCollisionObjectMsg(suction_voxel_co);
+      // Dettach the collision object
+      if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name,
+                              "Failed to processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
+        return false;
+      }
 
-    moveit_msgs::CollisionObject co;
-    if (!planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
-    {
-      ROS_WARN_STREAM_NAMED(logger_name, "Failed to attach object " << suction_voxel_co.id << " in planning scene");
-      return false;
+      // Check if the collision object was successfully detached
+      if (planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to detach object: " << suction_voxel_aco.object.id);
+        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << aco);
+        return false;
+      }
+
+      // Remove Collision object from planning scene
+      if (!planning_scene->processCollisionObjectMsg(suction_voxel_co))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name,
+                              "Failed to process collision object msg for: " << suction_voxel_aco.object.id);
+        return false;
+      }
+
+      // Check to make sure the object is no longer in the planning scene
+      moveit_msgs::CollisionObject co;
+      if (planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
+      {
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to remove object " << suction_voxel_co.id << " from planning scene");
+        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << co);
+        return false;
+      }
     }
 
-    // Assign output
+    // Assign collision object names for output
     collision_object_names[voxel_ix] = suction_voxel_co.id;
   }
 
-  // TODO: refactor into helper
-  if (true)
+  if (false)
   {
     moveit_msgs::DisplayRobotState display_robot_state_msg;
     robot_state::robotStateToRobotStateMsg(planning_scene->getCurrentState(), display_robot_state_msg.state, true);
@@ -241,6 +400,30 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     visual_tools_->prompt("Displaying suction cups as collision box. 'next' to continue");
   }
   return true;
+}
+
+void SuctionGraspFilter::setACMFingerEntry(const std::string& object_name, bool allowed,
+                                           const std::vector<std::string>& ee_link_names,
+                                           const planning_scene::PlanningScenePtr& scene)
+{
+  static const std::string logger_name = name_ + "set_acm_finger_entry";
+  ROS_DEBUG_STREAM_NAMED(logger_name, "" << object_name.c_str() << ", " << (allowed ? "true" : "false"));
+
+  // Lock planning scene
+  for (std::size_t i = 0; i < ee_link_names.size(); ++i)
+  {
+    ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : %s", object_name.c_str(), ee_link_names[i].c_str(),
+                    allowed ? "allowed" : "not allowed");
+    scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, ee_link_names[i], allowed);
+  }
+
+  // Debug current matrix
+  if (false)
+  {
+    moveit_msgs::AllowedCollisionMatrix msg;
+    scene->getAllowedCollisionMatrix().getMessage(msg);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Current collision matrix: " << msg);
+  }
 }
 
 void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)

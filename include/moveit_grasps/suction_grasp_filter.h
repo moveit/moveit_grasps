@@ -87,18 +87,34 @@ public:
    */
   void setSuctionVoxelOverlapCutoff(double cutoff);
 
+protected:
+  /**
+   * \brief  Remove all attached collision objects representing suction voxels from the planning scene.
+   * \param grasp_data - A pointer to a SuctionGraspData with a populated SuctionVoxelMatrix
+   * \param planning_scene - A pointer to a planning scene where we will attach the collision objects
+   * \return true if all suction voxel attached collision objects removed
+   */
+  bool removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_data,
+                             const planning_scene::PlanningScenePtr& planning_scene);
+
   /**
    * \brief  Add a collision object in the location of every active suction voxel. This is used for collision
    *         checking between the suction cups and other objects in the scene that you do not want to pick up
    * \param grasp_data - A pointer to a SuctionGraspData with a populated SuctionVoxelMatrix
    * \param planning_scene - A pointer to a planning scene where we will attach the collision objects
    * \param collision_object_names - Output, the collision object names added to the planning scene
-
-   *
    */
   bool attachActiveSuctionCupCO(const SuctionGraspDataPtr& grasp_data, const std::vector<bool>& suction_voxel_enabled,
                                 const planning_scene::PlanningScenePtr& planning_scene,
                                 std::vector<std::string>& collision_object_names);
+
+  /* \brief Set the ACM entry to ignore collisions between the ee_link_names and the object in the planning_scene */
+  void setACMFingerEntry(const std::string& object_name, bool allowed, const std::vector<std::string>& ee_link_names,
+                         const planning_scene::PlanningScenePtr& planning_scene);
+
+  /* \brief a method for transforming from voxel index to voxel collision object ID used by attachActiveSuctionCupCO and
+   * removeAllSuctionCupCO */
+  static std::string suctionVoxelIxToCollisionObjectId(std::size_t voxel_ix);
 
 private:
   // Name for logging
