@@ -63,34 +63,20 @@ public:
   SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
                         const Eigen::Isometry3d& cuboid_pose);
 
-  void setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap)
-  {
-    suction_voxel_overlap_ = suction_voxel_overlap;
-  }
+  void setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap);
 
-  std::vector<double> getSuctionVoxelOverlap()
-  {
-    return suction_voxel_overlap_;
-  }
+  std::vector<double> getSuctionVoxelOverlap();
 
-  void setSuctionVoxelCutoff(double cutoff)
-  {
-    suction_voxel_cutoff_ = cutoff;
-  }
+  void setSuctionVoxelCutoff(double cutoff);
 
-  std::vector<bool> getSuctionVoxelEnabled()
-  {
-    std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
-    for (std::size_t voxel_ix = 0; voxel_ix < suction_voxel_enabled.size(); ++voxel_ix)
-      suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff_;
-    return suction_voxel_enabled;
-  }
+  std::vector<bool> getSuctionVoxelEnabled();
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object
   std::vector<double> suction_voxel_overlap_;
+  // The Cutoff for enabled / disabled suction voxels
   double suction_voxel_cutoff_;
 
 };  // class

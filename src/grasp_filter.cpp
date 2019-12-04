@@ -454,7 +454,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return not_filtered;
 }
 
-bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) const
+bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)
 {
   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Checking grasp #" << ik_thread_struct->grasp_id);
 
