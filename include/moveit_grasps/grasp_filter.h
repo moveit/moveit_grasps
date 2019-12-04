@@ -299,6 +299,9 @@ protected:
   bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
 
 protected:
+  // logging name
+  const std::string name_;
+
   // Allow a writeable robot state
   robot_state::RobotStatePtr robot_state_;
 

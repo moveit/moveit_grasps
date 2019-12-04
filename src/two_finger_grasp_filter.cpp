@@ -51,7 +51,7 @@ namespace moveit_grasps
 // Constructor
 TwoFingerGraspFilter::TwoFingerGraspFilter(const robot_state::RobotStatePtr& robot_state,
                                            const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
-  : GraspFilter(robot_state, visual_tools)
+  : GraspFilter(robot_state, visual_tools), name_("two_finger_grasp_filter")
 {
 }
 
@@ -69,14 +69,7 @@ bool TwoFingerGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thr
       collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
 
   // Check if IK solution for grasp pose is valid for fingers closed as well
-  if (!checkFingersClosedIK(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn))
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find the-grasp IK solution with CLOSED fingers");
-    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
-    return false;
-  }
-
-  return true;
+  return checkFingersClosedIK(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate, constraint_fn);
 }
 
 bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution,
@@ -90,7 +83,8 @@ bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution
   // Check constraint function
   if (!constraint_fn(ik_thread_struct->robot_state_.get(), grasp_candidate->grasp_data_->arm_jmg_, &ik_solution[0]))
   {
-    ROS_WARN_STREAM_NAMED("grasp_filter", "Grasp filtered because in collision with fingers CLOSED");
+    ROS_WARN_STREAM_NAMED(name_ + ".superdebug", "Grasp filtered because in collision with fingers CLOSED");
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
     return false;
   }
 

@@ -101,6 +101,9 @@ public:
                                 std::vector<std::string>& collision_object_names);
 
 private:
+  // Name for logging
+  const std::string name_;
+
   // A cutoff threshold [0,1] where at least one suction voxe must have more than this fraction overlap
   // with the target object
   double suction_voxel_overlap_cutoff_;

@@ -56,7 +56,7 @@ namespace moveit_grasps
 // Constructor
 SuctionGraspFilter::SuctionGraspFilter(const robot_state::RobotStatePtr& robot_state,
                                        const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
-  : GraspFilter::GraspFilter(robot_state, visual_tools), suction_voxel_overlap_cutoff_(0)
+  : GraspFilter::GraspFilter(robot_state, visual_tools), name_("suction_grasp_filter"), suction_voxel_overlap_cutoff_(0)
 {
 }
 
@@ -70,12 +70,12 @@ bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCand
   std::size_t valid_grasps = 0;
   for (std::size_t ix = 0; ix < grasp_candidates.size(); ++ix)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "---------------\nGrasp candidate: " << count++);
+    ROS_DEBUG_STREAM_NAMED(name_ + ".pre_filter", "---------------\nGrasp candidate: " << count++);
     bool valid = false;
     auto suction_grasp_candidate = std::dynamic_pointer_cast<SuctionGraspCandidate>(grasp_candidates[ix]);
     if (!suction_grasp_candidate)
     {
-      ROS_ERROR_NAMED("grasp_filter.pre_filter", "grasp_candidate is not castable as SuctionGraspCandidatePtr");
+      ROS_ERROR_NAMED(name_ + ".pre_filter", "grasp_candidate is not castable as SuctionGraspCandidatePtr");
       return 0;
     }
     suction_grasp_candidate->setSuctionVoxelCutoff(suction_voxel_overlap_cutoff_);
@@ -96,11 +96,11 @@ bool SuctionGraspFilter::filterBySuctionVoxelOverlapCutoff(std::vector<GraspCand
   }
   if (statistics_verbose_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_filter.pre_filter", "----------------------------------------------------"
-                                                          << "\nGRASP PRE-FILTER RESULTS"
-                                                          << "\ntotal_grasp_candidates:     " << grasp_candidates.size()
-                                                          << "\nremaining grasp candidates: " << valid_grasps
-                                                          << "\n----------------------------------------------------");
+    ROS_DEBUG_STREAM_NAMED(name_ + ".pre_filter", "----------------------------------------------------"
+                                                      << "\nGRASP PRE-FILTER RESULTS"
+                                                      << "\ntotal_grasp_candidates:     " << grasp_candidates.size()
+                                                      << "\nremaining grasp candidates: " << valid_grasps
+                                                      << "\n----------------------------------------------------");
   }
   return valid_grasps;
 }
@@ -128,22 +128,23 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   auto suction_grasp_data = std::dynamic_pointer_cast<SuctionGraspData>(grasp_candidate->grasp_data_);
   if (!suction_grasp_data)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_filter.process_candidate_grasp", "Could not cast GraspCandidatePtr->GraspDataPtr as "
-                                                                   "SuctionGraspDataPtr");
+    ROS_ERROR_STREAM_NAMED(name_ + ".process_candidate_grasp", "Could not cast GraspCandidatePtr->GraspDataPtr as "
+                                                               "SuctionGraspDataPtr");
     return false;
   }
 
   auto suction_grasp_candidate = std::dynamic_pointer_cast<SuctionGraspCandidate>(grasp_candidate);
   if (!suction_grasp_candidate)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_filter.process_candidate_grasp", "Could not cast GraspCandidatePtr as "
-                                                                   "SuctionGraspCandidatePtr");
+    ROS_ERROR_STREAM_NAMED(name_ + ".process_candidate_grasp", "Could not cast GraspCandidatePtr as "
+                                                               "SuctionGraspCandidatePtr");
     return false;
   }
 
   std::vector<std::string> collision_object_names;
   attachActiveSuctionCupCO(suction_grasp_data, suction_grasp_candidate->getSuctionVoxelEnabled(),
                            ik_thread_struct->planning_scene_, collision_object_names);
+  robot_state::RobotState& current_state = ik_thread_struct->planning_scene_->getCurrentStateNonConst();
 
   moveit::core::GroupStateValidityCallbackFn constraint_fn =
       boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
@@ -154,7 +155,7 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   // if (!checkActiveSuctionVoxelCollisions(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate,
   // constraint_fn))
   // {
-  //   ROS_DEBUG_STREAM_NAMED("grasp_filter.superdebug", "Unable to find IK solution where the suction voxels are not in
+  //   ROS_DEBUG_STREAM_NAMED(name_ + ".superdebug", "Unable to find IK solution where the suction voxels are not in
   //   contact with other objects");
   //   grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
   //   return false;
@@ -168,7 +169,7 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
                                                   const planning_scene::PlanningScenePtr& planning_scene,
                                                   std::vector<std::string>& collision_object_names)
 {
-  static const std::string logger_name = "grasp_filter.attachActiveSuctionCupCO";
+  static const std::string logger_name = name_ + ".attachActiveSuctionCupCO";
 
   // Handle both cases where the grasp_data defines TCP by transform or by frame_id
   Eigen::Isometry3d ik_link_to_tcp = Eigen::Isometry3d::Identity();
@@ -196,7 +197,7 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     }
 
     moveit_msgs::CollisionObject suction_voxel_co;
-    suction_voxel_co.id = "suction_cup_" + voxel_ix;
+    suction_voxel_co.id = "suction_cup_number_" + std::to_string(voxel_ix);
     suction_voxel_co.header.frame_id = ik_link;
 
     suction_voxel_co.primitives.resize(1);
