@@ -69,15 +69,21 @@ public:
                                  bool visualize) override;
 
   /**
+   * \brief Print grasp filtering statistics
+   */
+  void printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates) override;
+
+  /**
    * \brief Thread for checking part of the possible grasps list
    */
   bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) override;
+
 
   /**
    * \brief Filter grasps that do not have a valid suction voxel overlap
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    */
-  bool filterBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates);
+  bool filterGraspsBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates);
 
   /**
    * \brief  For suction grippers, set the cutoff threshold used by preFilterBySuctionVoxelOverlap to

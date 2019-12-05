@@ -153,6 +153,9 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
   std::size_t remaining_grasps =
       filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
 
+  // Print stats
+  printFilterStatistics(grasp_candidates);
+
   if (remaining_grasps == 0)
   {
     ROS_WARN_STREAM_NAMED(name_, "Grasp filters removed all grasps!");
@@ -447,9 +450,31 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
       processCandidateGrasp(ik_thread_structs[thread_id]);
   }
 
+  if (statistics_verbose_)
+  {
+    // End Benchmark time
+    double duration = (ros::Time::now() - start_time).toSec();
+    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "=======================================================");
+    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "FILTER DURATION");
+    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "Grasp Filter Duration :\t" << duration);
+    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "-------------------------------------------------------");
+  }
+
+  std::size_t not_filtered = 0;
+  for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
+    if (grasp_candidates[i]->isValid())
+      ++not_filtered;
+
+  return not_filtered;
+}
+
+void GraspFilter::printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates)
+{
+  if (!statistics_verbose_)
+    return;
+  static const std::string logger_name = name_ + ".filter_statistics";
   // Count number of grasps remaining
   std::size_t not_filtered = 0;
-  std::size_t misc_filtered = 0;
   std::size_t grasp_filtered_by_ik = 0;
   std::size_t grasp_filtered_by_cutting_plane = 0;
   std::size_t grasp_filtered_by_orientation = 0;
@@ -458,52 +483,26 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   for (std::size_t i = 0; i < grasp_candidates.size(); ++i)
   {
     if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_IK)
-      grasp_filtered_by_ik++;
+      ++grasp_filtered_by_ik;
     else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE)
-      grasp_filtered_by_cutting_plane++;
+      ++grasp_filtered_by_cutting_plane;
     else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION)
-      grasp_filtered_by_orientation++;
+      ++grasp_filtered_by_orientation;
     else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::PREGRASP_FILTERED_BY_IK)
-      pregrasp_filtered_by_ik++;
-    else if (grasp_candidates[i]->grasp_filtered_code_ == GraspFilterCode::NOT_FILTERED)
-      not_filtered++;
-    else
-      misc_filtered++;
+      ++pregrasp_filtered_by_ik;
+    else if (grasp_candidates[i]->isValid())
+      ++not_filtered;
   }
 
-  if (misc_filtered + not_filtered + grasp_filtered_by_ik + grasp_filtered_by_cutting_plane +
-          grasp_filtered_by_orientation + pregrasp_filtered_by_ik !=
-      grasp_candidates.size())
-    ROS_ERROR_STREAM_NAMED(name_, "Logged filter reasons do not add up to total number of grasps. Internal "
-                                  "error.");
-
-  // End Benchmark time
-  double duration = (ros::Time::now() - start_time).toSec();
-
-  // Keep a running average of calculation time
-  static double total_duration = 0;
-  static std::size_t total_filter_calls = 0;
-  total_duration += duration;
-  total_filter_calls += 1;
-  double average_duration = total_duration / total_filter_calls;
-
-  if (statistics_verbose_)
-  {
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "GRASP FILTER RESULTS " << std::endl;
-    std::cout << "total candidate grasps          " << grasp_candidates.size() << std::endl;
-    std::cout << "grasp_filtered_by_cutting_plane " << grasp_filtered_by_cutting_plane << std::endl;
-    std::cout << "grasp_filtered_by_orientation   " << grasp_filtered_by_orientation << std::endl;
-    std::cout << "grasp_filtered_by_ik            " << grasp_filtered_by_ik << std::endl;
-    std::cout << "pregrasp_filtered_by_ik         " << pregrasp_filtered_by_ik << std::endl;
-    std::cout << "misc filtered grasps            " << misc_filtered << std::endl;
-    std::cout << "remaining grasps                " << not_filtered << std::endl;
-    std::cout << "time duration:                  " << duration << std::endl;
-    std::cout << "average time duration:          " << average_duration << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-  }
-
-  return not_filtered;
+  ROS_INFO_STREAM_NAMED(logger_name, "=======================================================");
+  ROS_INFO_STREAM_NAMED(logger_name, "GRASP FILTER RESULTS ");
+  ROS_INFO_STREAM_NAMED(logger_name, "Total candidate grasps          " << grasp_candidates.size());
+  ROS_INFO_STREAM_NAMED(logger_name, "Total valid grasps              " << not_filtered);
+  ROS_INFO_STREAM_NAMED(logger_name, "-------------------------------------------------------");
+  ROS_INFO_STREAM_NAMED(logger_name, "grasp_filtered_by_cutting_plane " << grasp_filtered_by_cutting_plane);
+  ROS_INFO_STREAM_NAMED(logger_name, "grasp_filtered_by_orientation   " << grasp_filtered_by_orientation);
+  ROS_INFO_STREAM_NAMED(logger_name, "grasp_filtered_by_ik            " << grasp_filtered_by_ik);
+  ROS_INFO_STREAM_NAMED(logger_name, "pregrasp_filtered_by_ik         " << pregrasp_filtered_by_ik);
 }
 
 bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)

@@ -44,18 +44,7 @@ SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, co
                                              const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, std::dynamic_pointer_cast<GraspData>(grasp_data), cuboid_pose)
   , suction_voxel_overlap_(grasp_data->suction_voxel_matrix_->getNumVoxels())
-  , suction_voxel_cutoff_(0)
 {
-  // if (grasp_data && grasp_data->suction_voxel_matrix_)
-  // {
-  //   suction_voxel_overlap_.resize(grasp_data->suction_voxel_matrix_->getNumVoxels());
-  // }
-  // else
-  // {
-  //   ROS_ERROR_STREAM_NAMED("suction_grasp_candidate", "Invalid GraspData. SuctionVoxelMatrix not initialized");
-  // }
-
-  grasp_filtered_code_ = SuctionGraspFilterCode::NOT_FILTERED;
 }
 
 void SuctionGraspCandidate::setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap)
@@ -68,16 +57,11 @@ std::vector<double> SuctionGraspCandidate::getSuctionVoxelOverlap()
   return suction_voxel_overlap_;
 }
 
-void SuctionGraspCandidate::setSuctionVoxelCutoff(double cutoff)
-{
-  suction_voxel_cutoff_ = cutoff;
-}
-
-std::vector<bool> SuctionGraspCandidate::getSuctionVoxelEnabled()
+std::vector<bool> SuctionGraspCandidate::getSuctionVoxelEnabled(double suction_voxel_cutoff)
 {
   std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
   for (std::size_t voxel_ix = 0; voxel_ix < suction_voxel_enabled.size(); ++voxel_ix)
-    suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff_;
+    suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff;
   return suction_voxel_enabled;
 }
 

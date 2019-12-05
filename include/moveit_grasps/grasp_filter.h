@@ -187,6 +187,11 @@ public:
                                          bool visualize);
 
   /**
+   * \brief Print grasp filtering statistics
+   */
+  virtual void printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates);
+
+  /**
    * \brief Method for checking part of the possible grasps list. MUST BE THREAD SAFE
    */
   virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct);
@@ -246,7 +251,7 @@ protected:
    * \param ik_thread_struct - a struct containing the planning_scene
    * \return true if grasp is filtered by operation
    */
-  bool filterGraspByGraspIK(GraspCandidatePtr& grasp_candidate, std::vector<double>& grasp_ik_solution,
+  bool filterGraspByGraspIK(const GraspCandidatePtr& grasp_candidate, std::vector<double>& grasp_ik_solution,
                             const IkThreadStructPtr& ik_thread_struct) const;
 
   /**

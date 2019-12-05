@@ -234,6 +234,7 @@ public:
     // Filtering grasps
     // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
     bool filter_pregrasps = true;
+    grasp_filter_->setSuctionVoxelOverlapCutoff(0.5);
     if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Filter grasps failed");
@@ -446,8 +447,8 @@ public:
     rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax, elevation_min, elevation_max,
                                                     azimuth_min, azimuth_max, angle_min, angle_max);
 
-    double cuboid_size_min = 0.01;
-    double cuboid_size_max = 0.03;
+    double cuboid_size_min = 0.10;
+    double cuboid_size_max = 0.20;
     rviz_visual_tools::RandomCuboidBounds cuboid_bounds(cuboid_size_min, cuboid_size_max);
 
     object_name = "pick_target";

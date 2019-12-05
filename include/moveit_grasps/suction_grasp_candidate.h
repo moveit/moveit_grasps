@@ -49,7 +49,7 @@ struct SuctionGraspFilterCode : public GraspFilterCode
 {
   enum
   {
-    GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1,  // No suction voxel is in sufficient contact with the target
+    GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1, // No suction voxel is in sufficient contact with the target
   };
 };
 
@@ -67,17 +67,13 @@ public:
 
   std::vector<double> getSuctionVoxelOverlap();
 
-  void setSuctionVoxelCutoff(double cutoff);
-
-  std::vector<bool> getSuctionVoxelEnabled();
+  std::vector<bool> getSuctionVoxelEnabled(double cutoff);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object
   std::vector<double> suction_voxel_overlap_;
-  // The Cutoff for enabled / disabled suction voxels
-  double suction_voxel_cutoff_;
 
 };  // class
 
