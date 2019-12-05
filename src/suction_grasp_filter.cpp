@@ -144,6 +144,7 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   std::vector<std::string> collision_object_names;
   attachActiveSuctionCupCO(suction_grasp_data, suction_grasp_candidate->getSuctionVoxelEnabled(),
                            ik_thread_struct->planning_scene_, collision_object_names);
+
   if (true)
   {
     moveit_msgs::DisplayRobotState display_robot_state_msg;
@@ -151,26 +152,32 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
                                            display_robot_state_msg.state, true);
     visual_tools_->publishRobotState(display_robot_state_msg);
     visual_tools_->trigger();
-    visual_tools_->prompt("look good?");
+    ros::Duration(0.01).sleep();
+    if (false)
+      visual_tools_->prompt("look good?");
+  }
+
+  // Check if IK solution for grasp pose is valid for suction voxels enabled
+  std::vector<double> suction_voxel_grasp_ik;
+  if (!filterGraspByActiveSuctionVoxelCollisions(grasp_candidate, suction_voxel_grasp_ik, ik_thread_struct))
+  {
+    ROS_DEBUG_STREAM_NAMED(name_ + ".superdebug", "Unable to find IK solution where the suction voxels are not in
+    contact with other objects");
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
+    return false;
   }
 
   removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_);
+
+  return true;
+}
+
+filterGraspByActiveSuctionVoxelCollisions(GraspCandidatePtr& grasp_candidate, std::vector<double>& suction_voxel_grasp_ik, const IkThreadStructPtr& ik_thread_struct)
+{
   moveit::core::GroupStateValidityCallbackFn constraint_fn =
       boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
                   collision_verbose_ || ik_thread_struct->visual_debug_ || true, collision_verbose_speed_,
                   visual_tools_, _1, _2, _3);
-
-  // Check if IK solution for grasp pose is valid for fingers closed as well
-  // if (!checkActiveSuctionVoxelCollisions(grasp_candidate->grasp_ik_solution_, ik_thread_struct, grasp_candidate,
-  // constraint_fn))
-  // {
-  //   ROS_DEBUG_STREAM_NAMED(name_ + ".superdebug", "Unable to find IK solution where the suction voxels are not in
-  //   contact with other objects");
-  //   grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED;
-  //   return false;
-  // }
-
-  return true;
 }
 
 std::string SuctionGraspFilter::suctionVoxelIxToCollisionObjectId(std::size_t voxel_ix)
