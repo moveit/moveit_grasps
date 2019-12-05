@@ -400,6 +400,7 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   // Filtering grasps
   // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
   bool filter_pregrasps = true;
+  grasp_filter_->setSuctionVoxelOverlapCutoff(0.5);
   ASSERT_TRUE(
       grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
       << "Filter grasps failed";

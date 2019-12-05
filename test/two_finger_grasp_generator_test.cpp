@@ -52,6 +52,8 @@
 
 namespace moveit_grasps
 {
+const std::size_t NUM_EXPECTED_GRASPS = 672;
+
 class TwoFingerGraspGeneratorTest : public ::testing::Test
 {
 public:
@@ -72,6 +74,7 @@ protected:
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
   moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
+
 };  // class TwoFingerGraspGeneratorTest
 
 TEST_F(TwoFingerGraspGeneratorTest, ConstructDestruct)
@@ -138,7 +141,6 @@ TEST_F(TwoFingerGraspGeneratorTest, GenerateFaceGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
@@ -164,7 +166,7 @@ TEST_F(TwoFingerGraspGeneratorTest, GenerateFaceGrasps)
   GraspCandidatePtr grasp = grasp_candidates.front();
 
   // Grasp Msg
-  EXPECT_EQ(grasp->grasp_.id, "Grasp224");
+  EXPECT_EQ(grasp->grasp_.id, "Grasp448");
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.x, 0);
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.y, 0);
   EXPECT_GT(grasp->grasp_.grasp_pose.pose.position.z, 0);
@@ -209,7 +211,6 @@ TEST_F(TwoFingerGraspGeneratorTest, GenerateEdgeGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
@@ -249,7 +250,6 @@ TEST_F(TwoFingerGraspGeneratorTest, GenerateCornerGrasps)
   double width = 0.01;
   double height = 0.01;
 
-  const std::size_t NUM_EXPECTED_GRASPS = 336;
   // Generate X Axis
   std::vector<GraspCandidatePtr> grasp_candidates;
   grasp_generator.generateCuboidAxisGrasps(cuboid_pose, depth, width, height, X_AXIS, grasp_data_,
