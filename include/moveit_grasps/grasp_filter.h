@@ -113,7 +113,7 @@ struct IkThreadStruct
                  robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
                  std::size_t thread_id)
     : grasp_candidates_(grasp_candidates)
-    , planning_scene_(planning_scene)
+    , planning_scene_(planning_scene::PlanningScene::clone(planning_scene))
     , link_transform_(link_transform)
     , grasp_id(grasp_id)
     , kin_solver_(kin_solver)
