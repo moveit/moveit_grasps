@@ -454,10 +454,10 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   {
     // End Benchmark time
     double duration = (ros::Time::now() - start_time).toSec();
-    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "=======================================================");
+    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "===================================================");
     ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "FILTER DURATION");
     ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "Grasp Filter Duration :\t" << duration);
-    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "-------------------------------------------------------");
+    ROS_INFO_STREAM_NAMED(name_ + ".print_filter_statistics", "---------------------------------------------------");
   }
 
   std::size_t not_filtered = 0;

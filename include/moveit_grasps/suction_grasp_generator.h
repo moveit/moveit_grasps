@@ -121,7 +121,8 @@ protected:
                            const Eigen::Isometry3d& cuboid_pose, const Eigen::Vector3d& object_size,
                            std::vector<double>& suction_voxel_overlap);
 
-  /* \brief helper function to re-orient the cuboid center top grasp so it is as close as possible to the ideal grasp orientation */
+  /* \brief helper function to re-orient the cuboid center top grasp so it is as close as possible to the ideal grasp
+   * orientation */
   void orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboid_pose, double depth, double width, double height);
 
   /* \brief helper function for generating suction grasps */

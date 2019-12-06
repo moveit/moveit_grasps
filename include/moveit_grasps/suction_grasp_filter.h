@@ -78,7 +78,6 @@ public:
    */
   bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct) override;
 
-
   /**
    * \brief Filter grasps that do not have a valid suction voxel overlap
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified

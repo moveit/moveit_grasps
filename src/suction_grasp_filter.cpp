@@ -78,7 +78,8 @@ bool SuctionGraspFilter::filterGraspsBySuctionVoxelOverlapCutoff(std::vector<Gra
       return 0;
     }
 
-    std::vector<bool> suction_voxel_enabled = suction_grasp_candidate->getSuctionVoxelEnabled(suction_voxel_overlap_cutoff_);
+    std::vector<bool> suction_voxel_enabled =
+        suction_grasp_candidate->getSuctionVoxelEnabled(suction_voxel_overlap_cutoff_);
     for (const bool& voxel_enabled : suction_voxel_enabled)
     {
       if (voxel_enabled)
@@ -126,10 +127,10 @@ void SuctionGraspFilter::printFilterStatistics(std::vector<GraspCandidatePtr>& g
   }
 
   ROS_INFO_STREAM_NAMED(logger_name, "-------------------------------------------------------");
-  ROS_INFO_STREAM_NAMED(logger_name, "grasp_filtered_by_suction_voxel_overlap            " << grasp_filtered_by_suction_voxel_overlap);
+  ROS_INFO_STREAM_NAMED(logger_name, "grasp_filtered_by_suction_voxel_overlap            "
+                                         << grasp_filtered_by_suction_voxel_overlap);
   ROS_INFO_STREAM_NAMED(logger_name, "-------------------------------------------------------");
 }
-
 
 bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct)
 {
@@ -142,7 +143,7 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   if (!suction_grasp_data)
   {
     ROS_ERROR_STREAM_NAMED(logger_name, "Could not cast GraspCandidatePtr->GraspDataPtr as "
-                                                               "SuctionGraspDataPtr");
+                                        "SuctionGraspDataPtr");
     grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
     return false;
   }
@@ -151,16 +152,7 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   if (!suction_grasp_candidate)
   {
     ROS_ERROR_STREAM_NAMED(logger_name, "Could not cast GraspCandidatePtr as "
-                                                               "SuctionGraspCandidatePtr");
-    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
-    return false;
-  }
-
-  std::vector<std::string> collision_object_names;
-  if (!attachActiveSuctionCupCO(suction_grasp_data, suction_grasp_candidate->getSuctionVoxelEnabled(suction_voxel_overlap_cutoff_),
-                                ik_thread_struct->planning_scene_, collision_object_names))
-  {
-    ROS_ERROR_STREAM_NAMED(logger_name, "Failed to attch active suction cups as collision objects in the planning scene");
+                                        "SuctionGraspCandidatePtr");
     grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
     return false;
   }
@@ -169,7 +161,23 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   if (!filer_results)
     return false;
 
-  removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_);
+  std::vector<std::string> collision_object_names;
+  if (!attachActiveSuctionCupCO(suction_grasp_data,
+                                suction_grasp_candidate->getSuctionVoxelEnabled(suction_voxel_overlap_cutoff_),
+                                ik_thread_struct->planning_scene_, collision_object_names))
+  {
+    ROS_ERROR_STREAM_NAMED(logger_name, "Failed to attch active suction cups as collision objects in the planning "
+                                        "scene");
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
+    return false;
+  }
+
+  if (!removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_))
+  {
+    ROS_ERROR_STREAM_NAMED(logger_name, "Failed to detach all active suction cups");
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
+    return false;
+  }
 
   return true;
 }
@@ -223,8 +231,7 @@ bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_
       // Dettach the collision object
       if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
       {
-        ROS_WARN_STREAM_NAMED(logger_name,
-                              "Failed to processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to processACOMsg for: " << suction_voxel_aco.object.id);
         return false;
       }
 
@@ -237,7 +244,7 @@ bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_
         return false;
       }
     }
-    // Check if the collision object exists
+    // Check if the collision object exists and remove it
     moveit_msgs::CollisionObject co;
     if (planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
     {
@@ -400,7 +407,7 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     visual_tools_->publishRobotState(display_robot_state_msg);
     visual_tools_->trigger();
     ros::Duration(0.05).sleep();
-    if (false)
+    if (true)
       visual_tools_->prompt("Displaying suction cups as collision box. 'next' to continue");
   }
 

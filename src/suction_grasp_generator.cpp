@@ -223,7 +223,8 @@ bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose,
 // X -> Depth
 // Y -> Width
 // Z -> Height
-void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboid_pose_fixed, double depth, double width, double height)
+void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboid_pose_fixed, double depth,
+                                                        double width, double height)
 {
   // Eigen::Isometry3d cuboid_pose_fixed(cuboid_pose);
 
@@ -310,7 +311,8 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
                                                              << height);
     visual_tools_->publishAxisLabeled(cuboid_top_pose, "cuboid_top_pose", rviz_visual_tools::SMALL);
     double suction_z_range = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
-    visual_tools_->publishWireframeCuboid(cuboid_top_pose * Eigen::Translation3d(0, 0, suction_z_range / 2.0), depth, width, suction_z_range, rviz_visual_tools::RED);
+    visual_tools_->publishWireframeCuboid(cuboid_top_pose * Eigen::Translation3d(0, 0, suction_z_range / 2.0), depth,
+                                          width, suction_z_range, rviz_visual_tools::RED);
     visual_tools_->trigger();
   }
 
