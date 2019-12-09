@@ -49,7 +49,7 @@ struct SuctionGraspFilterCode : public GraspFilterCode
 {
   enum
   {
-    GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1, // No suction voxel is in sufficient contact with the target
+    GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1,  // No suction voxel is in sufficient contact with the target
   };
 };
 
