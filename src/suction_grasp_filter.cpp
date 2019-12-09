@@ -101,7 +101,7 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
                                                    const planning_scene::PlanningScenePtr& planning_scene,
                                                    const robot_model::JointModelGroup* arm_jmg,
                                                    const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                                   bool visualize, const std::string &target_object_id)
+                                                   bool visualize, const std::string& target_object_id)
 {
   filterGraspsBySuctionVoxelOverlapCutoff(grasp_candidates);
   return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp,
@@ -168,10 +168,20 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
     return false;
   }
 
-  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
-  if (!filer_results)
-    return false;
+  if (!ik_thread_struct->grasp_target_object_id_.empty() && !collision_object_names.empty())
+  {
+    setACMFingerEntry(ik_thread_struct->grasp_target_object_id_, true, collision_object_names,
+                      ik_thread_struct->planning_scene_);
+  }
 
+  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
+
+  // Cleanup ACM changes
+  if (!ik_thread_struct->grasp_target_object_id_.empty() && !collision_object_names.empty())
+  {
+    setACMFingerEntry(ik_thread_struct->grasp_target_object_id_, false, collision_object_names,
+                      ik_thread_struct->planning_scene_);
+  }
 
   if (!removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_))
   {
@@ -179,6 +189,9 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
     grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
     return false;
   }
+
+  if (!filer_results)
+    return false;
 
   return true;
 }
@@ -401,7 +414,7 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
   }
 
   // Optional visualization for debugging
-  if (true)
+  if (false)
   {
     moveit_msgs::DisplayRobotState display_robot_state_msg;
     robot_state::robotStateToRobotStateMsg(planning_scene->getCurrentState(), display_robot_state_msg.state, true);
@@ -413,30 +426,6 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
   }
 
   return true;
-}
-
-void SuctionGraspFilter::setACMFingerEntry(const std::string& object_name, bool allowed,
-                                           const std::vector<std::string>& ee_link_names,
-                                           const planning_scene::PlanningScenePtr& scene)
-{
-  static const std::string logger_name = name_ + "set_acm_finger_entry";
-  ROS_DEBUG_STREAM_NAMED(logger_name, "" << object_name.c_str() << ", " << (allowed ? "true" : "false"));
-
-  // Lock planning scene
-  for (std::size_t i = 0; i < ee_link_names.size(); ++i)
-  {
-    ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : %s", object_name.c_str(), ee_link_names[i].c_str(),
-                    allowed ? "allowed" : "not allowed");
-    scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, ee_link_names[i], allowed);
-  }
-
-  // Debug current matrix
-  if (false)
-  {
-    moveit_msgs::AllowedCollisionMatrix msg;
-    scene->getAllowedCollisionMatrix().getMessage(msg);
-    ROS_DEBUG_STREAM_NAMED(logger_name, "Current collision matrix: " << msg);
-  }
 }
 
 void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)

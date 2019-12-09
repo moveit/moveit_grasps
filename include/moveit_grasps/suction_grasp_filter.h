@@ -65,9 +65,8 @@ public:
   std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                  const planning_scene::PlanningScenePtr& planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
-                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                 bool visualize,
-                                 const std::string &target_object_id = "") override;
+                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize,
+                                 const std::string& target_object_id = "") override;
 
   /**
    * \brief Print grasp filtering statistics
@@ -113,10 +112,6 @@ protected:
   bool attachActiveSuctionCupCO(const SuctionGraspDataPtr& grasp_data, const std::vector<bool>& suction_voxel_enabled,
                                 const planning_scene::PlanningScenePtr& planning_scene,
                                 std::vector<std::string>& collision_object_names);
-
-  /* \brief Set the ACM entry to ignore collisions between the ee_link_names and the object in the planning_scene */
-  void setACMFingerEntry(const std::string& object_name, bool allowed, const std::vector<std::string>& ee_link_names,
-                         const planning_scene::PlanningScenePtr& planning_scene);
 
   /* \brief a method for transforming from voxel index to voxel collision object ID used by attachActiveSuctionCupCO and
    * removeAllSuctionCupCO */

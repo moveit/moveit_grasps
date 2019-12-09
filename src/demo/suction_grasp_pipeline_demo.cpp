@@ -206,8 +206,6 @@ public:
       return false;
     }
 
-    setACMFingerEntry(object_name, true);
-
     // -----------------------------------
     // Generate grasp candidates
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
@@ -235,7 +233,8 @@ public:
     // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
     bool filter_pregrasps = true;
     grasp_filter_->setSuctionVoxelOverlapCutoff(0.5);
-    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
+    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps,
+                                     object_name))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Filter grasps failed");
       return false;
@@ -250,15 +249,16 @@ public:
     // Plan free-space approach, cartesian approach, lift and retreat trajectories
     moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
     moveit_msgs::MotionPlanResponse pre_approach_plan;
+
+    setACMFingerEntry(object_name, true);
     if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to plan grasp motions");
       return false;
     }
+    setACMFingerEntry(object_name, false);
 
     visualizePick(selected_grasp_candidate, pre_approach_plan);
-
-    setACMFingerEntry(object_name, false);
 
     return true;
   }

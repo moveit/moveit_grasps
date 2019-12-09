@@ -166,14 +166,12 @@ public:
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                             const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                             const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                            bool filter_pregrasp = false,
-                            const std::string &target_object_id = "");
+                            bool filter_pregrasp = false, const std::string& target_object_id = "");
 
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                             const planning_scene::PlanningScenePtr& planning_scene,
                             const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                            bool filter_pregrasp = false,
-                            const std::string &target_object_id = "");
+                            bool filter_pregrasp = false, const std::string& target_object_id = "");
   /**
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
@@ -187,15 +185,13 @@ public:
                                          const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                          const robot_model::JointModelGroup* arm_jmg,
                                          const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                         bool visualize,
-                                         const std::string &grasp_target_object_id = "");
+                                         bool visualize, const std::string& grasp_target_object_id = "");
 
   virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                          const planning_scene::PlanningScenePtr& planning_scene,
                                          const robot_model::JointModelGroup* arm_jmg,
                                          const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                         bool visualize,
-                                         const std::string &grasp_target_object_id = "");
+                                         bool visualize, const std::string& grasp_target_object_id = "");
 
   /**
    * \brief Print grasp filtering statistics
@@ -229,6 +225,10 @@ public:
    */
   bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
                               const double& bin_width, const double& bin_height);
+
+  /* \brief Set the ACM entry to ignore collisions between the ee_link_names and the object in the planning_scene */
+  void setACMFingerEntry(const std::string& object_name, bool allowed, const std::vector<std::string>& ee_link_names,
+                         const planning_scene::PlanningScenePtr& planning_scene);
 
 protected:
   /**

@@ -244,7 +244,8 @@ public:
     // Filtering grasps
     // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
     bool filter_pregrasps = true;
-    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
+    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps,
+                                     object_name))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Filter grasps failed");
       return false;

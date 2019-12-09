@@ -366,14 +366,18 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   // -----------------------------------
   // Generate random object to grasp
   geometry_msgs::Pose object_pose;
-  object_pose.position.x = 0.5;
-  object_pose.position.y = 0.125;
-  object_pose.position.z = 0.5;
-  double object_x_depth = 0.1;
-  double object_y_width = 0.1;
+  object_pose.position.x = 0.1875;
+  object_pose.position.y = 0.1875;
+  object_pose.position.z = 0.350;
+  double object_x_depth = 0.15;
+  double object_y_width = 0.15;
   double object_z_height = 0.025;
   std::string object_name = "target_box";
-  setACMFingerEntry(object_name, true);
+
+  visual_tools_->publishCollisionCuboid(object_pose, object_x_depth, object_y_width, object_z_height, object_name,
+                                        rviz_visual_tools::RED);
+  visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+  visual_tools_->trigger();
 
   // -----------------------------------
   // Generate grasp candidates
@@ -401,8 +405,8 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
   bool filter_pregrasps = true;
   grasp_filter_->setSuctionVoxelOverlapCutoff(0.5);
-  ASSERT_TRUE(
-      grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
+  ASSERT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
+                                          filter_pregrasps, object_name))
       << "Filter grasps failed";
   ASSERT_TRUE(grasp_filter_->removeInvalidAndFilter(grasp_candidates)) << "Grasp filtering removed all grasps";
   ROS_INFO_STREAM_NAMED(LOGNAME, "" << grasp_candidates.size() << " remain after filtering");
@@ -410,10 +414,11 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   // Plan free-space approach, cartesian approach, lift and retreat trajectories
   moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
   moveit_msgs::MotionPlanResponse pre_approach_plan;
+  setACMFingerEntry(object_name, true);
   ASSERT_TRUE(planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan)) << "Failed to plan grasp "
                                                                                                "motions";
-  visualizePick(selected_grasp_candidate, pre_approach_plan);
   setACMFingerEntry(object_name, false);
+  visualizePick(selected_grasp_candidate, pre_approach_plan);
 }
 
 }  // namespace moveit_grasps
