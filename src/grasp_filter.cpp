@@ -100,20 +100,22 @@ GraspFilter::GraspFilter(const robot_state::RobotStatePtr& robot_state,
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                const robot_model::JointModelGroup* arm_jmg,
-                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
+                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                               const std::string &target_object_id)
 {
   planning_scene::PlanningScenePtr planning_scene;
   {
     planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
     planning_scene = planning_scene::PlanningScene::clone(scene);
   }
-  return filterGrasps(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp);
+  return filterGrasps(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, target_object_id);
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                                const planning_scene::PlanningScenePtr& planning_scene,
                                const robot_model::JointModelGroup* arm_jmg,
-                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp)
+                               const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                               const std::string &target_object_id)
 {
   bool verbose = false;
 
@@ -151,7 +153,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 
   // Try to filter grasps not in verbose mode
   std::size_t remaining_grasps =
-      filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
+      filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose, target_object_id);
 
   // Print stats
   printFilterStatistics(grasp_candidates);
@@ -164,7 +166,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
       ROS_INFO_STREAM_NAMED(name_, "Re-running in verbose mode since it failed");
       verbose = true;
       remaining_grasps =
-          filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose);
+          filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, verbose, target_object_id);
     }
     else
       ROS_INFO_STREAM_NAMED(name_, "NOT re-running in verbose mode");
@@ -311,21 +313,22 @@ std::size_t
 GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                 const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                 const robot_model::JointModelGroup* arm_jmg,
-                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize)
+                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize,
+                                const std::string &target_object_id)
 {
   planning_scene::PlanningScenePtr planning_scene;
   {
     planning_scene_monitor::LockedPlanningSceneRO scene(planning_scene_monitor);
     planning_scene = planning_scene::PlanningScene::clone(scene);
   }
-  return filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, visualize);
+  return filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp, visualize, target_object_id);
 }
 
 std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                             const planning_scene::PlanningScenePtr& planning_scene,
                                             const robot_model::JointModelGroup* arm_jmg,
                                             const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                            bool visualize)
+                                            bool visualize, const std::string &target_object_id)
 {
   // Setup collision checking
   *robot_state_ = planning_scene->getCurrentState();
@@ -421,7 +424,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
         std::make_shared<IkThreadStruct>(grasp_candidates, planning_scene, link_transform,
                                          0,  // this is filled in by OpenMP
                                          kin_solvers_[arm_jmg->getName()][thread_id], robot_states_[thread_id],
-                                         solver_timeout_, filter_pregrasp, visualize, thread_id);
+                                         solver_timeout_, filter_pregrasp, visualize, thread_id, target_object_id);
     ik_thread_structs[thread_id]->ik_seed_state_ = ik_seed_state;
   }
 

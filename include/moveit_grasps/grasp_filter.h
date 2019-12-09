@@ -111,7 +111,7 @@ struct IkThreadStruct
                  planning_scene::PlanningScenePtr planning_scene, Eigen::Isometry3d& link_transform,
                  std::size_t grasp_id, kinematics::KinematicsBaseConstPtr kin_solver,
                  robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
-                 std::size_t thread_id)
+                 std::size_t thread_id, const std::string& grasp_target_object_id)
     : grasp_candidates_(grasp_candidates)
     , planning_scene_(planning_scene::PlanningScene::clone(planning_scene))
     , link_transform_(link_transform)
@@ -122,6 +122,7 @@ struct IkThreadStruct
     , filter_pregrasp_(filter_pregrasp)
     , visual_debug_(visual_debug)
     , thread_id_(thread_id)
+    , grasp_target_object_id_(grasp_target_object_id)
   {
   }
   std::vector<GraspCandidatePtr>& grasp_candidates_;
@@ -135,6 +136,10 @@ struct IkThreadStruct
   bool filter_pregrasp_;
   bool visual_debug_;
   std::size_t thread_id_;
+  // The name of the target grasp object to be used in the planning scene.
+  // NOTE: The ik filtering checks if the user has already added the grasp object
+  // to the planning scene. If it hasn't then GraspFilter will add it to the PS for filtering
+  std::string grasp_target_object_id_;
 
   // Used within processing function
   geometry_msgs::PoseStamped ik_pose_;
@@ -155,36 +160,42 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param target_object_id - The name of the target grasp object to be used in the planning scene.
    * \return if some grasps are still valid
    */
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                             const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                             const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                            bool filter_pregrasp = false);
+                            bool filter_pregrasp = false,
+                            const std::string &target_object_id = "");
 
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                             const planning_scene::PlanningScenePtr& planning_scene,
                             const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                            bool filter_pregrasp);
+                            bool filter_pregrasp = false,
+                            const std::string &target_object_id = "");
   /**
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
    * \param visualize - visualize IK filtering
+   * \param target_object_id - The name of the target grasp object to be used in the planning scene.
    * \return number of grasps remaining
    */
   virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                          const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                                          const robot_model::JointModelGroup* arm_jmg,
                                          const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                         bool visualize);
+                                         bool visualize,
+                                         const std::string &grasp_target_object_id = "");
 
   virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
                                          const planning_scene::PlanningScenePtr& planning_scene,
                                          const robot_model::JointModelGroup* arm_jmg,
                                          const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                         bool visualize);
+                                         bool visualize,
+                                         const std::string &grasp_target_object_id = "");
 
   /**
    * \brief Print grasp filtering statistics

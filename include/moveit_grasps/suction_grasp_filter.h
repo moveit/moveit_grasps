@@ -66,7 +66,8 @@ public:
                                  const planning_scene::PlanningScenePtr& planning_scene_monitor,
                                  const robot_model::JointModelGroup* arm_jmg,
                                  const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                 bool visualize) override;
+                                 bool visualize,
+                                 const std::string &target_object_id = "") override;
 
   /**
    * \brief Print grasp filtering statistics

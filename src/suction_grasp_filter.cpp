@@ -101,11 +101,11 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
                                                    const planning_scene::PlanningScenePtr& planning_scene,
                                                    const robot_model::JointModelGroup* arm_jmg,
                                                    const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-                                                   bool visualize)
+                                                   bool visualize, const std::string &target_object_id)
 {
   filterGraspsBySuctionVoxelOverlapCutoff(grasp_candidates);
   return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp,
-                                         visualize);
+                                         visualize, target_object_id);
 }
 
 void SuctionGraspFilter::printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates)
@@ -157,10 +157,6 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
     return false;
   }
 
-  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
-  if (!filer_results)
-    return false;
-
   std::vector<std::string> collision_object_names;
   if (!attachActiveSuctionCupCO(suction_grasp_data,
                                 suction_grasp_candidate->getSuctionVoxelEnabled(suction_voxel_overlap_cutoff_),
@@ -171,6 +167,11 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
     grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
     return false;
   }
+
+  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
+  if (!filer_results)
+    return false;
+
 
   if (!removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_))
   {
@@ -407,7 +408,7 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     visual_tools_->publishRobotState(display_robot_state_msg);
     visual_tools_->trigger();
     ros::Duration(0.05).sleep();
-    if (true)
+    if (false)
       visual_tools_->prompt("Displaying suction cups as collision box. 'next' to continue");
   }
 
