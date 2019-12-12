@@ -226,7 +226,6 @@ bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose,
 void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboid_pose_fixed, double depth,
                                                         double width, double height)
 {
-
   // Move the ideal grasp pose to the center of the  box
   Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
   ideal_grasp_tcp.translation() = cuboid_pose_fixed.translation();
@@ -244,7 +243,8 @@ void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboi
     ROS_DEBUG_STREAM_NAMED("grasp_generator", "ideal_grasp_tcp:\n" << ideal_grasp_tcp.rotation() << "\n");
     visual_tools_->publishWireframeCuboid(cuboid_pose_fixed, depth, width, height, rviz_visual_tools::YELLOW);
     visual_tools_->trigger();
-    visual_tools_->prompt("start config");
+    ros::Duration(1).sleep();
+    // visual_tools_->prompt("start config");
   }
 
   // If the ideal top grasp Z axis is in the opposite direction of the top pose then we rotate around X to flip the
@@ -262,7 +262,8 @@ void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboi
       visual_tools_->publishAxis(cuboid_pose_fixed, rviz_visual_tools::SMALL, "cuboid_pose_fixed");
       visual_tools_->publishWireframeCuboid(cuboid_pose_fixed, depth, width, height, rviz_visual_tools::BLUE);
       visual_tools_->trigger();
-      visual_tools_->prompt("flipped Z by rotating around X");
+      ros::Duration(1).sleep();
+      // visual_tools_->prompt("flipped Z by rotating around X");
     }
   }
 
@@ -280,7 +281,8 @@ void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboi
       visual_tools_->publishAxis(cuboid_pose_fixed, rviz_visual_tools::SMALL, "cuboid_pose_fixed");
       visual_tools_->publishWireframeCuboid(cuboid_pose_fixed, depth, width, height, rviz_visual_tools::GREEN);
       visual_tools_->trigger();
-      visual_tools_->prompt("flipped X by rotating around Z");
+      ros::Duration(1).sleep();
+      // visual_tools_->prompt("flipped X by rotating around Z");
     }
   }
   // return cuboid_pose_fixed;
