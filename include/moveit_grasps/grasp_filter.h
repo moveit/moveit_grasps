@@ -196,7 +196,7 @@ public:
   /**
    * \brief Print grasp filtering statistics
    */
-  virtual void printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates);
+  virtual void printFilterStatistics(const std::vector<GraspCandidatePtr>& grasp_candidates) const;
 
   /**
    * \brief Method for checking part of the possible grasps list. MUST BE THREAD SAFE

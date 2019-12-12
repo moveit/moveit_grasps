@@ -108,7 +108,7 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
                                          visualize, target_object_id);
 }
 
-void SuctionGraspFilter::printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates)
+void SuctionGraspFilter::printFilterStatistics(const std::vector<GraspCandidatePtr>& grasp_candidates) const
 {
   static const std::string logger_name = GraspFilter::name_ + ".filter_statistics";
 

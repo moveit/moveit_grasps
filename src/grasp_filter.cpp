@@ -496,7 +496,7 @@ std::size_t GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& gras
   return not_filtered;
 }
 
-void GraspFilter::printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates)
+void GraspFilter::printFilterStatistics(const std::vector<GraspCandidatePtr>& grasp_candidates) const
 {
   if (!statistics_verbose_)
     return;

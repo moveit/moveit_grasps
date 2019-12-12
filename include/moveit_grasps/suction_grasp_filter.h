@@ -71,7 +71,7 @@ public:
   /**
    * \brief Print grasp filtering statistics
    */
-  void printFilterStatistics(std::vector<GraspCandidatePtr>& grasp_candidates) override;
+  void printFilterStatistics(const std::vector<GraspCandidatePtr>& grasp_candidates) const override;
 
   /**
    * \brief Thread for checking part of the possible grasps list
