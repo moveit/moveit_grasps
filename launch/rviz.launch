@@ -7,11 +7,6 @@
   <!-- Suction or two finger -->
   <arg name="gripper" default="two_finger" doc="must be one of 'suction' or 'two_finger'" />
 
-  <!-- Load Rviz -->
-  <node name="$(anon rviz)" pkg="rviz" type="rviz" respawn="false"
-	args="-d $(find moveit_grasps)/launch/rviz/grasps.rviz" output="screen">
-  </node>
-
   <!-- Publish world frame -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_1" args="0 0 0 0 0 0 world panda_link0" />
 
@@ -20,5 +15,10 @@
     <arg name="load_robot_description" value="true"/>
     <arg name="gripper" value="$(arg gripper)"/>
   </include>
+
+  <!-- Load Rviz -->
+  <node name="$(anon rviz)" pkg="rviz" type="rviz" respawn="false"
+	args="-d $(find moveit_grasps)/launch/rviz/grasps.rviz" output="screen">
+  </node>
 
 </launch>

@@ -250,13 +250,11 @@ public:
     moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
     moveit_msgs::MotionPlanResponse pre_approach_plan;
 
-    setACMFingerEntry(object_name, true);
-    if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan))
+    if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan, object_name))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to plan grasp motions");
       return false;
     }
-    setACMFingerEntry(object_name, false);
 
     visualizePick(selected_grasp_candidate, pre_approach_plan);
 
@@ -313,7 +311,7 @@ public:
 
   bool planFullGrasp(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
                      moveit_grasps::GraspCandidatePtr& valid_grasp_candidate,
-                     moveit_msgs::MotionPlanResponse& pre_approach_plan)
+                     moveit_msgs::MotionPlanResponse& pre_approach_plan, const std::string& object_name)
   {
     moveit::core::RobotStatePtr current_state;
     {
@@ -327,8 +325,8 @@ public:
     {
       valid_grasp_candidate = grasp_candidates.front();
       valid_grasp_candidate->getPreGraspState(current_state);
-      if (!grasp_planner_->planApproachLiftRetreat(valid_grasp_candidate, current_state, planning_scene_monitor_,
-                                                   false))
+      if (!grasp_planner_->planApproachLiftRetreat(valid_grasp_candidate, current_state, planning_scene_monitor_, false,
+                                                   object_name))
       {
         ROS_INFO_NAMED(LOGNAME, "failed to plan approach lift retreat");
         continue;
@@ -346,20 +344,6 @@ public:
       break;
     }
     return success;
-  }
-
-  void setACMFingerEntry(const std::string& object_name, bool allowed)
-  {
-    planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);  // Lock planning scene
-
-    // Get links of end effector
-    const std::vector<std::string>& ee_links = grasp_data_->ee_jmg_->getLinkModelNames();
-
-    // Set collision checking between fingers and object
-    for (std::size_t i = 0; i < ee_links.size(); ++i)
-    {
-      scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, ee_links[i], allowed);
-    }
   }
 
   bool planPreApproach(const robot_state::RobotState& goal_state, moveit_msgs::MotionPlanResponse& pre_approach_plan)

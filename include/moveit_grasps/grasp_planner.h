@@ -68,15 +68,18 @@ public:
    * \param robot_state - robot_state to be used for computeCartesianPath
    * \param planning_scene_monitor - Current state of the world
    * \param grasp_data - robot gripper configuration
+   * \param grasp_object_id - The name of the target grasp object to be used in the planning scene.
    * \return true on success
    */
   bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
                                   const robot_state::RobotStatePtr& robot_state,
-                                  const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor);
+                                  const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                  const std::string& grasp_object_id = "");
 
   bool planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
                                   const robot_state::RobotStatePtr& robot_state,
-                                  const planning_scene::PlanningSceneConstPtr& planning_scene);
+                                  const planning_scene::PlanningSceneConstPtr& planning_scene,
+                                  const std::string& grasp_object_id = "");
 
   /**
    * \brief Plan entire cartesian manipulation sequence
@@ -85,11 +88,11 @@ public:
    */
   bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
                                const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                               bool verbose_cartesian_filtering);
+                               bool verbose_cartesian_filtering, const std::string& grasp_object_id = "");
 
   bool planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
                                const planning_scene::PlanningSceneConstPtr& planning_scene,
-                               bool verbose_cartesian_filtering);
+                               bool verbose_cartesian_filtering, const std::string& grasp_object_id = "");
 
   /**
    * \brief Compute a cartesian path along waypoints
