@@ -66,11 +66,11 @@ struct GraspFilterCode
   {
     NOT_FILTERED = 0,
     GRASP_FILTERED_BY_IK,             // Ik solution at grasp failed
-    GRASP_FILTERED_BY_CUTTING_PLANE,  // grasp pose is in an unreachable part of the environment (ex: inside or behind a
-                                      // wall)
+    GRASP_FILTERED_BY_CUTTING_PLANE,  // grasp pose is in an unreachable part of the environment (eg: behind a wall)
     GRASP_FILTERED_BY_ORIENTATION,    // grasp pose is not desireable
     GRASP_FILTERED_BY_IK_CLOSED,      // ik solution was fine with grasp opened, but failed with grasp closed
     PREGRASP_FILTERED_BY_IK,          // Ik solution before approach failed
+    GRASP_INVALID,                    // An error occured while processing the grasp
     LAST                              // Used to track last value in the base class when inheriting
   };
 };

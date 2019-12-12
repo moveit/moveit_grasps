@@ -102,9 +102,10 @@ bool SuctionGraspData::loadGraspData(const ros::NodeHandle& nh, const std::strin
 void SuctionGraspData::print()
 {
   GraspData::print();
+
   std::cout << "Suction Gripper Parameters: " << std::endl;
-  std::cout << "\tactive_suction_range_x_: " << suction_voxel_matrix_->active_suction_range_x_ << std::endl;
-  std::cout << "\tactive_suction_range_y_: " << suction_voxel_matrix_->active_suction_range_y_ << std::endl;
+  std::cout << "\tactive_suction_range_x_: " << suction_voxel_matrix_->getActiveSuctionWidthY() << std::endl;
+  std::cout << "\tactive_suction_range_y_: " << suction_voxel_matrix_->getActiveSuctionWidthX() << std::endl;
 }
 
 }  // namespace

@@ -16,7 +16,7 @@ hand:
     # grasp_depth_resolution is the discretization distance in meter used for sampling the grasp depth value.
     # Idealy this should be a small fraction of the depth range (i.e. 0.005).
     # If the value exceeds the depth distance range grasp_max_depth is used by default.
-    grasp_depth_resolution : 1.0
+    grasp_depth_resolution : 0.01
 
     # A grasp motion is composed of three linear paths: approach, retreat, lift
     # The values below define the desired distances of each path.

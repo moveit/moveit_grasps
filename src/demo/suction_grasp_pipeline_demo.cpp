@@ -206,8 +206,6 @@ public:
       return false;
     }
 
-    setACMFingerEntry(object_name, true);
-
     // -----------------------------------
     // Generate grasp candidates
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
@@ -234,7 +232,9 @@ public:
     // Filtering grasps
     // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
     bool filter_pregrasps = true;
-    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
+    grasp_filter_->setSuctionVoxelOverlapCutoff(0.5);
+    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps,
+                                     object_name))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Filter grasps failed");
       return false;
@@ -249,15 +249,16 @@ public:
     // Plan free-space approach, cartesian approach, lift and retreat trajectories
     moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
     moveit_msgs::MotionPlanResponse pre_approach_plan;
+
+    setACMFingerEntry(object_name, true);
     if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to plan grasp motions");
       return false;
     }
+    setACMFingerEntry(object_name, false);
 
     visualizePick(selected_grasp_candidate, pre_approach_plan);
-
-    setACMFingerEntry(object_name, false);
 
     return true;
   }
@@ -428,16 +429,26 @@ public:
                             double& y_width, double& z_height)
   {
     // Generate random cuboid
-    double xmin = 0.5;
-    double xmax = 0.7;
-    double ymin = -0.25;
-    double ymax = 0.25;
-    double zmin = 0.2;
-    double zmax = 0.7;
-    rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax);
+    double xmin = 0.125;
+    double xmax = 0.250;
+    double ymin = 0.125;
+    double ymax = 0.250;
+    double zmin = 0.200;
+    double zmax = 0.500;
 
-    double cuboid_size_min = 0.01;
-    double cuboid_size_max = 0.03;
+    double rot_tol = 0.05;
+    double elevation_min = rot_tol;
+    double elevation_max = rot_tol;
+    double azimuth_min = rot_tol;
+    double azimuth_max = rot_tol;
+    double angle_min = rot_tol;
+    double angle_max = rot_tol;
+
+    rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax, elevation_min, elevation_max,
+                                                    azimuth_min, azimuth_max, angle_min, angle_max);
+
+    double cuboid_size_min = 0.10;
+    double cuboid_size_max = 0.20;
     rviz_visual_tools::RandomCuboidBounds cuboid_bounds(cuboid_size_min, cuboid_size_max);
 
     object_name = "pick_target";

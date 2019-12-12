@@ -62,23 +62,22 @@ public:
 
   void SetUp() override
   {
-    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
-    if (planning_scene_monitor_->getPlanningScene())
+    planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor =
+        std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
+    if (planning_scene_monitor->getPlanningScene())
     {
-      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
-                                                            "grasping_planning_scene");
-      planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
+      planning_scene_monitor->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+                                                           "grasping_planning_scene");
+      planning_scene_monitor->getPlanningScene()->setName("grasping_planning_scene");
     }
-    const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor_->getRobotModel();
+    const robot_model::RobotModelConstPtr robot_model = planning_scene_monitor->getRobotModel();
     arm_jmg_ = robot_model->getJointModelGroup("panda_arm");
     ASSERT_TRUE(arm_jmg_ != nullptr);
     visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
-        robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
-    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
-    grasp_filter_ =
-        std::make_shared<moveit_grasps::TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
-    grasp_data_ =
-        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
+        robot_model->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor);
+    grasp_generator_ = std::make_shared<TwoFingerGraspGenerator>(visual_tools_);
+    grasp_filter_ = std::make_shared<TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+    grasp_data_ = std::make_shared<TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
 
     ASSERT_TRUE(grasp_data_->loadGraspData(nh_, ee_group_name_));
   }
@@ -88,10 +87,9 @@ protected:
   bool verbose_;
   std::string ee_group_name_;
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
-  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
-  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
-  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+  TwoFingerGraspGeneratorPtr grasp_generator_;
+  TwoFingerGraspFilterPtr grasp_filter_;
+  TwoFingerGraspDataPtr grasp_data_;
   const robot_model::JointModelGroup* arm_jmg_;
 };  // class GraspFilterTest
 
@@ -121,11 +119,10 @@ TEST_F(GraspFilterTest, TestGraspFilter)
     visual_tools_->generateRandomCuboid(object_pose, depth, width, height, pose_bounds, cuboid_bounds);
 
     // Generate set of grasps for one object
-    std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
+    std::vector<GraspCandidatePtr> grasp_candidates;
 
     // Configure the desired types of grasps
-    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
-        moveit_grasps::TwoFingerGraspCandidateConfig();
+    TwoFingerGraspCandidateConfig grasp_generator_config = TwoFingerGraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;
@@ -139,12 +136,49 @@ TEST_F(GraspFilterTest, TestGraspFilter)
 
     // Filter the grasp for only the ones that are reachable
     bool filter_pregrasps = true;
-    std::size_t valid_grasps = grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
-                                                           visual_tools_->getSharedRobotState(), filter_pregrasps);
+    bool success = grasp_filter_->filterGrasps(grasp_candidates, visual_tools_->getPlanningSceneMonitor(), arm_jmg_,
+                                               visual_tools_->getSharedRobotState(), filter_pregrasps);
 
-    EXPECT_FALSE(valid_grasps == 0) << "No valid grasps found after IK filtering";
+    EXPECT_TRUE(success) << "Checks if filterGrasps (without object in the planning scene) ran without issue";
+
+    std::size_t remaining_grasps = grasp_filter_->removeInvalidAndFilter(grasp_candidates);
+    EXPECT_NE(remaining_grasps, 0) << "No valid grasps remain after filtering";
+
+    // add the target box to the ps
+    std::string object_name = "target_box";
+    visual_tools_->publishCollisionCuboid(object_pose, depth, width, height, object_name, rviz_visual_tools::RED);
+
+    // Filter the grasp for only the ones that are reachable
+    success = grasp_filter_->filterGrasps(grasp_candidates, visual_tools_->getPlanningSceneMonitor(), arm_jmg_,
+                                          visual_tools_->getSharedRobotState(), filter_pregrasps, object_name);
+    EXPECT_TRUE(success) << "Checks if filterGrasps (with object in the planning scene and ACM setting) ran without "
+                            "issue";
+
+    remaining_grasps = grasp_filter_->removeInvalidAndFilter(grasp_candidates);
+    EXPECT_NE(remaining_grasps, 0) << "No valid grasps remain after filtering with collision object and ACM settings";
+
+    success = grasp_filter_->filterGrasps(grasp_candidates, visual_tools_->getPlanningSceneMonitor(), arm_jmg_,
+                                          visual_tools_->getSharedRobotState(), filter_pregrasps);
+    EXPECT_TRUE(success) << "Checks if filterGrasps (with object in the planning scene and NO ACM setting) ran without "
+                            "issue";
+
+    remaining_grasps = grasp_filter_->removeInvalidAndFilter(grasp_candidates);
+    EXPECT_EQ(remaining_grasps, 0) << "Valid grasps found after IK filtering despite collisions";
   }
 }
+
+TEST_F(GraspFilterTest, TestGraspFilterCompareScores)
+{
+  moveit_msgs::Grasp grasp;
+  GraspDataPtr grasp_data;
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  grasp.grasp_quality = 2;
+  GraspCandidatePtr grasp_a = std::make_shared<GraspCandidate>(grasp, grasp_data, pose);
+  grasp.grasp_quality = 1;
+  GraspCandidatePtr grasp_b = std::make_shared<GraspCandidate>(grasp, grasp_data, pose);
+  EXPECT_TRUE(TwoFingerGraspFilter::compareGraspScores(grasp_a, grasp_b));
+}
+
 }  // namespace moveit_grasps
 
 int main(int argc, char** argv)

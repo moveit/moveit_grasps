@@ -31,7 +31,7 @@ moveit_grasps:
     statistics_verbose: true
     # Visualize the planes used by the filter
     show_cutting_planes: true
-    # Collision checking in verbose
+    # Collision checking in verbose. Note: this will cause filtering to happen on a single thread rather than in parallel
     collision_verbose: true
     collision_verbose_speed: 0.01  # (sec/ solution)
     # Collision checking in verbose on second pass (after all failed)

@@ -62,15 +62,21 @@ class SuctionGraspCandidate : public GraspCandidate
 public:
   SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
                         const Eigen::Isometry3d& cuboid_pose);
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  void setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap);
+
+  std::vector<double> getSuctionVoxelOverlap();
+
+  std::vector<bool> getSuctionVoxelEnabled(double cutoff);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+protected:
   // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object
   std::vector<double> suction_voxel_overlap_;
 
-  const SuctionGraspDataPtr grasp_data_;
-
 };  // class
+
 typedef std::shared_ptr<SuctionGraspCandidate> SuctionGraspCandidatePtr;
 
 }  // namespace moveit_grasps

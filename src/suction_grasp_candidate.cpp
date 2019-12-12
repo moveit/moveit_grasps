@@ -43,9 +43,26 @@ namespace moveit_grasps
 SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, const SuctionGraspDataPtr& grasp_data,
                                              const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, std::dynamic_pointer_cast<GraspData>(grasp_data), cuboid_pose)
-  , grasp_data_(grasp_data)
+  , suction_voxel_overlap_(grasp_data->suction_voxel_matrix_->getNumVoxels())
 {
-  grasp_filtered_code_ = SuctionGraspFilterCode::NOT_FILTERED;
+}
+
+void SuctionGraspCandidate::setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap)
+{
+  suction_voxel_overlap_ = suction_voxel_overlap;
+}
+
+std::vector<double> SuctionGraspCandidate::getSuctionVoxelOverlap()
+{
+  return suction_voxel_overlap_;
+}
+
+std::vector<bool> SuctionGraspCandidate::getSuctionVoxelEnabled(double suction_voxel_cutoff)
+{
+  std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
+  for (std::size_t voxel_ix = 0; voxel_ix < suction_voxel_enabled.size(); ++voxel_ix)
+    suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff;
+  return suction_voxel_enabled;
 }
 
 }  // namespace moveit_grasps

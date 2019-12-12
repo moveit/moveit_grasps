@@ -110,18 +110,19 @@ struct IkThreadStruct
   IkThreadStruct(std::vector<GraspCandidatePtr>& grasp_candidates,  // the input
                  planning_scene::PlanningScenePtr planning_scene, Eigen::Isometry3d& link_transform,
                  std::size_t grasp_id, kinematics::KinematicsBaseConstPtr kin_solver,
-                 robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool verbose,
-                 std::size_t thread_id)
+                 robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
+                 std::size_t thread_id, const std::string& grasp_target_object_id)
     : grasp_candidates_(grasp_candidates)
-    , planning_scene_(planning_scene)
+    , planning_scene_(planning_scene::PlanningScene::clone(planning_scene))
     , link_transform_(link_transform)
     , grasp_id(grasp_id)
     , kin_solver_(kin_solver)
     , robot_state_(robot_state)
     , timeout_(timeout)
     , filter_pregrasp_(filter_pregrasp)
-    , verbose_(verbose)
+    , visual_debug_(visual_debug)
     , thread_id_(thread_id)
+    , grasp_target_object_id_(grasp_target_object_id)
   {
   }
   std::vector<GraspCandidatePtr>& grasp_candidates_;
@@ -133,8 +134,12 @@ struct IkThreadStruct
   const robot_model::JointModelGroup* arm_jmg_;
   double timeout_;
   bool filter_pregrasp_;
-  bool verbose_;
+  bool visual_debug_;
   std::size_t thread_id_;
+  // The name of the target grasp object to be used in the planning scene.
+  // NOTE: The ik filtering checks if the user has already added the grasp object
+  // to the planning scene. If it hasn't then GraspFilter will not modify the planning scene allowed collision matrix
+  std::string grasp_target_object_id_;
 
   // Used within processing function
   geometry_msgs::PoseStamped ik_pose_;
@@ -155,13 +160,78 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \return some grasps remaining
+   * \param target_object_id - The name of the target grasp object in the planning scene if it exists
+   * \return true on successful filter
    */
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
                             const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                             const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
-                            bool filter_pregrasp = false);
+                            bool filter_pregrasp = false, const std::string& target_object_id = "");
 
+  virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
+                            const planning_scene::PlanningScenePtr& planning_scene,
+                            const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state,
+                            bool filter_pregrasp = false, const std::string& target_object_id = "");
+  /**
+   * \brief Return grasps that are kinematically feasible
+   * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
+   * \param arm_jmg - the arm to solve the IK problem on
+   * \param seed_state - A robot state to be used for IK. Ideally this will be close to the desired goal configuration.
+   * \param filter_pregrasp - Whether to also check ik feasibility for the pregrasp position
+   * \param visualize - visualize IK filtering
+   * \param target_object_id - The name of the target grasp object in the planning scene if it exists
+   * \return true on successful filter
+   */
+  virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                         const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                         const robot_model::JointModelGroup* arm_jmg,
+                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                         bool visualize, const std::string& grasp_target_object_id = "");
+
+  virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                         const planning_scene::PlanningScenePtr& planning_scene,
+                                         const robot_model::JointModelGroup* arm_jmg,
+                                         const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
+                                         bool visualize, const std::string& grasp_target_object_id = "");
+
+  /**
+   * \brief Print grasp filtering statistics
+   */
+  virtual void printFilterStatistics(const std::vector<GraspCandidatePtr>& grasp_candidates) const;
+
+  /**
+   * \brief Method for checking part of the possible grasps list. MUST BE THREAD SAFE
+   */
+  virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct);
+
+  /**
+   * \brief Used for sorting an array of CandidateGrasps
+   * \return true if A is less than B
+   */
+  static bool compareGraspScores(const GraspCandidatePtr& grasp_a, const GraspCandidatePtr& grasp_b)
+  {
+    // Determine if A or B has higher quality
+    return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
+  }
+
+  /**
+   * \brief Of an array of grasps, sort the valid ones from best score to worse score
+   * \return false if no grasps remain
+   */
+  bool removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates) const;
+
+  /**
+   * \brief Add a cutting plane filter for a shelf bin
+   * \return true on success
+   */
+  bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
+                              const double& bin_width, const double& bin_height);
+
+  /* \brief Set the ACM entry to ignore collisions between the ee_link_names and the object in the planning_scene */
+  void setACMFingerEntry(const std::string& object_name, bool allowed, const std::vector<std::string>& ee_link_names,
+                         const planning_scene::PlanningScenePtr& planning_scene);
+
+protected:
   /**
    * \brief Filter grasps by cutting plane
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
@@ -171,7 +241,7 @@ public:
    * \return true if grasp is filtered by operation
    */
   bool filterGraspByPlane(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& filter_pose,
-                          GraspParallelPlane plane, int direction);
+                          GraspParallelPlane plane, int direction) const;
 
   /**
    * \brief Filter grasps by desired orientation. Think of reaching into a small opening, you can only rotate your hand
@@ -184,29 +254,35 @@ public:
    * \return true if grasp is filtered by operation
    */
   bool filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, const Eigen::Isometry3d& desired_pose,
-                                double max_angular_offset);
+                                double max_angular_offset) const;
 
   /**
-   * \brief Helper for filterGrasps
-   * \return number of grasps remaining
+   * \brief Filter grasps by feasablity of the grasp pose.
+   * \param grasp_candidates - a grasp candidate that this will test
+   * \param grasp_ik_solution - the IK solution if one exists
+   * \param ik_thread_struct - a struct containing the planning_scene
+   * \return true if grasp is filtered by operation
    */
-  std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
-                                 const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-                                 const robot_model::JointModelGroup* arm_jmg,
-                                 const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool verbose);
+  bool filterGraspByGraspIK(const GraspCandidatePtr& grasp_candidate, std::vector<double>& grasp_ik_solution,
+                            const IkThreadStructPtr& ik_thread_struct) const;
 
   /**
-   * \brief Thread for checking part of the possible grasps list
+   * \brief Filter grasps by feasablity of the pre grasp pose.
+   * \param grasp_candidates - a grasp candidate that this will test
+   * \param grasp_ik_solution - the IK solution if one exists
+   * \param ik_thread_struct - a struct containing the planning_scene
+   * \return true if grasp is filtered by operation
    */
-  virtual bool processCandidateGrasp(const IkThreadStructPtr& ik_thread_struct);
+  bool filterGraspByPreGraspIK(const GraspCandidatePtr& grasp_candidate, std::vector<double>& pregrasp_ik_solution,
+                               const IkThreadStructPtr& ik_thread_struct) const;
 
   /**
    * \brief Helper for the thread function to find IK solutions
    * \return true on success
    */
   bool findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
-                      GraspCandidatePtr& grasp_candidate,
-                      const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
+                      const GraspCandidatePtr& grasp_candidate,
+                      const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const;
 
   /**
    * \brief add a cutting plane
@@ -240,12 +316,6 @@ public:
   void clearDesiredGraspOrientations();
 
   /**
-   * \brief Of an array of grasps, sort the valid ones from best score to worse score
-   * \return true on success, false if no grasps remain
-   */
-  bool removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_candidates);
-
-  /**
    * \brief Show grasps after being filtered
    * \return true on success
    */
@@ -265,24 +335,10 @@ public:
    */
   bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
 
-  /**
-   * \brief Add a cutting plane filter for a shelf bin
-   * \return true on success
-   */
-  bool addCuttingPlanesForBin(const Eigen::Isometry3d& world_to_bin, const Eigen::Isometry3d& bin_to_product,
-                              const double& bin_width, const double& bin_height);
-
-  /**
-   * \brief Used for sorting an array of CandidateGrasps
-   * \return true if A is less than B
-   */
-  static bool compareGraspScores(const GraspCandidatePtr& grasp_a, const GraspCandidatePtr& grasp_b)
-  {
-    // Determine if A or B has higher quality
-    return (grasp_a->grasp_.grasp_quality > grasp_b->grasp_.grasp_quality);
-  }
-
 protected:
+  // logging name
+  const std::string name_;
+
   // Allow a writeable robot state
   robot_state::RobotStatePtr robot_state_;
 

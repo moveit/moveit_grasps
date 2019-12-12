@@ -65,9 +65,12 @@ public:
    */
   bool checkFingersClosedIK(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
                             GraspCandidatePtr& grasp_candidate,
-                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn);
+                            const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const;
 
-private:
+protected:
+  // Name for logging
+  const std::string name_;
+
 };  // end of class
 
 typedef std::shared_ptr<TwoFingerGraspFilter> TwoFingerGraspFilterPtr;
