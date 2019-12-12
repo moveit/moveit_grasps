@@ -138,7 +138,7 @@ struct IkThreadStruct
   std::size_t thread_id_;
   // The name of the target grasp object to be used in the planning scene.
   // NOTE: The ik filtering checks if the user has already added the grasp object
-  // to the planning scene. If it hasn't then GraspFilter will add it to the PS for filtering
+  // to the planning scene. If it hasn't then GraspFilter will not modify the planning scene allowed collision matrix
   std::string grasp_target_object_id_;
 
   // Used within processing function
@@ -160,7 +160,7 @@ public:
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
    * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
-   * \param target_object_id - The name of the target grasp object to be used in the planning scene.
+   * \param target_object_id - The name of the target grasp object in the planning scene if it exists
    * \return if some grasps are still valid
    */
   virtual bool filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
@@ -176,9 +176,10 @@ public:
    * \brief Return grasps that are kinematically feasible
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    * \param arm_jmg - the arm to solve the IK problem on
-   * \param filter_pregrasp -whether to also check ik feasibility for the pregrasp position
+   * \param seed_state - A robot state to be used for IK. Ideally this will be close to the desired goal configuration. 
+   * \param filter_pregrasp - Whether to also check ik feasibility for the pregrasp position
    * \param visualize - visualize IK filtering
-   * \param target_object_id - The name of the target grasp object to be used in the planning scene.
+   * \param target_object_id - The name of the target grasp object in the planning scene if it exists
    * \return number of grasps remaining
    */
   virtual std::size_t filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,

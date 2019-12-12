@@ -226,7 +226,6 @@ bool SuctionGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pose,
 void SuctionGraspGenerator::orientCuboidTowardsIdealTCP(Eigen::Isometry3d& cuboid_pose_fixed, double depth,
                                                         double width, double height)
 {
-  // Eigen::Isometry3d cuboid_pose_fixed(cuboid_pose);
 
   // Move the ideal grasp pose to the center of the  box
   Eigen::Isometry3d ideal_grasp_tcp = getIdealTCPGraspPose();
