@@ -61,7 +61,7 @@ std::vector<bool> SuctionGraspCandidate::getSuctionVoxelEnabled(double suction_v
 {
   std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
   for (std::size_t voxel_ix = 0; voxel_ix < suction_voxel_enabled.size(); ++voxel_ix)
-    suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] > suction_voxel_cutoff;
+    suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] >= suction_voxel_cutoff;
   return suction_voxel_enabled;
 }
 

@@ -339,22 +339,23 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   double yaw_max = 2.0 * M_PI;
 
   // clang-format off
-  if (debug_top_grasps_)
-  {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_min:                  " << x_min);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "x_max:                  " << x_max);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "depth:                  " << depth);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_x: " << grasp_data->suction_voxel_matrix_->getActiveSuctionWidthX());
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_x_width:          " << grasp_data->suction_voxel_matrix_->getVoxelWidthX());
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_min:                  " << y_min);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "y_max:                  " << y_max);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "width:                  " << width);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "active_suction_range_y: " << grasp_data->suction_voxel_matrix_->getActiveSuctionWidthY());
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "voxel_y_width:          " << grasp_data->suction_voxel_matrix_->getVoxelWidthY());
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_min:                  " << z_min);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "z_max:                  " << z_max);
-    ROS_DEBUG_STREAM_NAMED("grasp_generator.suction", "xy_increment:           " << xy_increment);
-  }
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "x_min:                  " << x_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "x_max:                  " << x_max);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "depth:                  " << depth);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "active_suction_range_x: " << grasp_data->suction_voxel_matrix_->getActiveSuctionWidthX());
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "voxel_x_width:          " << grasp_data->suction_voxel_matrix_->getVoxelWidthX());
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "y_min:                  " << y_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "y_max:                  " << y_max);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "width:                  " << width);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "active_suction_range_y: " << grasp_data->suction_voxel_matrix_->getActiveSuctionWidthY());
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "voxel_y_width:          " << grasp_data->suction_voxel_matrix_->getVoxelWidthY());
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "z_min:                  " << z_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "z_max:                  " << z_max);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "xy_increment:           " << xy_increment);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "yaw_increment:          " << yaw_increment);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "yaw_min:                " << yaw_min);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.suction.range", "yaw_max:                " << yaw_max);
+
   // clang-format on
 
   // For each range (X, Y, Z, Yaw) create copies of the grasp poses for each value in the range

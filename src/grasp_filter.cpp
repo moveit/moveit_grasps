@@ -50,24 +50,6 @@
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-namespace
-{
-bool ikCallbackFnAdapter(moveit::core::RobotState* state, const moveit::core::JointModelGroup* group,
-                         const moveit::core::GroupStateValidityCallbackFn& constraint, const geometry_msgs::Pose&,
-                         const std::vector<double>& ik_sol, moveit_msgs::MoveItErrorCodes& error_code)
-{
-  const std::vector<unsigned int>& bij = group->getKinematicsSolverJointBijection();
-  std::vector<double> solution(bij.size());
-  for (std::size_t i = 0; i < bij.size(); ++i)
-    solution[bij[i]] = ik_sol[i];
-  if (constraint(state, group, &solution[0]))
-    error_code.val = moveit_msgs::MoveItErrorCodes::SUCCESS;
-  else
-    error_code.val = moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION;
-  return true;
-}
-}
-
 namespace moveit_grasps
 {
 // Constructor
@@ -95,6 +77,9 @@ GraspFilter::GraspFilter(const robot_state::RobotStatePtr& robot_state,
   // clang-format on
 
   rosparam_shortcuts::shutdownIfError(parent_name, error);
+
+  // Add planning scene publisher for debugging
+  planning_scene_publisher_ = nh_.advertise<moveit_msgs::PlanningScene>("/published_planning_scene", 100, false);
 }
 
 bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
@@ -160,7 +145,7 @@ bool GraspFilter::filterGrasps(std::vector<GraspCandidatePtr>& grasp_candidates,
 
   if (remaining_grasps == 0)
   {
-    ROS_WARN_STREAM_NAMED(name_, "Grasp filters removed all grasps!");
+    ROS_INFO_STREAM_NAMED(name_, "Grasp filters removed all grasps");
     if (show_grasp_filter_collision_if_failed_)
     {
       ROS_INFO_STREAM_NAMED(name_, "Re-running in verbose mode since it failed");
@@ -564,7 +549,9 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
 
   std::vector<double> grasp_ik_solution;
   if (filterGraspByGraspIK(grasp_candidate, grasp_ik_solution, ik_thread_struct))
+  {
     return false;
+  }
 
   // Assign the grasp_ik solution.
   // TODO: This should be moved out of filtering
@@ -575,7 +562,9 @@ bool GraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_thread_struc
 
   std::vector<double> pregrasp_ik_solution;
   if (filterGraspByPreGraspIK(grasp_candidate, pregrasp_ik_solution, ik_thread_struct))
+  {
     return false;
+  }
   // Assign the pregrasp_ik solution.
   // TODO: This should be moved out of filtering
   grasp_candidate->pregrasp_ik_solution_ = pregrasp_ik_solution;
@@ -587,42 +576,36 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, const IkThrea
                                  const GraspCandidatePtr& grasp_candidate,
                                  const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const
 {
-  // Transform current pose to frame of planning group
-  Eigen::Isometry3d eigen_eef_mount_pose;
-  tf::poseMsgToEigen(ik_thread_struct->ik_pose_.pose, eigen_eef_mount_pose);
-  eigen_eef_mount_pose = ik_thread_struct->link_transform_ * eigen_eef_mount_pose;
-  tf::poseEigenToMsg(eigen_eef_mount_pose, ik_thread_struct->ik_pose_.pose);
+  robot_state::RobotState state = ik_thread_struct->planning_scene_->getCurrentState();
+  if (ik_thread_struct->ik_seed_state_.size() == grasp_candidate->grasp_data_->arm_jmg_->getActiveJointModels().size())
+  {
+    state.setJointGroupPositions(grasp_candidate->grasp_data_->arm_jmg_, ik_thread_struct->ik_seed_state_);
+    state.update();
+  }
 
-  // Set callback function
-  kinematics::KinematicsBase::IKCallbackFn ik_callback_fn;
-  if (constraint_fn)
-    ik_callback_fn = boost::bind(&ikCallbackFnAdapter, ik_thread_struct->robot_state_.get(),
-                                 grasp_candidate->grasp_data_->arm_jmg_, constraint_fn, _1, _2, _3);
+  // Copy in attached bodies which get removed by setJointGroupPositions for some reason
+  std::vector<const robot_state::AttachedBody*> attached_bodies;
+  ik_thread_struct->planning_scene_->getCurrentState().getAttachedBodies(attached_bodies);
 
-  // Test it with IK
-  ik_thread_struct->kin_solver_->searchPositionIK(ik_thread_struct->ik_pose_.pose, ik_thread_struct->ik_seed_state_,
-                                                  ik_thread_struct->timeout_, ik_solution, ik_callback_fn,
-                                                  ik_thread_struct->error_code_);
+  for (const robot_state::AttachedBody* ab : attached_bodies)
+    state.attachBody(ab->getName(), ab->getShapes(), ab->getFixedTransforms(), ab->getTouchLinks(),
+                     ab->getAttachedLinkName(), ab->getDetachPosture());
+
+  bool ik_success = state.setFromIK(grasp_candidate->grasp_data_->arm_jmg_, ik_thread_struct->ik_pose_.pose,
+                                    ik_thread_struct->timeout_, constraint_fn);
 
   // Results
-  if (ik_thread_struct->error_code_.val == moveit_msgs::MoveItErrorCodes::NO_IK_SOLUTION)
+  if (ik_success)
+  {
+    state.copyJointGroupPositions(grasp_candidate->grasp_data_->arm_jmg_, ik_solution);
+    return true;
+  }
+  else
   {
     // The grasp was valid but the pre-grasp was not
-    ROS_DEBUG_STREAM_NAMED(name_ + ".superdebug", "No IK solution");
+    ROS_DEBUG_STREAM_NAMED(name_ + ".superdebug", "IK solution not found");
     return false;
   }
-  else if (ik_thread_struct->error_code_.val == moveit_msgs::MoveItErrorCodes::TIMED_OUT)
-  {
-    ROS_DEBUG_STREAM_NAMED(name_ + ".superdebug", "Timed Out.");
-    return false;
-  }
-  else if (ik_thread_struct->error_code_.val != moveit_msgs::MoveItErrorCodes::SUCCESS)
-  {
-    ROS_ERROR_STREAM_NAMED(name_, "Unknown MoveItErrorCode from IK solver: " << ik_thread_struct->error_code_.val);
-    return false;
-  }
-
-  return true;
 }
 
 void GraspFilter::addCuttingPlane(const Eigen::Isometry3d& pose, GraspParallelPlane plane, int direction)
@@ -658,7 +641,7 @@ bool GraspFilter::removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_c
   // Error Check
   if (grasp_candidates.empty())
   {
-    ROS_ERROR_STREAM_NAMED(name_, "No remaining candidates grasps");
+    ROS_ERROR_STREAM_NAMED(name_, "No remaining grasp candidates");
     return false;
   }
 
@@ -885,6 +868,13 @@ void GraspFilter::setACMFingerEntry(const std::string& object_name, bool allowed
     scene->getAllowedCollisionMatrix().getMessage(msg);
     ROS_DEBUG_STREAM_NAMED(logger_name, "Current collision matrix: " << msg);
   }
+}
+
+void GraspFilter::publishPlanningScene(const planning_scene::PlanningScenePtr& ps) const
+{
+  moveit_msgs::PlanningScene msg;
+  ps->getPlanningSceneMsg(msg);
+  planning_scene_publisher_.publish(msg);
 }
 
 }  // namespace

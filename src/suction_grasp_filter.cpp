@@ -191,7 +191,10 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
   }
 
   if (!filer_results)
+  {
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Candidate grasp invalid");
     return false;
+  }
 
   return true;
 }
