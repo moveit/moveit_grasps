@@ -294,7 +294,7 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
     if (!grasp_object_id.empty() && scene->knowsFrameTransform(grasp_object_id))
     {
       std::vector<std::string> ee_link_names = grasp_candidate->grasp_data_->ee_jmg_->getLinkModelNames();
-      for (auto& ee_link : ee_link_names)
+      for (const auto& ee_link : ee_link_names)
         scene->getAllowedCollisionMatrixNonConst().setEntry(grasp_object_id, ee_link, true);
     }
     // Collision check
@@ -346,7 +346,7 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
         auto start_state_with_body = std::make_shared<robot_state::RobotState>(scene->getCurrentState());
         std::vector<const robot_state::AttachedBody*> attached_bodies;
         start_state_with_body->getAttachedBodies(attached_bodies);
-        for (auto& ab : attached_bodies)
+        for (const auto& ab : attached_bodies)
           start_state_copy->attachBody(ab->getName(), ab->getShapes(), ab->getFixedTransforms(), ab->getTouchLinks(),
                                        ab->getAttachedLinkName(), ab->getDetachPosture(), ab->getSubframeTransforms());
         constraint_fn = boost::bind(&isGraspStateValid, scene.get(), collision_checking_verbose,
