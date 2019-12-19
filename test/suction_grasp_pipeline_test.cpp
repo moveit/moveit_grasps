@@ -193,20 +193,6 @@ public:
         std::make_shared<planning_pipeline::PlanningPipeline>(robot_model_, nh_, "planning_plugin", "request_adapter");
   }
 
-  void setACMFingerEntry(const std::string& object_name, bool allowed)
-  {
-    // Get links of end effector
-    const std::vector<std::string>& ee_links = grasp_data_->ee_jmg_->getLinkModelNames();
-
-    // Lock planning scene
-    planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);
-    for (std::size_t i = 0; i < ee_links.size(); ++i)
-    {
-      // Set collision checking between fingers and object
-      scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, ee_links[i], allowed);
-    }
-  }
-
   void visualizePick(const moveit_grasps::GraspCandidatePtr& grasp_candidate,
                      const moveit_msgs::MotionPlanResponse& pre_approach_plan)
   {
@@ -309,7 +295,7 @@ public:
 
   bool planFullGrasp(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
                      moveit_grasps::GraspCandidatePtr& selected_grasp_candidate,
-                     moveit_msgs::MotionPlanResponse& pre_approach_plan)
+                     moveit_msgs::MotionPlanResponse& pre_approach_plan, const std::string& object_name)
   {
     moveit::core::RobotStatePtr current_state;
     {
@@ -324,7 +310,7 @@ public:
       selected_grasp_candidate = grasp_candidates.front();
       selected_grasp_candidate->getPreGraspState(current_state);
       if (!grasp_planner_->planApproachLiftRetreat(selected_grasp_candidate, current_state, planning_scene_monitor_,
-                                                   false))
+                                                   false, object_name))
       {
         ROS_INFO_NAMED(LOGNAME, "failed to plan approach lift retreat");
         continue;
@@ -414,10 +400,10 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   // Plan free-space approach, cartesian approach, lift and retreat trajectories
   moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
   moveit_msgs::MotionPlanResponse pre_approach_plan;
-  setACMFingerEntry(object_name, true);
-  ASSERT_TRUE(planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan)) << "Failed to plan grasp "
-                                                                                               "motions";
-  setACMFingerEntry(object_name, false);
+
+  ASSERT_TRUE(planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan, object_name))
+      << "Failed to plan grasp motions";
+
   visualizePick(selected_grasp_candidate, pre_approach_plan);
 }
 

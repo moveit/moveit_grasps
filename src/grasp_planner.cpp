@@ -57,17 +57,18 @@ GraspPlanner::GraspPlanner(const moveit_visual_tools::MoveItVisualToolsPtr& visu
 
 bool GraspPlanner::planAllApproachLiftRetreat(
     std::vector<GraspCandidatePtr>& grasp_candidates, const robot_state::RobotStatePtr& robot_state,
-    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor)
+    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor, const std::string& grasp_object_id)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
   ls.reset(new planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor));
   return planAllApproachLiftRetreat(grasp_candidates, robot_state,
-                                    static_cast<const planning_scene::PlanningSceneConstPtr&>(*ls));
+                                    static_cast<const planning_scene::PlanningSceneConstPtr&>(*ls), grasp_object_id);
 }
 
 bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& grasp_candidates,
                                               const robot_state::RobotStatePtr& robot_state,
-                                              const planning_scene::PlanningSceneConstPtr& planning_scene)
+                                              const planning_scene::PlanningSceneConstPtr& planning_scene,
+                                              const std::string& grasp_object_id)
 {
   ROS_INFO_STREAM_NAMED("grasp_planner", "Planning all remaining grasps with approach lift retreat cartesian path");
 
@@ -90,7 +91,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
                                                  << count++ << ". " << grasp_candidates.size() << " remaining.");
     }
 
-    if (!planApproachLiftRetreat(*grasp_it, robot_state, planning_scene, verbose_cartesian_filtering))
+    if (!planApproachLiftRetreat(*grasp_it, robot_state, planning_scene, verbose_cartesian_filtering, grasp_object_id))
     {
       ROS_INFO_STREAM_NAMED("grasp_planner", "Grasp candidate was unable to find valid cartesian waypoint path");
 
@@ -132,19 +133,20 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
 
 bool GraspPlanner::planApproachLiftRetreat(
     GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
-    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor, bool verbose_cartesian_filtering)
+    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor, bool verbose_cartesian_filtering,
+    const std::string& grasp_object_id)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
   ls.reset(new planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor));
   return planApproachLiftRetreat(grasp_candidate, robot_state,
                                  static_cast<const planning_scene::PlanningSceneConstPtr&>(*ls),
-                                 verbose_cartesian_filtering);
+                                 verbose_cartesian_filtering, grasp_object_id);
 }
 
 bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
                                            const robot_state::RobotStatePtr& robot_state,
                                            const planning_scene::PlanningSceneConstPtr& planning_scene,
-                                           bool verbose_cartesian_filtering)
+                                           bool verbose_cartesian_filtering, const std::string& grasp_object_id)
 {
   EigenSTL::vector_Isometry3d waypoints;
   GraspGenerator::getGraspWaypoints(grasp_candidate, waypoints);
@@ -158,15 +160,6 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
     visual_tools_->publishAxisLabeled(waypoints[2], "lifted");
     visual_tools_->publishAxisLabeled(waypoints[3], "retreat");
     visual_tools_->trigger();
-
-    // Show the grasp state
-    // waitForNextStep("see open grasp state");
-    // grasp_candidate->getGraspStateOpen(visual_tools_->getSharedRobotState());
-    // visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::ORANGE);
-
-    // waitForNextStep("see closed grasp state");
-    // grasp_candidate->getGraspStateClosed(visual_tools_->getSharedRobotState());
-    // visual_tools_->publishRobotState(visual_tools_->getSharedRobotState(), rviz_visual_tools::GREEN);
 
     if (grasp_candidate->getPreGraspState(visual_tools_->getSharedRobotState()))
     {
@@ -190,11 +183,11 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
   moveit::core::RobotStatePtr start_state(new moveit::core::RobotState(*robot_state));
   if (!grasp_candidate->getPreGraspState(start_state))
   {
-    ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "Unable to set pregrasp");
+    ROS_WARN_STREAM_NAMED("grasp_planner.waypoints", "Unable to set pregrasp");
     return false;
   }
 
-  if (!computeCartesianWaypointPath(grasp_candidate, planning_scene, start_state, waypoints))
+  if (!computeCartesianWaypointPath(grasp_candidate, planning_scene, start_state, waypoints, grasp_object_id))
   {
     ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "Unable to plan approach lift retreat path");
 
@@ -288,17 +281,26 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
     }
     attempts++;
 
-    // Collision check
-    moveit::core::GroupStateValidityCallbackFn constraint_fn =
-        boost::bind(&isGraspStateValid, planning_scene.get(), collision_checking_verbose, only_check_self_collision,
-                    visual_tools_, _1, _2, _3);
-
     moveit::core::RobotStatePtr start_state_copy(new moveit::core::RobotState(*start_state));
     if (!grasp_candidate->getPreGraspState(start_state_copy))
     {
       ROS_ERROR_STREAM_NAMED("grasp_planner.waypoints", "Unable to set pregrasp");
       return false;
     }
+
+    // Create a clone where we modify the ACM to disable collision checking between the end effector and object
+    planning_scene::PlanningScenePtr scene = planning_scene::PlanningScene::clone(planning_scene);
+    // If the grasp_object_id is set then we disable collision checking in the planning scene clone
+    if (!grasp_object_id.empty() && scene->knowsFrameTransform(grasp_object_id))
+    {
+      std::vector<std::string> ee_link_names = grasp_candidate->grasp_data_->ee_jmg_->getLinkModelNames();
+      for (const auto& ee_link : ee_link_names)
+        scene->getAllowedCollisionMatrixNonConst().setEntry(grasp_object_id, ee_link, true);
+    }
+    // Collision check
+    moveit::core::GroupStateValidityCallbackFn constraint_fn =
+        boost::bind(&isGraspStateValid, scene.get(), collision_checking_verbose, only_check_self_collision,
+                    visual_tools_, _1, _2, _3);
 
     // Compute Cartesian Path
     grasp_candidate->segmented_cartesian_traj_.clear();
@@ -313,6 +315,43 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
     {
       ROS_ERROR_STREAM_NAMED("grasp_planner", "Unable to set pregrasp");
       return false;
+    }
+
+    // Attach CO to end effector
+    if (!grasp_object_id.empty() && scene->knowsFrameTransform(grasp_object_id))
+    {
+      // Create an AttachedCollisionObject
+      moveit_msgs::AttachedCollisionObject aco;
+
+      // Create a reference to the collision object for convenience
+      moveit_msgs::CollisionObject& suction_voxel_co = aco.object;
+
+      suction_voxel_co.id = grasp_object_id;
+      suction_voxel_co.header.frame_id = ik_tip_link->getName();
+
+      // Set the aco attached link name
+      aco.link_name = ik_tip_link->getName();
+
+      // move the robot in the ps to the end of the approach path.
+      scene->setCurrentState(*start_state_copy);
+
+      // Mark object to be added
+      suction_voxel_co.operation = moveit_msgs::CollisionObject::ADD;
+      if (!scene->processAttachedCollisionObjectMsg(aco))
+      {
+        ROS_WARN_STREAM_NAMED("grasp_planner", "Failed to attach: " << aco.object.id);
+      }
+      else
+      {
+        auto start_state_with_body = std::make_shared<robot_state::RobotState>(scene->getCurrentState());
+        std::vector<const robot_state::AttachedBody*> attached_bodies;
+        start_state_with_body->getAttachedBodies(attached_bodies);
+        for (const auto& ab : attached_bodies)
+          start_state_copy->attachBody(ab->getName(), ab->getShapes(), ab->getFixedTransforms(), ab->getTouchLinks(),
+                                       ab->getAttachedLinkName(), ab->getDetachPosture(), ab->getSubframeTransforms());
+        constraint_fn = boost::bind(&isGraspStateValid, scene.get(), collision_checking_verbose,
+                                    only_check_self_collision, visual_tools_, _1, _2, _3);
+      }
     }
 
     double valid_lift_retreat_percentage = robot_state::CartesianInterpolator::computeCartesianPath(

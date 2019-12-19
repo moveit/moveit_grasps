@@ -13,22 +13,22 @@
       <visual>
         <origin xyz="0.0 0.0 0.055" rpy="0.0 0.0 0.0" />
         <geometry>
-          <box size="0.25 0.13 0.1"/>
+          <box size="0.0625 0.0625 0.1"/>
         </geometry>
       </visual>
-      <collision>
-        <origin xyz="0.0 0.0 0.055" rpy="0.0 0.0 0.0" />
+      <visual>
+        <origin xyz="0.0 0.0 0.125" rpy="0.0 0.0 0.0" />
         <geometry>
-          <box size="0.25 0.13 0.1"/>
+          <box size="0.25 0.13 0.05"/>
         </geometry>
-      </collision>
+      </visual>
     </link>
 
     <link name="tool_center_point" />
     <joint name="tool_center_point_joint" type="fixed">
       <parent link="${ns}_hand"/>
       <child link = "tool_center_point" />
-      <origin xyz="0.0 0.0 0.105" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.0 0.0 0.15" rpy="0.0 0.0 0.0" />
     </joint>
 
   </xacro:macro>
