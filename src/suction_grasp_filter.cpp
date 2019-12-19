@@ -233,12 +233,16 @@ bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_
   // Mark object to be removed
   suction_voxel_co.operation = moveit_msgs::CollisionObject::REMOVE;
 
+  // Get EE_JMG link names for setting ACM enabled / disabled
+  std::vector<std::string> ee_links = grasp_data->ee_jmg_->getLinkModelNames();
+
   // Iterate through the suction voxels and remove any that exist in the PS.
   std::size_t num_voxels = grasp_data->suction_voxel_matrix_->getNumVoxels();
   for (std::size_t voxel_ix = 0; voxel_ix < num_voxels; ++voxel_ix)
   {
     // Set the aco name
     suction_voxel_co.id = suctionVoxelIxToCollisionObjectId(voxel_ix);
+    setACMFingerEntry(suction_voxel_co.id, false, ee_links, planning_scene);
 
     // Check if the ACO already exists
     moveit_msgs::AttachedCollisionObject aco;
@@ -314,6 +318,9 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
   for (std::size_t ix = 0; ix < suction_voxel_enabled.size(); ++ix)
     ROS_DEBUG_STREAM_NAMED(logger_name, "voxel_" << ix << ":\t" << suction_voxel_enabled[ix]);
 
+  // Get EE_JMG link names for setting ACM enabled / disabled
+  std::vector<std::string> ee_links = grasp_data->ee_jmg_->getLinkModelNames();
+
   for (std::size_t voxel_ix = 0; voxel_ix < num_voxels; ++voxel_ix)
   {
     std::shared_ptr<SuctionVoxel> suction_voxel;
@@ -322,6 +329,9 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
       ROS_ERROR_STREAM_NAMED(logger_name, "Invalid suction voxel id: " << voxel_ix);
       return false;
     }
+    // Assign collision object names for output
+    collision_object_names[voxel_ix] = suctionVoxelIxToCollisionObjectId(voxel_ix);
+    setACMFingerEntry(collision_object_names[voxel_ix], true, ee_links, planning_scene);
 
     // Create an AttachedCollisionObject
     moveit_msgs::AttachedCollisionObject suction_voxel_aco;
@@ -329,7 +339,8 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     // Create a reference to the collision object for convenience
     moveit_msgs::CollisionObject& suction_voxel_co = suction_voxel_aco.object;
 
-    suction_voxel_co.id = suctionVoxelIxToCollisionObjectId(voxel_ix);
+    suction_voxel_co.id = collision_object_names[voxel_ix];
+
     suction_voxel_co.header.frame_id = ik_link;
 
     suction_voxel_co.primitives.resize(1);
@@ -365,6 +376,7 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
             logger_name, "Failed to process processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
         return false;
       }
+
       // Check if the collision object was successfully attached
       if (!planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
       {
@@ -411,9 +423,6 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
         return false;
       }
     }
-
-    // Assign collision object names for output
-    collision_object_names[voxel_ix] = suction_voxel_co.id;
   }
 
   // Optional visualization for debugging

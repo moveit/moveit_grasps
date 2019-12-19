@@ -366,11 +366,12 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   // -----------------------------------
   // Generate random object to grasp
   geometry_msgs::Pose object_pose;
-  object_pose.position.x = 0.1875;
-  object_pose.position.y = 0.1875;
-  object_pose.position.z = 0.350;
-  double object_x_depth = 0.15;
-  double object_y_width = 0.15;
+  object_pose.position.x = 0.5;
+  object_pose.position.y = 0.5;
+  object_pose.position.z = 0.35;
+  object_pose.orientation.w = -1;
+  double object_x_depth = 0.05;
+  double object_y_width = 0.05;
   double object_z_height = 0.025;
   std::string object_name = "target_box";
 
@@ -392,6 +393,7 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
       std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
   Eigen::Isometry3d eef_mount_grasp_pose =
       visual_tools_->convertPose(object_pose) * grasp_data_->tcp_to_eef_mount_.inverse();
+
   if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
   {
     ROS_WARN_STREAM_NAMED(LOGNAME, "The ideal seed state is not reachable. Using start state as seed.");
@@ -399,15 +401,18 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
         new planning_scene_monitor::LockedPlanningSceneRW(planning_scene_monitor_));
     seed_state = std::make_shared<robot_state::RobotState>((*ls)->getCurrentStateNonConst());
   }
+  visual_tools_->publishRobotState(seed_state, rviz_visual_tools::GREEN);
 
   // --------------------------------------------
   // Filtering grasps
   // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
   bool filter_pregrasps = true;
-  grasp_filter_->setSuctionVoxelOverlapCutoff(0.5);
-  ASSERT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
+  grasp_filter_->setSuctionVoxelOverlapCutoff(0.125);
+  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
                                           filter_pregrasps, object_name))
       << "Filter grasps failed";
+  ROS_ERROR_STREAM_NAMED("test", "grasp_candidates size " << grasp_candidates.size());
+  grasp_filter_->printFilterStatistics(grasp_candidates);
   ASSERT_TRUE(grasp_filter_->removeInvalidAndFilter(grasp_candidates)) << "Grasp filtering removed all grasps";
   ROS_INFO_STREAM_NAMED(LOGNAME, "" << grasp_candidates.size() << " remain after filtering");
 
