@@ -155,7 +155,9 @@ TEST_F(GraspFilterTest, TestGraspFilter)
                             "issue";
 
     remaining_grasps = grasp_filter_->removeInvalidAndFilter(grasp_candidates);
-    EXPECT_NE(remaining_grasps, 0) << "No valid grasps remain after filtering with collision object and ACM settings";
+    std::size_t expected_remaining_grasps = 0;
+    EXPECT_NE(remaining_grasps, expected_remaining_grasps) << "No valid grasps remain after filtering with collision "
+                                                              "object and ACM settings";
 
     success = grasp_filter_->filterGrasps(grasp_candidates, visual_tools_->getPlanningSceneMonitor(), arm_jmg_,
                                           visual_tools_->getSharedRobotState(), filter_pregrasps);
@@ -163,7 +165,9 @@ TEST_F(GraspFilterTest, TestGraspFilter)
                             "issue";
 
     remaining_grasps = grasp_filter_->removeInvalidAndFilter(grasp_candidates);
-    EXPECT_EQ(remaining_grasps, 0) << "Valid grasps found after IK filtering despite collisions";
+    expected_remaining_grasps = 0;
+    EXPECT_EQ(remaining_grasps, expected_remaining_grasps) << "Valid grasps found after IK filtering despite "
+                                                              "collisions";
   }
 }
 

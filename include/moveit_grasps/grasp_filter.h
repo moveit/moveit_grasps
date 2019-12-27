@@ -108,16 +108,16 @@ typedef std::shared_ptr<DesiredGraspOrientation> DesiredGraspOrientationPtr;
 struct IkThreadStruct
 {
   IkThreadStruct(std::vector<GraspCandidatePtr>& grasp_candidates,  // the input
-                 planning_scene::PlanningScenePtr planning_scene, Eigen::Isometry3d& link_transform,
+                 const planning_scene::PlanningScenePtr& planning_scene, Eigen::Isometry3d& link_transform,
                  std::size_t grasp_id, kinematics::KinematicsBaseConstPtr kin_solver,
-                 robot_state::RobotStatePtr robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
+                 const robot_state::RobotStatePtr& robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
                  std::size_t thread_id, const std::string& grasp_target_object_id)
     : grasp_candidates_(grasp_candidates)
     , planning_scene_(planning_scene::PlanningScene::clone(planning_scene))
     , link_transform_(link_transform)
     , grasp_id(grasp_id)
     , kin_solver_(kin_solver)
-    , robot_state_(robot_state)
+    , robot_state_(std::make_shared<robot_state::RobotState>(*robot_state))
     , timeout_(timeout)
     , filter_pregrasp_(filter_pregrasp)
     , visual_debug_(visual_debug)
@@ -125,13 +125,13 @@ struct IkThreadStruct
     , grasp_target_object_id_(grasp_target_object_id)
   {
   }
+
   std::vector<GraspCandidatePtr>& grasp_candidates_;
   planning_scene::PlanningScenePtr planning_scene_;
   Eigen::Isometry3d link_transform_;
   std::size_t grasp_id;
   kinematics::KinematicsBaseConstPtr kin_solver_;
   robot_state::RobotStatePtr robot_state_;
-  const robot_model::JointModelGroup* arm_jmg_;
   double timeout_;
   bool filter_pregrasp_;
   bool visual_debug_;
@@ -142,8 +142,7 @@ struct IkThreadStruct
   std::string grasp_target_object_id_;
 
   // Used within processing function
-  geometry_msgs::PoseStamped ik_pose_;
-  moveit_msgs::MoveItErrorCodes error_code_;
+  geometry_msgs::PoseStamped ik_pose_;  // Set from grasp candidate
   std::vector<double> ik_seed_state_;
 };
 typedef std::shared_ptr<IkThreadStruct> IkThreadStructPtr;
@@ -335,6 +334,11 @@ protected:
    */
   bool visualizeCandidateGrasps(const std::vector<GraspCandidatePtr>& grasp_candidates);
 
+  /**
+   * \brief Show an entire planning scene
+   */
+  void publishPlanningScene(const planning_scene::PlanningScenePtr& ps) const;
+
 protected:
   // logging name
   const std::string name_;
@@ -350,6 +354,8 @@ protected:
 
   // Class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+  // for rviz visualization of the planning scene
+  ros::Publisher planning_scene_publisher_;
 
   // Number of degrees of freedom for the IK solver to find
   std::size_t num_variables_;
