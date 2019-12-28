@@ -143,6 +143,9 @@ private:
   // A shared node handle
   ros::NodeHandle nh_;
 
+  // Name for logging
+  std::string name_;
+
   // Class for publishing stuff to rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
