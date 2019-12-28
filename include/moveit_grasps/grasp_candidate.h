@@ -73,6 +73,46 @@ struct GraspFilterCode
     GRASP_INVALID,                    // An error occured while processing the grasp
     LAST                              // Used to track last value in the base class when inheriting
   };
+
+  static bool errorCodeToString(int code, std::string& code_string)
+  {
+    if (code == NOT_FILTERED)
+    {
+      code_string = "GraspFilterCode::NOT_FILTERED";
+      return true;
+    }
+    else if (code == GRASP_FILTERED_BY_IK)
+    {
+      code_string = "GraspFilterCode::GRASP_FILTERED_BY_IK";
+      return true;
+    }
+    else if (code == GRASP_FILTERED_BY_CUTTING_PLANE)
+    {
+      code_string = "GraspFilterCode::GRASP_FILTERED_BY_CUTTING_PLANE";
+      return true;
+    }
+    else if (code == GRASP_FILTERED_BY_ORIENTATION)
+    {
+      code_string = "GraspFilterCode::GRASP_FILTERED_BY_ORIENTATION";
+      return true;
+    }
+    else if (code == GRASP_FILTERED_BY_IK_CLOSED)
+    {
+      code_string = "GraspFilterCode::GRASP_FILTERED_BY_IK_CLOSED";
+      return true;
+    }
+    else if (code == PREGRASP_FILTERED_BY_IK)
+    {
+      code_string = "GraspFilterCode::PREGRASP_FILTERED_BY_IK";
+      return true;
+    }
+    else if (code == GRASP_INVALID)
+    {
+      code_string = "GraspFilterCode::GRASP_INVALID";
+      return true;
+    }
+    return false;
+  }
 };
 
 /**
