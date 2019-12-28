@@ -50,9 +50,7 @@ constexpr char ENABLED_PARENT_NAME[] = "grasp_planner";  // for namespacing logg
 constexpr char ENABLED_SETTINGS_NAMESPACE[] = "moveit_grasps/planner";
 
 GraspPlanner::GraspPlanner(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools)
-  : nh_("~")
-  , name_(ENABLED_PARENT_NAME)
-  , visual_tools_(visual_tools)
+  : nh_("~"), name_(ENABLED_PARENT_NAME), visual_tools_(visual_tools)
 {
   loadEnabledSettings();
 }
@@ -90,7 +88,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
     {
       ROS_INFO_STREAM_NAMED(name_, "");
       ROS_INFO_STREAM_NAMED(name_, "Attempting to plan cartesian grasp path #"
-                                                 << count++ << ". " << grasp_candidates.size() << " remaining.");
+                                       << count++ << ". " << grasp_candidates.size() << " remaining.");
     }
 
     if (!planApproachLiftRetreat(*grasp_it, robot_state, planning_scene, verbose_cartesian_filtering, grasp_object_id))
@@ -200,14 +198,13 @@ bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
 
   // Feedback
   ROS_DEBUG_STREAM_NAMED(logger_name, "Found valid and complete waypoint manipulation path for grasp "
-                                                    "candidate");
+                                      "candidate");
 
   // Show visuals
   if (show_cartesian_waypoints)
   {
     ROS_INFO_STREAM_NAMED(logger_name, "Visualize end effector position of cartesian path for "
-                                                         << grasp_candidate->segmented_cartesian_traj_.size()
-                                                         << " segments");
+                                           << grasp_candidate->segmented_cartesian_traj_.size() << " segments");
     visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[APPROACH],
                                            grasp_candidate->grasp_data_->parent_link_, rviz_visual_tools::YELLOW);
     visual_tools_->publishTrajectoryPoints(grasp_candidate->segmented_cartesian_traj_[LIFT],
@@ -272,7 +269,7 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
   if (!grasp_candidate->grasp_data_->arm_jmg_->canSetStateFromIK(ik_tip_link->getName()))
   {
     ROS_ERROR_STREAM_NAMED(logger_name, "No IK Solver loaded - make sure moveit_config/kinamatics.yaml "
-                                                      "is loaded in this namespace");
+                                        "is loaded in this namespace");
     return false;
   }
 
@@ -375,9 +372,9 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
         kinematics::KinematicsQueryOptions());
 
     ROS_DEBUG_STREAM_NAMED(logger_name, "valid_approach_percentage: " << valid_approach_percentage
-                                                                                    << " \tvalid_lift_retreat_"
-                                                                                       "percentage: "
-                                                                                    << valid_lift_retreat_percentage);
+                                                                      << " \tvalid_lift_retreat_"
+                                                                         "percentage: "
+                                                                      << valid_lift_retreat_percentage);
 
     // The retreat has to work for the most part but doesn't need to be perfect
     double min_allowed_valid_lift_retreat_percentage = 0.90;
@@ -391,8 +388,8 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
 
   if (!valid_path_found)
   {
-    ROS_DEBUG_STREAM_NAMED(logger_name, "UNABLE to find valid waypoint cartesian path after "
-                                                          << MAX_IK_ATTEMPTS << " attempts");
+    ROS_DEBUG_STREAM_NAMED(logger_name, "UNABLE to find valid waypoint cartesian path after " << MAX_IK_ATTEMPTS
+                                                                                              << " attempts");
     return false;
   }
 

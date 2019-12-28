@@ -866,7 +866,8 @@ void GraspFilter::setACMFingerEntry(const std::string& object_name, bool allowed
   {
     for (const auto& link_name : ee_link_names)
     {
-      ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : not allowed", object_name.c_str(), link_name.c_str());
+      ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : not allowed", object_name.c_str(),
+                      link_name.c_str());
       scene->getAllowedCollisionMatrixNonConst().removeEntry(object_name, link_name);
     }
   }
