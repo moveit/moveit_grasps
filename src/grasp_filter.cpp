@@ -854,11 +854,21 @@ void GraspFilter::setACMFingerEntry(const std::string& object_name, bool allowed
   ROS_DEBUG_STREAM_NAMED(logger_name, "" << object_name.c_str() << ", " << (allowed ? "true" : "false"));
 
   // Lock planning scene
-  for (std::size_t i = 0; i < ee_link_names.size(); ++i)
+  if (allowed)
   {
-    ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : %s", object_name.c_str(), ee_link_names[i].c_str(),
-                    allowed ? "allowed" : "not allowed");
-    scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, ee_link_names[i], allowed);
+    for (const auto& link_name : ee_link_names)
+    {
+      ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : allowed", object_name.c_str(), link_name.c_str());
+      scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, link_name, true);
+    }
+  }
+  else
+  {
+    for (const auto& link_name : ee_link_names)
+    {
+      ROS_DEBUG_NAMED(logger_name, "collisions between %s and %s : not allowed", object_name.c_str(), link_name.c_str());
+      scene->getAllowedCollisionMatrixNonConst().removeEntry(object_name, link_name);
+    }
   }
 
   // Debug current matrix
