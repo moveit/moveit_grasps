@@ -80,6 +80,12 @@ void waitForNextStep(const moveit_visual_tools::MoveItVisualToolsPtr& visual_too
   visual_tools->prompt(prompt);
 }
 
+void waitForNextStepNonBlocking(const std::string& prompt)
+{
+  ROS_INFO_NAMED("waitForNextStepNonBlocking", prompt);
+  ros::Duration(0.5).sleep();
+}
+
 }  // end annonymous namespace
 
 class GraspPipelineDemo
@@ -183,7 +189,8 @@ public:
     grasp_planner_ = std::make_shared<moveit_grasps::GraspPlanner>(visual_tools_);
 
     // MoveIt Grasps allows for a manual breakpoint debugging tool to be optionally passed in
-    grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStep, visual_tools_, _1));
+    // grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStep, visual_tools_, _1));
+    grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStepNonBlocking, _1));
 
     // -----------------------------------------------------
     // Load the motion planning pipeline
@@ -275,24 +282,24 @@ public:
     visual_tools_->trigger();
 
     // Get the pre and post grasp states
-    visual_tools_->prompt("pre_grasp");
+    waitForNextStep("pre_grasp");
     robot_state::RobotStatePtr pre_grasp_state =
         std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
     valid_grasp_candidate->getPreGraspState(pre_grasp_state);
     visual_tools_->publishRobotState(pre_grasp_state, rviz_visual_tools::ORANGE);
-    visual_tools_->prompt("grasp");
+    waitForNextStep("grasp");
     robot_state::RobotStatePtr grasp_state =
         std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
     valid_grasp_candidate->getGraspStateClosed(grasp_state);
     visual_tools_->publishRobotState(grasp_state, rviz_visual_tools::YELLOW);
-    visual_tools_->prompt("lift");
+    waitForNextStep("lift");
     visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[1].back(),
                                      rviz_visual_tools::BLUE);
-    visual_tools_->prompt("retreat");
+    waitForNextStep("retreat");
     visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[2].back(),
                                      rviz_visual_tools::PURPLE);
 
-    visual_tools_->prompt("show free space approach");
+    waitForNextStep("show free space approach");
     visual_tools_->hideRobot();
     visual_tools_->trigger();
 
@@ -510,7 +517,8 @@ int main(int argc, char* argv[])
 
   // Run Tests
   moveit_grasps_demo::GraspPipelineDemo tester;
-  tester.demoRandomGrasp();
+  for (std::size_t ix=0; ix<10; ++ix)
+    tester.demoRandomGrasp();
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toSec();
