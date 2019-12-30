@@ -160,13 +160,6 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
                       ik_thread_struct->planning_scene_);
   }
 
-  if (!removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_))
-  {
-    ROS_ERROR_STREAM_NAMED(logger_name, "Failed to detach all active suction cups");
-    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
-    return false;
-  }
-
   if (!filer_results)
   {
     ROS_DEBUG_STREAM_NAMED(logger_name, "Candidate grasp invalid");
