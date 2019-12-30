@@ -48,6 +48,7 @@
 // Grasping
 #include <moveit_grasps/grasp_generator.h>
 #include <moveit_grasps/grasp_candidate.h>
+#include <moveit_grasps/state_validity_callback.h>
 
 // Rviz
 #include <moveit_visual_tools/moveit_visual_tools.h>
@@ -111,7 +112,8 @@ struct IkThreadStruct
                  const planning_scene::PlanningScenePtr& planning_scene, Eigen::Isometry3d& link_transform,
                  std::size_t grasp_id, kinematics::KinematicsBaseConstPtr kin_solver,
                  const robot_state::RobotStatePtr& robot_state, double timeout, bool filter_pregrasp, bool visual_debug,
-                 std::size_t thread_id, const std::string& grasp_target_object_id)
+                 std::size_t thread_id, const std::string& grasp_target_object_id,
+                 const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, double animation_speed)
     : grasp_candidates_(grasp_candidates)
     , planning_scene_(planning_scene::PlanningScene::clone(planning_scene))
     , link_transform_(link_transform)
@@ -123,6 +125,9 @@ struct IkThreadStruct
     , visual_debug_(visual_debug)
     , thread_id_(thread_id)
     , grasp_target_object_id_(grasp_target_object_id)
+    , constraint_fn_(boost::bind(
+        &isGraspStateValid, planning_scene_.get(),
+        visual_debug, animation_speed, visual_tools, _1, _2, _3))
   {
   }
 
@@ -144,6 +149,9 @@ struct IkThreadStruct
   // Used within processing function
   geometry_msgs::PoseStamped ik_pose_;  // Set from grasp candidate
   std::vector<double> ik_seed_state_;
+
+  // Used for IK animation
+  const moveit::core::GroupStateValidityCallbackFn constraint_fn_;
 };
 typedef std::shared_ptr<IkThreadStruct> IkThreadStructPtr;
 
@@ -280,8 +288,7 @@ protected:
    * \return true on success
    */
   bool findIKSolution(std::vector<double>& ik_solution, const IkThreadStructPtr& ik_thread_struct,
-                      const GraspCandidatePtr& grasp_candidate,
-                      const moveit::core::GroupStateValidityCallbackFn& constraint_fn) const;
+                      const GraspCandidatePtr& grasp_candidate) const;
 
   /**
    * \brief add a cutting plane
