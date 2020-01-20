@@ -641,7 +641,7 @@ bool GraspFilter::removeInvalidAndFilter(std::vector<GraspCandidatePtr>& grasp_c
   // Error Check
   if (grasp_candidates.empty())
   {
-    ROS_ERROR_STREAM_NAMED(name_, "No remaining grasp candidates");
+    ROS_WARN_STREAM_NAMED(name_, "No remaining grasp candidates");
     return false;
   }
 
