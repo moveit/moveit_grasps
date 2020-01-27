@@ -51,6 +51,19 @@ struct SuctionGraspFilterCode : public GraspFilterCode
   {
     GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP = LAST + 1,  // No suction voxel is in sufficient contact with the target
   };
+
+  static bool errorCodeToString(int code, std::string& code_string)
+  {
+    if (code == GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP)
+    {
+      code_string = "SuctionGraspFilterCode::GRASP_FILTERED_BY_SUCTION_VOXEL_OVERLAP";
+      return true;
+    }
+    else
+    {
+      return GraspFilterCode::errorCodeToString(code, code_string);
+    }
+  }
 };
 
 /**

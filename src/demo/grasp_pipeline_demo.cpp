@@ -63,6 +63,9 @@ namespace moveit_grasps_demo
 {
 static const std::string LOGNAME = "grasp_pipeline_demo";
 
+// Allow an interrupt to be called that waits for user input, useful for debugging
+typedef boost::function<void(std::string message)> WaitForNextStepCallback;
+
 namespace
 {
 bool isStateValid(const planning_scene::PlanningScene* planning_scene,
@@ -74,9 +77,15 @@ bool isStateValid(const planning_scene::PlanningScene* planning_scene,
   return !planning_scene->isStateColliding(*robot_state, group->getName());
 }
 
-void waitForNextStep(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, const std::string& prompt)
+void waitForNextStepBlocking(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, const std::string& prompt)
 {
   visual_tools->prompt(prompt);
+}
+
+void waitForNextStepNonBlocking(const std::string& prompt)
+{
+  ROS_INFO_STREAM("waitForNextStepNonBlocking:" << prompt);
+  ros::Duration(0.5).sleep();
 }
 
 }  // end annonymous namespace
@@ -142,6 +151,10 @@ public:
   void setupGraspPipeline()
   {
     // ---------------------------------------------------------------------------------------------
+    // Set waitForNextStep callback to be non-blocking
+    setWaitForNextStepCallback(boost::bind(&waitForNextStepNonBlocking, _1));
+
+    // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
     grasp_data_ =
         std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
@@ -183,7 +196,7 @@ public:
     grasp_planner_ = std::make_shared<moveit_grasps::GraspPlanner>(visual_tools_);
 
     // MoveIt Grasps allows for a manual breakpoint debugging tool to be optionally passed in
-    grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStep, visual_tools_, _1));
+    // grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStepBlocking, visual_tools_, _1));
 
     // -----------------------------------------------------
     // Load the motion planning pipeline
@@ -466,6 +479,17 @@ public:
     return success;
   }
 
+  void waitForNextStep(const std::string& message)
+  {
+    if (wait_for_next_step_callback_)
+      wait_for_next_step_callback_(message);
+  }
+
+  void setWaitForNextStepCallback(WaitForNextStepCallback callback)
+  {
+    wait_for_next_step_callback_ = callback;
+  }
+
 private:
   // A shared node handle
   ros::NodeHandle nh_;
@@ -501,6 +525,7 @@ private:
   std::string ee_group_name_;
   std::string planning_group_name_;
 
+  WaitForNextStepCallback wait_for_next_step_callback_;
 };  // end of class
 
 }  // namespace

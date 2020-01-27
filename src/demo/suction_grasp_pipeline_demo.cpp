@@ -64,6 +64,9 @@ namespace moveit_grasps_demo
 {
 static const std::string LOGNAME = "grasp_pipeline_demo";
 
+// Allow an interrupt to be called that waits for user input, useful for debugging
+typedef boost::function<void(std::string message)> WaitForNextStepCallback;
+
 namespace
 {
 bool isStateValid(const planning_scene::PlanningScene* planning_scene,
@@ -75,9 +78,15 @@ bool isStateValid(const planning_scene::PlanningScene* planning_scene,
   return !planning_scene->isStateColliding(*robot_state, group->getName());
 }
 
-void waitForNextStep(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, const std::string& prompt)
+void waitForNextStepBlocking(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, const std::string& prompt)
 {
   visual_tools->prompt(prompt);
+}
+
+void waitForNextStepNonBlocking(const std::string& prompt)
+{
+  ROS_INFO_STREAM("waitForNextStepNonBlocking:" << prompt);
+  ros::Duration(0.5).sleep();
 }
 
 }  // end annonymous namespace
@@ -143,6 +152,10 @@ public:
   void setupGraspPipeline()
   {
     // ---------------------------------------------------------------------------------------------
+    // Set waitForNextStep callback to be non-blocking
+    setWaitForNextStepCallback(boost::bind(&waitForNextStepNonBlocking, _1));
+
+    // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
     grasp_data_ =
         std::make_shared<moveit_grasps::SuctionGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
@@ -173,6 +186,7 @@ public:
     // Assign the grasp score weights in the grasp_generator
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
+
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
     grasp_filter_ =
@@ -183,7 +197,7 @@ public:
     grasp_planner_ = std::make_shared<moveit_grasps::GraspPlanner>(visual_tools_);
 
     // MoveIt Grasps allows for a manual breakpoint debugging tool to be optionally passed in
-    grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStep, visual_tools_, _1));
+    // grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStepBlocking, visual_tools_, _1));
 
     // -----------------------------------------------------
     // Load the motion planning pipeline
@@ -250,6 +264,7 @@ public:
     moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
     moveit_msgs::MotionPlanResponse pre_approach_plan;
 
+    // return false;
     if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan, object_name))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to plan grasp motions");
@@ -275,38 +290,40 @@ public:
     visual_tools_->trigger();
 
     // Get the pre and post grasp states
-    visual_tools_->prompt("pre_grasp");
+    waitForNextStep("pre_grasp");
     robot_state::RobotStatePtr pre_grasp_state =
         std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
     valid_grasp_candidate->getPreGraspState(pre_grasp_state);
     visual_tools_->publishRobotState(pre_grasp_state, rviz_visual_tools::ORANGE);
-    visual_tools_->prompt("grasp");
+
+    waitForNextStep("grasp");
     robot_state::RobotStatePtr grasp_state =
         std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
     valid_grasp_candidate->getGraspStateClosed(grasp_state);
     visual_tools_->publishRobotState(grasp_state, rviz_visual_tools::YELLOW);
-    visual_tools_->prompt("lift");
-    visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[1].back(),
-                                     rviz_visual_tools::BLUE);
-    visual_tools_->prompt("retreat");
-    visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[2].back(),
-                                     rviz_visual_tools::PURPLE);
 
-    visual_tools_->prompt("show free space approach");
-    visual_tools_->hideRobot();
-    visual_tools_->trigger();
+    // waitForNextStep("lift");
+    // visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[1].back(),
+    //                                  rviz_visual_tools::BLUE);
+    // waitForNextStep("retreat");
+    // visual_tools_->publishRobotState(valid_grasp_candidate->segmented_cartesian_traj_[2].back(),
+    //                                  rviz_visual_tools::PURPLE);
 
-    bool wait_for_animation = true;
-    visual_tools_->publishTrajectoryPath(pre_approach_plan.trajectory, pre_grasp_state, wait_for_animation);
-    ros::Duration(0.25).sleep();
-    visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH],
-                                         valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    ros::Duration(0.25).sleep();
-    visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::LIFT],
-                                         valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::RETREAT],
-                                         valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    ros::Duration(0.25).sleep();
+    // waitForNextStep("show free space approach");
+    // visual_tools_->hideRobot();
+    // visual_tools_->trigger();
+
+    // bool wait_for_animation = true;
+    // visual_tools_->publishTrajectoryPath(pre_approach_plan.trajectory, pre_grasp_state, wait_for_animation);
+    // ros::Duration(0.25).sleep();
+    // visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH],
+    //                                      valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    // ros::Duration(0.25).sleep();
+    // visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::LIFT],
+    //                                      valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    // visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::RETREAT],
+    //                                      valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
+    // ros::Duration(0.25).sleep();
   }
 
   bool planFullGrasp(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
@@ -325,20 +342,20 @@ public:
     {
       valid_grasp_candidate = grasp_candidates.front();
       valid_grasp_candidate->getPreGraspState(current_state);
-      if (!grasp_planner_->planApproachLiftRetreat(valid_grasp_candidate, current_state, planning_scene_monitor_, false,
-                                                   object_name))
-      {
-        ROS_INFO_NAMED(LOGNAME, "failed to plan approach lift retreat");
-        continue;
-      }
+      // if (!grasp_planner_->planApproachLiftRetreat(valid_grasp_candidate, current_state, planning_scene_monitor_, false,
+      //                                              object_name))
+      // {
+      //   ROS_INFO_NAMED(LOGNAME, "failed to plan approach lift retreat");
+      //   continue;
+      // }
+      // robot_state::RobotStatePtr pre_grasp_state =
+      //     valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH].front();
 
-      robot_state::RobotStatePtr pre_grasp_state =
-          valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH].front();
-      if (!planPreApproach(*pre_grasp_state, pre_approach_plan))
-      {
-        ROS_WARN_NAMED(LOGNAME, "failed to plan to pregrasp_state");
-        continue;
-      }
+      // if (!planPreApproach(*pre_grasp_state, pre_approach_plan))
+      // {
+      //   ROS_WARN_NAMED(LOGNAME, "failed to plan to pregrasp_state");
+      //   continue;
+      // }
 
       success = true;
       break;
@@ -413,20 +430,19 @@ public:
                             double& y_width, double& z_height)
   {
     // Generate random cuboid
-    double xmin = 0.125;
-    double xmax = 0.250;
-    double ymin = 0.125;
-    double ymax = 0.250;
-    double zmin = 0.200;
-    double zmax = 0.500;
-
+    double xmin = 0.35;
+    double xmax = 0.35;
+    double ymin = 0.35;
+    double ymax = 0.35;
+    double zmin = 0.35;
+    double zmax = 0.35;
     double rot_tol = 0.05;
     double elevation_min = rot_tol;
     double elevation_max = rot_tol;
     double azimuth_min = rot_tol;
     double azimuth_max = rot_tol;
-    double angle_min = rot_tol;
-    double angle_max = rot_tol;
+    double angle_min = 0;
+    double angle_max = 2 * M_PI;
 
     rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax, elevation_min, elevation_max,
                                                     azimuth_min, azimuth_max, angle_min, angle_max);
@@ -450,6 +466,17 @@ public:
       success = rate.cycleTime().toSec() < timeout;
     }
     return success;
+  }
+
+  void waitForNextStep(const std::string& message)
+  {
+    if (wait_for_next_step_callback_)
+      wait_for_next_step_callback_(message);
+  }
+
+  void setWaitForNextStepCallback(WaitForNextStepCallback callback)
+  {
+    wait_for_next_step_callback_ = callback;
   }
 
 private:
@@ -487,13 +514,15 @@ private:
   std::string ee_group_name_;
   std::string planning_group_name_;
 
+  // Set a callback for pausing demo
+  WaitForNextStepCallback wait_for_next_step_callback_;
+
 };  // end of class
 
 }  // namespace
 
 int main(int argc, char* argv[])
 {
-  int num_tests = 1;
 
   ros::init(argc, argv, "grasp_filter_demo");
 
@@ -509,8 +538,10 @@ int main(int argc, char* argv[])
   start_time = ros::Time::now();
 
   // Run Tests
+  int num_tests = 1;
   moveit_grasps_demo::GraspPipelineDemo tester;
-  tester.demoRandomGrasp();
+  for (std::size_t ix=0; ix<num_tests; ++ix)
+    tester.demoRandomGrasp();
 
   // Benchmark time
   double duration = (ros::Time::now() - start_time).toSec();
