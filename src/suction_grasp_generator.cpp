@@ -42,20 +42,6 @@
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-namespace
-{
-void debugFailedOpenGripper(double percent_open, double min_finger_open_on_approach, double object_width,
-                            double grasp_padding_on_approach)
-{
-  ROS_ERROR_STREAM_NAMED("grasp_generator", "Unable to set grasp width to "
-                                                << percent_open << " % open. Stats:"
-                                                << "\n min_finger_open_on_approach: \t " << min_finger_open_on_approach
-                                                << "\n object_width: \t " << object_width
-                                                << "\n grasp_padding_on_approach_: \t " << grasp_padding_on_approach);
-}
-
-}  // namespace
-
 namespace moveit_grasps
 {
 // Constructor
@@ -79,7 +65,7 @@ SuctionGraspGenerator::SuctionGraspGenerator(const moveit_visual_tools::MoveItVi
 
 bool SuctionGraspGenerator::addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount,
                                      const SuctionGraspDataPtr& grasp_data, const Eigen::Isometry3d& object_pose,
-                                     const Eigen::Vector3d& object_size, double object_width,
+                                     const Eigen::Vector3d& object_size,
                                      std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   // Transform the grasp pose eef mount to the tcp grasp pose
@@ -413,7 +399,7 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   for (std::size_t i = 0; i < num_grasps; ++i)
   {
     Eigen::Isometry3d grasp_pose_eef_mount = grasp_poses_tcp[i] * grasp_data->tcp_to_eef_mount_;
-    addGrasp(grasp_pose_eef_mount, grasp_data, cuboid_top_pose, object_size, 0, grasp_candidates);
+    addGrasp(grasp_pose_eef_mount, grasp_data, cuboid_top_pose, object_size, grasp_candidates);
     if (debug_top_grasps_)
     {
       visual_tools_->publishAxis(grasp_poses_tcp[i], rviz_visual_tools::MEDIUM, "tcp pose");

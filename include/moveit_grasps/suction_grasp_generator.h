@@ -82,13 +82,20 @@ public:
    * \param grasp_data data describing the end effector
    * \param object_pose - pose of object to grasp
    * \param object_size - size of object to grasp
-   * \param object_width - In the case of finger grippers, the width of the object in the dimension betwen the fingers
    * \param grasp_candidates - output, list possible grasps with new grasp appended
    * \return true on success
    */
   bool addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const SuctionGraspDataPtr& grasp_data,
-                const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size, double object_width,
+                const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size,
                 std::vector<GraspCandidatePtr>& grasp_candidates);
+
+  [[deprecated("Object_width no longer needs to be specified for suction grasps")]] bool
+  addGrasp(const Eigen::Isometry3d& grasp_pose_eef_mount, const SuctionGraspDataPtr& grasp_data,
+           const Eigen::Isometry3d& object_pose, const Eigen::Vector3d& object_size, double object_width,
+           std::vector<GraspCandidatePtr>& grasp_candidates)
+  {
+    return addGrasp(grasp_pose_eef_mount, grasp_data, object_pose, object_size, grasp_candidates);
+  }
 
   /**
    * \brief Setter for grasp score weights
