@@ -174,7 +174,7 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
                       ik_thread_struct->planning_scene_);
   }
 
-  bool filer_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
+  bool filter_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
 
   // Cleanup ACM changes
   if (!ik_thread_struct->grasp_target_object_id_.empty() && !collision_object_names.empty())
@@ -190,7 +190,7 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
     return false;
   }
 
-  if (!filer_results)
+  if (!filter_results)
   {
     ROS_DEBUG_STREAM_NAMED(logger_name, "Candidate grasp invalid");
     return false;

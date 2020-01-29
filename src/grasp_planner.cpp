@@ -405,9 +405,9 @@ void GraspPlanner::setWaitForNextStepCallback(WaitForNextStepCallback callback)
 bool GraspPlanner::loadEnabledSettings()
 {
   // Check if the map has been loaded yet
-  if (!enabled_setttings_loaded_)
+  if (!enabled_settings_loaded_)
   {
-    enabled_setttings_loaded_ = true;
+    enabled_settings_loaded_ = true;
     return rosparam_shortcuts::get(ENABLED_PARENT_NAME, nh_, ENABLED_SETTINGS_NAMESPACE, enabled_setting_);
   }
   return true;
@@ -416,7 +416,7 @@ bool GraspPlanner::loadEnabledSettings()
 bool GraspPlanner::isEnabled(const std::string& setting_name)
 {
   // Check if the map has been loaded yet. it is preferred if this is called manually
-  if (!enabled_setttings_loaded_)
+  if (!enabled_settings_loaded_)
     ROS_ERROR_STREAM_NAMED("rosparam_shortcuts", "Enabled settings are not yet loaded e.g. call loadEnabledSettings()");
 
   std::map<std::string, bool>::iterator it = enabled_setting_.find(setting_name);
