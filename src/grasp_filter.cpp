@@ -230,7 +230,8 @@ bool GraspFilter::filterGraspByOrientation(GraspCandidatePtr& grasp_candidate, c
   // compute the angle between the z-axes of the desired and grasp poses
   grasp_z_axis = tcp_grasp_pose.rotation() * Eigen::Vector3d(0, 0, 1);
   desired_z_axis = desired_pose.rotation() * Eigen::Vector3d(0, 0, 1);
-  angle = acos(grasp_z_axis.normalized().dot(desired_z_axis.normalized()));
+  double cos_angle = grasp_z_axis.normalized().dot(desired_z_axis.normalized());
+  angle = acos(std::max(-1.0, std::min(1.0, cos_angle)));
 
   if (angle > max_angular_offset)
   {
