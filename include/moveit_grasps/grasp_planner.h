@@ -149,7 +149,7 @@ private:
   WaitForNextStepCallback wait_for_next_step_callback_;
 
   // Visualization settings
-  bool enabled_setttings_loaded_ = false;
+  bool enabled_settings_loaded_ = false;
   std::map<std::string, bool> enabled_setting_;
 
 };  // end class

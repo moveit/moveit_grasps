@@ -61,7 +61,7 @@ double SuctionGraspScoreWeights::computeScore(const Eigen::Vector3d& orientation
   {
     static const std::string logger_name = "grasp_scorer.compute_score";
     // clang-format off
-    ROS_DEBUG_STREAM_NAMED(logger_name, "Two Finger Grasp score: ");
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Suction Grasp score: ");
     ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.x = " << orientation_scores[0] << "\tweight = "<< orientation_x_score_weight_);
     ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.y = " << orientation_scores[1] << "\tweight = "<< orientation_y_score_weight_);
     ROS_DEBUG_STREAM_NAMED(logger_name, "\torientation_score.z = " << orientation_scores[2] << "\tweight = "<< orientation_z_score_weight_);

@@ -81,26 +81,30 @@ Eigen::Vector3d GraspScorer::scoreRotationsFromDesired(const Eigen::Isometry3d& 
   Eigen::Vector3d grasp_pose_axis;
   Eigen::Vector3d ideal_pose_axis;
   Eigen::Vector3d scores;
+  double cos_angle;
   double angle;
 
   // get angle between x-axes
   grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitX();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitX();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  cos_angle = grasp_pose_axis.dot(ideal_pose_axis);
+  angle = acos(std::max(-1.0, std::min(1.0, cos_angle)));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "x angle = " << angle * 180.0 / M_PI);
   scores[0] = (M_PI - angle) / M_PI;
 
   // get angle between y-axes
   grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitY();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitY();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  cos_angle = grasp_pose_axis.dot(ideal_pose_axis);
+  angle = acos(std::max(-1.0, std::min(1.0, cos_angle)));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "y angle = " << angle * 180.0 / M_PI);
   scores[1] = (M_PI - angle) / M_PI;
 
   // get angle between z-axes
   grasp_pose_axis = grasp_pose_tcp.rotation() * Eigen::Vector3d::UnitZ();
   ideal_pose_axis = ideal_pose.rotation() * Eigen::Vector3d::UnitZ();
-  angle = acos(grasp_pose_axis.dot(ideal_pose_axis));
+  cos_angle = grasp_pose_axis.dot(ideal_pose_axis);
+  angle = acos(std::max(-1.0, std::min(1.0, cos_angle)));
   ROS_DEBUG_STREAM_NAMED("grasp_scorer.angle", "z angle = " << angle * 180.0 / M_PI);
   scores[2] = (M_PI - angle) / M_PI;
 
