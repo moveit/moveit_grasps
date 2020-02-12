@@ -60,7 +60,7 @@ SuctionGraspFilter::SuctionGraspFilter(const robot_state::RobotStatePtr& robot_s
 {
 }
 
-bool SuctionGraspFilter::filterGraspsBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates)
+bool SuctionGraspFilter::filterGraspsBySuctionVoxelOverlap(std::vector<GraspCandidatePtr>& grasp_candidates)
 {
   static const std::string logger_name = name_ + ".filter_grasps_by_suction_voxel_overlap";
 
@@ -103,7 +103,7 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
                                                    const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
                                                    bool visualize, const std::string& target_object_id)
 {
-  filterGraspsBySuctionVoxelOverlapCutoff(grasp_candidates);
+  filterGraspsBySuctionVoxelOverlap(grasp_candidates);
   return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp,
                                          visualize, target_object_id);
 }
