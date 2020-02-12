@@ -191,6 +191,14 @@ if(CATKIN_ENABLE_TESTING)
     ${Boost_LIBRARIES}
   )
 
+  add_rostest_gtest(suction_grasp_unit_tests test/suction_grasp_unit_tests.test test/suction_grasp_unit_tests.cpp)
+  target_link_libraries(suction_grasp_unit_tests
+    ${PROJECT_NAME}
+    ${PROJECT_NAME}_filter
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+
   ## Test for correct C++ source code
   roslint_cpp()
 endif()
