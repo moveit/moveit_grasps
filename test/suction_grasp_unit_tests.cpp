@@ -351,7 +351,7 @@ TEST_F(SuctionGraspUnitTests, TestFilterSuctionIKHighOverlap)
 
 // Ensure that we do not filter all grasps when trying to pick up an object larger than a suction voxel and surrounded
 // on all sides
-TEST_F(SuctionGraspUnitTests, DISABLED_TestFilterSuctionIKLowOverlap)
+TEST_F(SuctionGraspUnitTests, TestFilterSuctionIKLowOverlap)
 {
   // This test is identical to TestFilterSuctionIKHighOverlap except with a lower overlap cutoff
   // -----------------------------------

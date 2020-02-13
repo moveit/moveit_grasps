@@ -109,15 +109,15 @@ protected:
                              const planning_scene::PlanningScenePtr& planning_scene);
 
   /**
-   * \brief  Add a collision object in the location of every active suction voxel. This is used for collision
+   * \brief  Add a collision object in the location of active suction voxel. This is used for collision
    *         checking between the suction cups and other objects in the scene that you do not want to pick up
    * \param grasp_data - A pointer to a SuctionGraspData with a populated SuctionVoxelMatrix
    * \param planning_scene - A pointer to a planning scene where we will attach the collision objects
    * \param collision_object_names - Output, the collision object names added to the planning scene
    */
-  bool attachActiveSuctionCupCO(const SuctionGraspDataPtr& grasp_data, const std::vector<bool>& suction_voxel_enabled,
-                                const planning_scene::PlanningScenePtr& planning_scene,
-                                std::vector<std::string>& collision_object_names);
+  bool attachAllSuctionCupCO(const SuctionGraspDataPtr& grasp_data,
+                             const planning_scene::PlanningScenePtr& planning_scene,
+                             std::vector<std::string>& collision_object_names);
 
   /* \brief a method for transforming from voxel index to voxel collision object ID used by attachActiveSuctionCupCO and
    * removeAllSuctionCupCO */

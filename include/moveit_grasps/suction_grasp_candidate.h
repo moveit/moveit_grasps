@@ -65,15 +65,22 @@ public:
 
   void setSuctionVoxelOverlap(std::vector<double> suction_voxel_overlap);
 
+  void setSuctionVoxelInCollision(std::vector<bool> voxel_in_collision);
+
   std::vector<double> getSuctionVoxelOverlap();
 
   std::vector<bool> getSuctionVoxelEnabled(double cutoff);
+
+  std::vector<bool> getSuctionVoxelInCollision();
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 protected:
   // A vector of fractions maped to suction gripper voxels. [0,1] representing the fraction of the
   // suction voxel that overlaps the object
   std::vector<double> suction_voxel_overlap_;
+  // Whether the voxel is colliding with any objects other than the target.
+  // If it is, then using the voxel risks attaching to other unintended objects
+  std::vector<bool> voxel_in_collision_;
 
 };  // class
 

@@ -60,6 +60,7 @@
 // Parameter loading
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
+#include <tf2_eigen/tf2_eigen.h>
 namespace moveit_grasps_demo
 {
 static const std::string LOGNAME = "grasp_pipeline_demo";
@@ -114,11 +115,10 @@ public:
                                                           "grasping_planning_scene");
     planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
 
-    robot_model_loader::RobotModelLoaderPtr robot_model_loader;
-    robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>("robot_description");
+    robot_model_loader_ = std::make_shared<robot_model_loader::RobotModelLoader>("robot_description");
 
     // Load the robot model
-    robot_model_ = robot_model_loader->getModel();
+    robot_model_ = robot_model_loader_->getModel();
     arm_jmg_ = robot_model_->getJointModelGroup(planning_group_name_);
 
     // ---------------------------------------------------------------------------------------------
@@ -413,9 +413,9 @@ public:
                             double& y_width, double& z_height)
   {
     // Generate random cuboid
-    double xmin = 0.125;
+    double xmin = 0.225;
     double xmax = 0.250;
-    double ymin = 0.125;
+    double ymin = 0.225;
     double ymax = 0.250;
     double zmin = 0.200;
     double zmax = 0.500;
@@ -437,14 +437,22 @@ public:
 
     object_name = "pick_target";
     visual_tools_->generateRandomCuboid(object_pose, x_depth, y_width, z_height, pose_bounds, cuboid_bounds);
-    visual_tools_->publishCollisionCuboid(object_pose, x_depth, y_width, z_height, object_name, rviz_visual_tools::RED);
+    visual_tools_->publishCollisionCuboid(object_pose, x_depth, y_width, z_height, object_name, rviz_visual_tools::BLUE);
     visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
+    visual_tools_->trigger();
+
+    Eigen::Isometry3d pose_eigen;
+    Eigen::fromMsg(object_pose, pose_eigen);
+    visual_tools_->publishCollisionCuboid(pose_eigen * Eigen::Translation3d(x_depth, 0.0, 0.0), x_depth, y_width, z_height, "box_plus_x", rviz_visual_tools::RED);
+    visual_tools_->publishCollisionCuboid(pose_eigen * Eigen::Translation3d(-x_depth, 0.0, 0.0), x_depth, y_width, z_height, "box_minus_x", rviz_visual_tools::RED);
+    visual_tools_->publishCollisionCuboid(pose_eigen * Eigen::Translation3d(0.0, y_width, 0.0), x_depth, y_width, z_height, "box_plus_y", rviz_visual_tools::RED);
+    visual_tools_->publishCollisionCuboid(pose_eigen * Eigen::Translation3d(0.0, -y_width, 0.0), x_depth, y_width, z_height, "box_minus_y", rviz_visual_tools::RED);
     visual_tools_->trigger();
 
     bool success = true;
     double timeout = 5;  // seconds
     ros::Rate rate(100);
-    while (success && !planning_scene_monitor_->getPlanningScene()->knowsFrameTransform(object_name))
+    while (success && !planning_scene_monitor_->getPlanningScene()->knowsFrameTransform(object_name) && !planning_scene_monitor_->getPlanningScene()->knowsFrameTransform("box_minus_y"))
     {
       rate.sleep();
       success = rate.cycleTime().toSec() < timeout;
@@ -455,6 +463,9 @@ public:
 private:
   // A shared node handle
   ros::NodeHandle nh_;
+
+  // Robot model loader
+  robot_model_loader::RobotModelLoaderPtr robot_model_loader_;
 
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;

@@ -103,9 +103,11 @@ std::size_t SuctionGraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr
                                                    const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
                                                    bool visualize, const std::string& target_object_id)
 {
+  if (!GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp,
+                                       visualize, target_object_id))
+    return false;
   filterGraspsBySuctionVoxelOverlap(grasp_candidates);
-  return GraspFilter::filterGraspsHelper(grasp_candidates, planning_scene, arm_jmg, seed_state, filter_pregrasp,
-                                         visualize, target_object_id);
+  return true;
 }
 
 void SuctionGraspFilter::printFilterStatistics(const std::vector<GraspCandidatePtr>& grasp_candidates) const
@@ -157,42 +159,96 @@ bool SuctionGraspFilter::processCandidateGrasp(const IkThreadStructPtr& ik_threa
     return false;
   }
 
-  std::vector<std::string> collision_object_names;
-  if (!attachActiveSuctionCupCO(suction_grasp_data,
-                                suction_grasp_candidate->getSuctionVoxelEnabled(suction_voxel_overlap_cutoff_),
-                                ik_thread_struct->planning_scene_, collision_object_names))
+  // First filter without taking suction pads into account.
+  if (!GraspFilter::processCandidateGrasp(ik_thread_struct))
   {
-    ROS_ERROR_STREAM_NAMED(logger_name, "Failed to attch active suction cups as collision objects in the planning "
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Candidate grasp invalid");
+    return false;
+  }
+
+  // Create an AllowedCollisionMatrix with all collisions allowed.
+  // We can then add the suction voxels and check collision results to see which suction voxels must be disabled
+  // We first copy the matrix from the planning scene to ensure it has the robot links in it
+  collision_detection::AllowedCollisionMatrix suction_acm(
+      ik_thread_struct->planning_scene_->getAllowedCollisionMatrix());
+
+  // We must add entries for all world objects that may not be in the collision matrix yet, and then disable collision
+  // checking for all
+  for (const std::string& world_object : ik_thread_struct->planning_scene_->getWorld()->getObjectIds())
+  {
+    suction_acm.setEntry(world_object, true);
+  }
+  suction_acm.setEntry(true);
+
+  std::vector<std::string> collision_object_names;
+  if (!attachAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_, collision_object_names))
+  {
+    ROS_ERROR_STREAM_NAMED(logger_name, "Failed to attach active suction cups as collision objects in the planning "
                                         "scene");
     grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
     return false;
   }
 
+  // Since we just added the suction voxels as an ACO, the default is to check collision with all world objects.
+  // We disable collision checking just for the box we want to pick
   if (!ik_thread_struct->grasp_target_object_id_.empty() && !collision_object_names.empty())
   {
-    setACMFingerEntry(ik_thread_struct->grasp_target_object_id_, true, collision_object_names,
-                      ik_thread_struct->planning_scene_);
+    ROS_DEBUG_STREAM_NAMED(logger_name, "Allowing collisions between suction voxels and "
+                                            << ik_thread_struct->grasp_target_object_id_);
+    for (const auto& voxel_name : collision_object_names)
+    {
+      suction_acm.setEntry(ik_thread_struct->grasp_target_object_id_, voxel_name, true);
+    }
   }
 
-  bool filter_results = GraspFilter::processCandidateGrasp(ik_thread_struct);
+  robot_state::RobotState grasp_state = ik_thread_struct->planning_scene_->getCurrentState();
+  grasp_state.setJointGroupPositions(grasp_candidate->grasp_data_->arm_jmg_, grasp_candidate->grasp_ik_solution_);
+  grasp_state.update();
+  collision_detection::CollisionResult::ContactMap contacts;
+  ik_thread_struct->planning_scene_->getCollidingPairs(contacts, grasp_state, suction_acm);
 
-  // Cleanup ACM changes
-  if (!ik_thread_struct->grasp_target_object_id_.empty() && !collision_object_names.empty())
+  std::vector<bool> voxel_in_collision(suction_grasp_data->suction_voxel_matrix_->getNumVoxels());
+
+  for (auto& contact_collection : contacts)
   {
-    setACMFingerEntry(ik_thread_struct->grasp_target_object_id_, false, collision_object_names,
-                      ik_thread_struct->planning_scene_);
+    for (auto& contact_pair : contact_collection.second)
+    {
+      for (std::size_t voxel_ix = 0; voxel_ix < suction_grasp_data->suction_voxel_matrix_->getNumVoxels(); ++voxel_ix)
+      {
+        std::string voxel_id = suctionVoxelIxToCollisionObjectId(voxel_ix);
+        if (contact_pair.body_name_1 == voxel_id || contact_pair.body_name_2 == voxel_id)
+        {
+          voxel_in_collision[voxel_ix] = true;
+        }
+      }
+      ROS_DEBUG_STREAM_NAMED(logger_name, "Contact between " << contact_pair.body_name_1 << " and "
+                                                             << contact_pair.body_name_2);
+    }
   }
+
+  suction_grasp_candidate->setSuctionVoxelInCollision(voxel_in_collision);
+
+  if (std::find(voxel_in_collision.begin(), voxel_in_collision.end(), false) == voxel_in_collision.end())
+  {
+    ROS_DEBUG_NAMED(logger_name, "All voxels filtered for candidate grasp");
+    grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_FILTERED_BY_IK;
+    return false;
+  }
+
+  // Debugging code
+  if (false)
+  {
+    moveit_msgs::DisplayRobotState display_robot_state_msg;
+    robot_state::robotStateToRobotStateMsg(grasp_state, display_robot_state_msg.state, true);
+    visual_tools_->publishRobotState(display_robot_state_msg);
+    visual_tools_->trigger();
+  }
+  // End debugging code
 
   if (!removeAllSuctionCupCO(suction_grasp_data, ik_thread_struct->planning_scene_))
   {
     ROS_ERROR_STREAM_NAMED(logger_name, "Failed to detach all active suction cups");
     grasp_candidate->grasp_filtered_code_ = GraspFilterCode::GRASP_INVALID;
-    return false;
-  }
-
-  if (!filter_results)
-  {
-    ROS_DEBUG_STREAM_NAMED(logger_name, "Candidate grasp invalid");
     return false;
   }
 
@@ -242,7 +298,6 @@ bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_
   {
     // Set the aco name
     suction_voxel_co.id = suctionVoxelIxToCollisionObjectId(voxel_ix);
-    setACMFingerEntry(suction_voxel_co.id, false, ee_links, planning_scene);
 
     // Check if the ACO already exists
     moveit_msgs::AttachedCollisionObject aco;
@@ -253,15 +308,6 @@ bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_
       if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
       {
         ROS_WARN_STREAM_NAMED(logger_name, "Failed to processACOMsg for: " << suction_voxel_aco.object.id);
-        return false;
-      }
-
-      // Check if the collision object was successfully detached
-      aco = moveit_msgs::AttachedCollisionObject();
-      if (planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name, "Failed to detach object: " << suction_voxel_aco.object.id);
-        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << aco);
         return false;
       }
     }
@@ -276,24 +322,14 @@ bool SuctionGraspFilter::removeAllSuctionCupCO(const SuctionGraspDataPtr& grasp_
         ROS_WARN_STREAM_NAMED(logger_name, "Failed to processCollisionObjectMsg for: " << suction_voxel_co.id);
         return false;
       }
-
-      // Check to make sure the object is no longer in the planning scene
-      co = moveit_msgs::CollisionObject();
-      if (planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name, "Failed to remove object " << suction_voxel_co.id << " from planning scene");
-        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << co);
-        return false;
-      }
     }
   }
   return true;
 }
 
-bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& grasp_data,
-                                                  const std::vector<bool>& suction_voxel_enabled,
-                                                  const planning_scene::PlanningScenePtr& planning_scene,
-                                                  std::vector<std::string>& collision_object_names)
+bool SuctionGraspFilter::attachAllSuctionCupCO(const SuctionGraspDataPtr& grasp_data,
+                                               const planning_scene::PlanningScenePtr& planning_scene,
+                                               std::vector<std::string>& collision_object_names)
 {
   static const std::string logger_name = name_ + ".attach_active_suction_cup_co";
 
@@ -315,8 +351,8 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
   collision_object_names.resize(num_voxels);
 
   ROS_DEBUG_STREAM_NAMED(logger_name, "~~~~~~~~~~~");
-  for (std::size_t ix = 0; ix < suction_voxel_enabled.size(); ++ix)
-    ROS_DEBUG_STREAM_NAMED(logger_name, "voxel_" << ix << ":\t" << suction_voxel_enabled[ix]);
+  for (std::size_t ix = 0; ix < num_voxels; ++ix)
+    ROS_DEBUG_STREAM_NAMED(logger_name, "voxel_" << ix);
 
   // Get EE_JMG link names for setting ACM enabled / disabled
   std::vector<std::string> ee_links = grasp_data->ee_jmg_->getLinkModelNames();
@@ -331,7 +367,6 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     }
     // Assign collision object names for output
     collision_object_names[voxel_ix] = suctionVoxelIxToCollisionObjectId(voxel_ix);
-    setACMFingerEntry(collision_object_names[voxel_ix], true, ee_links, planning_scene);
 
     // Create an AttachedCollisionObject
     moveit_msgs::AttachedCollisionObject suction_voxel_aco;
@@ -349,9 +384,11 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     suction_voxel_co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = suction_voxel->x_width_;
     suction_voxel_co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = suction_voxel->y_width_;
     suction_voxel_co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = grasp_data->grasp_max_depth_;
+    suction_voxel_co.operation = moveit_msgs::CollisionObject::ADD;
 
     // The set the attached object pose
     suction_voxel_co.primitive_poses.resize(1);
+    // TODO: Check that the last translation here is the right direction (it seems maybe wrong in rviz on demo)
     Eigen::Isometry3d ik_link_to_voxel_center = ik_link_to_tcp * Eigen::Translation3d(suction_voxel->center_point_) *
                                                 Eigen::Translation3d(0, 0, -grasp_data->grasp_max_depth_ / 2.0 + .01);
     suction_voxel_co.primitive_poses[0] = tf2::toMsg(ik_link_to_voxel_center);
@@ -364,62 +401,13 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
     bool aco_exists = planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id);
 
     // If the suction voxel is not attached to the robot in the planning scene but should be
-    if (suction_voxel_enabled[voxel_ix] && !aco_exists)
+    if (!aco_exists)
     {
-      // Mark object to be added
-      suction_voxel_co.operation = moveit_msgs::CollisionObject::ADD;
-
       // Attach the collision object
       if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
       {
         ROS_WARN_STREAM_NAMED(
             logger_name, "Failed to process processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
-        return false;
-      }
-
-      // Check if the collision object was successfully attached
-      if (!planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name, "Object: " << suction_voxel_aco.object.id << " not attached to the robot");
-        return false;
-      }
-    }
-    // If the suction voxel is attached to the robot in the planning scene but shouldn't be
-    else if (!suction_voxel_enabled[voxel_ix] && aco_exists)
-    {
-      // Mark object to be removed
-      suction_voxel_co.operation = moveit_msgs::CollisionObject::REMOVE;
-
-      // Dettach the collision object
-      if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name,
-                              "Failed to processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
-        return false;
-      }
-
-      // Check if the collision object was successfully detached
-      if (planning_scene->getAttachedCollisionObjectMsg(aco, suction_voxel_aco.object.id))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name, "Failed to detach object: " << suction_voxel_aco.object.id);
-        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << aco);
-        return false;
-      }
-
-      // Remove Collision object from planning scene
-      if (!planning_scene->processCollisionObjectMsg(suction_voxel_co))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name,
-                              "Failed to process collision object msg for: " << suction_voxel_aco.object.id);
-        return false;
-      }
-
-      // Check to make sure the object is no longer in the planning scene
-      moveit_msgs::CollisionObject co;
-      if (planning_scene->getCollisionObjectMsg(co, suction_voxel_co.id))
-      {
-        ROS_WARN_STREAM_NAMED(logger_name, "Failed to remove object " << suction_voxel_co.id << " from planning scene");
-        ROS_DEBUG_STREAM_NAMED(logger_name, "Found : \n" << co);
         return false;
       }
     }

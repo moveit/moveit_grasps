@@ -44,6 +44,7 @@ SuctionGraspCandidate::SuctionGraspCandidate(const moveit_msgs::Grasp& grasp, co
                                              const Eigen::Isometry3d& cuboid_pose)
   : GraspCandidate::GraspCandidate(grasp, std::dynamic_pointer_cast<GraspData>(grasp_data), cuboid_pose)
   , suction_voxel_overlap_(grasp_data->suction_voxel_matrix_->getNumVoxels())
+  , voxel_in_collision_(grasp_data->suction_voxel_matrix_->getNumVoxels())
 {
 }
 
@@ -57,11 +58,24 @@ std::vector<double> SuctionGraspCandidate::getSuctionVoxelOverlap()
   return suction_voxel_overlap_;
 }
 
+void SuctionGraspCandidate::setSuctionVoxelInCollision(std::vector<bool> voxel_in_collision)
+{
+  voxel_in_collision_ = voxel_in_collision;
+}
+
+std::vector<bool> SuctionGraspCandidate::getSuctionVoxelInCollision()
+{
+  return voxel_in_collision_;
+}
+
 std::vector<bool> SuctionGraspCandidate::getSuctionVoxelEnabled(double suction_voxel_cutoff)
 {
   std::vector<bool> suction_voxel_enabled(suction_voxel_overlap_.size());
   for (std::size_t voxel_ix = 0; voxel_ix < suction_voxel_enabled.size(); ++voxel_ix)
-    suction_voxel_enabled[voxel_ix] = suction_voxel_overlap_[voxel_ix] >= suction_voxel_cutoff;
+  {
+    suction_voxel_enabled[voxel_ix] =
+        (suction_voxel_overlap_[voxel_ix] >= suction_voxel_cutoff && !voxel_in_collision_[voxel_ix]);
+  }
   return suction_voxel_enabled;
 }
 
