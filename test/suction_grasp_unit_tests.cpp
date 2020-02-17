@@ -204,6 +204,26 @@ public:
     return solution.setFromIK(arm_jmg, target_pose, link_name, timeout, constraint_fn);
   }
 
+  robot_state::RobotStatePtr generateSeedState(const Eigen::Isometry3d& object_pose)
+  {
+    // --------------------------------------------
+    // Generating a seed state for filtering grasps
+    robot_state::RobotStatePtr seed_state =
+        std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
+    Eigen::Isometry3d eef_mount_grasp_pose = object_pose * grasp_data_->tcp_to_eef_mount_.inverse();
+    visual_tools_->publishAxis(eef_mount_grasp_pose, rviz_visual_tools::MEDIUM);
+
+    if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
+    {
+      ROS_WARN_STREAM_NAMED("TestFilterSuctionIK", "The ideal seed state is not reachable. Using start state as seed.");
+      planning_scene_monitor::LockedPlanningSceneRO ls(planning_scene_monitor_);
+      seed_state = std::make_shared<robot_state::RobotState>(ls->getCurrentState());
+    }
+    visual_tools_->publishRobotState(seed_state, rviz_visual_tools::GREEN);
+    visual_tools_->trigger();
+    return seed_state;
+  }
+
 protected:
   ros::NodeHandle nh_;
   bool verbose_;
@@ -243,26 +263,11 @@ TEST_F(SuctionGraspUnitTests, TestGraspFilter)
       << "Grasp generator failed to generate any valid grasps";
 
   // --------------------------------------------
-  // Generating a seed state for filtering grasps
-  robot_state::RobotStatePtr seed_state =
-      std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
-  Eigen::Isometry3d eef_mount_grasp_pose = object_pose * grasp_data_->tcp_to_eef_mount_.inverse();
-  visual_tools_->publishAxis(eef_mount_grasp_pose, rviz_visual_tools::MEDIUM);
-
-  if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
-  {
-    ROS_WARN_STREAM_NAMED("TestFilterSuctionIK", "The ideal seed state is not reachable. Using start state as seed.");
-    planning_scene_monitor::LockedPlanningSceneRO ls(planning_scene_monitor_);
-    seed_state = std::make_shared<robot_state::RobotState>(ls->getCurrentState());
-  }
-  visual_tools_->publishRobotState(seed_state, rviz_visual_tools::GREEN);
-  visual_tools_->trigger();
-  // --------------------------------------------
   // Filtering grasps
   bool filter_pregrasps = false;
   grasp_filter_->setSuctionVoxelOverlapCutoff(0.9);
-  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
-                                          filter_pregrasps, object_name))
+  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
+                                          generateSeedState(object_pose), filter_pregrasps, object_name))
       << "Filter grasps failed";
   ASSERT_GT(grasp_candidates.size(), 0u);
   ASSERT_FALSE(grasp_filter_->removeInvalidAndFilter(grasp_candidates)) << "Expected grasp filter to remove all grasps";
@@ -296,26 +301,11 @@ TEST_F(SuctionGraspUnitTests, TestFilterSuctionIK)
       << "Grasp generator failed to generate any valid grasps";
 
   // --------------------------------------------
-  // Generating a seed state for filtering grasps
-  robot_state::RobotStatePtr seed_state =
-      std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
-  Eigen::Isometry3d eef_mount_grasp_pose = object_pose * grasp_data_->tcp_to_eef_mount_.inverse();
-  visual_tools_->publishAxis(eef_mount_grasp_pose, rviz_visual_tools::MEDIUM);
-
-  if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
-  {
-    ROS_WARN_STREAM_NAMED("TestFilterSuctionIK", "The ideal seed state is not reachable. Using start state as seed.");
-    planning_scene_monitor::LockedPlanningSceneRO ls(planning_scene_monitor_);
-    seed_state = std::make_shared<robot_state::RobotState>(ls->getCurrentState());
-  }
-  visual_tools_->publishRobotState(seed_state, rviz_visual_tools::GREEN);
-  visual_tools_->trigger();
-  // --------------------------------------------
   // Filtering grasps
   bool filter_pregrasps = false;
   grasp_filter_->setSuctionVoxelOverlapCutoff(0.9);
-  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
-                                          filter_pregrasps, object_name))
+  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
+                                          generateSeedState(object_pose), filter_pregrasps, object_name))
       << "Filter grasps failed";
   ASSERT_GT(grasp_candidates.size(), 0u);
   ASSERT_FALSE(grasp_filter_->removeInvalidAndFilter(grasp_candidates)) << "Expected grasp filter to remove all grasps";
@@ -349,26 +339,11 @@ TEST_F(SuctionGraspUnitTests, TestFilterSuctionIKHighOverlap)
       << "Grasp generator failed to generate any valid grasps";
 
   // --------------------------------------------
-  // Generating a seed state for filtering grasps
-  robot_state::RobotStatePtr seed_state =
-      std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
-  Eigen::Isometry3d eef_mount_grasp_pose = object_pose * grasp_data_->tcp_to_eef_mount_.inverse();
-  visual_tools_->publishAxis(eef_mount_grasp_pose, rviz_visual_tools::MEDIUM);
-
-  if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
-  {
-    ROS_WARN_STREAM_NAMED("TestFilterSuctionIK", "The ideal seed state is not reachable. Using start state as seed.");
-    planning_scene_monitor::LockedPlanningSceneRO ls(planning_scene_monitor_);
-    seed_state = std::make_shared<robot_state::RobotState>(ls->getCurrentState());
-  }
-  visual_tools_->publishRobotState(seed_state, rviz_visual_tools::GREEN);
-  visual_tools_->trigger();
-  // --------------------------------------------
   // Filtering grasps
   bool filter_pregrasps = false;
   grasp_filter_->setSuctionVoxelOverlapCutoff(0.9);
-  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
-                                          filter_pregrasps, object_name))
+  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
+                                          generateSeedState(object_pose), filter_pregrasps, object_name))
       << "Filter grasps failed";
   ASSERT_GT(grasp_candidates.size(), 0u);
   ASSERT_TRUE(grasp_filter_->removeInvalidAndFilter(grasp_candidates)) << "Grasp filtering removed all grasps";
@@ -403,27 +378,11 @@ TEST_F(SuctionGraspUnitTests, DISABLED_TestFilterSuctionIKLowOverlap)
       << "Grasp generator failed to generate any valid grasps";
 
   // --------------------------------------------
-  // Generating a seed state for filtering grasps
-  robot_state::RobotStatePtr seed_state =
-      std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
-  Eigen::Isometry3d eef_mount_grasp_pose = object_pose * grasp_data_->tcp_to_eef_mount_.inverse();
-  visual_tools_->publishAxis(eef_mount_grasp_pose, rviz_visual_tools::MEDIUM);
-
-  if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
-  {
-    ROS_WARN_STREAM_NAMED("TestFilterSuctionIKLowOverlap", "The ideal seed state is not reachable. Using start state "
-                                                           "as seed.");
-    planning_scene_monitor::LockedPlanningSceneRO ls(planning_scene_monitor_);
-    seed_state = std::make_shared<robot_state::RobotState>(ls->getCurrentState());
-  }
-  visual_tools_->publishRobotState(seed_state, rviz_visual_tools::GREEN);
-  visual_tools_->trigger();
-  // --------------------------------------------
   // Filtering grasps
   bool filter_pregrasps = false;
   grasp_filter_->setSuctionVoxelOverlapCutoff(0.125);
-  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state,
-                                          filter_pregrasps, object_name))
+  EXPECT_TRUE(grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_,
+                                          generateSeedState(object_pose), filter_pregrasps, object_name))
       << "Filter grasps failed";
   ASSERT_GT(grasp_candidates.size(), 0u);
   ASSERT_TRUE(grasp_filter_->removeInvalidAndFilter(grasp_candidates)) << "Grasp filtering removed all grasps";
