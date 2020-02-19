@@ -142,7 +142,7 @@ TEST_F(GraspFilterTest, TestGraspFilter)
     EXPECT_TRUE(success) << "Checks if filterGrasps (without object in the planning scene) ran without issue";
 
     std::size_t remaining_grasps = grasp_filter_->removeInvalidAndFilter(grasp_candidates);
-    EXPECT_NE(remaining_grasps, 0) << "No valid grasps remain after filtering";
+    EXPECT_NE(remaining_grasps, 0u) << "No valid grasps remain after filtering";
 
     // add the target box to the ps
     std::string object_name = "target_box";

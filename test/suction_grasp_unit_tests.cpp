@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2019, PickNik LLC
+ *  Copyright (c) 2020, PickNik LLC
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -215,7 +215,7 @@ public:
 
     if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
     {
-      ROS_WARN_STREAM_NAMED("TestFilterSuctionIK", "The ideal seed state is not reachable. Using start state as seed.");
+      ROS_WARN_STREAM_NAMED("generateSeedState", "The ideal seed state is not reachable. Using start state as seed.");
       planning_scene_monitor::LockedPlanningSceneRO ls(planning_scene_monitor_);
       seed_state = std::make_shared<robot_state::RobotState>(ls->getCurrentState());
     }
@@ -353,7 +353,7 @@ TEST_F(SuctionGraspUnitTests, TestFilterSuctionIKHighOverlap)
 // on all sides
 TEST_F(SuctionGraspUnitTests, DISABLED_TestFilterSuctionIKLowOverlap)
 {
-  // This test is identical to TestFilterSuctionIK except with a lower overlap cutoff
+  // This test is identical to TestFilterSuctionIKHighOverlap except with a lower overlap cutoff
   // -----------------------------------
   auto object_pose = Eigen::Isometry3d(Eigen::Translation3d(0.3, 0.3, 0.25));
   Eigen::Vector3d object_size(1.7 * voxel_size_x_, 1.7 * voxel_size_y_, .05);
