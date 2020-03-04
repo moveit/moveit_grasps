@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+    <!-- Suction or two finger -->
+    <arg name="gripper" value="suction" doc="must be one of 'suction' or 'two_finger'" />
+
+    <!-- PANDA -->
+    <include ns="suction_grasp_unit_tests" file="$(find moveit_grasps)/launch/load_panda.launch">
+      <arg name="gripper" value="$(arg gripper)"/>
+    </include>
+
+    <test pkg="moveit_grasps" type="suction_grasp_unit_tests" test-name="suction_grasp_unit_tests" time-limit="120" args="">
+        <param name="ee_group_name" value="hand"/>
+        <param name="arm_group_name" value="panda_arm"/>
+      <rosparam command="load" file="$(find moveit_grasps)/config_robot/panda_grasp_data.yaml"/>
+      <rosparam command="load" file="$(find moveit_grasps)/test/config/moveit_grasps_config.yaml"/>
+    </test>
+</launch>

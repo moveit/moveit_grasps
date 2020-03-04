@@ -22,6 +22,18 @@
           <box size="0.25 0.13 0.05"/>
         </geometry>
       </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.055" rpy="0.0 0.0 0.0" />
+        <geometry>
+          <box size="0.0625 0.0625 0.1"/>
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0.0 0.0 0.11" rpy="0.0 0.0 0.0" />
+        <geometry>
+          <box size="0.25 0.13 0.02"/>
+        </geometry>
+      </collision>
     </link>
 
     <link name="tool_center_point" />

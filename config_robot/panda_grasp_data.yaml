@@ -72,7 +72,7 @@ hand:
     ##############################
     ## Suction gripper parameters
     ##############################
-    # The width of the suction griper along the specified axes. (Assumes that Z points in the direction of the suction cups)
+    # The width of the suction gripper along the specified axes. (Assumes that Z points in the direction of the suction cups)
     active_suction_range_x : 0.22
     active_suction_range_y : 0.12
 
@@ -82,7 +82,7 @@ hand:
     # it will also set the suction_regions_in_contact_ variable in the grasp candidates so that you are able
     # to only enable suction on regions that are in contact with the grasp target.
     # Note that this metric assumes that suction regions are equally sized
-    # ie. width = active_suction_range_x / suction_regions_x
+    # ie. width = active_suction_range_x / suction_cols_count
     #
     suction_rows_count: 2
     suction_cols_count: 2

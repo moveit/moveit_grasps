@@ -417,7 +417,7 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "two_finger_grasp_filter_test");
+  ros::init(argc, argv, "suction_grasp_pipeline_test");
 
   // run test
   int result = RUN_ALL_TESTS();

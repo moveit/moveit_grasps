@@ -82,7 +82,13 @@ public:
    * \brief Filter grasps that do not have a valid suction voxel overlap
    * \param grasp_candidates - all possible grasps that this will test. this vector is returned modified
    */
-  bool filterGraspsBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates);
+  bool filterGraspsBySuctionVoxelOverlap(std::vector<GraspCandidatePtr>& grasp_candidates);
+
+  [[deprecated("Use filterGraspsBySuctionVoxelOverlap")]] bool
+  filterGraspsBySuctionVoxelOverlapCutoff(std::vector<GraspCandidatePtr>& grasp_candidates)
+  {
+    return filterGraspsBySuctionVoxelOverlap(grasp_candidates);
+  }
 
   /**
    * \brief  For suction grippers, set the cutoff threshold used by preFilterBySuctionVoxelOverlap to
