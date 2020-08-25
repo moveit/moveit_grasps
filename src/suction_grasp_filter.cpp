@@ -445,4 +445,4 @@ void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)
   suction_voxel_overlap_cutoff_ = cutoff;
 }
 
-}  // namespace
+}  // namespace moveit_grasps

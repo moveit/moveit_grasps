@@ -878,4 +878,4 @@ void GraspFilter::publishPlanningScene(const planning_scene::PlanningScenePtr& p
   planning_scene_publisher_.publish(msg);
 }
 
-}  // namespace
+}  // namespace moveit_grasps

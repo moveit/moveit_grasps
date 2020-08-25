@@ -229,8 +229,8 @@ double SuctionGraspScorer::scoreSuctionVoxelOverlap(const Eigen::Isometry3d& gra
       }
     }
     // normalize
-    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels.score", "overlap_vector[" << voxel_id
-                                                                          << "]     = " << overlap_vector[voxel_id]);
+    ROS_DEBUG_STREAM_NAMED("grasp_scorer.voxels.score",
+                           "overlap_vector[" << voxel_id << "]     = " << overlap_vector[voxel_id]);
 
     if (visual_tools)
     {

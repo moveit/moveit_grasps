@@ -88,8 +88,8 @@ double TwoFingerGraspScorer::scoreDistanceToPalm(const Eigen::Isometry3d& grasp_
                                                  double max_grasp_distance)
 {
   double distance = (grasp_pose_tcp.translation() - object_pose.translation()).norm();
-  ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance", "distance = " << distance << ", " << min_grasp_distance << ":"
-                                                                << max_grasp_distance);
+  ROS_DEBUG_STREAM_NAMED("grasp_scorer.distance",
+                         "distance = " << distance << ", " << min_grasp_distance << ":" << max_grasp_distance);
 
   double score = 1.0 - (distance - min_grasp_distance) / (max_grasp_distance - min_grasp_distance);
 

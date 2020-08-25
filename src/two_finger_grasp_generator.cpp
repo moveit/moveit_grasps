@@ -127,9 +127,9 @@ bool TwoFingerGraspGenerator::generateGrasps(const Eigen::Isometry3d& cuboid_pos
   auto two_finger_grasp_data = std::dynamic_pointer_cast<TwoFingerGraspData>(grasp_data);
   if (!two_finger_grasp_data)
   {
-    ROS_ERROR_STREAM_NAMED("grasp_generator",
-                           "grasp_data is not castable to TwoFingerGraspData. Make sure you are using "
-                           "the child class");
+    ROS_ERROR_STREAM_NAMED("grasp_generator", "grasp_data is not castable to TwoFingerGraspData. Make sure you are "
+                                              "using "
+                                              "the child class");
     return false;
   }
   return generateGrasps(cuboid_pose, depth, width, height, two_finger_grasp_data, grasp_candidates);
@@ -583,8 +583,8 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
     }
   }
 
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.add", "min/max distance = " << min_grasp_distance_ << ", "
-                                                                      << max_grasp_distance_);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.add",
+                         "min/max distance = " << min_grasp_distance_ << ", " << max_grasp_distance_);
 
   // add all poses as possible grasps
   std::size_t num_grasps_added = 0;
