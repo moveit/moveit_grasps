@@ -76,6 +76,6 @@ protected:
 typedef std::shared_ptr<TwoFingerGraspFilter> TwoFingerGraspFilterPtr;
 typedef std::shared_ptr<const TwoFingerGraspFilter> TwoFingerGraspFilterConstPtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

@@ -175,6 +175,6 @@ public:
 
 typedef std::shared_ptr<GraspCandidate> GraspCandidatePtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

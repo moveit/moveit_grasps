@@ -108,4 +108,4 @@ void SuctionGraspData::print()
   std::cout << "\tactive_suction_range_y_: " << suction_voxel_matrix_->getActiveSuctionWidthX() << std::endl;
 }
 
-}  // namespace
+}  // namespace moveit_grasps

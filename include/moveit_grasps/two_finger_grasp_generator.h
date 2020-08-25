@@ -252,6 +252,6 @@ protected:
 typedef std::shared_ptr<TwoFingerGraspGenerator> TwoFingerGraspGeneratorPtr;
 typedef std::shared_ptr<const TwoFingerGraspGenerator> TwoFingerGraspGeneratorConstPtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

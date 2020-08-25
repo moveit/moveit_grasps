@@ -91,4 +91,4 @@ bool TwoFingerGraspFilter::checkFingersClosedIK(std::vector<double>& ik_solution
   return true;
 }
 
-}  // namespace
+}  // namespace moveit_grasps

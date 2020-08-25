@@ -158,6 +158,6 @@ private:
 typedef std::shared_ptr<GraspPlanner> GraspPlannerPtr;
 typedef std::shared_ptr<const GraspPlanner> GraspPlannerConstPtr;
 
-}  // end namespace
+}  // namespace moveit_grasps
 
 #endif

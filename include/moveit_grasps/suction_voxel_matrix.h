@@ -183,6 +183,6 @@ protected:
   std::vector<std::vector<std::shared_ptr<SuctionVoxel>>> suction_voxels_;
 };
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

@@ -76,7 +76,7 @@ bool isStateValid(const planning_scene::PlanningScene* planning_scene,
   return !planning_scene->isStateColliding(*robot_state, group->getName());
 }
 
-}  // end annonymous namespace
+}  // namespace
 
 namespace moveit_grasps
 {
@@ -406,8 +406,10 @@ TEST_F(SuctionGraspPipelineTest, TestGrasp)
   moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
   moveit_msgs::MotionPlanResponse pre_approach_plan;
 
-  ASSERT_TRUE(planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan, object_name))
-      << "Failed to plan grasp motions";
+  ASSERT_TRUE(planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan, object_name)) << "Failed to "
+                                                                                                            "plan "
+                                                                                                            "grasp "
+                                                                                                            "motions";
 
   visualizePick(selected_grasp_candidate, pre_approach_plan);
 }

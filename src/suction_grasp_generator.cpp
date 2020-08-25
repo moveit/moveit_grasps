@@ -294,8 +294,8 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
 
   if (debug_top_grasps_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t"
-                                                             << height);
+    ROS_DEBUG_STREAM_NAMED("grasp_generator",
+                           "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t" << height);
     visual_tools_->publishAxisLabeled(cuboid_top_pose, "cuboid_top_pose", rviz_visual_tools::SMALL);
     double suction_z_range = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
     visual_tools_->publishWireframeCuboid(cuboid_top_pose * Eigen::Translation3d(0, 0, suction_z_range / 2.0), depth,
@@ -418,8 +418,9 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   if (!grasp_candidates.size())
     ROS_WARN_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated 0 grasps");
   else
-    ROS_INFO_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated " << grasp_candidates.size() << " grasp"
-                                                                                                                "s");
+    ROS_INFO_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated " << grasp_candidates.size()
+                                                                                  << " grasp"
+                                                                                     "s");
 
   // Visualize animated grasps that have been generated
   if (show_prefiltered_grasps_)
