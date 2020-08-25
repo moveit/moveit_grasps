@@ -55,9 +55,16 @@ public:
    * \param node_handle - allows for namespacing
    * \param end_effector name - which side of a two handed robot to load data for. should correspond to SRDF EE names
    * \param robot_model - The robot model
+   * TODO add param descripton function
    */
   TwoFingerGraspData(const ros::NodeHandle& nh, const std::string& end_effector,
-                     const moveit::core::RobotModelConstPtr& robot_model);
+                     const moveit::core::RobotModelConstPtr& robot_model,
+                     const std::function<std::vector<double>(
+                      double, double, double,
+                      const std::vector<std::string>&,
+                      const std::vector<double>&,
+                      const std::vector<double>&
+                    )>& get_joint_positions_from_width_func = nullptr);
 
   /**
    * \brief Helper function for constructor, loads grasp data from a yaml file (load from roslaunch)
@@ -99,6 +106,15 @@ public:
    */
   void print() override;
 
+private:
+static std::vector<double> getJointPositionsFromWidthDefault(
+  double distance_btw_fingers,
+  double max_finger_width_,
+  double min_finger_width_,
+  const std::vector<std::string>& joint_names,
+  const std::vector<double>& grasp_pose,
+  const std::vector<double>& pre_grasp_pose);
+
 public:
   /////////////////////////////////////
   // Finger gripper specific parameters
@@ -113,6 +129,14 @@ public:
   double min_finger_width_;
   // Parameter used to ensure generated grasps will overlap object
   double gripper_finger_width_;
+
+  // a function to translate from joint values to grasp width
+  std::function<std::vector<double>(
+    double, double, double,
+    const std::vector<std::string>&,
+    const std::vector<double>&,
+    const std::vector<double>&
+  )> get_joint_positions_from_width_func;
 };
 
 }  // namespace
