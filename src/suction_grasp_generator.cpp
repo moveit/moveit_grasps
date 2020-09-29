@@ -45,8 +45,7 @@
 namespace moveit_grasps
 {
 // Constructor
-SuctionGraspGenerator::SuctionGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools,
-                                             bool verbose)
+SuctionGraspGenerator::SuctionGraspGenerator(const moveit_visual_tools::MoveItVisualToolsPtr& visual_tools, bool verbose)
   : GraspGenerator(visual_tools, verbose)
 {
   auto suction_grasp_score_weights = std::make_shared<SuctionGraspScoreWeights>();
@@ -159,9 +158,10 @@ double SuctionGraspGenerator::scoreSuctionGrasp(const Eigen::Isometry3d& grasp_p
   Eigen::Vector3d translation_scores = SuctionGraspScorer::scoreGraspTranslation(grasp_pose_tcp, ideal_grasp_tcp);
 
   // Score suction grasp overhang
-  double suction_overlap_score = SuctionGraspScorer::scoreSuctionVoxelOverlap(
-      grasp_pose_tcp, grasp_data, cuboid_pose, object_size, suction_voxel_overlap,
-      (show_grasp_overhang_ ? visual_tools_ : nullptr));
+  double suction_overlap_score =
+      SuctionGraspScorer::scoreSuctionVoxelOverlap(grasp_pose_tcp, grasp_data, cuboid_pose, object_size,
+                                                   suction_voxel_overlap,
+                                                   (show_grasp_overhang_ ? visual_tools_ : nullptr));
 
   double total_score = 0;
   auto suction_grasp_score_weights = std::dynamic_pointer_cast<SuctionGraspScoreWeights>(grasp_score_weights_);
@@ -294,8 +294,8 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
 
   if (debug_top_grasps_)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_generator", "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t"
-                                                             << height);
+    ROS_DEBUG_STREAM_NAMED("grasp_generator",
+                           "\n\tWidth:\t" << width << "\n\tDepth:\t" << depth << "\n\tHeight\t" << height);
     visual_tools_->publishAxisLabeled(cuboid_top_pose, "cuboid_top_pose", rviz_visual_tools::SMALL);
     double suction_z_range = grasp_data->grasp_max_depth_ - grasp_data->grasp_min_depth_;
     visual_tools_->publishWireframeCuboid(cuboid_top_pose * Eigen::Translation3d(0, 0, suction_z_range / 2.0), depth,
@@ -418,8 +418,9 @@ bool SuctionGraspGenerator::generateSuctionGrasps(const Eigen::Isometry3d& cuboi
   if (!grasp_candidates.size())
     ROS_WARN_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated 0 grasps");
   else
-    ROS_INFO_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated " << grasp_candidates.size() << " grasp"
-                                                                                                                "s");
+    ROS_INFO_STREAM_NAMED("grasp_generator.generate_suction_grasps", "Generated " << grasp_candidates.size()
+                                                                                  << " grasp"
+                                                                                     "s");
 
   // Visualize animated grasps that have been generated
   if (show_prefiltered_grasps_)

@@ -243,6 +243,6 @@ protected:
 typedef std::shared_ptr<GraspGenerator> GraspGeneratorPtr;
 typedef std::shared_ptr<const GraspGenerator> GraspGeneratorConstPtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

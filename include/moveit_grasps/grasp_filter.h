@@ -386,6 +386,6 @@ protected:
 typedef std::shared_ptr<GraspFilter> GraspFilterPtr;
 typedef std::shared_ptr<const GraspFilter> GraspFilterConstPtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

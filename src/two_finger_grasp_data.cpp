@@ -110,8 +110,8 @@ bool TwoFingerGraspData::fingerWidthToGraspPosture(double distance_btw_fingers,
 {
   // TODO(mlautman): Change this function to take in a method for translating joint values to grasp width
   //       Currently this function simply interpolates between max open and max closed
-  ROS_DEBUG_STREAM_NAMED("grasp_data", "Setting grasp posture to have distance_between_fingers of "
-                                           << distance_btw_fingers);
+  ROS_DEBUG_STREAM_NAMED("grasp_data",
+                         "Setting grasp posture to have distance_between_fingers of " << distance_btw_fingers);
 
   // Error check
   if (distance_btw_fingers > max_finger_width_ + std::numeric_limits<double>::epsilon() ||
@@ -131,8 +131,9 @@ bool TwoFingerGraspData::fingerWidthToGraspPosture(double distance_btw_fingers,
   const std::vector<double>& pre_grasp_pose = pre_grasp_posture_.points[0].positions;
   if (joint_names.size() != grasp_pose.size() || grasp_pose.size() != pre_grasp_pose.size())
   {
-    ROS_ERROR_NAMED("grasp_data", "Mismatched vector sizes joint_names.size()=%zu, grasp_pose.size()=%zu, and "
-                                  "pre_grasp_pose.size()=%zu",
+    ROS_ERROR_NAMED("grasp_data",
+                    "Mismatched vector sizes joint_names.size()=%zu, grasp_pose.size()=%zu, and "
+                    "pre_grasp_pose.size()=%zu",
                     joint_names.size(), grasp_pose.size(), pre_grasp_pose.size());
     return false;
   }
@@ -211,4 +212,4 @@ void TwoFingerGraspData::print()
   std::cout << "\tmin_finger_width_: " << min_finger_width_ << std::endl;
 }
 
-}  // namespace
+}  // namespace moveit_grasps

@@ -113,4 +113,4 @@ bool GraspCandidate::isValid()
   return grasp_filtered_code_ == GraspFilterCode::NOT_FILTERED;
 }
 
-}  // namespace
+}  // namespace moveit_grasps

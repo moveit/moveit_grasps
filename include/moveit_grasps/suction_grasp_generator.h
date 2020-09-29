@@ -146,6 +146,6 @@ public:
 typedef std::shared_ptr<SuctionGraspGenerator> SuctionGraspGeneratorPtr;
 typedef std::shared_ptr<const SuctionGraspGenerator> SuctionGraspGeneratorConstPtr;
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

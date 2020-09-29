@@ -80,7 +80,7 @@ void waitForNextStep(const moveit_visual_tools::MoveItVisualToolsPtr& visual_too
   visual_tools->prompt(prompt);
 }
 
-}  // end annonymous namespace
+}  // namespace
 
 class GraspPipelineDemo
 {
@@ -489,7 +489,7 @@ private:
 
 };  // end of class
 
-}  // namespace
+}  // namespace moveit_grasps_demo
 
 int main(int argc, char* argv[])
 {
