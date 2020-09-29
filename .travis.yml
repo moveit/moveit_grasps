@@ -20,6 +20,7 @@ jobs:
   include:
     - env: TEST="clang-format catkin_lint"
     - env: TEST=code-coverage
+           DOCKER_IMAGE=moveit/moveit:master-source
     - env: DOCKER_IMAGE=moveit/moveit:master-source
   allow_failures:
     - env: TEST=code-coverage
