@@ -12,10 +12,17 @@ notifications:
     recipients:
 env:
   global:
-    - DOCKER_IMAGE=moveit/moveit:master-source
-  matrix:
-    - TEST=clang-format,catkin_lint
-    - TEST=code-coverage
+    - ROS_DISTRO=melodic
+    - ROS_REPO=ros
+
+jobs:
+  fast_finish: true
+  include:
+    - env: TEST="clang-format catkin_lint"
+    - env: TEST=code-coverage
+    - env: DOCKER_IMAGE=moveit/moveit:master-source
+  allow_failures:
+    - env: TEST=code-coverage
 
 before_script:
   - git clone -q --depth=1 https://github.com/ros-planning/moveit_ci.git .moveit_ci
