@@ -1,36 +1,36 @@
 /*********************************************************************
-   * Software License Agreement (BSD License)
-   *
-   *  Copyright (c) 2015, University of Colorado, Boulder
-   *  All rights reserved.
-   *
-   *  Redistribution and use in source and binary forms, with or without
-   *  modification, are permitted provided that the following conditions
-   *  are met:
-   *
-   *   * Redistributions of source code must retain the above copyright
-   *     notice, this list of conditions and the following disclaimer.
-   *   * Redistributions in binary form must reproduce the above
-   *     copyright notice, this list of conditions and the following
-   *     disclaimer in the documentation and/or other materials provided
-   *     with the distribution.
-   *   * Neither the name of the Univ of CO, Boulder nor the names of its
-   *     contributors may be used to endorse or promote products derived
-   *     from this software without specific prior written permission.
-   *
-   *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-   *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-   *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-   *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-   *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-   *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-   *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-   *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-   *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-   *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   *  POSSIBILITY OF SUCH DAMAGE.
-   *********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2015, University of Colorado, Boulder
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Univ of CO, Boulder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Dave Coleman <dave@picknik.ai>
    Desc:   Find the approach, lift, and retreat path for a candidate grasp (if a valid one exists)
@@ -78,8 +78,7 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
   std::size_t grasp_candidates_before_cartesian_path = grasp_candidates.size();
 
   std::size_t count = 0;
-  for (std::vector<GraspCandidatePtr>::iterator grasp_it = grasp_candidates.begin();
-       grasp_it != grasp_candidates.end();)
+  for (std::vector<GraspCandidatePtr>::iterator grasp_it = grasp_candidates.begin(); grasp_it != grasp_candidates.end();)
   {
     if (!ros::ok())
       return false;
@@ -131,10 +130,10 @@ bool GraspPlanner::planAllApproachLiftRetreat(std::vector<GraspCandidatePtr>& gr
   return true;
 }
 
-bool GraspPlanner::planApproachLiftRetreat(
-    GraspCandidatePtr& grasp_candidate, const robot_state::RobotStatePtr& robot_state,
-    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor, bool verbose_cartesian_filtering,
-    const std::string& grasp_object_id)
+bool GraspPlanner::planApproachLiftRetreat(GraspCandidatePtr& grasp_candidate,
+                                           const robot_state::RobotStatePtr& robot_state,
+                                           const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                           bool verbose_cartesian_filtering, const std::string& grasp_object_id)
 {
   boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRO> ls;
   ls.reset(new planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor));
@@ -383,8 +382,8 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
 
   if (!valid_path_found)
   {
-    ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints", "UNABLE to find valid waypoint cartesian path after "
-                                                          << MAX_IK_ATTEMPTS << " attempts");
+    ROS_DEBUG_STREAM_NAMED("grasp_planner.waypoints",
+                           "UNABLE to find valid waypoint cartesian path after " << MAX_IK_ATTEMPTS << " attempts");
     return false;
   }
 
@@ -432,4 +431,4 @@ bool GraspPlanner::isEnabled(const std::string& setting_name)
   return false;
 }
 
-}  // end namespace
+}  // namespace moveit_grasps

@@ -136,6 +136,6 @@ struct GraspData
   double grasp_padding_on_approach_;
 };
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

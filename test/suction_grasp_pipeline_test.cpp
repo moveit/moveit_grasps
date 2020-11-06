@@ -76,7 +76,7 @@ bool isStateValid(const planning_scene::PlanningScene* planning_scene,
   return !planning_scene->isStateColliding(*robot_state, group->getName());
 }
 
-}  // end annonymous namespace
+}  // namespace
 
 namespace moveit_grasps
 {

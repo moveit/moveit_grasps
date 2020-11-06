@@ -150,14 +150,16 @@ bool GraspData::loadGraspData(const ros::NodeHandle& nh, const std::string& end_
     state.update();
     if (!state.knowsFrameTransform(parent_link_->getName()))
     {
-      ROS_ERROR_NAMED("grasp_data", "Robot Model does not know the frame transform for the end effector group parent "
-                                    "frame: %s. Did you set a parent link in the srdf?",
+      ROS_ERROR_NAMED("grasp_data",
+                      "Robot Model does not know the frame transform for the end effector group parent "
+                      "frame: %s. Did you set a parent link in the srdf?",
                       parent_link_->getName().c_str());
     }
     if (!state.knowsFrameTransform(tcp_name_))
     {
-      ROS_ERROR_NAMED("grasp_data", "Robot Model does not know the frame transform for the tcp frame: %s. Is it "
-                                    "available in the urdf?",
+      ROS_ERROR_NAMED("grasp_data",
+                      "Robot Model does not know the frame transform for the tcp frame: %s. Is it "
+                      "available in the urdf?",
                       tcp_name_.c_str());
     }
     Eigen::Isometry3d eef_mount_pose = state.getGlobalLinkTransform(parent_link_);
@@ -207,4 +209,4 @@ void GraspData::print()
   std::cout << "grasp_padding_on_approach_: " << grasp_padding_on_approach_ << std::endl;
 }
 
-}  // namespace
+}  // namespace moveit_grasps

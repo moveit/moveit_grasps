@@ -583,8 +583,8 @@ bool TwoFingerGraspGenerator::generateCuboidAxisGrasps(const Eigen::Isometry3d& 
     }
   }
 
-  ROS_DEBUG_STREAM_NAMED("grasp_generator.add", "min/max distance = " << min_grasp_distance_ << ", "
-                                                                      << max_grasp_distance_);
+  ROS_DEBUG_STREAM_NAMED("grasp_generator.add",
+                         "min/max distance = " << min_grasp_distance_ << ", " << max_grasp_distance_);
 
   // add all poses as possible grasps
   std::size_t num_grasps_added = 0;

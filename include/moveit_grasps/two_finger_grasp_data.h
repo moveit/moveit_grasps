@@ -115,6 +115,6 @@ public:
   double gripper_finger_width_;
 };
 
-}  // namespace
+}  // namespace moveit_grasps
 
 #endif

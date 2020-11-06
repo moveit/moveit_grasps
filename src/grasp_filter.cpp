@@ -250,9 +250,10 @@ bool GraspFilter::filterGraspByGraspIK(const GraspCandidatePtr& grasp_candidate,
   ik_thread_struct->ik_pose_ = grasp_candidate->grasp_.grasp_pose;
 
   // Create constraint_fn
-  moveit::core::GroupStateValidityCallbackFn constraint_fn = boost::bind(
-      &isGraspStateValid, ik_thread_struct->planning_scene_.get(),
-      collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
+  moveit::core::GroupStateValidityCallbackFn constraint_fn =
+      boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
+                  collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1,
+                  _2, _3);
 
   // Set gripper position (eg. how open the eef is) to the custom open position
   grasp_candidate->getGraspStateOpenEEOnly(ik_thread_struct->robot_state_);
@@ -281,9 +282,10 @@ bool GraspFilter::filterGraspByPreGraspIK(const GraspCandidatePtr& grasp_candida
   const std::string& ee_parent_link_name = grasp_candidate->grasp_data_->ee_jmg_->getEndEffectorParentGroup().second;
   ik_thread_struct->ik_pose_ = GraspGenerator::getPreGraspPose(grasp_candidate, ee_parent_link_name);
 
-  moveit::core::GroupStateValidityCallbackFn constraint_fn = boost::bind(
-      &isGraspStateValid, ik_thread_struct->planning_scene_.get(),
-      collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1, _2, _3);
+  moveit::core::GroupStateValidityCallbackFn constraint_fn =
+      boost::bind(&isGraspStateValid, ik_thread_struct->planning_scene_.get(),
+                  collision_verbose_ || ik_thread_struct->visual_debug_, collision_verbose_speed_, visual_tools_, _1,
+                  _2, _3);
 
   // Solve IK Problem for pregrasp
   pregrasp_ik_solution.resize(0);
@@ -295,11 +297,12 @@ bool GraspFilter::filterGraspByPreGraspIK(const GraspCandidatePtr& grasp_candida
   return grasp_candidate->grasp_filtered_code_ == GraspFilterCode::PREGRASP_FILTERED_BY_IK;
 }
 
-std::size_t GraspFilter::filterGraspsHelper(
-    std::vector<GraspCandidatePtr>& grasp_candidates,
-    const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
-    const robot_model::JointModelGroup* arm_jmg, const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp,
-    bool visualize, const std::string& target_object_id)
+std::size_t
+GraspFilter::filterGraspsHelper(std::vector<GraspCandidatePtr>& grasp_candidates,
+                                const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
+                                const robot_model::JointModelGroup* arm_jmg,
+                                const moveit::core::RobotStatePtr& seed_state, bool filter_pregrasp, bool visualize,
+                                const std::string& target_object_id)
 {
   planning_scene::PlanningScenePtr planning_scene;
   {
@@ -878,4 +881,4 @@ void GraspFilter::publishPlanningScene(const planning_scene::PlanningScenePtr& p
   planning_scene_publisher_.publish(msg);
 }
 
-}  // namespace
+}  // namespace moveit_grasps

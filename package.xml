@@ -42,7 +42,6 @@
   <run_depend>message_runtime</run_depend>
   <run_depend>moveit_visual_tools</run_depend>
   <run_depend>rosparam_shortcuts</run_depend>
-  <run_depend version_eq="3.8">clang-format</run_depend>
 
   <test_depend>rostest</test_depend>
   <test_depend>rosunit</test_depend>

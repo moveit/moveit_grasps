@@ -283,7 +283,7 @@ public:
 
 };  // end of class
 
-}  // namespace
+}  // namespace moveit_grasps_demo
 
 int main(int argc, char* argv[])
 {

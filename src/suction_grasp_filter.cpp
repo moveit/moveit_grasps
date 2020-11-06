@@ -372,8 +372,8 @@ bool SuctionGraspFilter::attachActiveSuctionCupCO(const SuctionGraspDataPtr& gra
       // Attach the collision object
       if (!planning_scene->processAttachedCollisionObjectMsg(suction_voxel_aco))
       {
-        ROS_WARN_STREAM_NAMED(
-            logger_name, "Failed to process processAttachedCollisionObjectMsg for: " << suction_voxel_aco.object.id);
+        ROS_WARN_STREAM_NAMED(logger_name, "Failed to process processAttachedCollisionObjectMsg for: "
+                                               << suction_voxel_aco.object.id);
         return false;
       }
 
@@ -445,4 +445,4 @@ void SuctionGraspFilter::setSuctionVoxelOverlapCutoff(double cutoff)
   suction_voxel_overlap_cutoff_ = cutoff;
 }
 
-}  // namespace
+}  // namespace moveit_grasps
