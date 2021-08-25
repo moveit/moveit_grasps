@@ -346,7 +346,7 @@ bool GraspPlanner::computeCartesianWaypointPath(GraspCandidatePtr& grasp_candida
         std::vector<const robot_state::AttachedBody*> attached_bodies;
         start_state_with_body->getAttachedBodies(attached_bodies);
         for (const auto& ab : attached_bodies)
-          start_state_copy->attachBody(ab->getName(), ab->getShapes(), ab->getFixedTransforms(), ab->getTouchLinks(),
+          start_state_copy->attachBody(ab->getName(), ab->getShapes(), ab->getShapePoses(), ab->getTouchLinks(),
                                        ab->getAttachedLinkName(), ab->getDetachPosture(), ab->getSubframeTransforms());
         constraint_fn = boost::bind(&isGraspStateValid, scene.get(), collision_checking_verbose,
                                     only_check_self_collision, visual_tools_, _1, _2, _3);
