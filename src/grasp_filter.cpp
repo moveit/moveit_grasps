@@ -592,9 +592,8 @@ bool GraspFilter::findIKSolution(std::vector<double>& ik_solution, const IkThrea
   ik_thread_struct->planning_scene_->getCurrentState().getAttachedBodies(attached_bodies);
 
   for (const robot_state::AttachedBody* ab : attached_bodies)
-    state.attachBody(ab->getName(), ab->getPose(), ab->getShapes(), ab->getShapePoses(), 
-                     ab->getTouchLinks(), ab->getAttachedLinkName(), ab->getDetachPosture(),
-                     ab->getSubframes());
+    state.attachBody(ab->getName(), ab->getPose(), ab->getShapes(), ab->getShapePoses(), ab->getTouchLinks(),
+                     ab->getAttachedLinkName(), ab->getDetachPosture(), ab->getSubframes());
 
   bool ik_success = state.setFromIK(grasp_candidate->grasp_data_->arm_jmg_, ik_thread_struct->ik_pose_.pose,
                                     ik_thread_struct->timeout_, constraint_fn);
