@@ -2,7 +2,7 @@ base_link: 'world'
 # =====================================================
 # Note: these parameters are copied from Robotiq gripper without tweaking
 hand:
-    end_effector_name: 'hand'  # ee group name
+    end_effector_name: 'panda_hand'  # ee group name
     end_effector_type: 'finger'  # 'finger' or 'suction'
 
     # x/y translation and angle orientation grasp resolution parameters used for sampling grasp candidates
