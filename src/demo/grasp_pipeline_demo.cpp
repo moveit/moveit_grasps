@@ -195,6 +195,7 @@ public:
     // -----------------------------------
     // Generate random object to grasp
     geometry_msgs::Pose object_pose;
+    object_pose.orientation.w = 1.0;
     double object_x_depth;
     double object_y_width;
     double object_z_height;
