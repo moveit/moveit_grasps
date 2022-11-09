@@ -455,6 +455,10 @@ private:
   // A shared node handle
   ros::NodeHandle nh_;
 
+  // Robot
+  robot_model_loader::RobotModelLoaderPtr robot_model_loader_;
+  robot_model::RobotModelPtr robot_model_;
+
   // Tool for visualizing things in Rviz
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
@@ -475,10 +479,6 @@ private:
 
   // Arm
   const robot_model::JointModelGroup* arm_jmg_;
-
-  // Robot
-  robot_model_loader::RobotModelLoaderPtr robot_model_loader_;
-  robot_model::RobotModelPtr robot_model_;
 
   // All the motion planning components
   planning_pipeline::PlanningPipelinePtr planning_pipeline_;
