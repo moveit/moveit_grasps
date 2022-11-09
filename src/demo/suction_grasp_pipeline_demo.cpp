@@ -114,11 +114,10 @@ public:
                                                           "grasping_planning_scene");
     planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
 
-    robot_model_loader::RobotModelLoaderPtr robot_model_loader;
-    robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>("robot_description");
+    robot_model_loader_ = std::make_shared<robot_model_loader::RobotModelLoader>("robot_description");
 
     // Load the robot model
-    robot_model_ = robot_model_loader->getModel();
+    robot_model_ = robot_model_loader_->getModel();
     arm_jmg_ = robot_model_->getJointModelGroup(planning_group_name_);
 
     // ---------------------------------------------------------------------------------------------
@@ -478,6 +477,7 @@ private:
   const robot_model::JointModelGroup* arm_jmg_;
 
   // Robot
+  robot_model_loader::RobotModelLoaderPtr robot_model_loader_;
   robot_model::RobotModelPtr robot_model_;
 
   // All the motion planning components
